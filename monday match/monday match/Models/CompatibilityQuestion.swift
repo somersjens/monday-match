@@ -1,0 +1,17 @@
+import Foundation
+
+struct CompatibilityQuestion: Identifiable, Codable, Equatable {
+    let id: String
+    let title: String
+    let subtitle: String
+    let minimumValue: Int
+    let maximumValue: Int
+
+    static let likesChicken = CompatibilityQuestion(
+        id: "likes_chicken",
+        title: "How much do you like chicken?",
+        subtitle: "Choose 1 for not at all and 7 for very much.",
+        minimumValue: 1,
+        maximumValue: 7
+    )
+}
