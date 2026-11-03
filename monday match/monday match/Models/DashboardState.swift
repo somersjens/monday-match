@@ -14,9 +14,9 @@ struct DashboardState: Equatable {
         let nextSaturday = calendar.nextDate(
             after: now,
             matching: DateComponents(
-                weekday: 7,
                 hour: 23,
-                minute: 59
+                minute: 59,
+                weekday: 7
             ),
             matchingPolicy: .nextTime
         ) ?? now.addingTimeInterval(3 * 24 * 60 * 60)
@@ -41,13 +41,26 @@ struct DashboardState: Equatable {
 
         let profileDeadline = nextSaturday
 
+        // `nextSaturday` is by definition in the future, so comparing against it
+        // always produced `.open`. Derive the status from the full timeline.
+        let status: MatchingRound.Status
+        if now >= revealAt {
+            status = .revealed
+        } else if now >= nextSaturday {
+            status = .matching
+        } else if now >= opensAt {
+            status = .open
+        } else {
+            status = .locked
+        }
+
         return DashboardState(
             round: MatchingRound(
                 opensAt: opensAt,
                 profileDeadline: profileDeadline,
                 locksAt: nextSaturday,
                 revealAt: revealAt,
-                status: now < nextSaturday ? .open : .locked
+                status: status
             ),
             isOptedIn: false,
             profileCompletion: 1.0,

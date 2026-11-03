@@ -1,9 +1,10 @@
 import SwiftUI
+import UIKit
 
 struct SuccessfulMatchView: View {
     let result: MatchResult
     let profile: MatchedProfile
-    let conversation: ChatConversation?
+    let chatViewModel: ChatViewModel?
     let onEndMatch: () -> Void
 
     @State private var showsEndMatchConfirmation = false
@@ -133,10 +134,10 @@ struct SuccessfulMatchView: View {
                 .font(AppTypography.body)
                 .foregroundStyle(AppColors.secondaryForeground)
 
-                if let conversation {
+                if let chatViewModel {
                     NavigationLink {
                         ChatView(
-                            conversation: conversation
+                            viewModel: chatViewModel
                         )
                     } label: {
                         Text("Open chat")
@@ -171,7 +172,7 @@ struct SuccessfulMatchView: View {
         SuccessfulMatchView(
             result: .successfulMock,
             profile: .mock,
-            conversation: .mock(),
+            chatViewModel: ChatViewModel(conversation: .mock()),
             onEndMatch: {}
         )
     }

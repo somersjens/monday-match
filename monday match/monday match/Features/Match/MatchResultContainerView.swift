@@ -2,7 +2,7 @@ import SwiftUI
 
 struct MatchResultContainerView: View {
     let result: MatchResult?
-    let conversation: ChatConversation?
+    let chatViewModel: ChatViewModel?
     let onClearResult: () -> Void
 
     var body: some View {
@@ -17,7 +17,7 @@ struct MatchResultContainerView: View {
                         SuccessfulMatchView(
                             result: result,
                             profile: profile,
-                            conversation: conversation,
+                            chatViewModel: chatViewModel,
                             onEndMatch: onClearResult
                         )
                     }

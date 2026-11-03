@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import UIKit
 
 struct PhotoSelectionStepView: View {
     let photos: [ProfilePhoto]
@@ -122,7 +123,9 @@ struct PhotoSelectionStepView: View {
     private var pickerButton: some View {
         PhotosPicker(
             selection: $selectedItems,
-            maxSelectionCount: max(0, maximumPhotos - photos.count),
+            // `0` means "unlimited" for PhotosPicker, so clamp to at least 1.
+            // The picker itself is disabled once the maximum is reached.
+            maxSelectionCount: max(1, maximumPhotos - photos.count),
             matching: .images
         ) {
             HStack(spacing: AppSpacing.small) {

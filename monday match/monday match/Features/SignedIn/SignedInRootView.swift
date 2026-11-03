@@ -6,20 +6,13 @@ struct SignedInRootView: View {
     let onSignOut: () -> Void
 
     init(
+        repository: ProfileRepository,
         onSignOut: @escaping () -> Void
     ) {
         self.onSignOut = onSignOut
 
-        let repository: ProfileRepository
-
-        do {
-            repository = try FileProfileRepository()
-        } catch {
-            repository = InMemoryProfileRepository(
-                profile: .mockCompleted
-            )
-        }
-
+        // The repository is injected so this view reads the same store that
+        // onboarding wrote to, instead of creating a second one.
         _viewModel = StateObject(
             wrappedValue: SignedInRootViewModel(
                 repository: repository
@@ -37,7 +30,7 @@ struct SignedInRootView: View {
 
             MatchResultContainerView(
                 result: viewModel.matchResult,
-                conversation: viewModel.conversation,
+                chatViewModel: viewModel.chatViewModel,
                 onClearResult: viewModel.clearMatch
             )
             .tabItem {

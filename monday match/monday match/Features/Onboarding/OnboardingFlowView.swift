@@ -1,10 +1,21 @@
 import SwiftUI
 
 struct OnboardingFlowView: View {
-    @StateObject private var viewModel = OnboardingViewModel()
+    @StateObject private var viewModel: OnboardingViewModel
     @StateObject private var locationService = LocationService()
 
-    let onComplete: () -> Void
+    /// Receives the completed draft so the caller can persist it.
+    let onComplete: (ProfileDraft) -> Void
+
+    init(
+        repository: ProfileRepository? = nil,
+        onComplete: @escaping (ProfileDraft) -> Void
+    ) {
+        self.onComplete = onComplete
+        _viewModel = StateObject(
+            wrappedValue: OnboardingViewModel(repository: repository)
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -96,13 +107,18 @@ struct OnboardingFlowView: View {
                         ? "Complete profile"
                         : "Next",
                     validationMessage: viewModel.validationMessage,
-                    isEnabled: viewModel.canContinue,
+                    // The button stays tappable so `continueToNextStep()` can
+                    // explain *why* the step is incomplete. Disabling it here
+                    // made the validation message unreachable.
+                    isEnabled: true,
                     action: {
-                        if viewModel.currentStep == .review {
-                            onComplete()
-                        } else {
+                        guard viewModel.currentStep == .review else {
                             viewModel.continueToNextStep()
+                            return
                         }
+
+                        guard viewModel.finishOnboarding() else { return }
+                        onComplete(viewModel.draft)
                     }
                 )
             }
@@ -113,5 +129,8 @@ struct OnboardingFlowView: View {
 }
 
 #Preview {
-    OnboardingFlowView(onComplete: {})
+    OnboardingFlowView(
+        repository: InMemoryProfileRepository(),
+        onComplete: { _ in }
+    )
 }

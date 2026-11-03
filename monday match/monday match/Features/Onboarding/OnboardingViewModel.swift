@@ -1,5 +1,7 @@
-import Foundation
+import Combine
 import CoreLocation
+import Foundation
+import SwiftUI // for Array.move(fromOffsets:toOffset:)
 
 @MainActor
 final class OnboardingViewModel: ObservableObject {
@@ -13,8 +15,30 @@ final class OnboardingViewModel: ObservableObject {
     let minimumPhotos = 1
     let maximumPhotos = 3
 
+    private let imageProcessor: ImageProcessingService
+    private let repository: ProfileRepository?
+
+    init(
+        repository: ProfileRepository? = nil,
+        imageProcessor: ImageProcessingService? = nil
+    ) {
+        self.repository = repository
+        // Built here (not as a default argument) because the initializer is
+        // MainActor-isolated, while default arguments are evaluated nonisolated.
+        self.imageProcessor = imageProcessor ?? ImageProcessingService()
+
+        // Resume a half-finished onboarding instead of starting from scratch.
+        if let repository, let stored = try? repository.loadProfile() {
+            draft = stored
+        }
+    }
+
     var canContinue: Bool {
-        switch currentStep {
+        isComplete(step: currentStep)
+    }
+
+    private func isComplete(step: OnboardingStep) -> Bool {
+        switch step {
         case .dateOfBirth:
             return draft.isAtLeast(age: minimumAge)
 
@@ -69,12 +93,34 @@ final class OnboardingViewModel: ObservableObject {
         validationMessage = nil
 
         guard canContinue else {
-            validationMessage = messageForCurrentStep()
+            validationMessage = message(for: currentStep)
             return
         }
 
         guard let nextStep = currentStep.next else { return }
         currentStep = nextStep
+        persistDraft()
+    }
+
+    /// Final check before leaving onboarding. Every earlier step is re-validated,
+    /// because a user can navigate back and clear a required field.
+    /// Returns `false` and jumps to the offending step when something is missing.
+    @discardableResult
+    func finishOnboarding() -> Bool {
+        validationMessage = nil
+
+        for step in OnboardingStep.allCases where !isComplete(step: step) {
+            currentStep = step
+            validationMessage = message(for: step)
+            return false
+        }
+
+        persistDraft()
+        return true
+    }
+
+    private func persistDraft() {
+        try? repository?.saveProfile(draft)
     }
 
     func goBack() {
@@ -139,18 +185,20 @@ final class OnboardingViewModel: ObservableObject {
         draft.compatibilityAnswers[answer.questionID] = answer
     }
 
-    func addPhotoData(
-        _ dataItems: [Data],
-        processor: ImageProcessingService = ImageProcessingService()
-    ) {
+    // NOTE: no defaulted second parameter here. A method with default arguments
+    // cannot be passed directly as a `([Data]) -> Void` closure.
+    func addPhotoData(_ dataItems: [Data]) {
         photoErrorMessage = nil
 
         let remainingCapacity = maximumPhotos - draft.photos.count
-        guard remainingCapacity > 0 else { return }
+        guard remainingCapacity > 0 else {
+            photoErrorMessage = "You can add at most \(maximumPhotos) photos."
+            return
+        }
 
         for data in dataItems.prefix(remainingCapacity) {
             do {
-                let processed = try processor.process(data)
+                let processed = try imageProcessor.process(data)
                 let photo = ProfilePhoto(
                     imageData: processed,
                     order: draft.photos.count
@@ -177,8 +225,8 @@ final class OnboardingViewModel: ObservableObject {
         draft.normalizePhotoOrder()
     }
 
-    private func messageForCurrentStep() -> String {
-        switch currentStep {
+    private func message(for step: OnboardingStep) -> String {
+        switch step {
         case .dateOfBirth:
             return "You must be at least \(minimumAge) years old."
         case .gender:

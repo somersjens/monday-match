@@ -1,15 +1,9 @@
 import SwiftUI
 
 struct ChatView: View {
-    @StateObject private var viewModel: ChatViewModel
-
-    init(conversation: ChatConversation) {
-        _viewModel = StateObject(
-            wrappedValue: ChatViewModel(
-                conversation: conversation
-            )
-        )
-    }
+    // Observed, not owned: the view model is created and kept alive by
+    // SignedInRootViewModel so messages survive leaving and reopening the chat.
+    @ObservedObject var viewModel: ChatViewModel
 
     var body: some View {
         VStack(spacing: 0) {
@@ -218,7 +212,7 @@ private struct ChatMessageBubble: View {
 #Preview {
     NavigationStack {
         ChatView(
-            conversation: .mock()
+            viewModel: ChatViewModel(conversation: .mock())
         )
     }
 }

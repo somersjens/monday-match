@@ -2,3 +2,10 @@
 xcuserdata/
 *.xcuserstate
 DerivedData/
+
+# App Store preview videos and raw captures stay on this Mac so they can
+# still be uploaded. They are too large for Git.
+*.mp4
+*.mov
+*.m4v
+*.mp4.sb-*

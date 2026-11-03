@@ -4,6 +4,8 @@ struct AppCoordinatorView: View {
     @ObservedObject var appState: AppState
     let dependencies: DependencyContainer
 
+    @State private var onboardingErrorMessage: String?
+
     var body: some View {
         Group {
             switch appState.sessionState {
@@ -15,13 +17,13 @@ struct AppCoordinatorView: View {
 
             case .onboarding:
                 OnboardingFlowView(
-                    onComplete: {
-                        appState.showSignedInApp()
-                    }
+                    repository: dependencies.profileRepository,
+                    onComplete: completeOnboarding
                 )
 
             case .signedIn:
                 SignedInRootView(
+                    repository: dependencies.profileRepository,
                     onSignOut: {
                         Task {
                             await appState.signOut()
@@ -33,6 +35,32 @@ struct AppCoordinatorView: View {
         .task {
             guard appState.sessionState == .loading else { return }
             await appState.start()
+        }
+        .alert(
+            "Could not save your profile",
+            isPresented: Binding(
+                get: { onboardingErrorMessage != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        onboardingErrorMessage = nil
+                    }
+                }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(onboardingErrorMessage ?? "")
+        }
+    }
+
+    /// Persists the onboarding result before entering the signed-in app.
+    /// Without this the whole onboarding flow would be discarded.
+    private func completeOnboarding(_ draft: ProfileDraft) {
+        do {
+            try dependencies.profileRepository.saveProfile(draft)
+            appState.showSignedInApp()
+        } catch {
+            onboardingErrorMessage = error.localizedDescription
         }
     }
 
@@ -77,9 +105,8 @@ struct AppCoordinatorView: View {
 
         case .onboarding:
             OnboardingFlowView(
-                onComplete: {
-                    appState.showSignedInApp()
-                }
+                repository: dependencies.profileRepository,
+                onComplete: completeOnboarding
             )
 
         case .dashboard:

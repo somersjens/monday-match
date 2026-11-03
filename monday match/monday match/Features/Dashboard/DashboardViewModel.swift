@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 @MainActor
@@ -7,8 +8,10 @@ final class DashboardViewModel: ObservableObject {
 
     private var timerTask: Task<Void, Never>?
 
-    init(state: DashboardState = .mock()) {
-        self.state = state
+    // Same reason as the other view models: `.mock()` is MainActor-isolated and
+    // cannot be evaluated as a nonisolated default argument, so build it here.
+    init(state: DashboardState? = nil) {
+        self.state = state ?? .mock()
     }
 
     var canToggleOptIn: Bool {

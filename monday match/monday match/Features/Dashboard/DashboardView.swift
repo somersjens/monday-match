@@ -5,7 +5,7 @@ struct DashboardView: View {
     @StateObject private var notificationService = NotificationPermissionService()
 
     init(
-        state: DashboardState = .mock()
+        state: DashboardState? = nil
     ) {
         _viewModel = StateObject(
             wrappedValue: DashboardViewModel(state: state)

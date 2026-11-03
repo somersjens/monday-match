@@ -6,5 +6,9 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Your location is used to find matches within the distance you choose. Only an approximate location is stored and your exact coordinates are never shown on your profile.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose photos from your library to use on your profile.</string>
 </dict>
 </plist>
