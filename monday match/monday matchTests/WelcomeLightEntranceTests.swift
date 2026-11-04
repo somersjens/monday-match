@@ -27,7 +27,8 @@ final class WelcomeLightEntranceTests: XCTestCase {
     }
 
     func testEntranceRunsOnceAndThenKeepsTheExistingLoopClock() {
-        XCTAssertLessThan(WelcomeLightEntrance.Frame(elapsed: 0).reveal, 0)
+        XCTAssertEqual(WelcomeLightEntrance.Frame(elapsed: 0).reveal, -WelcomeLightEntrance.inletLength,
+                       "The head must begin at the offscreen end, not partway into the approach.")
         XCTAssertEqual(WelcomeLightEntrance.Frame(elapsed: WelcomeLightEntrance.traceDuration).reveal, 1, accuracy: 0.000001)
         let start = WelcomeLightEntrance.Frame(elapsed: WelcomeLightEntrance.duration)
         for loop in 1...6 {

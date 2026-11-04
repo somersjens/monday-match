@@ -7,6 +7,7 @@ struct WelcomeView: View {
     var body: some View {
         GeometryReader { proxy in
             let animationHeight = max(0, proxy.size.height - 160)
+            let animationWidth = min(proxy.size.width, 620)
 
             ZStack {
                 Color(red: 0.008, green: 0.012, blue: 0.035)
@@ -14,8 +15,10 @@ struct WelcomeView: View {
 
                 WelcomeLightAnimation()
                     .frame(
-                        width: min(proxy.size.width, 620),
-                        height: min(proxy.size.width * 1.12, animationHeight * 0.94)
+                        width: animationWidth,
+                        // Keep the heart's scale/center, but let its incoming
+                        // tail reach the screen edge beyond the heart's bounds.
+                        height: max(animationWidth * 2.1, min(proxy.size.width * 1.12, animationHeight * 0.94))
                     )
                     .position(x: proxy.size.width / 2, y: animationHeight / 2)
 

@@ -4,9 +4,11 @@ import CoreGraphics
 /// One presentation clock feeds the entrance and then the existing periodic loop.
 /// The loop's shape, light and particle clocks never reset at the handoff.
 enum WelcomeLightEntrance {
-    static let traceDuration = 3.9
-    static let accelerationStart = traceDuration-0.75
     private static let launchDuration = 0.65
+    // Heart-perimeter units per second: preserve the established visible pace.
+    private static let headSpeed = 0.3634
+    static let traceDuration = (1+inletLength)/headSpeed+launchDuration*0.5
+    static let accelerationStart = traceDuration-0.75
     static let duration = traceDuration
     static var inletLength: Double { -Double(inletTravel[0]) }
 
@@ -59,17 +61,17 @@ enum WelcomeLightEntrance {
             // At handoff this clock has the same position and speed as the loop.
             flowElapsed = time-duration+rampDuration*0.5
             // All entrance-only motion is gone at closure, not afterwards.
-            streamStrength = ease(time/0.20)*(1-ease((time-(traceDuration-0.80))/0.80))
+            streamStrength = time >= traceDuration ? 0
+                : ease(time/0.20)*(1-ease((time-(traceDuration-0.80))/0.80))
             // Accelerate once, then keep the head moving through closure. There
             // is no ease-out or stopped head at the bottom of the heart.
             let launch = min(time/launchDuration, 1)
             let launchedDistance = launchDuration*(pow(launch,6)-3*pow(launch,5)+2.5*pow(launch,4))
                 + max(0,time-launchDuration)
-            // Begin partway along the offscreen approach, so the slower drawing
-            // pace does not add an empty wait before the first light arrives.
-            let initialDistance = inletLength*0.65
-            let speed = (1+initialDistance)/(traceDuration-launchDuration*0.5)
-            reveal = -initialDistance+speed*launchedDistance
+            // Start at the actual offscreen end, including the soft leading
+            // glow. Only the invisible approach adds time; the visible speed
+            // and the seamless handoff retain their established timing.
+            reveal = -inletLength+headSpeed*launchedDistance
             inletOpacity = ease(time/0.20)*(1-ease((time-(traceDuration-0.16))/0.16))
             // Dissolve the leading light into the silk before the loop closes,
             // rather than carrying a bright ball around the completed heart.

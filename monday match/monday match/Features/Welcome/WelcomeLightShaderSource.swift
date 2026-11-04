@@ -200,7 +200,10 @@ fragment float4 welcomeRibbonFragment(RibbonVertex in [[stage_in]], constant Wel
     float sheath = exp(-d*d / (2*0.55*0.55*focus*focus*in.coreWidth)) * 0.12;
     float halo = exp(-d*d / (2*2.0*2.0)) * 0.012;
     float border = min(min(in.screen.x, p.viewport.x-in.screen.x), min(in.screen.y, p.viewport.y-in.screen.y));
-    float energy = (core + sheath + halo) * in.intensity * 2.8 * smoothstep(0.0, p.viewport.w*9, border);
+    // An incoming thread crosses the viewport edge at full brightness, rather
+    // than fading into existence several points inside the screen.
+    float edgeFade = mix(smoothstep(0.0, p.viewport.w*9, border),1.0,p.entrance.y);
+    float energy = (core + sheath + halo) * in.intensity * 2.8 * edgeFade;
     float3 color = in.color * energy;
     return float4(color, 0);
 }
@@ -271,10 +274,11 @@ fragment float4 welcomeCompositeFragment(CompositeVertex in [[stage_in]],
     float2 centered = (in.uv - 0.5)*p.viewport.xy / (min(p.viewport.x,p.viewport.y)*0.5);
     float haze = pow(max(0.0, 1-length(centered)), 1.7);
     float3 background = float3(0.008,0.012,0.035) + float3(0.005,0.012,0.125)*haze;
-    // Fade every effect to the exact welcome background before the view edge.
+    // Keep the loop's edge treatment; let the entrance cross the screen edge.
     float2 screen = in.uv*p.viewport.xy;
     float border = min(min(screen.x,p.viewport.x-screen.x),min(screen.y,p.viewport.y-screen.y));
-    return float4(background + radiance*smoothstep(0.0,p.viewport.w*10,border), 1);
+    float edgeFade = mix(smoothstep(0.0,p.viewport.w*10,border),1.0,p.entrance.y);
+    return float4(background + radiance*edgeFade, 1);
 }
 
 """#

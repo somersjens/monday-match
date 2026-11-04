@@ -106,6 +106,25 @@ final class WelcomeLightMetalTests: XCTestCase {
         XCTAssertGreaterThan(change, 5_000, "Material already on the heart must keep moving behind the head.")
     }
 
+    func testEntranceStartsOffscreenAndFirstLightCrossesTheScreenEdge() throws {
+        let resources = try XCTUnwrap(WelcomeLightMetalRenderer.resources)
+        let size = CGSize(width: 402, height: 844)
+        var firstVisibleFrame: Int?
+        for frame in 0...48 {
+            let pixels = try render(elapsed: Double(frame)/60, resources: resources,
+                                    presentation: true, size: size)
+            let bright = stride(from: 0, to: pixels.count, by: 4).filter { pixels[$0] > 80 }
+            if !bright.isEmpty {
+                firstVisibleFrame = frame
+                XCTAssertGreaterThan(frame, 20, "The approach must begin fully outside the screen.")
+                XCTAssertEqual(bright.map { ($0/4)%402 }.min(), 0,
+                               "The first light must touch the actual screen edge, without an inset fade.")
+                break
+            }
+        }
+        XCTAssertNotNil(firstVisibleFrame, "The offscreen approach must enter promptly.")
+    }
+
     func testProjectedRibbonMotionAvoidsThePreviousSpeedAndAccelerationPeaks() throws {
         let resources = try XCTUnwrap(WelcomeLightMetalRenderer.resources)
         let source = WelcomeLightShaderSource.code + #"""
@@ -176,9 +195,10 @@ final class WelcomeLightMetalTests: XCTestCase {
         XCTAssertLessThan(maximumAcceleration, 2_500, "The previous acceleration peak exceeded 4,000 px/s².")
     }
 
-    private func render(elapsed: Double, resources: WelcomeLightMetalResources, presentation: Bool = false) throws -> [UInt8] {
-        let size = CGSize(width: 256, height: 256)
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 256, height: 256, mipmapped: false)
+    private func render(elapsed: Double, resources: WelcomeLightMetalResources, presentation: Bool = false,
+                        size: CGSize = CGSize(width: 256, height: 256)) throws -> [UInt8] {
+        let width = Int(size.width), height = Int(size.height)
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: width, height: height, mipmapped: false)
         descriptor.storageMode = .shared
         descriptor.usage = [.renderTarget, .shaderRead]
         let texture = try XCTUnwrap(resources.device.makeTexture(descriptor: descriptor))
@@ -195,8 +215,8 @@ final class WelcomeLightMetalTests: XCTestCase {
         command.commit()
         command.waitUntilCompleted()
         XCTAssertNil(command.error)
-        var pixels = [UInt8](repeating: 0, count: 256 * 256 * 4)
-        texture.getBytes(&pixels, bytesPerRow: 256 * 4, from: MTLRegionMake2D(0, 0, 256, 256), mipmapLevel: 0)
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        texture.getBytes(&pixels, bytesPerRow: width * 4, from: MTLRegionMake2D(0, 0, width, height), mipmapLevel: 0)
         return pixels
     }
 }
