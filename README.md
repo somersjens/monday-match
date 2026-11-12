@@ -1,10 +1,13 @@
-# monday match
+# Stop Swiping
 
-Open `monday match.xcodeproj` in this folder. This is the single active project.
+Open `Stop Swiping.xcodeproj` in this folder. This is the single active project.
 
-- `monday match/`: SwiftUI app source and assets.
-- `monday matchTests/`: unit and Metal rendering tests.
-- `monday matchUITests/`: UI tests.
+The app and Xcode targets are named **Stop Swiping**. The existing App Store SKU
+and bundle identifiers are unchanged so the app keeps its existing identity.
+
+- `Stop Swiping/`: SwiftUI app source and assets.
+- `Stop SwipingTests/`: unit and Metal rendering tests.
+- `Stop SwipingUITests/`: UI tests.
 - `firebase/`: starter backend rules.
 - `exports/`: reference artwork.
 - `2 circle.mp4`: animation reference, kept locally and not played by the app.
@@ -126,4 +129,8 @@ The next build block can connect onboarding completion to Firebase:
 - retry failed uploads
 - restore a cloud profile
 - decide onboarding versus dashboard from Firestore
-# Stop-Swiping
+## Photo verification
+
+Local front-camera photo verification and upload guidelines are integrated into
+both photo inputs. See [face verification](docs/face-verification.md) for model
+provenance, configuration, privacy behavior and device-validation requirements.
