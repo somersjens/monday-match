@@ -177,7 +177,7 @@ float helixRungGrowth(float height, constant WelcomeUniforms &p) {
 constant float helixInletPace = 1.6;
 
 void helixInletControls(float reach, float side, thread float2 *c) {
-    c[0] = float2(0, 0); c[1] = float2(side*0.2, 0.12);
+    c[0] = float2(0, 0); c[1] = float2(side*0.2, 0);
     c[2] = float2(side*reach*0.55, 0.55); c[3] = float2(side*reach, 1.15);
 }
 
@@ -203,11 +203,37 @@ float2 helixInletOffset(float excess, float side, float lane, float sheet, float
     return q + float2(-d.y, d.x)*spread;
 }
 
-// Mirrors WelcomeLightMatch: the helix keeps its shape and screws itself
-// up out of view, spinning faster as it rises.
-constant float helixExitTurns = 2.2, helixExitRise = 4.4;
-float helixExitSpin(float exit) { return pow(exit, 1.5)*helixExitTurns*tau; }
-float helixExitLift(float exit) { return pow(exit, 2.4)*helixExitRise; }
+// Both ends follow the helix at one constant speed. The soft lower end
+// moves with the upper one, so its length stays fixed until it is clipped
+// by the top of the screen. No inlet is drawn during departure.
+constant float helixExitRise = 4.2;
+float helixExitTop(float exit) { return -helixHalfHeight - helixExitRise*exit; }
+float helixExitTail(float exit) { return helixHalfHeight - helixExitRise*exit; }
+float helixExitSlide(float h, float exit) { return h*helixHalfHeight - helixExitRise*exit; }
+
+float helixEnvelope(float axial, float top, float tail) {
+    float d = clamp(min(axial - top, tail - axial)/helixHalfHeight, 0.0, 1.0);
+    return sqrt(max(0.0, 1 - pow(1 - d, 4.0)));
+}
+
+// A thread's phase as a function of height, and back, carried on past the
+// original top so base pairs keep their spacing on the extended spiral.
+float helixClimb(float height) {
+    if (height >= -1) return acos(clamp(sin(height*asin(0.995))/0.995, -1.0, 1.0));
+    return M_PI_F + (-1 - height)*M_PI_F*0.5;
+}
+float helixHeightAt(float climb) {
+    if (climb <= M_PI_F) return asin(0.995*cos(climb))/asin(0.995);
+    return -1 - (climb - M_PI_F)*2/M_PI_F;
+}
+// The phase that places this thread's base pairs: its own until the exit,
+// then the phase of wherever the thread has slid to.
+float helixRungPhase(float original, float exit) {
+    if (exit <= 0) return original;
+    float h = asin(0.995*cos(original))/asin(0.995);
+    float climb = helixClimb(helixExitSlide(h, exit)/helixHalfHeight);
+    return sin(original) < -1e-6 ? tau - climb : climb;
+}
 
 float3 helixPoint(float u, uint instance, constant WelcomeUniforms &p) {
     uint ring = instance / strands;
@@ -226,11 +252,14 @@ float3 helixPoint(float u, uint instance, constant WelcomeUniforms &p) {
         float clamped = min(shifted, 1.0);
         excess = shifted - clamped;
         float c = clamp(sin(clamped*asin(0.995))/0.995, -1.0, 1.0);
-        phase = sin(original) < 0 ? -acos(c) : acos(c);
+        phase = sin(original) < -1e-6 ? -acos(c) : acos(c);
     }
     float h = asin(0.995*cos(phase))/asin(0.995);
-    float envelope = sqrt(max(0.0, 1 - pow(abs(h), 4.0)));
-    float axial = h*helixHalfHeight;
+    // Everything below depends on position along the axis only, so sliding a
+    // thread along it changes nothing but where the thread begins and ends.
+    float exit = p.match.x;
+    float axial = helixExitSlide(h, exit);
+    float envelope = helixEnvelope(axial, helixExitTop(exit), helixExitTail(exit));
     float turn = helixTwist*axial + helixSpin*seconds;
     float swell = 1 + 0.03*sin(2.2*axial - 0.9*seconds);
     float seed = float(strand)*1.37 + ringValue*4.1;
@@ -238,13 +267,15 @@ float3 helixPoint(float u, uint instance, constant WelcomeUniforms &p) {
     float r, theta, backbone = 0;
     if (sheet == 1) {
         float offset = ring == 0 ? 0.0 : M_PI_F*0.5;
-        float angle = helixRungs*phase + offset;
+        float angle = helixRungs*helixRungPhase(phase, exit) + offset;
         float sweep = sin(angle);
         float middle = 1 - sweep*sweep;
         float center = (round(angle/M_PI_F)*M_PI_F - offset)/helixRungs;
-        float level = axial + (asin(0.995*cos(center))/asin(0.995)*helixHalfHeight - axial)*smoothstep(0.0, 0.3, middle);
+        float centerHeight = exit > 0 ? helixHeightAt(sin(original) < -1e-6 ? tau - center : center)
+                                      : asin(0.995*cos(center))/asin(0.995);
+        float level = axial + (centerHeight*helixHalfHeight - axial)*smoothstep(0.0, 0.3, middle);
         float pass = 1.4*tanh(sin(phase)/0.05);
-        r = (helixRadius - 0.02)*swell*sweep*envelope*helixRungGrowth(level/helixHalfHeight, p);
+        r = (helixRadius - 0.02)*swell*sweep*envelope*helixRungGrowth(clamp(level/helixHalfHeight, -1.0, 1.0), p);
         theta = helixTwist*level + helixSpin*seconds + lane*0.04*middle;
         y = level + lane*(0.0015 + 0.006*middle*cos(4*sweep + 0.9*seconds + ringValue + pass))*envelope
           + 0.02*middle*sin(3.6*sweep + 1.2*seconds + pass*1.1 + ringValue)*envelope
@@ -262,7 +293,9 @@ float3 helixPoint(float u, uint instance, constant WelcomeUniforms &p) {
         float braid = 0.008*sin(9*axial + lane*2.4 - 1.7*seconds + sheetValue*2 + ringValue*3)
                     + 0.003*sin(seed + 0.8*seconds);
         float offset = lane*width + separation + braid;
-        float taper = 0.35 + 0.65*envelope;
+        float streaming = min(p.helixArrival.x, 1.0);
+        float foot = smoothstep(0.0, 0.12, 1 - axial/helixHalfHeight);
+        float taper = (0.35 + 0.65*envelope)*(1 - streaming + streaming*foot);
         r = helixRadius*swell*envelope + (offset*cos(torsion) + plyOffset*cos(ply))*taper;
         y += (offset*sin(torsion) + plyOffset*sin(ply))*taper;
         theta += lane*0.05*taper;
@@ -270,12 +303,19 @@ float3 helixPoint(float u, uint instance, constant WelcomeUniforms &p) {
             r += (0.04 + 0.025*sin(2.3*axial + 0.7*seconds + ringValue*2))*envelope;
         }
     }
-    theta += p.helixArrival.y + helixExitSpin(p.match.x);
+    theta += p.helixArrival.y;
     float x = r*sin(theta), z = r*cos(theta);
-    float2 q = float2(x, y)/(1 - z*0.30);
+    // Project depth around the moving centre, so rising never magnifies the
+    // helix's height or changes the speed of its leading and trailing ends.
+    float near = clamp(y + helixExitRise*exit, -1.25, 1.25);
+    float2 q = float2(x, near)/(1 - z*0.30) + float2(0, y - near);
+    float streaming = min(p.helixArrival.x, 1.0);
+    // Suppress the vertical perspective bulge where the two loose inlets
+    // meet the foot; otherwise the last arc turns back into a tiny loop.
+    float footProjection = streaming*(1 - smoothstep(0.0, 0.2, helixHalfHeight - axial));
+    q.y = mix(q.y, y, footProjection);
     if (excess > 0) q += helixInletOffset(excess, backbone*sign(p.helixArrival.w), lane, sheetValue,
                                           abs(p.helixArrival.w), seconds);
-    q.y -= helixExitLift(p.match.x);
     return float3(q, (helixRadius - z)*0.8);
 }
 
@@ -573,19 +613,27 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
     float along = abs(asin(0.995*cos((u + 0.5)*tau))/asin(0.995));
     float rim = (sheet != 1 && (strand % 20 == 0 || strand % 20 == 18)) ? 1.0 : 0.0;
     float aura = (sheet != 1 && strand % 20 == 19) ? 1.0 : 0.0;
-    float rungAngle = helixRungs*(u + 0.5)*tau + (instance/strands == 0 ? 0.0 : M_PI_F*0.5);
+    float rungExit = matchHeart > 0.5 ? 0.0 : p.match.x;
     float rungOffset = instance/strands == 0 ? 0.0 : M_PI_F*0.5;
+    float rungAngle = helixRungs*helixRungPhase((u + 0.5)*tau, rungExit) + rungOffset;
     float rungCenter = (round(rungAngle/M_PI_F)*M_PI_F - rungOffset)/helixRungs;
-    float rungSpan = sheet == 1 ? 1.1*helixRungGrowth(asin(0.995*cos(rungCenter))/asin(0.995), p)
+    float rungHeight = rungExit > 0
+        ? clamp(helixHeightAt(sin((u + 0.5)*tau) < 0 ? tau - rungCenter : rungCenter), -1.0, 1.0)
+        : asin(0.995*cos(rungCenter))/asin(0.995);
+    float rungSpan = sheet == 1 ? 1.1*helixRungGrowth(rungHeight, p)
                                     *(1 - smoothstep(0.78, 0.94, abs(sin(rungAngle))))
                                     *(1 - smoothstep(0.5, 0.85, along))
                                     *smoothstep(0.25, 0.65, abs(tangent.x)) : 1.0;
+    // This fade belongs to the moving helix, including its lower end.
+    // It advances with the geometry instead of leaving a stationary foot.
+    float endpoint = 1 - smoothstep(0.55, 0.95, along);
     float helixLight = (0.55 + 1.1*rim - 0.25*aura)*(1 - 0.4*back)*(sheet == 0 ? 1.0 : 0.85)
-                     *rungSpan*(1 - smoothstep(0.55, 0.95, along));
+                     *rungSpan*endpoint;
     helixLight = mix(helixLight, 1.7, code);
     out.intensity *= mix(1.0, helixLight, helix);
     float visible = mix(smoothstep(-0.008,0.008,p.entrance.x-travel),1.0,
                         smoothstep(0.97,1.0,p.entrance.x));
+
     // The head rounds the final bend and continues along the closed path.
     // Near closure, stretch the leading glow along separate filaments and
     // blend it into their ordinary light. Its total energy falls as it spreads.

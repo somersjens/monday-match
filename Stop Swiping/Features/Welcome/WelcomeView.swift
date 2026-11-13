@@ -155,6 +155,7 @@ struct WelcomeView: View {
                         reveal: matchReveal,
                         isSaved: savedMatches.contains(activeMatch.snapshot.id),
                         onShowScores: { scoreDetail = $0 },
+                        onRename: renameMatch,
                         onSave: { saveMatch(activeMatch.snapshot) },
                         onClose: closeMatch,
                         onDelete: { deleteMatch(activeMatch.snapshot) }
@@ -178,6 +179,9 @@ struct WelcomeView: View {
                 }
             }
         }
+        // The name popover handles its own keyboard. Keep the entire match
+        // canvas at its original size so the heart and controls stay in place.
+        .ignoresSafeArea(.keyboard, edges: activeMatch == nil ? [] : .bottom)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size in
             // Growing never comes from the keyboard; shrinking only does while typing.
             if size.width != lightLayoutSize.width || size.height > lightLayoutSize.height || !isNameFocused {
@@ -403,6 +407,13 @@ struct WelcomeView: View {
     private func saveMatch(_ snapshot: MatchSnapshot) {
         savedMatches.save(snapshot)
         AccessibilityNotification.Announcement(L10n("Match saved.")).post()
+    }
+
+    private func renameMatch(to name: String) {
+        guard var snapshot = activeMatch?.snapshot, snapshot.rename(to: name) else { return }
+        savedMatches.rename(snapshot.id, to: snapshot.name)
+        activeMatch = ActiveMatch(snapshot: snapshot, report: snapshot.report)
+        AccessibilityNotification.Announcement(L10n("Match name updated.")).post()
     }
 
     private func deleteMatch(_ snapshot: MatchSnapshot) {

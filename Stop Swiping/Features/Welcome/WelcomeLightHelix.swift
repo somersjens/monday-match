@@ -107,6 +107,29 @@ enum WelcomeLightHelix {
         }
     }
 
+    /// Both ends advance along the helical path at the same constant speed.
+    /// The soft lower end travels with the upper one, preserving the height
+    /// of the helix until the screen clips it. No supply is added below it.
+    enum Departure {
+        static let rise = 4.2
+
+        static func top(_ exit: Double) -> Double { -halfHeight - rise * exit }
+        static func tail(_ exit: Double) -> Double { halfHeight - rise * exit }
+
+        static func axial(height: Double, exit: Double) -> Double {
+            height * halfHeight - rise * exit
+        }
+    }
+
+    static func climb(height: Double) -> Double {
+        if height >= -1 { return acos(min(max(sin(height * asin(0.995)) / 0.995, -1), 1)) }
+        return Double.pi + (-1 - height) * Double.pi * 0.5
+    }
+
+    static func heightAt(climb: Double) -> Double {
+        climb <= Double.pi ? height(phase: climb) : -1 - (climb - Double.pi) * 2 / Double.pi
+    }
+
     /// Position along the axis from -1 to 1, travelling the full length and
     /// back once per loop with an even pace between the ends.
     static func height(phase: Double) -> Double {
@@ -121,8 +144,8 @@ enum WelcomeLightHelix {
     /// Control points of an inlet relative to the bottom tip, for the
     /// backbone that comes in from the right (`side` 1) or left (-1).
     private static func inletControls(reach: Double, side: Double) -> [CGPoint] {
-        // Rises diagonally into the tip, curving down more steeply towards the edge.
-        [CGPoint(x: 0, y: 0), CGPoint(x: side * 0.2, y: 0.12),
+        // Leaves the tip horizontally to meet the tapered helical arc without a kink.
+        [CGPoint(x: 0, y: 0), CGPoint(x: side * 0.2, y: 0),
          CGPoint(x: side * reach * 0.55, y: 0.55), CGPoint(x: side * reach, y: 1.15)]
     }
 
@@ -159,7 +182,7 @@ enum WelcomeLightHelix {
         return CGPoint(x: x - dy * spread, y: y + dx * spread)
     }
 
-    static func point(u: Double, ring: Int, strand: Int, seconds: Double, arrival: Arrival = .settled) -> (point: CGPoint, depth: Double) {
+    static func point(u: Double, ring: Int, strand: Int, seconds: Double, arrival: Arrival = .settled, exit: Double = 0) -> (point: CGPoint, depth: Double) {
         let sheet = strand / 20
         let laneIndex = strand % 20
         let lane = Double(laneIndex) / 19 * 2 - 1
@@ -175,11 +198,13 @@ enum WelcomeLightHelix {
             let clamped = min(shifted, 1)
             excess = shifted - clamped
             let c = min(max(sin(clamped * asin(0.995)) / 0.995, -1), 1)
-            phase = sin(original) < 0 ? -acos(c) : acos(c)
+            phase = sin(original) < -1e-6 ? -acos(c) : acos(c)
         }
         let h = height(phase: phase)
-        let envelope = envelope(height: h)
-        let axial = h * halfHeight
+        let traveling = Departure.axial(height: h, exit: exit)
+        let axial = traveling
+        let endDistance = min(max(min(axial - Departure.top(exit), Departure.tail(exit) - axial) / halfHeight, 0), 1)
+        let envelope = sqrt(max(0, 1 - pow(1 - endDistance, 4)))
         let turn = twist * axial + spin * seconds
         // A slow swell travels up the helix, so it breathes like the heart.
         let swell = 1 + 0.03 * sin(2.2 * axial - 0.9 * seconds)
@@ -195,7 +220,9 @@ enum WelcomeLightHelix {
             // Both passes over a pair are thin threads waving in opposite
             // directions, so together they read as a twisted double line.
             let offset = ring == 0 ? 0 : Double.pi / 2
-            let angle = rungsPerPass * phase + offset
+            let rungClimb = climb(height: axial / halfHeight)
+            let rungPhase = exit > 0 ? (sin(original) < -1e-6 ? WelcomeLightGeometry.tau - rungClimb : rungClimb) : phase
+            let angle = rungsPerPass * rungPhase + offset
             // An even crossing speed gives every pair enough samples to wave
             // smoothly; the turns near the backbones are hidden by the shader.
             let sweep = sin(angle)
@@ -203,11 +230,13 @@ enum WelcomeLightHelix {
             // Each pair lies level at the height where it crosses the axis;
             // between pairs the thread follows the backbone, hidden in it.
             let center = ((angle / Double.pi).rounded() * Double.pi - offset) / rungsPerPass
-            let level = axial + (height(phase: center) * halfHeight - axial) * smoothstep(0, 0.3, middle)
+            let centerHeight = exit > 0 ? heightAt(climb: sin(original) < -1e-6 ? WelcomeLightGeometry.tau - center : center)
+                : height(phase: center)
+            let level = axial + (centerHeight * halfHeight - axial) * smoothstep(0, 0.3, middle)
             let pass = 1.4 * tanh(sin(phase) / 0.05)
             // Each pair grows out from the axis towards both backbones. Its
             // own level keeps the growth continuous where pairs hand over.
-            let growth = arrival.rungGrowth(height: level / halfHeight)
+            let growth = arrival.rungGrowth(height: min(max(level / halfHeight, -1), 1))
             r = (radius - 0.02) * swell * sweep * envelope * growth
             theta = twist * level + spin * seconds + lane * 0.04 * middle
             y = level + lane * (0.0015 + 0.006 * middle * cos(4 * sweep + 0.9 * seconds + ringValue + pass)) * envelope
@@ -236,7 +265,9 @@ enum WelcomeLightHelix {
                 + 0.003 * sin(seed + 0.8 * seconds)
             let offset = lane * width + separation + braid
             // Near the ends the band loosens, so the tips taper softly.
-            let taper = 0.35 + 0.65 * envelope
+            let streaming = min(arrival.travel, 1)
+            let foot = smoothstep(0, 0.12, 1 - axial / halfHeight)
+            let taper = (0.35 + 0.65 * envelope) * (1 - streaming + streaming * foot)
             r = radius * swell * envelope + (offset * cos(torsion) + plyOffset * cos(ply)) * taper
             y += (offset * sin(torsion) + plyOffset * sin(ply)) * taper
             theta += lane * 0.05 * taper
@@ -248,7 +279,11 @@ enum WelcomeLightHelix {
         theta += arrival.turn
         let x = r * sin(theta), z = r * cos(theta)
         let perspective = 1 / (1 - z * 0.30)
-        var point = CGPoint(x: x * perspective, y: y * perspective)
+        let near = min(max(y + Departure.rise * exit, -1.25), 1.25)
+        let streaming = min(arrival.travel, 1)
+        let footProjection = streaming * (1 - smoothstep(0, 0.2, halfHeight - axial))
+        let projectedY = near * perspective + y - near
+        var point = CGPoint(x: x * perspective, y: projectedY + (y - projectedY) * footProjection)
         if excess > 0 {
             // One backbone comes from the lower right, the other from the
             // lower left, each crossing the tip into the arc on the far side.

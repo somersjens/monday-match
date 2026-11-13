@@ -6,6 +6,8 @@ struct ScaleSelector: View {
     let value: Int?
     var lowLabel: String?
     var highLabel: String?
+    /// Mirrored partner selections can follow the user's immediate highlight.
+    var selectionAnimation: Animation? = nil
     let valueDescription: (Int) -> String
     let onSelect: (Int) -> Void
 
@@ -73,8 +75,9 @@ struct ScaleSelector: View {
                     }
             }
             .shadow(color: OnboardingTheme.blue.opacity(isSelected ? 0.6 : 0), radius: 12, y: 3)
-            // Selection color changes immediately; only its small lift animates.
-            .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion)) { point in
+            .animation(selectionAnimation, value: value)
+            // Direct selections change color immediately; only their lift animates.
+            .animation(selectionAnimation ?? OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion)) { point in
                 point.scaleEffect(isSelected ? 1.08 : 1)
             }
             .contentShape(Circle())
@@ -84,7 +87,9 @@ struct ScaleSelector: View {
 private struct ScalePointPressStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.92 : 1)
-            .animation(.spring(duration: 0.22, bounce: 0.3), value: configuration.isPressed)
+            // The release animation must not delay the selection color as well.
+            .animation(.spring(duration: 0.22, bounce: 0.3)) { label in
+                label.scaleEffect(configuration.isPressed ? 0.92 : 1)
+            }
     }
 }

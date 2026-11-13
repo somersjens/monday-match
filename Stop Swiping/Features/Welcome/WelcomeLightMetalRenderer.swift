@@ -99,6 +99,7 @@ struct WelcomeLightUniforms {
     mutating func apply(_ pose: WelcomeLightMatch.Pose, layout: WelcomeLightMatch.Layout) {
         match = SIMD4(Float(pose.exit), Float(pose.head), Float(pose.tail), Float(pose.breakAmount))
         matchLayout = SIMD4(Float(layout.scale), Float(layout.offsetY), Float(layout.lineY), 1)
+        apply(WelcomeLightHelix.Arrival.settled)
     }
 }
 

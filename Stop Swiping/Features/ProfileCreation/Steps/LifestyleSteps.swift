@@ -91,9 +91,9 @@ struct CompatibilityScaleStep: View {
     var body: some View {
         let answer = viewModel.state.lifestyle[question]
         VStack(spacing: 12) {
-            card(title: L10n("How are you usually?")) {
+            card(title: L10n("What describes you best?")) {
                 ScaleSelector(
-                    label: L10n("How are you usually?"),
+                    label: L10n("What describes you best?"),
                     value: answer.own,
                     lowLabel: question.lowLabel,
                     highLabel: question.highLabel,
@@ -105,15 +105,15 @@ struct CompatibilityScaleStep: View {
                 )
             }
 
-            card(
-                title: L10n("What suits your ideal partner best?"),
-                note: answer.own != nil && !answer.isPartnerCustomized ? L10n("Set to your own answer. Adjust it if you like.") : nil
-            ) {
+            card(title: L10n("What suits your ideal partner best?")) {
                 ScaleSelector(
                     label: L10n("What suits your ideal partner best?"),
                     value: answer.partner,
                     lowLabel: question.lowLabel,
                     highLabel: question.highLabel,
+                    // Show the tapped own answer first; its mirrored value follows.
+                    selectionAnimation: !answer.isPartnerCustomized && !reduceMotion
+                        ? .easeOut(duration: 0.16).delay(0.12) : nil,
                     valueDescription: { positionDescription($0) },
                     onSelect: {
                         viewModel.setCompatibilityPartner($0, for: question)
@@ -122,10 +122,7 @@ struct CompatibilityScaleStep: View {
                 )
             }
 
-            card(
-                title: L10n("How important is a good match on this?"),
-                value: answer.importance.map { CompatibilityScaleAnswer.importanceTitle($0) }
-            ) {
+            card(title: L10n("How important is a good match on this?")) {
                 ScaleSelector(
                     label: L10n("How important is a good match on this?"),
                     value: answer.importance,
@@ -153,35 +150,16 @@ struct CompatibilityScaleStep: View {
 
     private func card<Content: View>(
         title: String,
-        value: String? = nil,
-        note: String? = nil,
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(title)
-                    .font(.system(.subheadline, weight: .semibold))
-                    .foregroundStyle(OnboardingTheme.primaryText)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-                if let value {
-                    Text(value)
-                        .font(.system(.subheadline, weight: .semibold))
-                        .foregroundStyle(OnboardingTheme.cyan)
-                        .contentTransition(.opacity)
-                        .accessibilityHidden(true)
-                }
-            }
-            .accessibilityHidden(true)
+            Text(title)
+                .font(.system(.subheadline, weight: .semibold))
+                .foregroundStyle(OnboardingTheme.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityHidden(true)
 
             content()
-
-            if let note {
-                Label(note, systemImage: "arrow.turn.down.right")
-                    .font(.system(.caption, weight: .medium))
-                    .foregroundStyle(OnboardingTheme.tertiaryText)
-                    .transition(.onboardingReveal(reduceMotion: reduceMotion))
-            }
         }
         .padding(18)
         .onboardingSurface(cornerRadius: 24)

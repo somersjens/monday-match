@@ -20,15 +20,14 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
     case aloneTime
     // Append storage IDs so older saved steps retain their meaning.
     case religion
-    case timeTogether
-    case dailyContact
-    case physicalAffection
+    // Explicit numbers follow retired questions, so the remaining saved
+    // steps keep their meaning. Never reuse 17, 18, 24, 39, 40, 48 or 53.
+    case physicalAffection = 19
     case sharedHobbies
     case futurePlanning
     case texting
     case calling
-    case conversationHumor
-    case communicationStyle
+    case communicationStyle = 25
     case discussingFeelings
     case expressingAppreciation
     case relationshipConversations
@@ -42,22 +41,33 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
     case foodChoices
     case travel
     case newExperiences
-    case socialCircle
-    case meetingNewPeople
-    case socialPlans
+    case socialPlans = 41
     case familyRole
     case partnerSocializing
     case exPartnerContact
     case relationshipPrivacy
     case socialMediaSharing
     case punctuality
-    case keepingPlans
-    case homeTidiness
+    case homeTidiness = 49
     case spendingMoney
     case workAmbition
     case decisionMaking
-    case changePreference
-    case sharedResponsibilities
+    case sharedResponsibilities = 54
+    case romanticGestures
+    case publicAffection
+    case sexualIntimacy
+    case talkativeness
+    case conversationDepth
+    case humorStyle
+    case emotionalIntensity
+    case nightlife
+    case takingInitiative
+    case spirituality
+    case livingTogether
+    case marriage
+    case livingEnvironment
+    case pets
+    case sharedFinances
 
     static let allCases: [Self] = [
         .dateOfBirth, .partnerAgeRange, .height, .partnerHeightRange,

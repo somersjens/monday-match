@@ -92,16 +92,16 @@ final class AppLocalizationTests: XCTestCase {
 
     func testExpandedCompatibilityCatalogHasOrderedLocalizedQuestionsAndCompactEndpoints() {
         let english = CompatibilityScaleQuestion.all
-        XCTAssertEqual(english.count, 39)
+        XCTAssertEqual(english.count, 47)
         XCTAssertEqual(Set(english.map(\.id)).count, english.count)
         XCTAssertEqual(english.map(\.step), Array(ProfileCreationStep.allCases.suffix(english.count)))
         XCTAssertEqual(english.first?.step, .aloneTime)
-        XCTAssertEqual(english.last?.step, .sharedResponsibilities)
+        XCTAssertEqual(english.last?.step, .sharedFinances)
 
         AppLanguageSettings.shared.language = .dutch
         let dutch = CompatibilityScaleQuestion.all
         XCTAssertEqual(dutch.map(\.id), english.map(\.id))
-        XCTAssertEqual(CompatibilityScaleQuestion.sections.count, 5)
+        XCTAssertEqual(CompatibilityScaleQuestion.sections.count, 7)
         for (original, translated) in zip(english, dutch) {
             XCTAssertNotEqual(translated.title, original.title)
             XCTAssertNotEqual(translated.subtitle, original.subtitle)

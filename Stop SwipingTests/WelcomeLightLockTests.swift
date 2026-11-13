@@ -109,6 +109,39 @@ final class WelcomeLightLockTests: XCTestCase {
         }
     }
 
+    func testSharingHelixGeometryMatchesTheShader() throws {
+        for exit in [0.0, 0.12, 0.4, 0.78, 1.0] {
+            try assertShaderMatchesSwift(
+                pose: .init(amount: 1, lift: 0, shake: 0, isHelix: true), exit: exit
+            ) { u, ring, strand, seconds, _ in
+                WelcomeLightHelix.point(u: u, ring: ring, strand: strand, seconds: seconds, exit: exit).point
+            }
+        }
+    }
+
+    func testSharingKeepsItsLengthAndMovesBothEndsAtOneSpeed() {
+        typealias Departure = WelcomeLightHelix.Departure
+        let step = 0.01
+        var previousTop = Departure.top(0)
+        var previousTail = Departure.tail(0)
+        for index in 1...100 {
+            let exit = Double(index) * step
+            let top = Departure.top(exit)
+            let tail = Departure.tail(exit)
+            XCTAssertEqual(tail - top, 2 * WelcomeLightHelix.halfHeight, accuracy: 1e-9,
+                           "The helix must never stretch during sharing.")
+            XCTAssertEqual(top - previousTop, -Departure.rise * step, accuracy: 1e-9)
+            XCTAssertEqual(tail - previousTail, top - previousTop, accuracy: 1e-9,
+                           "The lower fade must travel at exactly the same speed as the upper end.")
+            XCTAssertLessThan(tail, WelcomeLightHelix.halfHeight,
+                              "Sharing must never add geometry below the original foot.")
+            previousTop = top
+            previousTail = tail
+        }
+        XCTAssertLessThan(Departure.tail(1), -3,
+                          "The trailing end must leave before the match heart starts.")
+    }
+
     func testIncomingStrandsSweepInFromBothLowerSidesAndStayContinuous() {
         let arrival = WelcomeLightHelix.Arrival(elapsed: 0.45, distance: 1.6)
         var sides = Set<Int>()
@@ -307,6 +340,7 @@ final class WelcomeLightLockTests: XCTestCase {
     private func assertShaderMatchesSwift(
         pose: WelcomeLightLock.Pose,
         arrival: WelcomeLightHelix.Arrival? = nil,
+        exit: Double = 0,
         probe: String = "output[id] = (p.lock.w > 0.5 ? helixPoint(u, instance, p) : lockPoint(u, instance, p)).xy;",
         swiftPoint: (Double, Int, Int, Double, WelcomeLightLock.Pose) -> CGPoint
     ) throws {
@@ -329,6 +363,7 @@ final class WelcomeLightLockTests: XCTestCase {
         var uniforms = WelcomeLightUniforms(elapsed: 1.3, size: CGSize(width: 256, height: 256), pixelScale: 1)
         uniforms.apply(pose)
         uniforms.apply(arrival ?? .settled)
+        uniforms.match.x = Float(exit)
 
         let command = try XCTUnwrap(resources.queue.makeCommandBuffer())
         let encoder = try XCTUnwrap(command.makeComputeCommandEncoder())

@@ -280,7 +280,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
 
         answerLifestyleSteps(viewModel)
         XCTAssertEqual(viewModel.currentStep, .aloneTime)
-        XCTAssertEqual(viewModel.currentStep.next, .timeTogether)
+        XCTAssertEqual(viewModel.currentStep.next, .sharedHobbies)
         answerCompatibilitySteps(viewModel)
         XCTAssertTrue(viewModel.isCompleted)
 
@@ -452,7 +452,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         viewModel.setAloneTimeOwn(1)
         XCTAssertTrue(viewModel.shouldAutoAdvanceAfterAnswerSelection, "The fields can be chosen in any order.")
         XCTAssertEqual(viewModel.submitCurrentStep(), .advanced)
-        XCTAssertEqual(viewModel.currentStep, .timeTogether)
+        XCTAssertEqual(viewModel.currentStep, .sharedHobbies)
 
         viewModel.beginEditing(.aloneTime)
         viewModel.setAloneTimePartner(5)
@@ -514,6 +514,10 @@ final class ProfileCreationViewModelTests: XCTestCase {
         }
         XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("15".utf8)), .aloneTime)
         XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("16".utf8)), .religion)
+        XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("19".utf8)), .physicalAffection)
+        XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("54".utf8)), .sharedResponsibilities)
+        XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("17".utf8)), .dateOfBirth,
+                       "A retired question reopens the first step.")
     }
 
     func testEachNewCompatibilityQuestionSupportsSavingAndCancellingAnEdit() throws {
