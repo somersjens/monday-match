@@ -251,6 +251,14 @@ struct ProfileCreationState: Codable, Equatable {
         set { storedAutoMatching = newValue }
     }
 
+    /// The first name matches see. Optional in storage so states saved
+    /// before names existed still decode.
+    private var storedDisplayName: String?
+    var displayName: String {
+        get { storedDisplayName ?? "" }
+        set { storedDisplayName = newValue }
+    }
+
     var isUnderageLocked = false
     var completedAt: Date?
 

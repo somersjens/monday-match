@@ -19,6 +19,8 @@ struct WelcomeUniforms {
     float4 lock;        // lock or helix progress, shackle lift, shake, 1 for the helix
     float4 code;        // progress from the helix to the QR code, modules per side
     float4 helixArrival; // height still to pull in, extra turn, base pairs still to lay (0 = all laid), inlet reach signed by side
+    float4 match;       // helix exit, strand head, strand tail, break
+    float4 matchLayout; // heart scale, vertical offset, score line height, 1 while a match shows
 };
 
 struct RibbonVertex {
@@ -201,6 +203,17 @@ float2 helixInletOffset(float excess, float side, float lane, float sheet, float
     return q + float2(-d.y, d.x)*spread;
 }
 
+// Mirrors WelcomeLightMatch: the top leaves first and the rest follows,
+// narrowing into one stream that accelerates up out of view.
+float2 helixExit(float2 q, float h, float ringValue, float exit) {
+    float order = (h + 1)*0.5;
+    float k = clamp((exit - 0.42*order)/0.58, 0.0, 1.0);
+    float e = k*k*(2 - k);
+    q.x = q.x*(1 - 0.55*e) + 0.10*sin(3.5*e + order*2.5 + ringValue*1.3)*e;
+    q.y -= e*5.2;
+    return q;
+}
+
 float3 helixPoint(float u, uint instance, constant WelcomeUniforms &p) {
     uint ring = instance / strands;
     uint strand = instance % strands;
@@ -267,6 +280,7 @@ float3 helixPoint(float u, uint instance, constant WelcomeUniforms &p) {
     float2 q = float2(x, y)/(1 - z*0.30);
     if (excess > 0) q += helixInletOffset(excess, backbone*sign(p.helixArrival.w), lane, sheetValue,
                                           abs(p.helixArrival.w), seconds);
+    if (p.match.x > 0) q = helixExit(q, h, ringValue, p.match.x);
     return float3(q, (helixRadius - z)*0.8);
 }
 
@@ -305,9 +319,122 @@ float codeAmount(float u, uint instance, constant WelcomeUniforms &p) {
 
 float3 ribbonPoint(float u, uint instance, constant WelcomeUniforms &p, device const float2 *controls);
 
+// The match heart mirrors WelcomeLightMatch. Each ring is one open strand:
+// in from above, through the top cusp into the opposite lobe, through the tip
+// and along the line under the opposite score. Ring 0's lobe is on the right.
+constant float matchCuspS = 0.42, matchTipS = 0.826;
+constant float matchCuspY = -0.62, matchTipY = 0.80;
+
+float2 matchCubic(float2 a, float2 b, float2 c, float2 d, float t, thread float2 &direction) {
+    float v = 1 - t;
+    direction = 3*v*v*(b - a) + 6*v*t*(c - b) + 3*t*t*(d - c);
+    return v*v*v*a + 3*v*v*t*b + 3*v*t*t*c + t*t*t*d;
+}
+
+float2 matchPath(float s, float side, float4 layout, thread float2 &direction) {
+    float scale = layout.x;
+    float2 k = float2(side*scale, scale), o = float2(0, layout.y);
+    float2 cusp = float2(0, matchCuspY)*k + o, tip = float2(0, matchTipY)*k + o;
+    float clamped = clamp(s, 0.0, 1.0);
+    float2 a, b, c, d;
+    float t;
+    if (clamped < matchCuspS) {
+        t = clamped/matchCuspS;
+        a = float2(-side*0.5, -3.3); b = float2(-side*0.42, -2.0);
+        c = cusp - float2(side*0.62, 0.78)*0.32*scale; d = cusp;
+    } else if (clamped < 0.504) {
+        t = (clamped - matchCuspS)/(0.504 - matchCuspS);
+        a = cusp; b = float2(0.08, -0.72)*k + o; c = float2(0.22, -0.88)*k + o; d = float2(0.48, -0.88)*k + o;
+    } else if (clamped < 0.623) {
+        t = (clamped - 0.504)/(0.623 - 0.504);
+        a = float2(0.48, -0.88)*k + o; b = float2(0.80, -0.88)*k + o;
+        c = float2(0.98, -0.62)*k + o; d = float2(0.97, -0.30)*k + o;
+    } else if (clamped < matchTipS) {
+        t = (clamped - 0.623)/(matchTipS - 0.623);
+        a = float2(0.97, -0.30)*k + o; b = float2(0.96, 0.05)*k + o; c = float2(0.18, 0.56)*k + o; d = tip;
+    } else {
+        t = (clamped - matchTipS)/(1 - matchTipS);
+        a = tip; b = tip + float2(-side*0.6, 0.8)*0.2*scale;
+        c = float2(-side*0.45, layout.z); d = float2(-side*1.12, layout.z);
+    }
+    float2 q = matchCubic(a, b, c, d, t, direction);
+    direction = normalize(direction + float2(1e-7, 0));
+    return q + direction*(s - clamped)*7.0;
+}
+
+// The crack runs from the cusp to the tip; v is 0 at the cusp.
+float2 matchCrack(float v, float4 layout) {
+    const float stops[7] = {0.0, 0.17, 0.34, 0.52, 0.70, 0.86, 1.0};
+    const float offsets[7] = {0.0, 0.075, -0.06, 0.07, -0.055, 0.035, 0.0};
+    float x = 0;
+    for (int i = 0; i < 6; i++) {
+        if (v >= stops[i] && v <= stops[i + 1]) {
+            x = mix(offsets[i], offsets[i + 1], (v - stops[i])/(stops[i + 1] - stops[i]));
+        }
+    }
+    float y = mix(matchCuspY, matchTipY, v);
+    return float2(x, y)*layout.x + float2(0, layout.y);
+}
+
+float3 matchPoint(float u, uint instance, constant WelcomeUniforms &p) {
+    uint ring = instance / strands;
+    uint strand = instance % strands;
+    uint sheet = strand / 20;
+    float lane = float(strand % 20)/19.0*2 - 1;
+    float side = ring == 0 ? 1.0 : -1.0;
+    float ringValue = float(ring), sheetValue = float(sheet);
+    float s = u - p.stream.w;
+    float2 direction;
+    float2 base = matchPath(s, side, p.matchLayout, direction);
+    float2 normal = float2(-direction.y, direction.x);
+    float seconds = p.shape.w;
+    float a = s*tau*4;
+    float phase = sheetValue*2.15 + ringValue*1.7;
+    // Pinched where the strands cross; looser silk on the way in and out.
+    float pinch = mix(0.16, 1.0, smoothstep(0.0, 0.06, abs(s - matchCuspS)))
+                * mix(0.10, 1.0, smoothstep(0.0, 0.07, abs(s - matchTipS)));
+    float loose = 1 + 1.8*smoothstep(0.0, 0.25, matchCuspS - s) + 0.5*smoothstep(0.0, 0.12, s - matchTipS);
+    // Each sheet twists on its own, and the outer sheets swap sides, so the
+    // ribbons cross one another as they travel round.
+    float width = 0.05 + 0.022*sin(a*0.6 - seconds*0.9 + phase);
+    float torsion = 0.95*sin(a*0.35 - seconds*0.8 + phase + ringValue);
+    float separation = (sheetValue - 1)*0.055*sin(a*0.5 + seconds*0.6 + ringValue*1.3);
+    float weave = 0.024*sin(a - seconds*1.6 + phase + lane*0.9)
+                + 0.008*sin(2.3*a + seconds*1.1 + lane*2.4 + phase);
+    float spread = pinch*loose*p.matchLayout.x;
+    float offset = (lane*width*cos(torsion) + separation + weave)*spread;
+    float2 q = base + normal*offset;
+    float z = 0.16*sin(a*0.8 - seconds*1.2 + phase) + lane*width*sin(torsion)*2.5;
+
+    float broken = p.match.w;
+    if (broken > 0) {
+        float lobe = smoothstep(matchCuspS - 0.03, matchCuspS - 0.005, s)
+                   * (1 - smoothstep(matchTipS, matchTipS + 0.06, s));
+        // The middle sheet leaves the outline and runs down the crack.
+        if (sheet == 1) {
+            float v = clamp((s - matchCuspS)/(matchTipS - matchCuspS), 0.0, 1.0);
+            float reach = clamp((smoothstep(0.0, 0.45, broken)*1.3 - v)/0.3, 0.0, 1.0);
+            reach = reach*reach*(3 - 2*reach);
+            float2 crack = matchCrack(v, p.matchLayout) + float2(lane*0.006 + weave*0.2, 0)*p.matchLayout.x;
+            q = mix(q, crack, reach*lobe);
+        }
+        // Each half tilts away around the tip and drifts apart.
+        float split = smoothstep(0.35, 1.0, broken);
+        split = split*split*(3 - 2*split);
+        float angle = side*0.11*split;
+        float2 pivot = float2(0, matchTipY*p.matchLayout.x + p.matchLayout.y);
+        float2 r = q - pivot;
+        float2 turned = pivot + float2(r.x*cos(angle) - r.y*sin(angle), r.x*sin(angle) + r.y*cos(angle))
+                      + float2(side*0.06, 0.03)*split*p.matchLayout.x;
+        q = mix(q, turned, lobe);
+    }
+    return float3(q, z);
+}
+
 // Strands leave the heart at slightly different moments, so the lock or helix
 // forms as travelling silk rather than a crossfade. Zero leaves the heart untouched.
 float3 lockedRibbonPoint(float u, uint instance, constant WelcomeUniforms &p, device const float2 *controls) {
+    if (p.matchLayout.w > 0.5 && p.match.x >= 1) return matchPoint(u, instance, p);
     float3 heart = ribbonPoint(u, instance, p, controls);
     if (p.lock.x <= 0) return heart;
     float stagger = 0.35*(0.5 + 0.5*sin(u*tau + float(instance)*0.37));
@@ -388,9 +515,11 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
     float phase = float(sheet)*2.15 + float(instance/strands)*1.7;
     float lightClock = p.shape.w / 6.042 * tau;
     // The helix always wears the finished heart's light, whatever the loop shows.
-    float helix = p.lock.w > 0.5 ? p.lock.x : 0.0;
-    float heartFlow = mix(smoothstep(0.15, 0.85, p.shape.y), 1.0, helix);
-    float code = codeAmount(u, instance, p);
+    // So does the match heart, which draws as the heart rather than the helix.
+    float matchHeart = (p.matchLayout.w > 0.5 && p.match.x >= 1) ? 1.0 : 0.0;
+    float helix = (p.lock.w > 0.5 ? p.lock.x : 0.0)*(1 - matchHeart);
+    float heartFlow = mix(mix(smoothstep(0.15, 0.85, p.shape.y), 1.0, helix), 1.0, matchHeart);
+    float code = codeAmount(u, instance, p)*(1 - matchHeart);
     float2 local = float2(0);
     if (code > 0) codePoint(u, instance, p, local);
     float light = pow(0.5 + 0.5*sin(u*tau*2 - lightClock*3 + phase), 3.0);
@@ -453,6 +582,14 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
     float carried = pow(0.5+0.5*sin((travel-p.stream.x)*tau*3+phase),3.0);
     out.intensity *= visible*(1 + head*0.85)*mix(1.0,0.65+0.70*carried,p.stream.y);
     color = mix(color, float3(0.55,0.85,1), head*mix(0.5,0.12,dissolve));
+    if (matchHeart > 0) {
+        // Only the drawn stretch of each strand shows, led by a soft bright end.
+        float s = u - p.stream.w;
+        float window = smoothstep(p.match.z, p.match.z + 0.03, s)*(1 - smoothstep(p.match.y - 0.03, p.match.y, s));
+        float lead = exp(-pow((p.match.y - s)/0.03, 2.0))*(1 - smoothstep(0.9, 1.02, p.match.y));
+        out.intensity *= 1.25*window*(1 + 1.6*lead)*(1 - smoothstep(0.88, 1.0, s))*(1 - 0.35*p.match.w);
+        color = mix(color, float3(0.55,0.85,1), lead*0.45);
+    }
     out.coreWidth = (1 + highlight*(1.3 - 0.45*heartFlow) + head*0.45)*mix(1.0, 2.0, code*helix);
     out.color = color;
     out.screen = screen;
@@ -606,8 +743,9 @@ fragment float4 welcomeCompositeFragment(CompositeVertex in [[stage_in]],
     nearGlow /= 8;
     farGlow /= 8;
     // The helix keeps its fine threads crisp, with less of the heart's mist.
-    float helix = p.lock.w > 0.5 ? p.lock.x : 0.0;
-    float heartFlow = mix(smoothstep(0.15, 0.85, p.shape.y), 1.0, helix);
+    float matchHeart = (p.matchLayout.w > 0.5 && p.match.x >= 1) ? 1.0 : 0.0;
+    float helix = (p.lock.w > 0.5 ? p.lock.x : 0.0)*(1 - matchHeart);
+    float heartFlow = mix(mix(smoothstep(0.15, 0.85, p.shape.y), 1.0, helix), 1.0, matchHeart);
     float3 light = core + nearGlow*0.72 + farGlow*mix(0.55, 0.42, helix) + silkGlow/8*heartFlow*mix(0.60, 0.25, helix);
     float3 radiance = 1 - exp(-light*1.8);
     float2 centered = (in.uv - 0.5)*p.viewport.xy / (min(p.viewport.x,p.viewport.y)*0.5);

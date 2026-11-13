@@ -13,6 +13,7 @@ struct WelcomeLightMetalView: UIViewRepresentable {
     var skipsEntrance = false
     var framesPerSecond = 60
     var helixEntryDistance = 0.0
+    var match: WelcomeLightMatch.Request?
 
     static var isAvailable: Bool { WelcomeLightMetalRenderer.resources != nil }
 
@@ -40,6 +41,7 @@ struct WelcomeLightMetalView: UIViewRepresentable {
         context.coordinator.update(reduceMotion: reduceMotion, isActive: isActive)
         context.coordinator.updateForm(form, pulse: lockPulse, showsCode: showsCode,
                                        helixEntryDistance: helixEntryDistance)
+        context.coordinator.updateMatch(match)
         view.isPaused = reduceMotion || !isActive
         view.enableSetNeedsDisplay = reduceMotion && isActive
         if view.enableSetNeedsDisplay { view.setNeedsDisplay() }
@@ -63,6 +65,8 @@ struct WelcomeLightUniforms {
     var lock: SIMD4<Float> = .zero
     var code: SIMD4<Float> = SIMD4(0, Float(WelcomeLightCode.size), 0, 0)
     var helixArrival: SIMD4<Float> = .zero
+    var match: SIMD4<Float> = .zero
+    var matchLayout: SIMD4<Float> = .zero
 
     init(elapsed: Double, size: CGSize, pixelScale: Float, flowElapsed: Double? = nil) {
         let frame = WelcomeLightGeometry.Frame(elapsed: elapsed, flowElapsed: flowElapsed)
@@ -90,6 +94,11 @@ struct WelcomeLightUniforms {
     mutating func apply(_ arrival: WelcomeLightHelix.Arrival) {
         helixArrival = SIMD4(Float(arrival.travel), Float(arrival.turn), Float(1 - arrival.rungs),
                              Float(arrival.reach * arrival.side))
+    }
+
+    mutating func apply(_ pose: WelcomeLightMatch.Pose, layout: WelcomeLightMatch.Layout) {
+        match = SIMD4(Float(pose.exit), Float(pose.head), Float(pose.tail), Float(pose.breakAmount))
+        matchLayout = SIMD4(Float(layout.scale), Float(layout.offsetY), Float(layout.lineY), 1)
     }
 }
 
@@ -218,6 +227,8 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
     private var currentForm: WelcomeLightForm?
     private var helixStartedAt = 0.0
     private var helixEntryDistance = 0.0
+    private var match: WelcomeLightMatch.Request?
+    private var matchStartedAt = 0.0
 
     init(skipsEntrance: Bool = false) {
         presentationElapsed = skipsEntrance ? WelcomeLightEntrance.duration + 1 : 0
@@ -238,6 +249,15 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
         let now = ProcessInfo.processInfo.systemUptime
         lockMotion.update(form: form, pulse: pulse, now: now, animated: !reduceMotion)
         lockMotion.update(showsCode: showsCode && form == .helix, now: now, animated: !reduceMotion)
+    }
+
+    /// A new match starts on this clock. Ending one brings the helix back in
+    /// from the sides, as on arrival.
+    func updateMatch(_ request: WelcomeLightMatch.Request?) {
+        guard request != match else { return }
+        if let request, request.id != match?.id { matchStartedAt = presentationElapsed }
+        if request == nil, match != nil { helixStartedAt = presentationElapsed }
+        match = request
     }
 
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
@@ -267,6 +287,11 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
                 distance: helixEntryDistance,
                 startSeconds: WelcomeLightHelix.Arrival.motionSeconds(atPresentation: helixStartedAt, reduceMotion: reduceMotion),
                 reduceMotion: reduceMotion))
+        }
+        if let match {
+            uniforms.apply(WelcomeLightMatch.pose(elapsed: presentationElapsed - matchStartedAt,
+                                                  isMatch: match.isMatch, reduceMotion: reduceMotion),
+                           layout: .of(isMatch: match.isMatch))
         }
         if emission?.width != Int(view.drawableSize.width) || emission?.height != Int(view.drawableSize.height) {
             emission = resources.emissionTexture(size: view.drawableSize)

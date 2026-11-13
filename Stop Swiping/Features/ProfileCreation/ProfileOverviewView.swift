@@ -48,6 +48,10 @@ struct ProfileOverviewView: View {
             LazyVStack(alignment: .leading, spacing: 28) {
                 header
 
+                ProfileNameRow(viewModel: viewModel)
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    .onboardingSurface(cornerRadius: 24)
+
                 ForEach(Self.sections, id: \.title) { section in
                     VStack(alignment: .leading, spacing: 10) {
                         Text(section.title.uppercased())

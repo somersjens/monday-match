@@ -22,6 +22,30 @@ struct WelcomeView: View {
     @State private var isLightHidden = false
     @State private var showsCode = false
 
+    @StateObject private var savedMatches = SavedMatchStore()
+    /// The match shown in place of the home controls.
+    @State private var activeMatch: ActiveMatch?
+    /// What the light draws. It trails `activeMatch` while the heart fades out.
+    @State private var lightMatch: WelcomeLightMatch.Request?
+    @State private var matchReveal = MatchReveal.hidden
+    @State private var matchTask: Task<Void, Never>?
+    @State private var scoreDetail: MatchReport.Perspective?
+    @State private var showsSavedMatches = false
+    @State private var demoStarts = 0
+    @State private var nameNudges = 0
+    @FocusState private var isNameFocused: Bool
+    /// The tallest layout seen at this width. The keyboard shrinks the
+    /// layout, but the light stays where it is.
+    @State private var lightLayoutSize = CGSize.zero
+
+    private struct ActiveMatch: Equatable {
+        let snapshot: MatchSnapshot
+        let report: MatchReport
+    }
+
+    /// Holding Share profile this long starts a demo match.
+    private static let demoHoldDuration = 3.0
+
     private enum Stage {
         case landing
         case onboarding
@@ -61,7 +85,9 @@ struct WelcomeView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let animationHeight = max(0, proxy.size.height - 160)
+            let layoutHeight = lightLayoutSize.width == proxy.size.width
+                ? max(lightLayoutSize.height, proxy.size.height) : proxy.size.height
+            let animationHeight = max(0, layoutHeight - 160)
             let animationWidth = min(proxy.size.width, 620)
             let lightHeight = min(proxy.size.width * 1.12, animationHeight * 0.94)
             // Extend the drawable past the incoming tail while keeping the
@@ -79,10 +105,11 @@ struct WelcomeView: View {
                 // and opacity change, so the Metal surface is never resized.
                 WelcomeLightAnimation(form: lightForm, lockPulse: lockPulse,
                                       showsCode: showsCode, skipsEntrance: skipsEntrance,
-                                      isPaused: showsOverview || showsAutoMatching,
+                                      isPaused: showsOverview || showsAutoMatching || showsSavedMatches,
                                       framesPerSecond: isOnboarding ? 30 : 60,
                                       helixEntryDistance: sideEntry / max(animationWidth * 0.42, 1)
-                                        + WelcomeLightHelix.radius + 0.12)
+                                        + WelcomeLightHelix.radius + 0.12,
+                                      match: lightMatch)
                     .frame(width: animationWidth, height: drawingHeight)
                     .scaleEffect(isOnboarding ? 0.62 : 1)
                     .opacity(isLightHidden ? 0 : (isOnboarding ? (showsUnderageNotice ? 0.55 : 0.3) : 1))
@@ -91,7 +118,7 @@ struct WelcomeView: View {
                         y: isOnboarding ? min(36, animationHeight / 2) : animationHeight / 2
                     )
 
-                if stage == .complete && lightStage == .complete && canShowCode {
+                if stage == .complete && lightStage == .complete && canShowCode && activeMatch == nil {
                     Button(action: toggleCode) {
                         Color.clear
                             .frame(width: min(proxy.size.width, 620) * 0.6, height: lightHeight * 0.85)
@@ -117,6 +144,22 @@ struct WelcomeView: View {
                     .opacity(showsUnderageNotice ? 0.15 : 1)
                     .allowsHitTesting(!showsUnderageNotice)
                     .transition(.asymmetric(insertion: .identity, removal: .opacity))
+                } else if stage == .complete, let activeMatch {
+                    MatchResultOverlay(
+                        match: activeMatch.snapshot,
+                        report: activeMatch.report,
+                        frame: MatchStageFrame(
+                            center: CGPoint(x: proxy.size.width / 2, y: animationHeight / 2),
+                            unit: animationWidth * 0.42
+                        ),
+                        reveal: matchReveal,
+                        isSaved: savedMatches.contains(activeMatch.snapshot.id),
+                        onShowScores: { scoreDetail = $0 },
+                        onSave: { saveMatch(activeMatch.snapshot) },
+                        onClose: closeMatch,
+                        onDelete: { deleteMatch(activeMatch.snapshot) }
+                    )
+                    .transition(.opacity)
                 } else if stage == .complete {
                     completionControls
                         .transition(reduceMotion
@@ -135,10 +178,18 @@ struct WelcomeView: View {
                 }
             }
         }
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { size in
+            // Growing never comes from the keyboard; shrinking only does while typing.
+            if size.width != lightLayoutSize.width || size.height > lightLayoutSize.height || !isNameFocused {
+                lightLayoutSize = size
+            }
+        }
         .toolbar(.hidden, for: .navigationBar)
         .preferredColorScheme(.dark)
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.6), trigger: lockPulse)
         .sensoryFeedback(.error, trigger: showsUnderageNotice) { _, shown in shown }
+        .sensoryFeedback(.success, trigger: demoStarts)
+        .sensoryFeedback(.warning, trigger: nameNudges)
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { profileCreation.persist() }
         }
@@ -151,6 +202,15 @@ struct WelcomeView: View {
                 showsAutoMatching = false
             }
             .preferredColorScheme(.dark)
+        }
+        .fullScreenCover(isPresented: $showsSavedMatches) {
+            SavedMatchesView(store: savedMatches, onOpen: openSavedMatch)
+        }
+        .sheet(item: $scoreDetail) { perspective in
+            if let activeMatch {
+                MatchScoreDetailView(report: activeMatch.report, perspective: perspective,
+                                     name: activeMatch.snapshot.name)
+            }
         }
         .onAppear {
             if lightStage == .complete { waitForHelixEntrance() }
@@ -189,23 +249,49 @@ struct WelcomeView: View {
             Spacer(minLength: 0)
 
             VStack(spacing: 12) {
-                AutoMatchingCard(viewModel: profileCreation) {
-                    guard !isTransitioning else { return }
-                    showsAutoMatching = true
+                // A name comes first; auto matching appears once it is saved.
+                Group {
+                    if profileCreation.hasDisplayName {
+                        AutoMatchingCard(viewModel: profileCreation) {
+                            guard !isTransitioning else { return }
+                            showsAutoMatching = true
+                        }
+                        .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                    } else {
+                        ProfileNameCard(viewModel: profileCreation, isFocused: $isNameFocused)
+                            .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                    }
                 }
                 .padding(.bottom, 4)
 
                 Button(showsCode ? L10n("Show your helix") : L10n("Share profile"), action: toggleCode)
                     .buttonStyle(GlowButtonStyle())
                     .disabled(isTransitioning || !canShowCode)
+                    // Before launch there is nobody to match with: holding
+                    // the button plays a demo match instead.
+                    .simultaneousGesture(
+                        LongPressGesture(minimumDuration: Self.demoHoldDuration)
+                            .onEnded { _ in startDemoMatch() }
+                    )
                     .accessibilityHint(showsCode ? L10n("Shows your profile DNA.") : L10n("Shows your QR code."))
+                    .accessibilityAction(named: L10n("Start a demo match"), startDemoMatch)
 
-                Button(L10n("Adjust profile"), action: adjustProfile)
-                    .buttonStyle(QuietButtonStyle())
+                HStack(spacing: 8) {
+                    Button(L10n("Adjust profile"), action: adjustProfile)
+                        .buttonStyle(QuietButtonStyle())
+                    if !savedMatches.matches.isEmpty {
+                        Button(L10n("Saved matches"), action: openSavedMatches)
+                            .buttonStyle(QuietButtonStyle())
+                            .transition(.opacity)
+                    }
+                }
             }
             .frame(maxWidth: OnboardingTheme.controlWidth)
             .padding(.horizontal, 28)
             .padding(.bottom, 18)
+            .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion),
+                       value: profileCreation.hasDisplayName)
+            .animation(.easeInOut(duration: 0.25), value: savedMatches.matches.isEmpty)
         }
     }
 
@@ -257,8 +343,109 @@ struct WelcomeView: View {
     }
 
     private func toggleCode() {
-        guard !isTransitioning else { return }
+        guard !isTransitioning, activeMatch == nil else { return }
         showsCode.toggle()
+    }
+
+    // MARK: - Matches
+
+    private func startDemoMatch() {
+        guard stage == .complete, lightStage == .complete, activeMatch == nil, !isTransitioning else { return }
+        guard profileCreation.hasDisplayName else {
+            nameNudges += 1
+            isNameFocused = true
+            return
+        }
+        var generator = SystemRandomNumberGenerator()
+        let snapshot = DemoMatchGenerator.makeMatch(for: profileCreation.state,
+                                                    shouldMatch: DemoMatchSchedule.next(),
+                                                    using: &generator)
+        demoStarts += 1
+        present(snapshot)
+    }
+
+    /// The helix streams up and returns as the match heart; the labels
+    /// follow the light's own timeline.
+    private func present(_ snapshot: MatchSnapshot) {
+        let report = snapshot.report
+        isTransitioning = true
+        isNameFocused = false
+        showsCode = false
+        matchReveal = .hidden
+        withAnimation(.easeOut(duration: 0.35)) {
+            activeMatch = ActiveMatch(snapshot: snapshot, report: report)
+        }
+        lightMatch = WelcomeLightMatch.Request(id: snapshot.id, isMatch: report.isMatch)
+        AccessibilityNotification.Announcement(report.isMatch
+            ? L10n("\(report.average) percent, a match with \(snapshot.name).")
+            : L10n("\(report.average) percent, no match with \(snapshot.name).")).post()
+        matchTask?.cancel()
+        matchTask = Task {
+            var beats: [(Double, MatchReveal)] = [
+                (WelcomeLightMatch.averageRevealTime, .average),
+                (WelcomeLightMatch.scoresRevealTime, .scores)
+            ]
+            if !report.isMatch { beats.append((WelcomeLightMatch.issuesRevealTime, .issues)) }
+            beats.append((WelcomeLightMatch.controlsRevealTime(isMatch: report.isMatch), .controls))
+            var elapsed = 0.0
+            for (time, step) in beats {
+                if !reduceMotion {
+                    try? await Task.sleep(for: .seconds(max(0, time - elapsed)))
+                    elapsed = time
+                }
+                guard !Task.isCancelled else { return }
+                withAnimation(.easeOut(duration: reduceMotion ? 0.2 : 0.6)) { matchReveal = step }
+            }
+            isTransitioning = false
+        }
+    }
+
+    private func saveMatch(_ snapshot: MatchSnapshot) {
+        savedMatches.save(snapshot)
+        AccessibilityNotification.Announcement(L10n("Match saved.")).post()
+    }
+
+    private func deleteMatch(_ snapshot: MatchSnapshot) {
+        savedMatches.delete(snapshot.id)
+        closeMatch()
+    }
+
+    /// The heart fades where it is, and the helix ropes back in from the sides.
+    private func closeMatch() {
+        guard activeMatch != nil else { return }
+        matchTask?.cancel()
+        isTransitioning = true
+        scoreDetail = nil
+        Task {
+            withAnimation(.easeOut(duration: 0.3)) {
+                activeMatch = nil
+                matchReveal = .hidden
+                if !reduceMotion { isLightHidden = true }
+            }
+            if !reduceMotion { try? await Task.sleep(for: .seconds(0.3)) }
+            var instant = Transaction()
+            instant.disablesAnimations = true
+            withTransaction(instant) {
+                lightMatch = nil
+                isLightHidden = false
+            }
+            waitForHelixEntrance()
+        }
+    }
+
+    private func openSavedMatches() {
+        guard !isTransitioning, activeMatch == nil else { return }
+        showsCode = false
+        showsSavedMatches = true
+    }
+
+    private func openSavedMatch(_ snapshot: MatchSnapshot) {
+        showsSavedMatches = false
+        Task {
+            // Let the cover finish closing before the helix starts to leave.
+            try? await Task.sleep(for: .seconds(0.45))
+            present(snapshot)
+        }
     }
 
     /// The heart fades where it is; the helix turns in from below the screen

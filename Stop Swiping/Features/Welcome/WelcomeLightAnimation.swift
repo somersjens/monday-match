@@ -17,6 +17,8 @@ struct WelcomeLightAnimation: View {
     var framesPerSecond = 60
     /// Entrance travel in the same normalized space as the helix geometry.
     var helixEntryDistance = 0.0
+    /// Turns the helix into the match heart. Drawn by the Metal renderer only.
+    var match: WelcomeLightMatch.Request?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
@@ -31,7 +33,7 @@ struct WelcomeLightAnimation: View {
                 WelcomeLightMetalView(reduceMotion: reduceMotion, isActive: isRunning,
                                       form: form, lockPulse: lockPulse, showsCode: showsCode,
                                       skipsEntrance: skipsEntrance, framesPerSecond: framesPerSecond,
-                                      helixEntryDistance: helixEntryDistance)
+                                      helixEntryDistance: helixEntryDistance, match: match)
             } else {
                 TimelineView(.animation(
                     minimumInterval: 1.0 / Double(framesPerSecond),

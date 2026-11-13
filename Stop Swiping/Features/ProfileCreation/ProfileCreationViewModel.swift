@@ -575,6 +575,39 @@ final class ProfileCreationViewModel: ObservableObject {
 }
 
 
+// MARK: - Name
+
+enum ProfileNameRules {
+    static let maximumLength = 30
+
+    /// Trims surrounding spaces, collapses inner runs and caps the length.
+    static func normalized(_ name: String) -> String {
+        let words = name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return String(words.prefix(maximumLength)).trimmingCharacters(in: .whitespaces)
+    }
+}
+
+extension ProfileCreationViewModel {
+    var hasDisplayName: Bool { !state.displayName.isEmpty }
+
+    /// Saves the name on this device and in the stored profile. An empty
+    /// name is rejected, so a name once given is never cleared.
+    @discardableResult
+    func setDisplayName(_ name: String) -> Bool {
+        let normalized = ProfileNameRules.normalized(name)
+        guard !normalized.isEmpty else { return false }
+        guard normalized != state.displayName else { return true }
+        state.displayName = normalized
+        stateBeforeEditing?.displayName = normalized
+        if let repository, var draft = (try? repository.loadProfile()) ?? nil {
+            draft.displayName = normalized
+            try? repository.saveProfile(draft)
+        }
+        persist()
+        return true
+    }
+}
+
 // MARK: - Auto matching
 
 extension ProfileCreationViewModel {
@@ -762,5 +795,6 @@ extension ProfileDraft {
             MatchLocation(coordinate: $0.coordinate, radiusKilometers: state.searchRadiusKilometers)
         }
         profileCreationCompletedAt = completedAt
+        if !state.displayName.isEmpty { displayName = state.displayName }
     }
 }
