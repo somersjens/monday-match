@@ -20,13 +20,51 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
     case aloneTime
     // Append storage IDs so older saved steps retain their meaning.
     case religion
+    case timeTogether
+    case dailyContact
+    case physicalAffection
+    case sharedHobbies
+    case futurePlanning
+    case texting
+    case calling
+    case conversationHumor
+    case communicationStyle
+    case discussingFeelings
+    case expressingAppreciation
+    case relationshipConversations
+    case disagreements
+    case stressContact
+    case listeningAndSolutions
+    case dailyRhythm
+    case weeklyPlanning
+    case leisureTime
+    case exercise
+    case foodChoices
+    case travel
+    case newExperiences
+    case socialCircle
+    case meetingNewPeople
+    case socialPlans
+    case familyRole
+    case partnerSocializing
+    case exPartnerContact
+    case relationshipPrivacy
+    case socialMediaSharing
+    case punctuality
+    case keepingPlans
+    case homeTidiness
+    case spendingMoney
+    case workAmbition
+    case decisionMaking
+    case changePreference
+    case sharedResponsibilities
 
     static let allCases: [Self] = [
         .dateOfBirth, .partnerAgeRange, .height, .partnerHeightRange,
         .gender, .partnerGenders, .sexualArrangement, .religion, .languages,
         .location, .hasChildren, .partnerHasChildren, .futureChildren,
-        .alcohol, .smoking, .drugs, .aloneTime
-    ]
+        .alcohol, .smoking, .drugs
+    ] + CompatibilityScaleQuestion.orderedSteps
 
     /// A step saved by a build with a different set of steps reopens the
     /// birthday instead of failing to load every answer.
@@ -39,7 +77,8 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
 
     var next: ProfileCreationStep? { Self.allCases.dropFirst(number).first }
     var previous: ProfileCreationStep? { Self.allCases.prefix(number - 1).last }
-    var number: Int { Self.allCases.firstIndex(of: self)! + 1 }
+    private static let positions = Dictionary(uniqueKeysWithValues: allCases.enumerated().map { ($0.element, $0.offset + 1) })
+    var number: Int { Self.positions[self]! }
 
     static func < (lhs: Self, rhs: Self) -> Bool { lhs.number < rhs.number }
 
@@ -59,7 +98,7 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
         case .partnerHasChildren: L10n("Are you open to a partner who already has children?")
         case .futureChildren: L10n("Do you want children in the future with a new partner?")
         case .alcohol, .smoking, .drugs: substance?.ownPrompt ?? ""
-        case .aloneTime: CompatibilityScaleQuestion.aloneTime.title
+        default: compatibilityQuestion?.title ?? ""
         }
     }
 
@@ -80,7 +119,7 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
         case .partnerHasChildren: L10n("Partner with children")
         case .futureChildren: L10n("Future children")
         case .alcohol, .smoking, .drugs: substance?.name ?? ""
-        case .aloneTime: CompatibilityScaleQuestion.aloneTime.title
+        default: compatibilityQuestion?.title ?? ""
         }
     }
 
@@ -106,8 +145,8 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
         case .languages: L10n("Tap a language to change it.")
         case .location: L10n("Drop a pin on the map or use your location.")
         case .hasChildren, .partnerHasChildren, .futureChildren: nil
-        case .aloneTime: L10n("From little to lots of time alone. 3 is right in the middle.")
         case .alcohol, .smoking, .drugs: L10n("And how often may a partner, at most? Less often is fine too.")
+        default: compatibilityQuestion?.subtitle
         }
     }
 }

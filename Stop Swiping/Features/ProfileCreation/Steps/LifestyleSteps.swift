@@ -89,7 +89,7 @@ struct CompatibilityScaleStep: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let answer = viewModel.state.lifestyle.aloneTime
+        let answer = viewModel.state.lifestyle[question]
         VStack(spacing: 12) {
             card(title: L10n("How are you usually?")) {
                 ScaleSelector(
@@ -99,7 +99,7 @@ struct CompatibilityScaleStep: View {
                     highLabel: question.highLabel,
                     valueDescription: { positionDescription($0) },
                     onSelect: {
-                        viewModel.setAloneTimeOwn($0)
+                        viewModel.setCompatibilityOwn($0, for: question)
                         onAnswerSelected()
                     }
                 )
@@ -116,7 +116,7 @@ struct CompatibilityScaleStep: View {
                     highLabel: question.highLabel,
                     valueDescription: { positionDescription($0) },
                     onSelect: {
-                        viewModel.setAloneTimePartner($0)
+                        viewModel.setCompatibilityPartner($0, for: question)
                         onAnswerSelected()
                     }
                 )
@@ -133,14 +133,13 @@ struct CompatibilityScaleStep: View {
                     highLabel: L10n("Very important"),
                     valueDescription: { "\($0), \(CompatibilityScaleAnswer.importanceTitle($0))" },
                     onSelect: {
-                        viewModel.setAloneTimeImportance($0)
+                        viewModel.setCompatibilityImportance($0, for: question)
                         onAnswerSelected()
                     }
                 )
             }
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
-        .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: answer)
     }
 
     private func positionDescription(_ value: Int) -> String {

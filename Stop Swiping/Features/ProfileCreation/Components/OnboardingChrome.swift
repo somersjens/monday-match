@@ -6,9 +6,17 @@ struct OnboardingProgressDots: View {
     let current: Int
     let total: Int
 
+    /// Keep long questionnaires within a phone's width while following the
+    /// current question. VoiceOver still announces the full step count.
+    private var visibleSteps: ClosedRange<Int> {
+        let count = total <= 17 ? total : 9
+        let start = max(1, min(current - count / 2, total - count + 1))
+        return start...(start + count - 1)
+    }
+
     var body: some View {
         HStack(spacing: 6) {
-            ForEach(1...total, id: \.self) { index in
+            ForEach(visibleSteps, id: \.self) { index in
                 Capsule()
                     .fill(fill(for: index))
                     .frame(width: index == current ? 22 : 6, height: 6)

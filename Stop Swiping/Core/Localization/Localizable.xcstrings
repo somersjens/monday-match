@@ -4385,7 +4385,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Weinig tijd alleen"
+            "value" : "Weinig eigen tijd"
           }
         }
       }
@@ -4640,7 +4640,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Veel tijd alleen"
+            "value" : "Veel eigen tijd"
           }
         }
       }
@@ -9982,6 +9982,2641 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je resultaat staat klaar"
+          }
+        }
+      }
+    },
+    "Time together and independence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time together and independence"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samenzijn en zelfstandigheid"
+          }
+        }
+      }
+    },
+    "How much time do you need for yourself, apart from your partner?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How much time do you need for yourself, apart from your partner?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoeveel tijd heb je voor jezelf nodig, los van je partner?"
+          }
+        }
+      }
+    },
+    "Spending time together" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spending time together"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samen tijd doorbrengen"
+          }
+        }
+      }
+    },
+    "Do you prefer plenty of time apart, or spending much of your time together?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you prefer plenty of time apart, or spending much of your time together?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heb je graag veel eigen tijd, of breng je juist veel tijd samen door?"
+          }
+        }
+      }
+    },
+    "Plenty of own time" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plenty of own time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veel eigen tijd"
+          }
+        }
+      }
+    },
+    "Lots of time together" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lots of time together"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veel samen"
+          }
+        }
+      }
+    },
+    "Daily contact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily contact"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dagelijks contact"
+          }
+        }
+      }
+    },
+    "Do you need contact with your partner every day, even when you do not see each other?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you need contact with your partner every day, even when you do not see each other?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heb je elke dag behoefte aan contact met je partner, ook als je elkaar niet ziet?"
+          }
+        }
+      }
+    },
+    "Not every day" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not every day"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet elke dag"
+          }
+        }
+      }
+    },
+    "Every day" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every day"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elke dag"
+          }
+        }
+      }
+    },
+    "Physical affection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Physical affection"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fysieke affectie"
+          }
+        }
+      }
+    },
+    "How much do you enjoy touch, cuddling and physical closeness in a relationship?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How much do you enjoy touch, cuddling and physical closeness in a relationship?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoeveel behoefte heb je aan aanraking, knuffelen en fysieke nabijheid in een relatie?"
+          }
+        }
+      }
+    },
+    "Occasional touch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Occasional touch"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Af en toe"
+          }
+        }
+      }
+    },
+    "Lots of closeness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lots of closeness"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veel nabijheid"
+          }
+        }
+      }
+    },
+    "Shared hobbies" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared hobbies"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gedeelde hobby’s"
+          }
+        }
+      }
+    },
+    "Do you enjoy having your own hobbies, or would you like to share many hobbies with a partner?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you enjoy having your own hobbies, or would you like to share many hobbies with a partner?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heb je graag je eigen hobby’s, of deel je er het liefst veel met je partner?"
+          }
+        }
+      }
+    },
+    "Own hobbies" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Own hobbies"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigen hobby’s"
+          }
+        }
+      }
+    },
+    "Many shared hobbies" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Many shared hobbies"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veel samen"
+          }
+        }
+      }
+    },
+    "Planning the future" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planning the future"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toekomst plannen"
+          }
+        }
+      }
+    },
+    "Do you prefer taking a relationship one phase at a time, or making plans far ahead?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you prefer taking a relationship one phase at a time, or making plans far ahead?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bekijk je een relatie graag per fase, of maak je liever plannen voor de verre toekomst?"
+          }
+        }
+      }
+    },
+    "One phase at a time" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One phase at a time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per fase"
+          }
+        }
+      }
+    },
+    "Far ahead" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Far ahead"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver vooruit"
+          }
+        }
+      }
+    },
+    "Communication and feelings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Communication and feelings"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Communicatie en gevoelens"
+          }
+        }
+      }
+    },
+    "Texting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texting"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appcontact"
+          }
+        }
+      }
+    },
+    "Do you message only when there is something to share, or regularly throughout the day?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you message only when there is something to share, or regularly throughout the day?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App je vooral als er iets te delen is, of graag regelmatig gedurende de dag?"
+          }
+        }
+      }
+    },
+    "When there is news" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When there is news"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen bij nieuws"
+          }
+        }
+      }
+    },
+    "Throughout the day" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Throughout the day"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Door de dag heen"
+          }
+        }
+      }
+    },
+    "Calling" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calling"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bellen"
+          }
+        }
+      }
+    },
+    "Do you prefer messaging, or calling and video calling with a partner?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you prefer messaging, or calling and video calling with a partner?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur je liever berichten, of bel of videobel je graag met je partner?"
+          }
+        }
+      }
+    },
+    "Prefer messages" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prefer messages"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liever appen"
+          }
+        }
+      }
+    },
+    "Prefer calls" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prefer calls"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liever bellen"
+          }
+        }
+      }
+    },
+    "Humor in conversations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Humor in conversations"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Humor in gesprekken"
+          }
+        }
+      }
+    },
+    "Do your conversations tend to be serious and substantive, or full of lightness and humor?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do your conversations tend to be serious and substantive, or full of lightness and humor?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zijn je gesprekken meestal serieus en inhoudelijk, of juist luchtig en vol humor?"
+          }
+        }
+      }
+    },
+    "Mostly serious" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostly serious"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vooral serieus"
+          }
+        }
+      }
+    },
+    "Lots of humor" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lots of humor"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veel humor"
+          }
+        }
+      }
+    },
+    "Communication style" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Communication style"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Communicatiestijl"
+          }
+        }
+      }
+    },
+    "Do you express yourself carefully and tactfully, or directly and clearly?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you express yourself carefully and tactfully, or directly and clearly?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Druk je je voorzichtig en tactvol uit, of ben je graag rechtstreeks en duidelijk?"
+          }
+        }
+      }
+    },
+    "Tactful" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tactful"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tactvol"
+          }
+        }
+      }
+    },
+    "Direct" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direct"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direct"
+          }
+        }
+      }
+    },
+    "Discussing feelings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discussing feelings"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gevoelens bespreken"
+          }
+        }
+      }
+    },
+    "Do you share feelings gradually and in small steps, or openly and in depth?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you share feelings gradually and in small steps, or openly and in depth?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel je gevoelens geleidelijk en gedoseerd, of bespreek je ze graag open en uitgebreid?"
+          }
+        }
+      }
+    },
+    "Gradually" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gradually"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geleidelijk"
+          }
+        }
+      }
+    },
+    "Openly and in depth" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Openly and in depth"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open en uitgebreid"
+          }
+        }
+      }
+    },
+    "Expressing appreciation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expressing appreciation"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waardering uitspreken"
+          }
+        }
+      }
+    },
+    "Do you mainly show appreciation through actions, or often put it into words?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you mainly show appreciation through actions, or often put it into words?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laat je waardering vooral zien in wat je doet, of spreek je die graag vaak uit?"
+          }
+        }
+      }
+    },
+    "Through actions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Through actions"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In gedrag"
+          }
+        }
+      }
+    },
+    "In words" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In words"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In woorden"
+          }
+        }
+      }
+    },
+    "Relationship conversations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relationship conversations"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relatiegesprekken"
+          }
+        }
+      }
+    },
+    "Do you discuss your relationship when something comes up, or regularly make time to reflect on it?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you discuss your relationship when something comes up, or regularly make time to reflect on it?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bespreek je jullie relatie als er iets speelt, of neem je er graag regelmatig bewust de tijd voor?"
+          }
+        }
+      }
+    },
+    "When needed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When needed"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als er iets speelt"
+          }
+        }
+      }
+    },
+    "Regularly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regularly"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regelmatig"
+          }
+        }
+      }
+    },
+    "Discussing disagreements" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discussing disagreements"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een meningsverschil bespreken"
+          }
+        }
+      }
+    },
+    "After a disagreement, do you need time first, or prefer to talk it through as soon as possible?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After a disagreement, do you need time first, or prefer to talk it through as soon as possible?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neem je na een meningsverschil liever eerst de tijd, of bespreek je het zo snel mogelijk?"
+          }
+        }
+      }
+    },
+    "Take time first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take time first"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eerst tijd nemen"
+          }
+        }
+      }
+    },
+    "Talk soon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talk soon"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snel bespreken"
+          }
+        }
+      }
+    },
+    "Contact during stress" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact during stress"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact tijdens stress"
+          }
+        }
+      }
+    },
+    "When stressed, do you first need space, or seek contact and support from your partner?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When stressed, do you first need space, or seek contact and support from your partner?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heb je bij stress eerst ruimte nodig, of zoek je juist contact en steun bij je partner?"
+          }
+        }
+      }
+    },
+    "Space first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Space first"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eerst ruimte"
+          }
+        }
+      }
+    },
+    "Seek contact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seek contact"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact zoeken"
+          }
+        }
+      }
+    },
+    "Listening and solutions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listening and solutions"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Luisteren en oplossingen"
+          }
+        }
+      }
+    },
+    "When someone shares a problem, do you quickly look for solutions, or first take time to listen?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When someone shares a problem, do you quickly look for solutions, or first take time to listen?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek je bij een probleem snel naar een oplossing, of neem je eerst uitgebreid de tijd om te luisteren?"
+          }
+        }
+      }
+    },
+    "Find solutions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find solutions"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplossen"
+          }
+        }
+      }
+    },
+    "Listen first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listen first"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eerst luisteren"
+          }
+        }
+      }
+    },
+    "Daily rhythm and lifestyle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily rhythm and lifestyle"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dagritme en levensstijl"
+          }
+        }
+      }
+    },
+    "Daily rhythm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily rhythm"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dagritme"
+          }
+        }
+      }
+    },
+    "Do you feel most at home in the evening, or are you at your best early in the morning?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you feel most at home in the evening, or are you at your best early in the morning?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voel je je het prettigst in de avond, of ben je juist vroeg in de ochtend op je best?"
+          }
+        }
+      }
+    },
+    "Night owl" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Night owl"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avondmens"
+          }
+        }
+      }
+    },
+    "Early bird" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Early bird"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ochtendmens"
+          }
+        }
+      }
+    },
+    "Weekly planning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weekly planning"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weekplanning"
+          }
+        }
+      }
+    },
+    "Do you like leaving your week open to spontaneous plans, or planning it in advance?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you like leaving your week open to spontaneous plans, or planning it in advance?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laat je je week graag open voor spontane plannen, of plan je die liever vooraf?"
+          }
+        }
+      }
+    },
+    "Spontaneous" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spontaneous"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spontaan"
+          }
+        }
+      }
+    },
+    "Planned ahead" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planned ahead"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vooraf gepland"
+          }
+        }
+      }
+    },
+    "Free time" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vrije tijd"
+          }
+        }
+      }
+    },
+    "Do you prefer relaxing at home or somewhere quiet, or going out and being active?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you prefer relaxing at home or somewhere quiet, or going out and being active?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breng je vrije tijd graag thuis of in alle rust door, of ga je liever actief op pad?"
+          }
+        }
+      }
+    },
+    "At home and quiet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "At home and quiet"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thuis en rustig"
+          }
+        }
+      }
+    },
+    "Out and active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Out and active"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Op pad en actief"
+          }
+        }
+      }
+    },
+    "Exercise" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exercise"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beweging"
+          }
+        }
+      }
+    },
+    "How big a role do exercise, sports and physical activity play in your life?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How big a role do exercise, sports and physical activity play in your life?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoe groot is de rol van bewegen, sporten en lichamelijke activiteit in je leven?"
+          }
+        }
+      }
+    },
+    "Small role" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Small role"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kleine rol"
+          }
+        }
+      }
+    },
+    "Big role" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Big role"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grote rol"
+          }
+        }
+      }
+    },
+    "Food" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Food"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eten"
+          }
+        }
+      }
+    },
+    "Do taste and convenience guide your food choices, or do you mainly choose consciously and healthily?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do taste and convenience guide your food choices, or do you mainly choose consciously and healthily?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies je eten vooral op smaak en gemak, of maak je vooral bewuste en gezonde keuzes?"
+          }
+        }
+      }
+    },
+    "Taste and ease" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taste and ease"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smaak en gemak"
+          }
+        }
+      }
+    },
+    "Mindful and healthy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mindful and healthy"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewust en gezond"
+          }
+        }
+      }
+    },
+    "Do you prefer staying close to home, or would you like to travel often?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you prefer staying close to home, or would you like to travel often?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blijf je liever dicht bij huis, of reis je graag en vaak?"
+          }
+        }
+      }
+    },
+    "Travel little" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Travel little"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weinig reizen"
+          }
+        }
+      }
+    },
+    "Travel often" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Travel often"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaak reizen"
+          }
+        }
+      }
+    },
+    "New experiences" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New experiences"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe ervaringen"
+          }
+        }
+      }
+    },
+    "Do you enjoy familiar, comfortable experiences, or actively seek novelty and adventure?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you enjoy familiar, comfortable experiences, or actively seek novelty and adventure?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies je graag voor vertrouwd en comfortabel, of zoek je juist nieuwe en avontuurlijke ervaringen?"
+          }
+        }
+      }
+    },
+    "Familiar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Familiar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vertrouwd"
+          }
+        }
+      }
+    },
+    "Adventurous" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adventurous"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avontuurlijk"
+          }
+        }
+      }
+    },
+    "Social life and privacy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Social life and privacy"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sociaal leven en privacy"
+          }
+        }
+      }
+    },
+    "Social circle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Social circle"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sociale omgeving"
+          }
+        }
+      }
+    },
+    "Do you prefer a small, steady circle of people, or a wide social network?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you prefer a small, steady circle of people, or a wide social network?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heb je liever een kleine, vaste kring om je heen, of een groot sociaal netwerk?"
+          }
+        }
+      }
+    },
+    "Small circle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Small circle"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kleine kring"
+          }
+        }
+      }
+    },
+    "Wide network" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wide network"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groot netwerk"
+          }
+        }
+      }
+    },
+    "Meeting new people" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meeting new people"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe mensen ontmoeten"
+          }
+        }
+      }
+    },
+    "Are you content with familiar faces, or do you enjoy meeting new people regularly?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you content with familiar faces, or do you enjoy meeting new people regularly?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heb je genoeg aan vertrouwde gezichten, of ontmoet je graag regelmatig nieuwe mensen?"
+          }
+        }
+      }
+    },
+    "Rarely needed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rarely needed"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weinig behoefte"
+          }
+        }
+      }
+    },
+    "Social plans" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Social plans"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sociale afspraken"
+          }
+        }
+      }
+    },
+    "Do you prefer few social commitments, or enjoy a full social calendar?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you prefer few social commitments, or enjoy a full social calendar?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heb je liever weinig sociale afspraken, of geniet je van een volle sociale agenda?"
+          }
+        }
+      }
+    },
+    "Few plans" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Few plans"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weinig afspraken"
+          }
+        }
+      }
+    },
+    "Full calendar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Full calendar"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volle agenda"
+          }
+        }
+      }
+    },
+    "Family" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Familie"
+          }
+        }
+      }
+    },
+    "How big a role does family play in your life and the time you spend together?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How big a role does family play in your life and the time you spend together?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoe groot is de rol van familie in je leven en de tijd die je samen doorbrengt?"
+          }
+        }
+      }
+    },
+    "Limited role" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limited role"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beperkte rol"
+          }
+        }
+      }
+    },
+    "Including your partner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Including your partner"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partner meenemen"
+          }
+        }
+      }
+    },
+    "Are you happy keeping social lives separate, or do you like joining each other often?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you happy keeping social lives separate, or do you like joining each other often?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mogen jullie sociale levens losstaan, of sluit je graag vaak bij elkaars afspraken aan?"
+          }
+        }
+      }
+    },
+    "Separate is fine" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Separate is fine"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los van elkaar"
+          }
+        }
+      }
+    },
+    "Often together" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Often together"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaak samen"
+          }
+        }
+      }
+    },
+    "Contact with ex-partners" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact with ex-partners"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact met ex-partners"
+          }
+        }
+      }
+    },
+    "Are you comfortable with friendly contact with ex-partners, or prefer as little contact as possible?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you comfortable with friendly contact with ex-partners, or prefer as little contact as possible?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vind je vriendschappelijk contact met ex-partners prima, of heb je liever zo min mogelijk contact?"
+          }
+        }
+      }
+    },
+    "Friendly contact is fine" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Friendly contact is fine"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact is prima"
+          }
+        }
+      }
+    },
+    "Minimal contact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimal contact"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimaal contact"
+          }
+        }
+      }
+    },
+    "Privacy in a relationship" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy in a relationship"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy in een relatie"
+          }
+        }
+      }
+    },
+    "Do you value plenty of personal privacy, or sharing a lot openly with each other?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you value plenty of personal privacy, or sharing a lot openly with each other?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hecht je aan veel persoonlijke privacy, of deel je graag veel open met elkaar?"
+          }
+        }
+      }
+    },
+    "Personal privacy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personal privacy"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veel privacy"
+          }
+        }
+      }
+    },
+    "Mutual openness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mutual openness"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veel openheid"
+          }
+        }
+      }
+    },
+    "Sharing your relationship online" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sharing your relationship online"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relatie op sociale media"
+          }
+        }
+      }
+    },
+    "Do you prefer keeping your relationship private, or sharing it visibly on social media?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you prefer keeping your relationship private, or sharing it visibly on social media?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd je je relatie liever privé, of deel je die graag zichtbaar op sociale media?"
+          }
+        }
+      }
+    },
+    "Keep private" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep private"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privé houden"
+          }
+        }
+      }
+    },
+    "Share openly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share openly"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zichtbaar delen"
+          }
+        }
+      }
+    },
+    "Everyday preferences and choices" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everyday preferences and choices"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dagelijkse voorkeuren en keuzes"
+          }
+        }
+      }
+    },
+    "Keeping time" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keeping time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omgaan met tijd"
+          }
+        }
+      }
+    },
+    "Are agreed times flexible for you, or do you find being on time and precise important?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are agreed times flexible for you, or do you find being on time and precise important?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zijn afgesproken tijden voor jou flexibel, of vind je op tijd en precies zijn belangrijk?"
+          }
+        }
+      }
+    },
+    "Flexible" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flexible"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flexibel"
+          }
+        }
+      }
+    },
+    "Precise" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precise"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precies"
+          }
+        }
+      }
+    },
+    "Keeping plans" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keeping plans"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afspraken"
+          }
+        }
+      }
+    },
+    "Can plans change easily, or do you prefer sticking to what was agreed?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can plans change easily, or do you prefer sticking to what was agreed?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mogen plannen makkelijk veranderen, of houd je graag vast aan wat is afgesproken?"
+          }
+        }
+      }
+    },
+    "Easy to change" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Easy to change"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mogen veranderen"
+          }
+        }
+      }
+    },
+    "Prefer to keep" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prefer to keep"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blijven staan"
+          }
+        }
+      }
+    },
+    "Home and tidiness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home and tidiness"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wonen en opruimen"
+          }
+        }
+      }
+    },
+    "Are you comfortable with a lived-in home, or is a tidy home important to you?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you comfortable with a lived-in home, or is a tidy home important to you?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Is een geleefd huis voor jou prima, of vind je een opgeruimd huis belangrijk?"
+          }
+        }
+      }
+    },
+    "Lived-in is fine" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lived-in is fine"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geleefd is prima"
+          }
+        }
+      }
+    },
+    "Tidiness matters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidiness matters"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graag opgeruimd"
+          }
+        }
+      }
+    },
+    "Spending money" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spending money"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geld uitgeven"
+          }
+        }
+      }
+    },
+    "Do you enjoy spending spontaneously, or prefer planning expenses and saving?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you enjoy spending spontaneously, or prefer planning expenses and saving?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geef je graag spontaan geld uit om te genieten, of plan en spaar je liever?"
+          }
+        }
+      }
+    },
+    "Enjoy spontaneously" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enjoy spontaneously"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spontaan genieten"
+          }
+        }
+      }
+    },
+    "Plan and save" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan and save"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plannen en sparen"
+          }
+        }
+      }
+    },
+    "Work and ambition" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Work and ambition"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werk en ambitie"
+          }
+        }
+      }
+    },
+    "Does work mainly support your life, or are career and personal growth major goals?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Does work mainly support your life, or are career and personal growth major goals?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ondersteunt werk vooral je leven, of zijn je carrière en groei een belangrijk doel?"
+          }
+        }
+      }
+    },
+    "Supports life" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supports life"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werk als middel"
+          }
+        }
+      }
+    },
+    "Career and growth" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Career and growth"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werk en groei"
+          }
+        }
+      }
+    },
+    "Making decisions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Making decisions"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beslissingen nemen"
+          }
+        }
+      }
+    },
+    "Do you decide quickly and intuitively, or take time to think things through?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you decide quickly and intuitively, or take time to think things through?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beslis je graag snel en op gevoel, of neem je rustig de tijd om keuzes te overwegen?"
+          }
+        }
+      }
+    },
+    "Quick and intuitive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick and intuitive"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snel op gevoel"
+          }
+        }
+      }
+    },
+    "Carefully considered" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carefully considered"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weloverwogen"
+          }
+        }
+      }
+    },
+    "Change" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verandering"
+          }
+        }
+      }
+    },
+    "Do you prefer stability and familiar routines, or enjoy regular change?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you prefer stability and familiar routines, or enjoy regular change?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies je graag voor stabiliteit en vaste routines, of houd je van regelmatige verandering?"
+          }
+        }
+      }
+    },
+    "Stability" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stability"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabiliteit"
+          }
+        }
+      }
+    },
+    "Regular change" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regular change"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verandering"
+          }
+        }
+      }
+    },
+    "Tasks in a relationship" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks in a relationship"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taken in een relatie"
+          }
+        }
+      }
+    },
+    "Do you prefer each having your own responsibilities, or tackling many things as a team?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you prefer each having your own responsibilities, or tackling many things as a team?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heeft ieder graag eigen verantwoordelijkheden, of pak je veel samen als team aan?"
+          }
+        }
+      }
+    },
+    "Own responsibilities" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Own responsibilities"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ieder eigen taken"
+          }
+        }
+      }
+    },
+    "Together as a team" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Together as a team"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samen als team"
           }
         }
       }

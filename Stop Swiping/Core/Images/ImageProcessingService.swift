@@ -1,7 +1,8 @@
 import UIKit
+import ImageIO
 import Foundation
 
-enum ImageProcessingError: LocalizedError {
+nonisolated enum ImageProcessingError: LocalizedError {
     case invalidImageData
     case failedToResize
     case failedToCompress
@@ -18,7 +19,9 @@ enum ImageProcessingError: LocalizedError {
     }
 }
 
-struct ImageProcessingService {
+/// Downsample during decoding, before a full camera image occupies memory.
+/// Dimensions are pixels, independent of the device's 2× or 3× display scale.
+nonisolated struct ImageProcessingService: Sendable {
     let maximumDimension: CGFloat
     let compressionQuality: CGFloat
 
@@ -30,39 +33,31 @@ struct ImageProcessingService {
         self.compressionQuality = compressionQuality
     }
 
+    func processInBackground(_ data: Data) async throws -> Data {
+        try await Task.detached(priority: .userInitiated) {
+            try process(data)
+        }.value
+    }
+
     func process(_ data: Data) throws -> Data {
-        guard let image = UIImage(data: data) else {
+        guard let source = CGImageSourceCreateWithData(data as CFData, [
+            kCGImageSourceShouldCache: false
+        ] as CFDictionary) else {
             throw ImageProcessingError.invalidImageData
         }
 
-        let resizedImage = resizeIfNeeded(image)
+        guard let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: max(1, Int(maximumDimension)),
+            kCGImageSourceShouldCacheImmediately: true
+        ] as CFDictionary) else {
+            throw ImageProcessingError.failedToResize
+        }
 
-        guard let compressedData = resizedImage.jpegData(
-            compressionQuality: compressionQuality
-        ) else {
+        guard let compressed = UIImage(cgImage: thumbnail).jpegData(compressionQuality: compressionQuality) else {
             throw ImageProcessingError.failedToCompress
         }
-
-        return compressedData
-    }
-
-    private func resizeIfNeeded(_ image: UIImage) -> UIImage {
-        let originalSize = image.size
-        let largestDimension = max(originalSize.width, originalSize.height)
-
-        guard largestDimension > maximumDimension else {
-            return image
-        }
-
-        let scale = maximumDimension / largestDimension
-        let targetSize = CGSize(
-            width: originalSize.width * scale,
-            height: originalSize.height * scale
-        )
-
-        let renderer = UIGraphicsImageRenderer(size: targetSize)
-        return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: targetSize))
-        }
+        return compressed
     }
 }

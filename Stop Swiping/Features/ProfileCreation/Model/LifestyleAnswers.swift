@@ -102,28 +102,29 @@ extension CompatibilityScaleAnswer {
     }
 }
 
-struct CompatibilityScaleQuestion: Hashable {
-    let id: String
-    let title: String
-    let lowLabel: String
-    let highLabel: String
-
-    static var aloneTime: CompatibilityScaleQuestion {
-        CompatibilityScaleQuestion(
-            id: "aloneTime",
-            title: L10n("Time for yourself"),
-            lowLabel: L10n("Little time alone"),
-            highLabel: L10n("Lots of time alone")
-        )
-    }
-}
-
 struct LifestyleAnswers: Codable, Equatable {
     var hasChildren: Bool?
     var openToPartnerWithChildren: Bool?
     var futureChildren: FutureChildrenWish?
     private var substances: [String: SubstanceAnswer] = [:]
     var aloneTime = CompatibilityScaleAnswer()
+    /// Optional so drafts saved before the expanded catalog still decode.
+    private var storedCompatibilityAnswers: [String: CompatibilityScaleAnswer]?
+
+    subscript(question: CompatibilityScaleQuestion) -> CompatibilityScaleAnswer {
+        get {
+            if question.step == .aloneTime { return aloneTime }
+            return storedCompatibilityAnswers?[question.id] ?? CompatibilityScaleAnswer()
+        }
+        set {
+            if question.step == .aloneTime {
+                aloneTime = newValue
+            } else {
+                if storedCompatibilityAnswers == nil { storedCompatibilityAnswers = [:] }
+                storedCompatibilityAnswers?[question.id] = newValue
+            }
+        }
+    }
 
     /// Levels that no longer exist on a revised scale read as unanswered.
     subscript(substance: Substance) -> SubstanceAnswer {

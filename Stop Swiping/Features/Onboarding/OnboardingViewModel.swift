@@ -155,9 +155,7 @@ final class OnboardingViewModel: ObservableObject {
         draft.compatibilityAnswers[answer.questionID] = answer
     }
 
-    // NOTE: no defaulted second parameter here. A method with default arguments
-    // cannot be passed directly as a `([Data]) -> Void` closure.
-    func addPhotoData(_ dataItems: [Data]) {
+    func addPhotoData(_ dataItems: [Data]) async {
         photoErrorMessage = nil
 
         let remainingCapacity = maximumPhotos - draft.photos.count
@@ -168,7 +166,8 @@ final class OnboardingViewModel: ObservableObject {
 
         for data in dataItems.prefix(remainingCapacity) {
             do {
-                let processed = try imageProcessor.process(data)
+                let processed = try await imageProcessor.processInBackground(data)
+                guard draft.photos.count < maximumPhotos else { break }
                 let photo = ProfilePhoto(
                     imageData: processed,
                     order: draft.photos.count

@@ -60,8 +60,9 @@ extension ProfileCreationState {
                 value: substance.levels[own],
                 detail: answer.partnerMaximumLevel.map { L10n("partner at most \(substance.levels[$0].lowercased())") }
             )
-        case .aloneTime:
-            let answer = lifestyle.aloneTime
+        default:
+            guard let question = step.compatibilityQuestion else { return unanswered }
+            let answer = lifestyle[question]
             guard let own = answer.own else { return unanswered }
             let parts = [
                 answer.partner.map { L10n("partner: \($0)") },

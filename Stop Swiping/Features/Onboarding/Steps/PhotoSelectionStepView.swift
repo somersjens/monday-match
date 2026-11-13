@@ -8,7 +8,7 @@ struct PhotoSelectionStepView: View {
     let errorMessage: String?
     var photoVerification: PhotoVerificationReceipt? = nil
     var onPhotoVerified: (PhotoVerificationReceipt) -> Void = { _ in }
-    let onAddPhotoData: ([Data]) -> Void
+    let onAddPhotoData: ([Data]) async -> Void
     let onRemovePhoto: (UUID) -> Void
     let onMovePhoto: (IndexSet, Int) -> Void
 
@@ -174,11 +174,9 @@ struct PhotoSelectionStepView: View {
                 }
             }
 
-            await MainActor.run {
-                onAddPhotoData(loadedData)
-                selectedItems = []
-                isLoadingSelection = false
-            }
+            await onAddPhotoData(loadedData)
+            selectedItems = []
+            isLoadingSelection = false
         }
     }
 }

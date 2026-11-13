@@ -90,6 +90,30 @@ final class AppLocalizationTests: XCTestCase {
         XCTAssertEqual(L10n("Your profile"), "Je profiel")
     }
 
+    func testExpandedCompatibilityCatalogHasOrderedLocalizedQuestionsAndCompactEndpoints() {
+        let english = CompatibilityScaleQuestion.all
+        XCTAssertEqual(english.count, 39)
+        XCTAssertEqual(Set(english.map(\.id)).count, english.count)
+        XCTAssertEqual(english.map(\.step), Array(ProfileCreationStep.allCases.suffix(english.count)))
+        XCTAssertEqual(english.first?.step, .aloneTime)
+        XCTAssertEqual(english.last?.step, .sharedResponsibilities)
+
+        AppLanguageSettings.shared.language = .dutch
+        let dutch = CompatibilityScaleQuestion.all
+        XCTAssertEqual(dutch.map(\.id), english.map(\.id))
+        XCTAssertEqual(CompatibilityScaleQuestion.sections.count, 5)
+        for (original, translated) in zip(english, dutch) {
+            XCTAssertNotEqual(translated.title, original.title)
+            XCTAssertNotEqual(translated.subtitle, original.subtitle)
+            XCTAssertFalse(translated.lowLabel.isEmpty)
+            XCTAssertFalse(translated.highLabel.isEmpty)
+            XCTAssertLessThanOrEqual(translated.lowLabel.count, 21)
+            XCTAssertLessThanOrEqual(translated.highLabel.count, 21)
+            XCTAssertEqual(translated.step.title, translated.title)
+            XCTAssertEqual(translated.step.subtitle, translated.subtitle)
+        }
+    }
+
     func testLanguageChangesKeepProfileDataAndMatchingStable() throws {
         var state = ProfileCreationState(today: .init(year: 2026, month: 11, day: 12), applicationLanguage: "en")
         state.languages = ["en", "fr"]

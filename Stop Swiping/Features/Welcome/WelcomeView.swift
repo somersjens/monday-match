@@ -80,6 +80,7 @@ struct WelcomeView: View {
                 WelcomeLightAnimation(form: lightForm, lockPulse: lockPulse,
                                       showsCode: showsCode, skipsEntrance: skipsEntrance,
                                       isPaused: showsOverview || showsAutoMatching,
+                                      framesPerSecond: isOnboarding ? 30 : 60,
                                       helixEntryDistance: sideEntry / max(animationWidth * 0.42, 1)
                                         + WelcomeLightHelix.radius + 0.12)
                     .frame(width: animationWidth, height: drawingHeight)

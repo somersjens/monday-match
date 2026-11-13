@@ -11,11 +11,15 @@ enum ProfileRepositoryError: LocalizedError {
     }
 }
 
-struct FileProfileRepository: ProfileRepository {
+/// One shared repository owns the file for the lifetime of the app. Keep its
+/// decoded value in memory so view reads do not repeatedly decode photo data.
+final class FileProfileRepository: ProfileRepository {
     private let fileManager: FileManager
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
     private let fileURL: URL
+    private var cachedProfile: ProfileDraft?
+    private var hasLoadedProfile = false
 
     init(
         fileManager: FileManager = .default,
@@ -44,17 +48,22 @@ struct FileProfileRepository: ProfileRepository {
     }
 
     func loadProfile() throws -> ProfileDraft? {
+        if hasLoadedProfile { return cachedProfile }
         guard fileManager.fileExists(
             atPath: fileURL.path
         ) else {
+            hasLoadedProfile = true
             return nil
         }
 
         let data = try Data(contentsOf: fileURL)
-        return try decoder.decode(
+        let profile = try decoder.decode(
             ProfileDraft.self,
             from: data
         )
+        cachedProfile = profile
+        hasLoadedProfile = true
+        return profile
     }
 
     func saveProfile(_ profile: ProfileDraft) throws {
@@ -64,15 +73,21 @@ struct FileProfileRepository: ProfileRepository {
             to: fileURL,
             options: [.atomic]
         )
+        cachedProfile = profile
+        hasLoadedProfile = true
     }
 
     func deleteProfile() throws {
         guard fileManager.fileExists(
             atPath: fileURL.path
         ) else {
+            cachedProfile = nil
+            hasLoadedProfile = true
             return
         }
 
         try fileManager.removeItem(at: fileURL)
+        cachedProfile = nil
+        hasLoadedProfile = true
     }
 }

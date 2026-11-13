@@ -280,8 +280,8 @@ final class ProfileCreationViewModelTests: XCTestCase {
 
         answerLifestyleSteps(viewModel)
         XCTAssertEqual(viewModel.currentStep, .aloneTime)
-        XCTAssertNil(viewModel.currentStep.next, "Time for yourself is the last question.")
-        XCTAssertEqual(viewModel.submitCurrentStep(), .completed)
+        XCTAssertEqual(viewModel.currentStep.next, .timeTogether)
+        answerCompatibilitySteps(viewModel)
         XCTAssertTrue(viewModel.isCompleted)
 
         let draft = try XCTUnwrap(repository.loadProfile())
@@ -436,6 +436,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
     func testThreePillarsOnlyAutoAdvanceWithDifferentPartnerAndNonDefaultImportance() {
         let viewModel = makeViewModel()
         completeProfile(viewModel)
+        while viewModel.currentStep != .aloneTime { XCTAssertTrue(viewModel.goBack()) }
         XCTAssertEqual(viewModel.currentStep, .aloneTime)
         viewModel.setAloneTimeImportance(3)
         XCTAssertFalse(viewModel.shouldAutoAdvanceAfterAnswerSelection)
@@ -450,7 +451,8 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.shouldAutoAdvanceAfterAnswerSelection, "Equal own and partner values require Continue.")
         viewModel.setAloneTimeOwn(1)
         XCTAssertTrue(viewModel.shouldAutoAdvanceAfterAnswerSelection, "The fields can be chosen in any order.")
-        XCTAssertEqual(viewModel.submitCurrentStep(), .completed, "The last question finishes the profile.")
+        XCTAssertEqual(viewModel.submitCurrentStep(), .advanced)
+        XCTAssertEqual(viewModel.currentStep, .timeTogether)
 
         viewModel.beginEditing(.aloneTime)
         viewModel.setAloneTimePartner(5)
@@ -468,6 +470,69 @@ final class ProfileCreationViewModelTests: XCTestCase {
         let saved = CompatibilityScaleAnswer(own: 2, partner: 4, isPartnerCustomized: true, importance: 5)
         let decoded = try JSONDecoder().decode(CompatibilityScaleAnswer.self, from: JSONEncoder().encode(saved))
         XCTAssertEqual(decoded, saved, "An existing importance is preserved.")
+    }
+
+    func testExpandedCompatibilityAnswersStayIndependentAndSurviveRelaunch() throws {
+        let viewModel = makeViewModel()
+        let questions = CompatibilityScaleQuestion.all
+        for (index, question) in questions.enumerated() {
+            let own = index % 5 + 1
+            let partner = (index + 2) % 5 + 1
+            viewModel.setCompatibilityOwn(own, for: question)
+            XCTAssertEqual(viewModel.state.lifestyle[question].partner, own)
+            viewModel.setCompatibilityPartner(partner, for: question)
+            viewModel.setCompatibilityOwn(own % 5 + 1, for: question)
+            XCTAssertEqual(viewModel.state.lifestyle[question].partner, partner, "A customized partner answer stays independent.")
+            viewModel.setCompatibilityImportance(index % 5 + 1, for: question)
+            viewModel.setCompatibilityOwn(0, for: question)
+            viewModel.setCompatibilityPartner(6, for: question)
+            viewModel.setCompatibilityImportance(6, for: question)
+        }
+        let restored = try JSONDecoder().decode(ProfileCreationState.self, from: JSONEncoder().encode(viewModel.state))
+        for (index, question) in questions.enumerated() {
+            let answer = restored.lifestyle[question]
+            XCTAssertEqual(answer.own, (index % 5 + 1) % 5 + 1)
+            XCTAssertEqual(answer.partner, (index + 2) % 5 + 1)
+            XCTAssertEqual(answer.importance, index % 5 + 1)
+            XCTAssertTrue(answer.isPartnerCustomized)
+            XCTAssertTrue(viewModel.isComplete(question.step))
+        }
+    }
+
+    func testOlderLifestyleAnswersKeepTheirOriginalScaleAndLeaveNewTopicsUnanswered() throws {
+        let json = #"{"substances":{},"aloneTime":{"own":2,"partner":4,"isPartnerCustomized":true,"importance":5}}"#
+        let answers = try JSONDecoder().decode(LifestyleAnswers.self, from: Data(json.utf8))
+        XCTAssertEqual(answers[CompatibilityScaleQuestion.aloneTime], answers.aloneTime)
+        XCTAssertEqual(answers.aloneTime.own, 2)
+        XCTAssertEqual(answers.aloneTime.partner, 4)
+        XCTAssertEqual(answers.aloneTime.importance, 5)
+        for question in CompatibilityScaleQuestion.all.dropFirst() {
+            XCTAssertFalse(answers[question].isComplete)
+            XCTAssertNil(answers[question].own)
+            XCTAssertNil(answers[question].partner)
+            XCTAssertEqual(answers[question].importance, 3)
+        }
+        XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("15".utf8)), .aloneTime)
+        XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("16".utf8)), .religion)
+    }
+
+    func testEachNewCompatibilityQuestionSupportsSavingAndCancellingAnEdit() throws {
+        let repository = InMemoryProfileRepository()
+        let viewModel = makeViewModel(repository: repository)
+        completeProfile(viewModel)
+        for question in CompatibilityScaleQuestion.all.dropFirst() {
+            viewModel.beginEditing(question.step)
+            viewModel.setCompatibilityOwn(1, for: question)
+            viewModel.setCompatibilityPartner(5, for: question)
+            viewModel.setCompatibilityImportance(5, for: question)
+            XCTAssertFalse(viewModel.shouldAutoAdvanceAfterAnswerSelection)
+            viewModel.cancelEditing()
+            XCTAssertEqual(viewModel.state.lifestyle[question].own, 3)
+            viewModel.beginEditing(question.step)
+            viewModel.setCompatibilityPartner(1, for: question)
+            XCTAssertEqual(viewModel.submitCurrentStep(), .completed)
+            XCTAssertEqual(try XCTUnwrap(repository.loadProfile()).lifestyle[question].partner, 1)
+        }
     }
 
     func testEditingOneAnswerSavesTheWholeProfileAgain() throws {
@@ -1146,7 +1211,16 @@ final class ProfileCreationViewModelTests: XCTestCase {
         viewModel.updateSearchRadius(60)
         viewModel.submitCurrentStep()
         answerLifestyleSteps(viewModel)
-        XCTAssertEqual(viewModel.submitCurrentStep(), .completed)
+        answerCompatibilitySteps(viewModel)
+    }
+
+    private func answerCompatibilitySteps(_ viewModel: ProfileCreationViewModel) {
+        for question in CompatibilityScaleQuestion.all {
+            XCTAssertEqual(viewModel.currentStep, question.step)
+            viewModel.setCompatibilityOwn(3, for: question)
+            viewModel.setCompatibilityImportance(4, for: question)
+            XCTAssertEqual(viewModel.submitCurrentStep(), question.step.next == nil ? .completed : .advanced)
+        }
     }
 
     private func advancePastBirthday(_ viewModel: ProfileCreationViewModel) {

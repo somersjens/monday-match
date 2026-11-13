@@ -11,6 +11,7 @@ struct WelcomeLightMetalView: UIViewRepresentable {
     var showsCode = false
     /// Starts after the entrance, for a light that is shown already formed.
     var skipsEntrance = false
+    var framesPerSecond = 60
     var helixEntryDistance = 0.0
 
     static var isAvailable: Bool { WelcomeLightMetalRenderer.resources != nil }
@@ -26,13 +27,16 @@ struct WelcomeLightMetalView: UIViewRepresentable {
         view.isOpaque = true
         view.backgroundColor = UIColor(named: "WelcomeBackground")
         view.framebufferOnly = true
-        view.preferredFramesPerSecond = 60
+        view.preferredFramesPerSecond = framesPerSecond
         view.delegate = context.coordinator
         updateUIView(view, context: context)
         return view
     }
 
     func updateUIView(_ view: MTKView, context: Context) {
+        if view.preferredFramesPerSecond != framesPerSecond {
+            view.preferredFramesPerSecond = framesPerSecond
+        }
         context.coordinator.update(reduceMotion: reduceMotion, isActive: isActive)
         context.coordinator.updateForm(form, pulse: lockPulse, showsCode: showsCode,
                                        helixEntryDistance: helixEntryDistance)

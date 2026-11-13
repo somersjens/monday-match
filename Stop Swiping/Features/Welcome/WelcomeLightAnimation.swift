@@ -13,6 +13,8 @@ struct WelcomeLightAnimation: View {
     var skipsEntrance = false
     /// Stops drawing while something covers the light.
     var isPaused = false
+    /// Ambient light behind a form can draw less often than the main artwork.
+    var framesPerSecond = 60
     /// Entrance travel in the same normalized space as the helix geometry.
     var helixEntryDistance = 0.0
 
@@ -28,10 +30,11 @@ struct WelcomeLightAnimation: View {
             if WelcomeLightMetalView.isAvailable {
                 WelcomeLightMetalView(reduceMotion: reduceMotion, isActive: isRunning,
                                       form: form, lockPulse: lockPulse, showsCode: showsCode,
-                                      skipsEntrance: skipsEntrance, helixEntryDistance: helixEntryDistance)
+                                      skipsEntrance: skipsEntrance, framesPerSecond: framesPerSecond,
+                                      helixEntryDistance: helixEntryDistance)
             } else {
                 TimelineView(.animation(
-                    minimumInterval: 1.0 / 60.0,
+                    minimumInterval: 1.0 / Double(framesPerSecond),
                     paused: reduceMotion || !isRunning
                 )) { timeline in
                     Canvas(opaque: false, rendersAsynchronously: true) { context, size in

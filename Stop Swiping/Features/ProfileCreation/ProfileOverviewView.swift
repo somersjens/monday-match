@@ -19,9 +19,10 @@ struct ProfileOverviewView: View {
     private static var sections: [(title: String, steps: [ProfileCreationStep])] { [
         (L10n("Basics"), [.dateOfBirth, .partnerAgeRange, .height, .partnerHeightRange, .gender, .partnerGenders, .sexualArrangement, .religion, .languages, .location]),
         (L10n("Children"), [.hasChildren, .partnerHasChildren, .futureChildren]),
-        (L10n("Lifestyle"), [.alcohol, .smoking, .drugs]),
-        (L10n("Compatibility"), [.aloneTime])
-    ] }
+        (L10n("Lifestyle"), [.alcohol, .smoking, .drugs])
+    ] + CompatibilityScaleQuestion.sections.map { section in
+        (section.title, section.questions.map(\.step))
+    } }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -44,7 +45,7 @@ struct ProfileOverviewView: View {
 
     private var overview: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
+            LazyVStack(alignment: .leading, spacing: 28) {
                 header
 
                 ForEach(Self.sections, id: \.title) { section in
@@ -297,7 +298,7 @@ private extension ProfileCreationStep {
         case .alcohol: "wineglass"
         case .smoking: "smoke"
         case .drugs: "leaf"
-        case .aloneTime: "moon.stars"
+        default: compatibilityQuestion?.symbol ?? "slider.horizontal.3"
         }
     }
 }

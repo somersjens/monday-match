@@ -33,7 +33,7 @@ enum OnboardingMotion {
     static let step = Animation.spring(duration: 0.56, bounce: 0.1)
     static let stage = Animation.spring(duration: 0.95, bounce: 0.08)
     static let reveal = Animation.spring(duration: 0.45, bounce: 0.16)
-    static let selection = Animation.spring(duration: 0.32, bounce: 0.28)
+    static let selection = Animation.spring(duration: 0.16, bounce: 0.12)
     /// How long navigation stays locked while a step transition plays.
     static let stepLock: Duration = .milliseconds(580)
 

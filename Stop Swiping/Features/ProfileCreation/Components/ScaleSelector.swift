@@ -40,7 +40,6 @@ struct ScaleSelector: View {
                 .foregroundStyle(OnboardingTheme.secondaryText)
             }
         }
-        .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion), value: value)
         .sensoryFeedback(.selection, trigger: value)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
@@ -74,7 +73,10 @@ struct ScaleSelector: View {
                     }
             }
             .shadow(color: OnboardingTheme.blue.opacity(isSelected ? 0.6 : 0), radius: 12, y: 3)
-            .scaleEffect(isSelected ? 1.08 : 1)
+            // Selection color changes immediately; only its small lift animates.
+            .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion)) { point in
+                point.scaleEffect(isSelected ? 1.08 : 1)
+            }
             .contentShape(Circle())
     }
 }

@@ -86,6 +86,9 @@ nonisolated enum AppLocalization {
     static func string(_ message: AppLocalizedMessage, language: AppLanguage) -> String {
         let bundle = bundles[language] ?? .main
         let format = bundle.localizedString(forKey: message.key, value: message.key, table: "Localizable")
+        // Most UI labels have no arguments. Avoid a mutable string allocation
+        // and a regular-expression scan on every render of those labels.
+        guard !message.arguments.isEmpty else { return format }
         let result = NSMutableString(string: format)
         for match in placeholders.matches(in: format, range: NSRange(format.startIndex..., in: format)).reversed() {
             if let index = Int((format as NSString).substring(with: match.range(at: 1))), message.arguments.indices.contains(index) {

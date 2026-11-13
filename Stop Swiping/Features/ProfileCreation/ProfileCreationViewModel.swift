@@ -139,8 +139,9 @@ final class ProfileCreationViewModel: ObservableObject {
             guard let substance = step.substance else { return false }
             let answer = state.lifestyle[substance]
             return answer.ownLevel != nil && answer.partnerMaximumLevel != nil
-        case .aloneTime:
-            return state.lifestyle.aloneTime.isComplete
+        default:
+            guard let question = step.compatibilityQuestion else { return false }
+            return state.lifestyle[question].isComplete
         }
     }
 
@@ -156,10 +157,9 @@ final class ProfileCreationViewModel: ObservableObject {
             return GenderIdentity.onboardingOptions.allSatisfy { state.partnerGenders.contains($0) }
         case .sexualArrangement:
             return state.relationshipPreferences.shouldAutoAdvance(.sexualArrangement)
-        case .aloneTime:
-            return state.lifestyle.aloneTime.hasCustomValuesForAutoAdvance
         default:
-            return false
+            guard let question = currentStep.compatibilityQuestion else { return false }
+            return state.lifestyle[question].hasCustomValuesForAutoAdvance
         }
     }
 
@@ -470,23 +470,42 @@ final class ProfileCreationViewModel: ObservableObject {
     }
 
     /// The partner value follows the user's own answer until it is changed.
-    func setAloneTimeOwn(_ value: Int) {
+    func setCompatibilityOwn(_ value: Int, for question: CompatibilityScaleQuestion) {
         guard CompatibilityScaleAnswer.range.contains(value) else { return }
-        state.lifestyle.aloneTime.own = value
-        if !state.lifestyle.aloneTime.isPartnerCustomized {
-            state.lifestyle.aloneTime.partner = value
+        var answer = state.lifestyle[question]
+        answer.own = value
+        if !answer.isPartnerCustomized {
+            answer.partner = value
         }
+        guard answer != state.lifestyle[question] else { return }
+        state.lifestyle[question] = answer
+    }
+
+    func setCompatibilityPartner(_ value: Int, for question: CompatibilityScaleQuestion) {
+        guard CompatibilityScaleAnswer.range.contains(value) else { return }
+        var answer = state.lifestyle[question]
+        answer.partner = value
+        answer.isPartnerCustomized = true
+        guard answer != state.lifestyle[question] else { return }
+        state.lifestyle[question] = answer
+    }
+
+    func setCompatibilityImportance(_ value: Int, for question: CompatibilityScaleQuestion) {
+        guard CompatibilityScaleAnswer.range.contains(value) else { return }
+        guard state.lifestyle[question].importance != value else { return }
+        state.lifestyle[question].importance = value
+    }
+
+    func setAloneTimeOwn(_ value: Int) {
+        setCompatibilityOwn(value, for: .aloneTime)
     }
 
     func setAloneTimePartner(_ value: Int) {
-        guard CompatibilityScaleAnswer.range.contains(value) else { return }
-        state.lifestyle.aloneTime.partner = value
-        state.lifestyle.aloneTime.isPartnerCustomized = true
+        setCompatibilityPartner(value, for: .aloneTime)
     }
 
     func setAloneTimeImportance(_ value: Int) {
-        guard CompatibilityScaleAnswer.range.contains(value) else { return }
-        state.lifestyle.aloneTime.importance = value
+        setCompatibilityImportance(value, for: .aloneTime)
     }
 
     // MARK: - Completion
@@ -599,6 +618,26 @@ extension ProfileCreationViewModel {
         guard let repository else { return L10n("Photos can’t be saved on this device.") }
         do {
             let processed = try ImageProcessingService().process(data)
+            return saveAutoMatchingPhoto(processed, repository: repository)
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
+    /// Photo-picker entry point: decoding and compression cannot block taps
+    /// or the loading indicator on the main actor.
+    func setAutoMatchingPhotoInBackground(_ data: Data) async -> String? {
+        guard let repository else { return L10n("Photos can’t be saved on this device.") }
+        do {
+            let processed = try await ImageProcessingService().processInBackground(data)
+            return saveAutoMatchingPhoto(processed, repository: repository)
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
+    private func saveAutoMatchingPhoto(_ processed: Data, repository: ProfileRepository) -> String? {
+        do {
             var draft = try repository.loadProfile() ?? ProfileDraft()
             if let previous = state.autoMatching.photoID {
                 draft.photos.removeAll { $0.id == previous }

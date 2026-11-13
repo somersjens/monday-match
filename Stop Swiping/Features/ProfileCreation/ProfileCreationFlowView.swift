@@ -159,8 +159,10 @@ struct ProfileCreationFlowView: View {
             if let substance = step.substance {
                 SubstanceStep(viewModel: viewModel, substance: substance)
             }
-        case .aloneTime:
-            CompatibilityScaleStep(viewModel: viewModel, question: .aloneTime, onAnswerSelected: advanceAfterAnswerSelection)
+        default:
+            if let question = step.compatibilityQuestion {
+                CompatibilityScaleStep(viewModel: viewModel, question: question, onAnswerSelected: advanceAfterAnswerSelection)
+            }
         }
     }
 

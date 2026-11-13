@@ -490,7 +490,7 @@ struct AutoMatchingSetupView: View {
                 photoError = L10n("That photo couldn’t be opened.")
                 return
             }
-            if let error = viewModel.setAutoMatchingPhoto(data) {
+            if let error = await viewModel.setAutoMatchingPhotoInBackground(data) {
                 photoError = error
             } else {
                 photo = viewModel.autoMatchingPhoto.flatMap { UIImage(data: $0) }
