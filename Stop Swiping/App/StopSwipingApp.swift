@@ -6,10 +6,11 @@ struct StopSwipingApp: App {
     private let dependencies: DependencyContainer
 
     init() {
-        // The welcome light's shaders compile from source on first use. Start
-        // that off the main thread now, so the light is ready to draw as soon
-        // as its screen appears instead of costing the first frames.
-        Task.detached(priority: .userInitiated) { _ = WelcomeLightMetalRenderer.resources }
+        // Warm up the welcome light's shaders after this initializer finishes,
+        // on the main actor that owns the renderer resources.
+        Task(priority: .userInitiated) { @MainActor in
+            _ = WelcomeLightMetalRenderer.resources
+        }
         let dependencies = DependencyContainer.live
         self.dependencies = dependencies
         _appState = StateObject(

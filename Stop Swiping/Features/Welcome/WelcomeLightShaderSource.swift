@@ -203,16 +203,11 @@ float2 helixInletOffset(float excess, float side, float lane, float sheet, float
     return q + float2(-d.y, d.x)*spread;
 }
 
-// Mirrors WelcomeLightMatch: the top leaves first and the rest follows,
-// narrowing into one stream that accelerates up out of view.
-float2 helixExit(float2 q, float h, float ringValue, float exit) {
-    float order = (h + 1)*0.5;
-    float k = clamp((exit - 0.42*order)/0.58, 0.0, 1.0);
-    float e = k*k*(2 - k);
-    q.x = q.x*(1 - 0.55*e) + 0.10*sin(3.5*e + order*2.5 + ringValue*1.3)*e;
-    q.y -= e*5.2;
-    return q;
-}
+// Mirrors WelcomeLightMatch: the helix keeps its shape and screws itself
+// up out of view, spinning faster as it rises.
+constant float helixExitTurns = 2.2, helixExitRise = 4.4;
+float helixExitSpin(float exit) { return pow(exit, 1.5)*helixExitTurns*tau; }
+float helixExitLift(float exit) { return pow(exit, 2.4)*helixExitRise; }
 
 float3 helixPoint(float u, uint instance, constant WelcomeUniforms &p) {
     uint ring = instance / strands;
@@ -275,12 +270,12 @@ float3 helixPoint(float u, uint instance, constant WelcomeUniforms &p) {
             r += (0.04 + 0.025*sin(2.3*axial + 0.7*seconds + ringValue*2))*envelope;
         }
     }
-    theta += p.helixArrival.y;
+    theta += p.helixArrival.y + helixExitSpin(p.match.x);
     float x = r*sin(theta), z = r*cos(theta);
     float2 q = float2(x, y)/(1 - z*0.30);
     if (excess > 0) q += helixInletOffset(excess, backbone*sign(p.helixArrival.w), lane, sheetValue,
                                           abs(p.helixArrival.w), seconds);
-    if (p.match.x > 0) q = helixExit(q, h, ringValue, p.match.x);
+    q.y -= helixExitLift(p.match.x);
     return float3(q, (helixRadius - z)*0.8);
 }
 
@@ -331,6 +326,16 @@ float2 matchCubic(float2 a, float2 b, float2 c, float2 d, float t, thread float2
     return v*v*v*a + 3*v*v*t*b + 3*v*t*t*c + t*t*t*d;
 }
 
+// Above the cusp both strands wind round one line as a double helix that
+// spins as it comes down, and unwinds just before the heart.
+float2 matchTwist(float s, float side, float seconds, thread float &depth) {
+    float above = max(matchCuspS - s, 0.0);
+    float radius = 0.26*smoothstep(0.0, 0.17, above);
+    float angle = above*tau*6.2 + seconds*3.2 + (side > 0 ? 0.0 : M_PI_F);
+    depth = radius*cos(angle);
+    return float2(radius*sin(angle), 0);
+}
+
 float2 matchPath(float s, float side, float4 layout, thread float2 &direction) {
     float scale = layout.x;
     float2 k = float2(side*scale, scale), o = float2(0, layout.y);
@@ -340,7 +345,7 @@ float2 matchPath(float s, float side, float4 layout, thread float2 &direction) {
     float t;
     if (clamped < matchCuspS) {
         t = clamped/matchCuspS;
-        a = float2(-side*0.5, -3.3); b = float2(-side*0.42, -2.0);
+        a = float2(0, -3.4); b = float2(0, -1.9);
         c = cusp - float2(side*0.62, 0.78)*0.32*scale; d = cusp;
     } else if (clamped < 0.504) {
         t = (clamped - matchCuspS)/(0.504 - matchCuspS);
@@ -384,16 +389,24 @@ float3 matchPoint(float u, uint instance, constant WelcomeUniforms &p) {
     float side = ring == 0 ? 1.0 : -1.0;
     float ringValue = float(ring), sheetValue = float(sheet);
     float s = u - p.stream.w;
+    float seconds = p.shape.w;
     float2 direction;
     float2 base = matchPath(s, side, p.matchLayout, direction);
+    float twistDepth = 0, aheadDepth = 0;
+    float2 twist = matchTwist(s, side, seconds, twistDepth);
+    if (s < matchCuspS) {
+        float2 ahead;
+        float2 next = matchPath(s + 0.002, side, p.matchLayout, ahead) + matchTwist(s + 0.002, side, seconds, aheadDepth);
+        base += twist;
+        direction = normalize(next - base + float2(1e-7, 0));
+    }
     float2 normal = float2(-direction.y, direction.x);
-    float seconds = p.shape.w;
     float a = s*tau*4;
     float phase = sheetValue*2.15 + ringValue*1.7;
     // Pinched where the strands cross; looser silk on the way in and out.
     float pinch = mix(0.16, 1.0, smoothstep(0.0, 0.06, abs(s - matchCuspS)))
                 * mix(0.10, 1.0, smoothstep(0.0, 0.07, abs(s - matchTipS)));
-    float loose = 1 + 1.8*smoothstep(0.0, 0.25, matchCuspS - s) + 0.5*smoothstep(0.0, 0.12, s - matchTipS);
+    float loose = 1 + 0.35*smoothstep(0.0, 0.25, matchCuspS - s) + 0.5*smoothstep(0.0, 0.12, s - matchTipS);
     // Each sheet twists on its own, and the outer sheets swap sides, so the
     // ribbons cross one another as they travel round.
     float width = 0.05 + 0.022*sin(a*0.6 - seconds*0.9 + phase);
@@ -405,6 +418,9 @@ float3 matchPoint(float u, uint instance, constant WelcomeUniforms &p) {
     float offset = (lane*width*cos(torsion) + separation + weave)*spread;
     float2 q = base + normal*offset;
     float z = 0.16*sin(a*0.8 - seconds*1.2 + phase) + lane*width*sin(torsion)*2.5;
+    // The rope's near strand passes in front, a little larger.
+    q /= 1 - twistDepth*0.30;
+    z -= twistDepth*0.8;
 
     float broken = p.match.w;
     if (broken > 0) {

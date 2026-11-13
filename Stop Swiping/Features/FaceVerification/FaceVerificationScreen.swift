@@ -135,7 +135,7 @@ struct FaceVerificationScreen<CameraContent: View>: View {
 
     private var footer: some View {
         VStack(spacing: 10) {
-            if let outcome {
+            if outcome != nil {
                 Button(isMatched ? L10n("Continue") : needsCameraPermission ? L10n("Open Settings") : L10n("Try again"),
                        action: isMatched ? onDone : needsCameraPermission ? onSettings : onRetry)
                     .buttonStyle(GlowButtonStyle())
