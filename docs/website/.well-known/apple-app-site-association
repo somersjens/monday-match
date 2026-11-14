@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["4283ACUG4Y.Hakketjak.monday-match"],
+        "components": [
+          {
+            "/": "/stop-swiping/code*",
+            "comment": "Profile codes open in Stop Swiping; without the app, the page leads to the App Store."
+          }
+        ]
+      }
+    ]
+  }
+}

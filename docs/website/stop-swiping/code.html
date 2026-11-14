@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Stop Swiping</title>
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#020309">
+  <meta name="apple-itunes-app" content="app-id=6830641479">
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      padding: 32px 28px calc(32px + env(safe-area-inset-bottom));
+      background: radial-gradient(60% 45% at 50% 34%, rgba(5, 12, 96, .85), transparent 70%) #020309;
+      color: #fff; font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    main { width: 100%; max-width: 420px; text-align: center; }
+    .mark { width: 76px; height: 76px; margin-bottom: 22px; }
+    h1 { margin: 0 0 10px; font-size: 26px; line-height: 1.2; font-weight: 600; letter-spacing: -.01em; }
+    p { margin: 0 auto 28px; max-width: 340px; color: rgba(255, 255, 255, .64); }
+    a.button {
+      display: flex; align-items: center; justify-content: center; min-height: 58px; margin-top: 12px;
+      padding: 0 20px; border-radius: 22px; font-weight: 600; color: #fff; text-decoration: none;
+    }
+    a.primary { background: linear-gradient(90deg, #2952ff, #9b4dff); box-shadow: 0 10px 34px rgba(64, 82, 255, .35); }
+    a.quiet { min-height: 48px; color: rgba(255, 255, 255, .72); font-weight: 500; }
+    a.button:active { opacity: .7; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <svg class="mark" viewBox="0 0 76 76" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="light" x1="8" y1="10" x2="68" y2="66" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#33cfff"/><stop offset=".55" stop-color="#2952ff"/><stop offset="1" stop-color="#9b4dff"/>
+        </linearGradient>
+      </defs>
+      <path d="M38 64C20 51 9 41 9 27.5C9 18 16 12 24 12c6 0 11 3.5 14 9 3-5.5 8-9 14-9 8 0 15 6 15 15.5C67 41 56 51 38 64Z"
+            stroke="url(#light)" stroke-width="3" stroke-linejoin="round"/>
+    </svg>
+    <h1 data-nl="Open deze code in Stop Swiping">Open this code in Stop Swiping</h1>
+    <p data-nl="Met de app zie je of jullie een match zijn. Download Stop Swiping, maak je profiel compleet en scan de code daarna opnieuw.">The app shows whether the two of you are a match. Download Stop Swiping, complete your profile, then scan the code again.</p>
+    <a class="button primary" id="store" href="https://apps.apple.com/app/id6830641479" data-nl="Download in de App Store">Download on the App Store</a>
+    <a class="button quiet" id="open" hidden data-nl="Ik heb de app al">I already have the app</a>
+  </main>
+  <script>
+    (function () {
+      // Dutch for Dutch readers, English for everyone else.
+      if (/^nl\b/i.test(navigator.language || "")) {
+        document.documentElement.lang = "nl";
+        document.querySelectorAll("[data-nl]").forEach(function (node) { node.textContent = node.dataset.nl; });
+      }
+      // The answers are behind the #. They stay in this browser: nothing on
+      // this page sends them anywhere, they are only handed to the app.
+      var code = location.hash.slice(1);
+      if (/^[A-Za-z0-9_-]{8,4096}$/.test(code)) {
+        var open = document.getElementById("open");
+        open.href = "stopswiping://code/" + code;
+        open.hidden = false;
+      }
+      // Phones without the app go straight on to the App Store. The page
+      // stays behind it, for anyone who has the app after all.
+      var seen = false;
+      try {
+        seen = sessionStorage.getItem("store") === "1";
+        sessionStorage.setItem("store", "1");
+      } catch (error) {}
+      if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !seen) {
+        setTimeout(function () { location.href = document.getElementById("store").href; }, 900);
+      }
+    })();
+  </script>
+</body>
+</html>
