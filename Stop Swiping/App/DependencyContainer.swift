@@ -7,6 +7,8 @@ struct DependencyContainer {
     /// device's underage lock.
     var profileCreationStore: ProfileCreationStateStoring = UserDefaultsProfileCreationStore()
     var profileSync: ProfileCloudSyncing?
+    var chatRepository: SecureChatRepository?
+    var photoVerification: AWSPhotoVerificationService?
 
     static var live: DependencyContainer {
         // The file repository can only fail when the documents directory is
@@ -27,6 +29,8 @@ struct DependencyContainer {
         let client = configuration.makeClient()
         let sync = SupabaseProfileSync(client: client, projectURL: configuration.url, repository: repository, store: store)
         return DependencyContainer(authService: SupabaseAuthService(client: client, profileSync: sync),
-                                   profileRepository: repository, profileCreationStore: store, profileSync: sync)
+                                   profileRepository: repository, profileCreationStore: store, profileSync: sync,
+                                   chatRepository: SupabaseChatRepository(client: client, projectURL: configuration.url),
+                                   photoVerification: AWSPhotoVerificationService(client: client, profileSync: sync))
     }
 }

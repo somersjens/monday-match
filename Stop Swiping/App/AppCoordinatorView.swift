@@ -140,6 +140,8 @@ struct AppCoordinatorView: View {
                 authService: dependencies.authService,
                 hasAccount: appState.sessionState == .signedIn || appState.sessionState == .onboarding,
                 profileSync: dependencies.profileSync,
+                chatRepository: dependencies.chatRepository,
+                photoVerification: dependencies.photoVerification,
                 codeInbox: codeInbox,
                 onAccountCreated: appState.showSignedInApp,
                 onSignIn: {

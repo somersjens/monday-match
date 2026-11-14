@@ -5,7 +5,7 @@ import Foundation
 final class SignedInRootViewModel: ObservableObject {
     @Published var selectedTab: SignedInTab = .dashboard
     @Published private(set) var profile: ProfileDraft
-    @Published private(set) var matchResult: MatchResult? = .successfulMock
+    @Published private(set) var matchResult: MatchResult?
     /// Owned here so it survives navigating in and out of the chat. Sent
     /// messages live in this single instance for as long as the match is active.
     @Published private(set) var chatViewModel: ChatViewModel?

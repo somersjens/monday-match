@@ -6,6 +6,7 @@ import UIKit
 struct AutoMatchingSetupView: View {
     @ObservedObject var viewModel: ProfileCreationViewModel
     @ObservedObject var locationService: LocationService
+    var serverVerification: AWSPhotoVerificationService? = nil
     let onFinish: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -76,11 +77,19 @@ struct AutoMatchingSetupView: View {
                     if isFinalStep {
                         photoCard
                         if settings.photoID != nil {
-                            PhotoVerificationSection(
-                                photo: viewModel.autoMatchingReferencePhoto,
-                                receipt: viewModel.autoMatchingPhotoVerification,
-                                onComplete: viewModel.recordAutoMatchingPhotoVerification
-                            )
+                            Group {
+                                if let serverVerification, let reference=viewModel.autoMatchingReferencePhoto {
+                                    AWSPhotoVerificationSection(photo:reference,service:serverVerification,
+                                        receipt:viewModel.autoMatchingPhotoVerification,
+                                        onComplete:viewModel.recordAutoMatchingPhotoVerification)
+                                } else {
+                                    PhotoVerificationSection(
+                                        photo: viewModel.autoMatchingReferencePhoto,
+                                        receipt: viewModel.autoMatchingPhotoVerification,
+                                        onComplete: viewModel.recordAutoMatchingPhotoVerification
+                                    )
+                                }
+                            }
                             .padding(18)
                             .onboardingSurface(cornerRadius: 24)
                             .disabled(isLoadingPhoto)

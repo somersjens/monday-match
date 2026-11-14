@@ -1,0 +1,4 @@
+# The function verifies the Supabase access token with auth.getUser on every request.
+# Keep the legacy gateway JWT check enabled as an additional layer.
+[functions.aws-face-verification]
+verify_jwt = true

@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Stop Swiping Face Liveness - least-privilege roles for Supabase Edge and temporary camera sessions. Deploy in eu-west-1.
+Parameters:
+  SupabaseProjectRef:
+    Type: String
+    AllowedPattern: '[a-z]{20}'
+    Default: yrnwzehdzlxwnhyabwja
+Resources:
+  VerificationWorker:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Sub 'stop-swiping-verification-${SupabaseProjectRef}'
+      Policies:
+        - PolicyName: VerifyProfilePhoto
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - rekognition:CreateFaceLivenessSession
+                  - rekognition:GetFaceLivenessSessionResults
+                  - rekognition:DetectFaces
+                  - rekognition:CompareFaces
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: eu-west-1
+              - Effect: Allow
+                Action: sts:AssumeRole
+                Resource: !GetAtt CameraStreamingRole.Arn
+  CameraStreamingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'stop-swiping-liveness-stream-${SupabaseProjectRef}'
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:root'
+            Action: sts:AssumeRole
+            Condition:
+              ArnEquals:
+                aws:PrincipalArn: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:user/stop-swiping-verification-${SupabaseProjectRef}'
+              StringEquals:
+                sts:ExternalId: !Ref SupabaseProjectRef
+      Policies:
+        - PolicyName: StreamLivenessOnly
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: rekognition:StartFaceLivenessSession
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: eu-west-1
+Outputs:
+  WorkerUserName:
+    Value: !Ref VerificationWorker
+  StreamingRoleArn:
+    Value: !GetAtt CameraStreamingRole.Arn
+# No access keys, image buckets, face collections, images or embeddings are created
+# by this template. Supply worker credentials only through Supabase Edge secrets.

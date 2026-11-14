@@ -5,6 +5,8 @@ struct WelcomeView: View {
     private let onAccountCreated: () -> Void
     private let authService: AuthServicing
     private let profileSync: ProfileCloudSyncing?
+    private let chatRepository: SecureChatRepository?
+    private let photoVerification: AWSPhotoVerificationService?
     private let automaticallyShowsAccessOnAppear: Bool
     @ObservedObject var access: LifetimeAccessStore
     /// Codes scanned outside the app, with the iPhone's own camera.
@@ -89,6 +91,8 @@ struct WelcomeView: View {
         authService: AuthServicing = MockAuthService(),
         hasAccount: Bool = false,
         profileSync: ProfileCloudSyncing? = nil,
+        chatRepository: SecureChatRepository? = nil,
+        photoVerification: AWSPhotoVerificationService? = nil,
         codeInbox: ProfileCodeInbox? = nil,
         onAccountCreated: @escaping () -> Void = {},
         onSignIn: @escaping () -> Void
@@ -98,6 +102,8 @@ struct WelcomeView: View {
         self.onAccountCreated = onAccountCreated
         self.authService = authService
         self.profileSync = profileSync
+        self.chatRepository = chatRepository
+        self.photoVerification = photoVerification
         _hasAccount = State(initialValue: hasAccount)
         self.access = access
         self.automaticallyShowsAccessOnAppear = automaticallyShowsAccessOnAppear
@@ -406,7 +412,8 @@ struct WelcomeView: View {
                                 onUnderage: showUnderageNotice)
         }
         .fullScreenCover(isPresented: $showsAutoMatching) {
-            AutoMatchingSetupView(viewModel: profileCreation, locationService: locationService) {
+            AutoMatchingSetupView(viewModel: profileCreation, locationService: locationService,
+                                  serverVerification: photoVerification) {
                 showsAutoMatching = false
             }
             .preferredColorScheme(.dark)
@@ -550,6 +557,9 @@ struct WelcomeView: View {
 
     @ViewBuilder
     private var matchingEntry: some View {
+        if hasAccount, let chatRepository {
+            MatchingHubView(repository: chatRepository)
+        }
         switch AutoMatchingEntryStep.resolve(hasAccount: hasAccount, notificationState: hasLoadedNotifications ? notifications.state : nil) {
         case .account:
             AccountCreationCard {

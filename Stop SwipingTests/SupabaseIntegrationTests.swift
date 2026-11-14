@@ -202,6 +202,35 @@ final class SupabaseIntegrationTests: XCTestCase {
         XCTAssertTrue(String(decoding: upload.bodyData, as: UTF8.self).contains("image/jpeg"))
     }
 
+    func testExistingIdenticalPhotoIsNotOverwrittenOrReverified() async throws {
+        let bytes=Data([1,2,3]), requests=SupabaseTestRequests()
+        SupabaseTestURLProtocol.handler = { request in
+            requests.append(request)
+            if request.httpMethod == "POST" { return (409,Data("{\"statusCode\":\"409\",\"error\":\"Duplicate\",\"message\":\"Already exists\"}".utf8)) }
+            return (200,bytes)
+        }
+        let (client,_)=makeClient()
+        let photo=ProfilePhoto(imageData:bytes,order:0)
+        let uploader=SupabaseProfilePhotoUploader(client:client,projectURL:projectURL)
+        _=try await uploader.uploadPhotos([photo],userID:userID.uuidString)
+        XCTAssertEqual(requests.all.filter { $0.httpMethod == "POST" }.count,1)
+        XCTAssertEqual(requests.all.filter { $0.httpMethod == "GET" }.count,1)
+        XCTAssertFalse(requests.all.contains { $0.httpMethod == "PUT" })
+        XCTAssertTrue(requests.all.filter { $0.httpMethod == "POST" }.allSatisfy { $0.value(forHTTPHeaderField:"x-upsert") != "true" })
+    }
+    func testExistingChangedPhotoRequiresNewIdentity() async throws {
+        SupabaseTestURLProtocol.handler = { request in
+            if request.httpMethod == "POST" { return (409,Data("{\"statusCode\":\"409\",\"error\":\"Duplicate\",\"message\":\"Already exists\"}".utf8)) }
+            return (200,Data([9]))
+        }
+        let (client,_)=makeClient()
+        let uploader=SupabaseProfilePhotoUploader(client:client,projectURL:projectURL)
+        do {
+            _=try await uploader.uploadPhotos([ProfilePhoto(imageData:Data([1]),order:0)],userID:userID.uuidString)
+            XCTFail("Different bytes at an existing photo ID must not be overwritten")
+        } catch SupabaseProfilePhotoUploader.PhotoUploadError.changedIdentity {}
+    }
+
     private func completedState() -> ProfileCreationState {
         var state = ProfileCreationState(today: .today(), applicationLanguage: "en")
         state.completedAt = Date()

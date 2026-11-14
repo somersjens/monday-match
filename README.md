@@ -68,8 +68,16 @@ Mock authentication is available only when explicitly injected in previews or
 tests. Missing Supabase configuration fails account creation instead of
 pretending that an account was created.
 
-Automatic match generation and chat remain separate backend work. This change
-connects authentication, the profile backup and private photo upload.
+Automatic matching now runs in Postgres on every profile save: opted-in eligible
+users join the pool, mutually compatible users are reserved atomically, and
+past pairs are permanently excluded for the same account IDs. The two matching
+migrations and the rollback-only SQL tests are in `supabase/`.
+See [matching backend](docs/supabase-matching.md) for the lifecycle, API contract,
+admin overview, verification requirements and deployment notes. The real profile home now
+opens live encrypted chat, with CryptoKit HPKE, Keychain device keys, security
+codes, retry handling, blocking and reporting. AWS Face Liveness integration for
+verified profile photos is implemented; see [AWS activation](docs/aws-photo-verification.md)
+for the account/secret setup that remains before real verification can run.
 
 Reference: [Supabase SwiftUI setup](https://supabase.com/docs/guides/getting-started/quickstarts/ios-swiftui),
 [Apple sign-in](https://supabase.com/docs/guides/auth/social-sign-in/auth-apple),

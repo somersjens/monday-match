@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		CD8820010000000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = CD8820010000000000000002 /* Supabase */; };
+		CD8820020000000000000001 /* FaceLiveness in Frameworks */ = {isa = PBXBuildFile; productRef = CD8820020000000000000002 /* FaceLiveness */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +71,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CD8820010000000000000001 /* Supabase in Frameworks */,
+				CD8820020000000000000001 /* FaceLiveness in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +133,7 @@
 			name = "Stop Swiping";
 			packageProductDependencies = (
 				CD8820010000000000000002 /* Supabase */,
+				CD8820020000000000000002 /* FaceLiveness */,
 			);
 			productName = "Stop Swiping";
 			productReference = F9D98B6B2FE9028200B20CE0 /* Stop Swiping.app */;
@@ -217,6 +220,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				CD8820010000000000000003 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				CD8820020000000000000003 /* XCRemoteSwiftPackageReference "amplify-ui-swift-liveness" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F9D98B6C2FE9028200B20CE0 /* Products */;
@@ -308,6 +312,12 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Stop Swiping/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Stop Swiping";
+				INFOPLIST_KEY_NSCameraUsageDescription = "The camera scans profile codes and verifies your chosen photo. Offline scans stay on this iPhone. If you choose server verification, the live face video and photo are processed by AWS in Ireland after your consent.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Stop Swiping uses your local network to find the phone you hold yours against, so the two of you can exchange profiles directly.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to find matches within the distance you choose. Only an approximate location is stored and your exact coordinates are never shown on your profile.";
+				INFOPLIST_KEY_NSNearbyInteractionUsageDescription = "Stop Swiping measures the distance to another phone, so profiles are only exchanged when you hold your phones together.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Choose photos from your library to use on your profile.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -355,6 +365,12 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Stop Swiping/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Stop Swiping";
+				INFOPLIST_KEY_NSCameraUsageDescription = "The camera scans profile codes and verifies your chosen photo. Offline scans stay on this iPhone. If you choose server verification, the live face video and photo are processed by AWS in Ireland after your consent.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Stop Swiping uses your local network to find the phone you hold yours against, so the two of you can exchange profiles directly.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to find matches within the distance you choose. Only an approximate location is stored and your exact coordinates are never shown on your profile.";
+				INFOPLIST_KEY_NSNearbyInteractionUsageDescription = "Stop Swiping measures the distance to another phone, so profiles are only exchanged when you hold your phones together.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Choose photos from your library to use on your profile.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -662,6 +678,14 @@
 				minimumVersion = 2.55.6;
 			};
 		};
+		CD8820020000000000000003 /* XCRemoteSwiftPackageReference "amplify-ui-swift-liveness" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/aws-amplify/amplify-ui-swift-liveness";
+			requirement = {
+				kind = exactVersion;
+				version = 1.6.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -669,6 +693,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = CD8820010000000000000003 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		CD8820020000000000000002 /* FaceLiveness */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CD8820020000000000000003 /* XCRemoteSwiftPackageReference "amplify-ui-swift-liveness" */;
+			productName = FaceLiveness;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
