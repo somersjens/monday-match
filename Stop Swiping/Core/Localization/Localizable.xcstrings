@@ -58,6 +58,23 @@
         }
       }
     },
+    "{0} can no longer send you messages." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} can no longer send you messages."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} kan je dan geen berichten meer sturen."
+          }
+        }
+      }
+    },
     "{0} centimeters" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -313,6 +330,23 @@
         }
       }
     },
+    "{0} new messages from {1}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} new messages from {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} nieuwe berichten van {1}"
+          }
+        }
+      }
+    },
     "{0} none of {1}" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -547,6 +581,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "{0} spreekt geen {1}"
+          }
+        }
+      }
+    },
+    "{0} unread" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} unread"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} ongelezen"
           }
         }
       }
@@ -823,12 +874,19 @@
         }
       }
     },
-    "%@ · %lld%%" : {
+    "{0}% match · {1}" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$lld%%"
+            "state" : "translated",
+            "value" : "{0}% match · {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0}% match · {1}"
           }
         }
       }
@@ -1535,6 +1593,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Meldingen toestaan"
+          }
+        }
+      }
+    },
+    "Also break the match" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also break the match"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match ook verbreken"
           }
         }
       }
@@ -2300,6 +2375,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zet allebei AirDrop aan"
+          }
+        }
+      }
+    },
+    "Break match" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break match"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match verbreken"
+          }
+        }
+      }
+    },
+    "Break your match" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break your match"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbreek je match"
+          }
+        }
+      }
+    },
+    "Break your match with {0}?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break your match with {0}?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je match met {0} verbreken?"
+          }
+        }
+      }
+    },
+    "Breaking ends your match with {0} for both of you." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breaking ends your match with {0} for both of you."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbreken beëindigt je match met {0} voor jullie allebei."
           }
         }
       }
@@ -3276,6 +3419,23 @@
         }
       }
     },
+    "Conversation with {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conversation with {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesprek met {0}"
+          }
+        }
+      }
+    },
     "Cook at home" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3323,6 +3483,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Koken en uit eten"
+          }
+        }
+      }
+    },
+    "Could not submit report" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not submit report"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melding kon niet worden verstuurd"
           }
         }
       }
@@ -3531,6 +3708,23 @@
         }
       }
     },
+    "Demo conversation. Every message gets a reply." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demo conversation. Every message gets a reply."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demogesprek. Elk bericht krijgt een antwoord."
+          }
+        }
+      }
+    },
     "Depth of conversation" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3561,6 +3755,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beschrijf wat er is gebeurd"
+          }
+        }
+      }
+    },
+    "Describe what happened (optional)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Describe what happened (optional)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beschrijf wat er gebeurde (optioneel)"
           }
         }
       }
@@ -4445,6 +4656,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Willen geen kinderen"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klaar"
           }
         }
       }
@@ -5516,6 +5744,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Heeft kinderen"
+          }
+        }
+      }
+    },
+    "Hate speech or discrimination" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hate speech or discrimination"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haatzaaien of discriminatie"
           }
         }
       }
@@ -7087,6 +7332,23 @@
         }
       }
     },
+    "Match broken." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match broken."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match verbroken."
+          }
+        }
+      }
+    },
     "Match name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7138,6 +7400,23 @@
         }
       }
     },
+    "Match settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match settings"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instellingen van de match"
+          }
+        }
+      }
+    },
     "Max" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7168,6 +7447,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Maximum"
+          }
+        }
+      }
+    },
+    "May be under 18" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "May be under 18"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mogelijk jonger dan 18"
           }
         }
       }
@@ -7219,6 +7515,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Berichten worden op je telefoon versleuteld. Verloren privésleutels kunnen niet vanuit Supabase worden hersteld."
+          }
+        }
+      }
+    },
+    "Messages are end-to-end encrypted. Only you and your match can read them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messages are end-to-end encrypted. Only you and your match can read them."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten zijn end-to-end versleuteld. Alleen jij en je match kunnen ze lezen."
           }
         }
       }
@@ -7627,6 +7940,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nieuwe ervaringen"
+          }
+        }
+      }
+    },
+    "New message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New message"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw bericht"
+          }
+        }
+      }
+    },
+    "New message from {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New message from {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw bericht van {0}"
           }
         }
       }
@@ -9484,6 +9831,23 @@
         }
       }
     },
+    "Reply to {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reply to {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord {0}"
+          }
+        }
+      }
+    },
     "Report" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9501,6 +9865,40 @@
         }
       }
     },
+    "Report {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} melden"
+          }
+        }
+      }
+    },
+    "Report and break match" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report and break match"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melden en match verbreken"
+          }
+        }
+      }
+    },
     "Report match" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9514,6 +9912,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Match melden"
+          }
+        }
+      }
+    },
+    "Report your match" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report your match"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meld je match"
           }
         }
       }
@@ -9565,6 +9980,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Resultaten"
+          }
+        }
+      }
+    },
+    "Retry" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnieuw proberen"
           }
         }
       }
@@ -10011,6 +10443,40 @@
         }
       }
     },
+    "Send" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versturen"
+          }
+        }
+      }
+    },
+    "Send a message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send a message"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur een bericht"
+          }
+        }
+      }
+    },
     "Send reminder 1 day before deadline" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10024,6 +10490,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Herinner mij 1 dag voor de deadline"
+          }
+        }
+      }
+    },
+    "Send report" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send report"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melding versturen"
           }
         }
       }
@@ -10946,6 +11429,23 @@
         }
       }
     },
+    "Start a demo conversation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start a demo conversation"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start een demogesprek"
+          }
+        }
+      }
+    },
     "Start a demo match" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11435,6 +11935,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gelukkig is er nog persoonlijkheid"
+          }
+        }
+      }
+    },
+    "Thanks. Your report was sent." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thanks. Your report was sent."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedankt. Je melding is verstuurd."
           }
         }
       }
@@ -12034,6 +12551,23 @@
         }
       }
     },
+    "This match has ended." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This match has ended."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze match is beëindigd."
+          }
+        }
+      }
+    },
     "This message belongs to another device. Its private key is unavailable on this iPhone." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12204,6 +12738,23 @@
         }
       }
     },
+    "Today" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vandaag"
+          }
+        }
+      }
+    },
     "Top to top, and your profiles are exchanged." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12336,6 +12887,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verandert in een QR-code."
+          }
+        }
+      }
+    },
+    "Typing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Typing"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aan het typen"
+          }
+        }
+      }
+    },
+    "typing…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "typing…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "typt…"
+          }
+        }
+      }
+    },
+    "Unsent messages for the previous device will be discarded when you confirm this code." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsent messages for the previous device will be discarded when you confirm this code."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet-verstuurde berichten voor het vorige apparaat worden verwijderd zodra je deze code bevestigt."
           }
         }
       }
@@ -12680,6 +13282,40 @@
         }
       }
     },
+    "View your profile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View your profile"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bekijk je profiel"
+          }
+        }
+      }
+    },
+    "Waiting for {0} to open this conversation." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for {0} to open this conversation."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachten tot {0} dit gesprek opent."
+          }
+        }
+      }
+    },
     "Waiting for {0}…" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12965,6 +13601,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wat past het beste bij jou?"
+          }
+        }
+      }
+    },
+    "What happened?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What happened?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat is er gebeurd?"
           }
         }
       }
@@ -13428,6 +14081,23 @@
         }
       }
     },
+    "Yesterday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yesterday"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gisteren"
+          }
+        }
+      }
+    },
     "You" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13645,6 +14315,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je hebt een match. Open jullie privégesprek."
+          }
+        }
+      }
+    },
+    "You have a match. Say hi!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You have a match. Say hi!"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je hebt een match. Zeg hoi!"
           }
         }
       }
@@ -14104,6 +14791,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jouw match met {0}"
+          }
+        }
+      }
+    },
+    "Your match with {0}, {1} percent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your match with {0}, {1} percent"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jouw match met {0}, {1} procent"
           }
         }
       }

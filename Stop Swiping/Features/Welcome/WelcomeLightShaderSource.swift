@@ -22,6 +22,7 @@ struct WelcomeUniforms {
     float4 match;       // helix exit, strand head, strand tail, break
     float4 matchLayout; // heart scale, vertical offset, score line height, 1 while a match shows
     float4 matchMorph;  // progress, saved match enabled, shared vertical offset, captured helix seconds
+    float4 chat;        // heart-to-rings progress, rings' turn in radians
 };
 
 struct RibbonVertex {
@@ -454,6 +455,61 @@ float2 matchCrack(float v, float4 layout) {
     return float2(x, y)*layout.x + float2(0, layout.y);
 }
 
+// The chat rings mirror WelcomeLightMatch.Chat. Each strand's visible part,
+// from the cusp to its end, becomes one closed ring around its own lobe: it
+// starts at the cusp, runs over the top and round, and its last stretch
+// overlaps the start while fading, so the ring has no seam.
+constant float chatRingEnd = 0.94;
+constant float chatSeamWidth = 0.06;
+constant float chatRingX = \#(WelcomeLightMatch.Chat.ringCenterX), chatRingY = \#(WelcomeLightMatch.Chat.ringCenterY);
+constant float chatRingRadius = \#(WelcomeLightMatch.Chat.ringRadius);
+
+float2 chatRingCenter(float side, float4 layout) {
+    return float2(side*chatRingX, chatRingY)*layout.x + float2(0, layout.y);
+}
+
+float2 chatRing(float s, float side, float4 layout, float seconds, thread float2 &direction) {
+    float2 center = chatRingCenter(side, layout);
+    float radius = chatRingRadius*layout.x*(1 + 0.018*sin(seconds*1.3 + side*0.9));
+    // Start where the cusp sits on this ring, running the lobe's way round.
+    float2 cusp = float2(0, matchCuspY)*layout.x + float2(0, layout.y) - center;
+    float start = atan2(cusp.y, side*cusp.x);
+    float angle = start + (s - matchCuspS)/(chatRingEnd - matchCuspS)*tau;
+    direction = float2(-side*sin(angle), cos(angle));
+    return center + float2(side*cos(angle), sin(angle))*radius;
+}
+
+// Light along a ring: the start fades in exactly where the end fades out.
+float chatSeam(float s) {
+    return smoothstep(matchCuspS, matchCuspS + chatSeamWidth, s)
+        *(1 - smoothstep(chatRingEnd, chatRingEnd + chatSeamWidth, s));
+}
+
+// The tip and the strand under the scores lead; the top of the lobes follows.
+float chatAmount(float s, constant WelcomeUniforms &p) {
+    if (p.chat.x <= 0) return 0;
+    float along = clamp((s - matchCuspS)/(1.0 - matchCuspS), 0.0, 1.0);
+    float k = clamp(p.chat.x*1.4 - 0.4*(1 - along), 0.0, 1.0);
+    return k*k*(3 - 2*k);
+}
+
+// The rings circle each other round a vertical axis through their middle,
+// seen from a little above: the far ring rises, shrinks and dims, the near
+// one passes in front. Each ring also turns a little on its own axis.
+float3 chatOrbit(float2 q, float z, float side, constant WelcomeUniforms &p) {
+    float theta = p.chat.y;
+    if (theta == 0) return float3(q, z);
+    float2 center = chatRingCenter(side, p.matchLayout);
+    float2 pivot = float2(0, center.y);
+    float2 local = q - center;
+    float c = cos(theta), s = sin(theta);
+    float yaw = 0.42*s;
+    float depth = center.x*s + local.x*sin(yaw);
+    float2 moved = float2(center.x*c + local.x*cos(yaw), center.y - center.x*s*0.24 + local.y);
+    float perspective = 1.0/(1.0 + depth*0.42);
+    return float3(pivot + (moved - pivot)*perspective, z + depth*0.9);
+}
+
 float3 matchPointAt(float s, uint instance, constant WelcomeUniforms &p) {
     uint ring = instance / strands;
     uint strand = instance % strands;
@@ -476,6 +532,13 @@ float3 matchPointAt(float s, uint instance, constant WelcomeUniforms &p) {
         float join = smoothstep(matchCuspS - 0.035, matchCuspS, s);
         direction = normalize(mix(direction, float2(0, -1), join) + float2(side*1e-7, 0));
     }
+    float chat = chatAmount(s, p);
+    if (chat > 0) {
+        float2 ringDirection;
+        float2 ring = chatRing(s, side, p.matchLayout, seconds, ringDirection);
+        base = mix(base, ring, chat);
+        direction = normalize(mix(direction, ringDirection, chat) + float2(1e-7, 0));
+    }
     float2 normal = float2(-direction.y, direction.x);
     float a = s*tau*4;
     float phase = sheetValue*2.15 + ringValue*1.7;
@@ -490,7 +553,8 @@ float3 matchPointAt(float s, uint instance, constant WelcomeUniforms &p) {
     float separation = (sheetValue - 1)*0.020*sin(a*0.5 + seconds*0.6 + ringValue*1.3);
     float weave = 0.007*sin(a - seconds*1.6 + phase + lane*0.9)
                 + 0.003*sin(2.3*a + seconds*1.1 + lane*2.4 + phase);
-    float spread = pinch*loose*p.matchLayout.x;
+    // Rings carry an even ribbon: no crossings left to pinch.
+    float spread = mix(pinch*loose, 1.0, chat)*p.matchLayout.x;
     float offset = (lane*width*cos(torsion) + separation + weave)*spread;
     float2 q = base + normal*offset;
     float z = 0.075*sin(a*0.8 - seconds*1.2 + phase) + lane*width*sin(torsion)*1.5;
@@ -520,6 +584,7 @@ float3 matchPointAt(float s, uint instance, constant WelcomeUniforms &p) {
                       + float2(side*0.06, 0.03)*split*p.matchLayout.x;
         q = mix(q, turned, lobe);
     }
+    if (p.chat.x > 0) return chatOrbit(q, z, side, p);
     return float3(q, z);
 }
 
@@ -744,14 +809,16 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
         // Keep their combined light equal to one open ribbon, without fading
         // the material that is still travelling through the coil.
         float strandLight = (0.55 + 1.1*rim - 0.25*aura)*(1 - 0.4*back)*(sheet == 1 ? 0.30 : 1.0);
-        float heartLight = 0.5*strandLight*(1 - smoothstep(0.88, 1.0, s))*(1 - 0.35*p.match.w);
+        float chatLight = smoothstep(0.2, 0.85, p.chat.x);
+        float heartLight = 0.5*strandLight*mix(1 - smoothstep(0.88, 1.0, s), chatSeam(s), chatLight)*(1 - 0.35*p.match.w);
         out.intensity *= mix(1.0, heartLight, matchHeart);
     } else if (matchHeart > 0) {
         float s = u - p.stream.w;
         float root = p.match.y >= 1.04 ? step(p.match.z, s) : smoothstep(p.match.z, p.match.z + 0.02, s);
         float window = root*(1 - smoothstep(p.match.y - 0.018, p.match.y, s));
         float strandLight = (0.55 + 1.1*rim - 0.25*aura)*(1 - 0.4*back)*(sheet == 1 ? 0.30 : 1.0);
-        out.intensity *= window*strandLight*(1 - smoothstep(0.88, 1.0, s))*(1 - 0.35*p.match.w);
+        float chatLight = smoothstep(0.2, 0.85, p.chat.x);
+        out.intensity *= window*strandLight*mix(1 - smoothstep(0.88, 1.0, s), chatSeam(s), chatLight)*(1 - 0.35*p.match.w);
     }
     out.coreWidth = (1 + highlight*(1.3 - 0.45*heartFlow) + head*0.45)*mix(1.0, 2.0, code*helix);
     out.color = color;

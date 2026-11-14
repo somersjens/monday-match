@@ -45,6 +45,12 @@ struct WelcomeView: View {
     @State private var scannedProfile: ProfileCreationState?
 
     @StateObject private var savedMatches = SavedMatchStore()
+    /// The account's active server match and its conversation.
+    @StateObject private var liveMatches: LiveMatchCenter
+    /// The conversation behind the match on screen, live or demo.
+    @State private var activeChat: ChatViewModel?
+    /// The heart has turned into the rings and the conversation is open.
+    @State private var isChatting = false
     /// Looks for other phones while the profile is being shared.
     @StateObject private var exchange = ProfileExchangeSession()
     @State private var exchanges = 0
@@ -119,6 +125,7 @@ struct WelcomeView: View {
         self.automaticallyShowsAccessOnAppear = automaticallyShowsAccessOnAppear
         let model = ProfileCreationViewModel(store: profileCreationStore, repository: repository)
         _profileCreation = StateObject(wrappedValue: model)
+        _liveMatches = StateObject(wrappedValue: LiveMatchCenter(repository: chatRepository))
         // Closing a required access picker returns to the landing controls,
         // even if an old completed profile is still saved on this device.
         let stage: Stage = model.isCompleted && (automaticallyShowsAccessOnAppear || access.hasAccess)
@@ -213,12 +220,14 @@ struct WelcomeView: View {
                                             + WelcomeLightHelix.radius + 0.12,
                                           match: lightMatch)
                         .frame(width: animationWidth, height: drawingHeight)
-                        .scaleEffect(showsAccess ? AccessScreenMotion.lightScale(for: animationWidth) : (isOnboarding ? 0.62 : 1))
+                        .scaleEffect(showsAccess ? AccessScreenMotion.lightScale(for: animationWidth)
+                                     : (isOnboarding ? 0.62 : (isChatting ? MatchChatLayout.lightScale : 1)))
                         .opacity(showsAccess ? 1 : (isLightHidden ? 0 : (isOnboarding ? (showsUnderageNotice ? 0.55 : 0.3) : 1)))
                         .position(
                             x: proxy.size.width / 2,
                             y: showsAccess ? AccessScreenMotion.lightCenterY
-                                : (isOnboarding ? min(36, animationHeight / 2) : animationHeight / 2)
+                                : (isOnboarding ? min(36, animationHeight / 2)
+                                   : (isChatting ? MatchChatLayout.lightCenterY(unit: animationWidth * 0.42) : animationHeight / 2))
                         )
 
                     if !showsAccess && stage == .complete && lightStage == .complete && canShowCode && activeMatch == nil {
@@ -285,11 +294,23 @@ struct WelcomeView: View {
                             onShowScores: { scoreDetail = $0 },
                             onShowProfile: { showsMatchProfile = true },
                             onRename: renameMatch,
-                            onSave: { saveMatch(activeMatch.snapshot) },
+                            onSave: {
+                                // Releasing a held Save match after the demo chat opened is no save.
+                                guard !isChatting else { return }
+                                saveMatch(activeMatch.snapshot)
+                            },
                             onClose: closeMatch,
                             onDelete: { deleteMatch(activeMatch.snapshot) },
                             onRestartDemo: restartDemoAction,
-                            onUnderstandDemo: understandDemoAction
+                            onUnderstandDemo: understandDemoAction,
+                            chat: activeChat,
+                            isChatting: isChatting,
+                            chatRingsBottom: MatchChatLayout.ringsBottom(unit: animationWidth * 0.42),
+                            onSendMessage: startChat,
+                            onStartDemoChat: { startDemoChat(activeMatch.snapshot) },
+                            onViewProfile: { showsOverview = true },
+                            onBreakMatch: breakMatch,
+                            onReport: reportMatch
                         )
                         .transition(.opacity)
                     } else if stage == .complete, demoPhase != nil {
@@ -350,7 +371,8 @@ struct WelcomeView: View {
         sceneContent
         // The name popover handles its own keyboard. Keep the entire match
         // canvas at its original size so the heart and controls stay in place.
-        .ignoresSafeArea(.keyboard, edges: activeMatch == nil ? [] : .bottom)
+        // The conversation's composer rides on the keyboard; the light stays put.
+        .ignoresSafeArea(.keyboard, edges: activeMatch == nil || isChatting ? [] : .bottom)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size in
             // Keep the light at its largest size at this width while the keyboard resizes the controls.
             if size.width != lightLayoutSize.width || size.height > lightLayoutSize.height {
@@ -380,6 +402,15 @@ struct WelcomeView: View {
             if automaticallyShowsAccessOnAppear { checkAccess() }
             await notifications.refresh()
             hasLoadedNotifications = true
+        }
+        .task(id: hasAccount && scenePhase == .active && chatRepository != nil) {
+            guard hasAccount, scenePhase == .active, chatRepository != nil else { return }
+            await liveMatches.run { [profileCreation] in profileCreation.state }
+        }
+        .onChange(of: liveMatches.match?.id) { old, new in
+            // The other person broke the match while it was on screen.
+            guard let old, new != old, activeMatch?.snapshot.id == old else { return }
+            activeChat?.conversationEnded()
         }
         .task(id: profileSyncRevision) {
             // Wait until a saved answer has settled, rather than uploading
@@ -574,8 +605,8 @@ struct WelcomeView: View {
 
     @ViewBuilder
     private var matchingEntry: some View {
-        if hasAccount, let chatRepository {
-            MatchingHubView(repository: chatRepository)
+        if hasAccount, liveMatches.match != nil {
+            LiveMatchCard(center: liveMatches, onOpen: openLiveMatch)
         }
         switch AutoMatchingEntryStep.resolve(hasAccount: hasAccount, notificationState: hasLoadedNotifications ? notifications.state : nil) {
         case .account:
@@ -906,6 +937,8 @@ struct WelcomeView: View {
         Task {
             withAnimation(.easeOut(duration: 0.3)) {
                 activeMatch = nil
+                activeChat = nil
+                isChatting = false
                 matchReveal = .hidden
                 if !reduceMotion { isLightHidden = true }
             }
@@ -917,6 +950,67 @@ struct WelcomeView: View {
                 isLightHidden = false
             }
             waitForHelixEntrance()
+        }
+    }
+
+    // MARK: - Conversation
+
+    /// The server's match, shown like any other: the first time with the full
+    /// arrival, afterwards unfolding in place from the helix.
+    private func openLiveMatch() {
+        guard !isTransitioning, activeMatch == nil, demoPhase == nil,
+              let snapshot = liveMatches.snapshot(fallbackYou: profileCreation.state) else { return }
+        let transition: WelcomeLightMatch.Transition = liveMatches.hasBeenSeen(snapshot.id) ? .savedMatch : .newMatch
+        liveMatches.markSeen(snapshot.id)
+        showsCode = false
+        activeChat = liveMatches.chat
+        present(snapshot, transition: transition)
+    }
+
+    /// The heart's tip pulls up into two rings, the light rises under the
+    /// header, and the conversation fades in below.
+    private func startChat() {
+        guard let activeMatch, activeChat != nil, !isChatting else { return }
+        matchTask?.cancel()
+        matchReveal = .controls
+        isTransitioning = false
+        scoreDetail = nil
+        lightMatch = WelcomeLightMatch.Request(id: activeMatch.snapshot.id, isMatch: activeMatch.report.isMatch,
+                                               transition: lightMatch?.transition ?? .newMatch, isChatting: true)
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.3) : .smooth(duration: 1.6)) {
+            isChatting = true
+        }
+        activeChat?.markAllRead()
+        AccessibilityNotification.Announcement(L10n("Conversation with \(activeMatch.snapshot.name)")).post()
+    }
+
+    /// Before launch: a made-up conversation that answers every message.
+    private func startDemoChat(_ snapshot: MatchSnapshot) {
+        // Only a heart can become the rings; a broken one has nothing to say.
+        guard !isChatting, snapshot.report.isMatch,
+              activeChat == nil || !(activeChat?.isLive ?? false) else { return }
+        activeChat = .demo(matchID: snapshot.id, name: snapshot.name)
+        startChat()
+    }
+
+    /// Ends the match for both people; a demo simply closes.
+    private func breakMatch() {
+        guard let activeMatch else { return }
+        if let chat = activeChat, chat.isLive {
+            chat.endMatch()
+            liveMatches.forget()
+        }
+        savedMatches.delete(activeMatch.snapshot.id)
+        AccessibilityNotification.Announcement(L10n("Match broken.")).post()
+        closeMatch()
+    }
+
+    private func reportMatch(_ reason: ReportReason, details: String, alsoBreak: Bool) {
+        activeChat?.submitReport(reason: reason, details: details, endMatch: alsoBreak)
+        AccessibilityNotification.Announcement(L10n("Thanks. Your report was sent.")).post()
+        if alsoBreak {
+            if activeChat?.isLive == true { liveMatches.forget() }
+            closeMatch()
         }
     }
 

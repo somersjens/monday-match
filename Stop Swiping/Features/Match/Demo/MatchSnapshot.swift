@@ -11,13 +11,26 @@ struct MatchSnapshot: Codable, Identifiable, Equatable {
     let them: ProfileCreationState
     /// A local label; the original matched profiles remain unchanged.
     private(set) var customName: String?
+    /// Scores decided by the server for a match it made. The server only
+    /// makes a match when every requirement is met both ways.
+    var fixedScores: FixedScores?
 
-    init(id: UUID = UUID(), matchedAt: Date, you: ProfileCreationState, them: ProfileCreationState) {
+    struct FixedScores: Codable, Equatable {
+        let yours: Int
+        let theirs: Int
+    }
+
+    init(id: UUID = UUID(), matchedAt: Date, you: ProfileCreationState, them: ProfileCreationState,
+         fixedScores: FixedScores? = nil) {
         self.id = id
         self.matchedAt = matchedAt
         self.you = you
         self.them = them
+        self.fixedScores = fixedScores
     }
+
+    /// A match made by the server, with a conversation behind it.
+    var isLive: Bool { fixedScores != nil }
 
     var name: String { customName ?? them.displayName }
 
@@ -30,7 +43,9 @@ struct MatchSnapshot: Codable, Identifiable, Equatable {
     }
 
     var report: MatchReport {
-        MatchReport(you: you, them: them, on: CalendarDate.today(calendar: BirthDateRules.calendar, now: matchedAt), name: name)
+        var report = MatchReport(you: you, them: them, on: CalendarDate.today(calendar: BirthDateRules.calendar, now: matchedAt), name: name)
+        if let fixedScores { report.useServerScores(yours: fixedScores.yours, theirs: fixedScores.theirs) }
+        return report
     }
 }
 
@@ -71,12 +86,20 @@ struct MatchReport: Equatable {
         var weight: Double { MatchWeighting.weight(importance: importance) }
     }
 
-    let yourScore: Int
-    let theirScore: Int
+    private(set) var yourScore: Int
+    private(set) var theirScore: Int
     /// Requirements of yours that they don't meet.
-    let theirIssues: [String]
+    private(set) var theirIssues: [String]
     /// Requirements of theirs that you don't meet.
-    let yourIssues: [String]
+    private(set) var yourIssues: [String]
+
+    /// The server already checked every requirement both ways.
+    mutating func useServerScores(yours: Int, theirs: Int) {
+        yourScore = yours
+        theirScore = theirs
+        theirIssues = []
+        yourIssues = []
+    }
     private let yourRows: [Row]
     private let theirRows: [Row]
 

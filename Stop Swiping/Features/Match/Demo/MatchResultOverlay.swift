@@ -42,10 +42,25 @@ struct MatchResultOverlay: View {
     let onDelete: () -> Void
     var onRestartDemo: (() -> Void)? = nil
     var onUnderstandDemo: (() -> Void)? = nil
+    /// The conversation behind a match the server made, or the demo's.
+    var chat: ChatViewModel? = nil
+    /// The heart has become the rings and the conversation is open.
+    var isChatting = false
+    /// From the top of this view to the bottom of the rings while chatting.
+    var chatRingsBottom: CGFloat = 0
+    var onSendMessage: () -> Void = {}
+    /// Holding Save match opens a made-up conversation, before launch.
+    var onStartDemoChat: () -> Void = {}
+    var onViewProfile: () -> Void = {}
+    var onBreakMatch: () -> Void = {}
+    var onReport: (ReportReason, String, Bool) -> Void = { _, _, _ in }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var confirmsDeletion = false
     @State private var confirmsDeletionAgain = false
+    @State private var confirmsBreak = false
+    @State private var confirmsBreakAgain = false
+    @State private var reportReason: ReportReason?
     @State private var showsNameEditor = false
     @State private var hasMoreIssuesBelow = false
 
@@ -55,10 +70,19 @@ struct MatchResultOverlay: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .top) {
-                header
-                    .opacity(reveal >= .average ? 1 : 0)
-                    .allowsHitTesting(reveal >= .average)
-                    .accessibilityHidden(reveal < .average)
+                ZStack {
+                    if isChatting {
+                        chatHeader
+                            .transition(.opacity.combined(with: .offset(y: -6)))
+                    } else {
+                        header
+                            .transition(.opacity)
+                    }
+                }
+                .opacity(reveal >= .average ? 1 : 0)
+                .allowsHitTesting(reveal >= .average)
+                .accessibilityHidden(reveal < .average)
+                .zIndex(1)
 
                 TimelineView(.animation(minimumInterval: 1.0 / 60,
                     paused: lightTransition != .savedMatch || reduceMotion || reveal == .controls)) { timeline in
@@ -77,6 +101,19 @@ struct MatchResultOverlay: View {
                         score(.theirs, x: WelcomeLightMatch.scoreX, frame: movingFrame)
                     }
                     .frame(width: proxy.size.width, height: proxy.size.height)
+                    // The numbers step aside as the heart becomes the rings.
+                    .opacity(isChatting ? 0 : 1)
+                    .scaleEffect(isChatting && !reduceMotion ? 0.9 : 1)
+                    .allowsHitTesting(!isChatting)
+                    .accessibilityHidden(isChatting)
+                }
+
+                if isChatting, let chat {
+                    MatchChatPanel(chat: chat, ringsBottom: chatRingsBottom,
+                                   headerHeight: MatchChatLayout.headerHeight)
+                        .padding(.top, MatchChatLayout.headerHeight)
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .transition(.opacity.animation(.easeOut(duration: 0.5).delay(reduceMotion ? 0 : 0.6)))
                 }
 
                 VStack(spacing: 0) {
@@ -107,6 +144,10 @@ struct MatchResultOverlay: View {
                     }
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height)
+                .opacity(isChatting ? 0 : 1)
+                .offset(y: isChatting && !reduceMotion ? 30 : 0)
+                .allowsHitTesting(!isChatting)
+                .accessibilityHidden(isChatting)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
@@ -130,6 +171,30 @@ struct MatchResultOverlay: View {
                     Text(L10n("Are you sure? This is your last chance to keep it."))
                 }
         }
+        .alert(L10n("This can’t be undone"), isPresented: $confirmsBreak) {
+            Button(L10n("Cancel"), role: .cancel) {}
+            Button(L10n("Continue"), role: .destructive) {
+                Task {
+                    try? await Task.sleep(for: .milliseconds(350))
+                    confirmsBreakAgain = true
+                }
+            }
+        } message: {
+            Text(L10n("Breaking ends your match with \(match.name) for both of you."))
+        }
+        .background {
+            Color.clear
+                .alert(L10n("Break your match with \(match.name)?"), isPresented: $confirmsBreakAgain) {
+                    Button(L10n("Cancel"), role: .cancel) {}
+                    Button(L10n("Break match"), role: .destructive, action: onBreakMatch)
+                } message: {
+                    Text(L10n("Are you sure? This is your last chance to keep it."))
+                }
+        }
+        .sheet(item: $reportReason) { reason in
+            MatchReportSheet(name: match.name, reason: reason, onSubmit: onReport)
+        }
+        .animation(.easeInOut(duration: reduceMotion ? 0.2 : 0.55), value: isChatting)
     }
 
     // MARK: - Pieces
@@ -185,7 +250,7 @@ struct MatchResultOverlay: View {
             .accessibilityLabel(L10n("Show \(match.name)’s answers"))
             .accessibilityIdentifier("match.profile")
 
-            if isSaved {
+            if isSaved || match.isLive {
                 Button(action: onClose) {
                     Image(systemName: "xmark")
                         .font(.system(size: 18, weight: .semibold))
@@ -202,6 +267,44 @@ struct MatchResultOverlay: View {
         }
         .padding(.horizontal, 20)
         .padding(.top, 12)
+    }
+
+    /// While chatting: back, who it is, and one gear for everything else.
+    private var chatHeader: some View {
+        HStack(spacing: 10) {
+            Button(action: onClose) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.accentGradient)
+                    .frame(width: 44, height: 44)
+                    .background { Circle().fill(.white.opacity(0.08)) }
+                    .overlay { Circle().strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5) }
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(L10n("Back"))
+            .accessibilityIdentifier("chat.back")
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(match.name)
+                    .font(.system(.title3, design: .rounded, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .lineLimit(1)
+                if let chat {
+                    ChatHeaderSubtitle(chat: chat, matchedAt: match.matchedAt, average: report.average)
+                }
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+
+            Spacer(minLength: 0)
+
+            MatchSettingsMenu(name: match.name, onViewProfile: onViewProfile, onShowScores: onShowScores,
+                              onReport: { reportReason = $0 }, onBreak: { confirmsBreak = true })
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 10)
+        .frame(height: MatchChatLayout.headerHeight, alignment: .top)
     }
 
     private var average: some View {
@@ -329,15 +432,27 @@ struct MatchResultOverlay: View {
 
     private var controls: some View {
         VStack(spacing: 12) {
-            if isSaved {
-                Button(L10n("Close"), action: onClose)
-                    .buttonStyle(GlowButtonStyle())
+            if match.isLive && report.isMatch, let chat {
+                // A match the server made: both met every requirement and
+                // cleared each other's minimum score, so they can talk.
+                LiveMatchControls(chat: chat, name: match.name, onSendMessage: onSendMessage, onClose: onClose)
             } else {
-                Button(L10n("Save match"), action: onSave)
-                    .buttonStyle(GlowButtonStyle())
+                if isSaved {
+                    Button(L10n("Close"), action: onClose)
+                        .buttonStyle(GlowButtonStyle())
+                } else {
+                    Button(L10n("Save match"), action: onSave)
+                        .buttonStyle(GlowButtonStyle())
+                        .simultaneousGesture(
+                            LongPressGesture(minimumDuration: 3)
+                                .onEnded { _ in onStartDemoChat() }
+                        )
+                        .accessibilityAction(named: L10n("Start a demo conversation"), onStartDemoChat)
+                        .accessibilityIdentifier("match.save")
+                }
+                Button(L10n("Delete match")) { confirmsDeletion = true }
+                    .buttonStyle(QuietButtonStyle())
             }
-            Button(L10n("Delete match")) { confirmsDeletion = true }
-                .buttonStyle(QuietButtonStyle())
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)
@@ -417,5 +532,52 @@ private struct ScoreButtonStyle: ButtonStyle {
             .opacity(configuration.isPressed ? 0.6 : 1)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+/// Under a live match: what the other person already wrote, and the way in.
+private struct LiveMatchControls: View {
+    @ObservedObject var chat: ChatViewModel
+    let name: String
+    let onSendMessage: () -> Void
+    let onClose: () -> Void
+
+    var body: some View {
+        let unread = chat.unreadMessages
+        VStack(spacing: 12) {
+            if !unread.isEmpty {
+                LiveMessagePreview(name: name, messages: unread)
+                    .padding(.bottom, 6)
+                    .transition(.opacity.combined(with: .offset(y: 8)))
+            }
+            Button(unread.isEmpty ? L10n("Send a message") : L10n("Reply to \(name)"), action: onSendMessage)
+                .buttonStyle(GlowButtonStyle())
+                .accessibilityIdentifier("match.sendMessage")
+            Button(L10n("Close"), action: onClose)
+                .buttonStyle(QuietButtonStyle())
+        }
+        .animation(.spring(duration: 0.45, bounce: 0.2), value: unread.count)
+    }
+}
+
+/// "typing…" while the other person writes, otherwise when you matched.
+private struct ChatHeaderSubtitle: View {
+    @ObservedObject var chat: ChatViewModel
+    let matchedAt: Date
+    let average: Int
+
+    var body: some View {
+        Group {
+            if chat.isPartnerTyping {
+                Text(L10n("typing…"))
+                    .foregroundStyle(OnboardingTheme.cyan)
+            } else {
+                Text(L10n("\(average)% match · \(matchedAt.formatted(.dateTime.day().month(.abbreviated).locale(AppLocale.current)))"))
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+            }
+        }
+        .font(.footnote)
+        .lineLimit(1)
+        .animation(.easeInOut(duration: 0.2), value: chat.isPartnerTyping)
     }
 }

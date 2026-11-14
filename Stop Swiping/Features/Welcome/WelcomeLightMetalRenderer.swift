@@ -72,6 +72,8 @@ struct WelcomeLightUniforms {
     var match: SIMD4<Float> = .zero
     var matchLayout: SIMD4<Float> = .zero
     var matchMorph: SIMD4<Float> = .zero
+    /// Heart-to-rings progress and the rings' turn, while the chat is open.
+    var chat: SIMD4<Float> = .zero
 
     init(elapsed: Double, size: CGSize, pixelScale: Float, flowElapsed: Double? = nil) {
         let frame = WelcomeLightGeometry.Frame(elapsed: elapsed, flowElapsed: flowElapsed)
@@ -261,6 +263,7 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
     private var helixEntryDistance = 0.0
     private var match: WelcomeLightMatch.Request?
     private var matchStartedAt = 0.0
+    private var chatStartedAt: Double?
     private var code: WelcomeLightCode.Matrix?
     private var codeBuffer: MTLBuffer?
 
@@ -291,6 +294,11 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
         guard request != match else { return }
         if let request, request.id != match?.id { matchStartedAt = presentationElapsed }
         if request == nil, match != nil { helixStartedAt = presentationElapsed }
+        if request?.isChatting == true {
+            if chatStartedAt == nil || request?.id != match?.id { chatStartedAt = presentationElapsed }
+        } else {
+            chatStartedAt = nil
+        }
         match = request
     }
 
@@ -334,6 +342,13 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
                            startSeconds: WelcomeLightHelix.Arrival.motionSeconds(
                             atPresentation: matchStartedAt, reduceMotion: reduceMotion),
                            reduceMotion: reduceMotion)
+            if let chatStartedAt {
+                let elapsed = presentationElapsed - chatStartedAt
+                uniforms.chat = SIMD4(Float(WelcomeLightMatch.Chat.progress(elapsed: elapsed, reduceMotion: reduceMotion)),
+                                      Float(WelcomeLightMatch.Chat.orbitAngle(elapsed: elapsed, reduceMotion: reduceMotion)
+                                        .truncatingRemainder(dividingBy: 2 * .pi)),
+                                      0, 0)
+            }
         }
         if emission?.width != Int(view.drawableSize.width) || emission?.height != Int(view.drawableSize.height) {
             emission = resources.emissionTexture(size: view.drawableSize)

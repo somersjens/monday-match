@@ -126,6 +126,7 @@ final class SecureChatSession {
                     message=ChatMessage(id:row.messageID,sender:.system,text:SecureChatError.unavailableKey.localizedDescription,sentAt:row.createdAt)
                 }
                 received[row.messageID]=message
+                if row.senderID != ownID { newestPartnerRowID=max(newestPartnerRowID ?? 0,row.id) }
             }
             let next=page.map(\.id).max()
             if let next { cursor=max(cursor ?? 0,next) }
@@ -166,5 +167,18 @@ final class SecureChatSession {
         }
     }
     func end(block: Bool) async throws { try await identity(); try await repository.end(match.id,reason:block ? "blocked":"closed"); isClosed=true }
-    func report(reason: String,details: String) async throws { try await identity(); try await repository.report(match.id,reason:reason,details:details) }
+    func report(reason: String,details: String,endMatch: Bool = false) async throws {
+        try await identity()
+        try await repository.report(match.id,reason:reason,details:details,endMatch:endMatch)
+        if endMatch { isClosed=true }
+    }
+    /// The newest server row of a message from the partner, for read receipts.
+    private var newestPartnerRowID: Int64?
+    private var lastMarkedRead: Int64?
+    /// Tells the server everything received so far has been seen.
+    func markRead() async throws {
+        guard let newest=newestPartnerRowID, newest != lastMarkedRead, !isClosed else { return }
+        try await repository.markRead(match.id,upTo:newest)
+        lastMarkedRead=newest
+    }
 }

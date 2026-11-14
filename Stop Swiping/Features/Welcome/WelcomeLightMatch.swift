@@ -109,6 +109,47 @@ enum WelcomeLightMatch {
         let id: UUID
         let isMatch: Bool
         var transition: Transition = .newMatch
+        /// The conversation is open: the heart's tip pulls up until each lobe
+        /// is a ring, and the two rings keep circling each other.
+        var isChatting = false
+    }
+
+    /// Heart to rings for the conversation. The tip rises first, the strand
+    /// that ran under the scores is drawn up into the rings, and once they
+    /// are closed the pair starts to turn around its middle, slowly at first.
+    enum Chat {
+        static let morphDuration = 2.6
+        /// When the turning starts, and how long it takes to reach full speed.
+        static let orbitStart = 1.8
+        static let orbitRamp = 2.6
+        /// One full turn of the pair, in seconds.
+        static let orbitPeriod = 9.0
+
+        static func progress(elapsed: Double, reduceMotion: Bool = false) -> Double {
+            if reduceMotion { return 1 }
+            let t = min(max(elapsed / morphDuration, 0), 1)
+            return t*t*t*(t*(t*6 - 15) + 10)
+        }
+
+        /// The pair's turn in radians. Speed eases in from rest, so the rings
+        /// leave the heart's pose without a jolt.
+        static func orbitAngle(elapsed: Double, reduceMotion: Bool = false) -> Double {
+            if reduceMotion { return 0 }
+            let speed = 2 * Double.pi / orbitPeriod
+            let t = elapsed - orbitStart
+            guard t > 0 else { return 0 }
+            if t < orbitRamp {
+                // ∫ smoothstep: x³ − x⁴/2.
+                let x = t / orbitRamp
+                return speed * orbitRamp * (x*x*x - x*x*x*x / 2)
+            }
+            return speed * (orbitRamp / 2 + t - orbitRamp)
+        }
+
+        /// The middle of the rings, in the light's normalized space.
+        static let ringCenterY = -0.40
+        static let ringCenterX = 0.48
+        static let ringRadius = 0.47
     }
 
     /// Where the heart and the line between the scores sit.
