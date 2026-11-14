@@ -51,6 +51,7 @@ struct AutoMatchingSettings: Codable, Equatable {
     static let minimumScoreRange = 50...90
     static let minimumScoreStep = 5
 
+    var privacyConsent: PrivacyConsentReceipt?
     var isEnabled = false
     /// Kept when switching off, so the saved setup can be resumed directly.
     var hasCompletedSetup = false
@@ -74,7 +75,7 @@ struct AutoMatchingSettings: Codable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case isEnabled, photoID, ownAttractiveness, partnerMinimumAttractiveness, minimumMatchPercent
-        case appearanceScaleVersion, requiresVerifiedPartnerPhoto, hasCompletedSetup
+        case appearanceScaleVersion, requiresVerifiedPartnerPhoto, hasCompletedSetup, privacyConsent
     }
 
     init(from decoder: Decoder) throws {
@@ -90,12 +91,15 @@ struct AutoMatchingSettings: Codable, Equatable {
             partnerMinimumAttractiveness = try values.decodeIfPresent(Int.self, forKey: .partnerMinimumAttractiveness)
                 .flatMap { AppearanceRating.range.contains($0) ? $0 : nil }
         }
+        privacyConsent = try values.decodeIfPresent(PrivacyConsentReceipt.self, forKey: .privacyConsent)
         isEnabled = try values.decodeIfPresent(Bool.self, forKey: .isEnabled) == true && isReady
+            && privacyConsent?.isCurrent(for: .matching) == true
         hasCompletedSetup = try values.decodeIfPresent(Bool.self, forKey: .hasCompletedSetup) ?? isEnabled
     }
 
     func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encodeIfPresent(privacyConsent, forKey: .privacyConsent)
         try values.encode(isEnabled, forKey: .isEnabled)
         try values.encode(hasCompletedSetup, forKey: .hasCompletedSetup)
         try values.encode(requiresVerifiedPartnerPhoto, forKey: .requiresVerifiedPartnerPhoto)

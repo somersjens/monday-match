@@ -670,6 +670,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         let store = InMemoryProfileCreationStore()
         let viewModel = makeViewModel(store: store, repository: repository)
         completeProfile(viewModel)
+        authorizeMatching(viewModel)
         XCTAssertFalse(viewModel.state.autoMatching.isEnabled)
 
         XCTAssertFalse(viewModel.joinAutoMatching(), "Both scores are required.")
@@ -725,6 +726,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         let store = InMemoryProfileCreationStore()
         let model = makeViewModel(store: store, repository: repository)
         completeProfile(model)
+        authorizeMatching(model)
         model.setOwnAttractiveness(7)
         model.setPartnerMinimumAttractiveness(6)
         model.setMinimumMatchPercent(80)
@@ -754,6 +756,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         let store = InMemoryProfileCreationStore()
         let model = makeViewModel(store: store, repository: repository)
         completeProfile(model)
+        authorizeMatching(model)
         model.setOwnAttractiveness(7)
         model.setPartnerMinimumAttractiveness(6)
         let data = UIGraphicsImageRenderer(size: CGSize(width: 40, height: 40)).pngData { context in
@@ -778,6 +781,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         var settings = AutoMatchingSettings()
         settings.ownAttractiveness = 7
         settings.partnerMinimumAttractiveness = 6
+        settings.privacyConsent = PrivacyConsentReceipt(version: PrivacyConsentKind.matching.version, acceptedAt: Date(), languageCode: "en")
         settings.isEnabled = true
         var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any])
         legacy.removeValue(forKey: "hasCompletedSetup")
@@ -791,6 +795,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         let store = InMemoryProfileCreationStore()
         let viewModel = makeViewModel(store: store, repository: repository)
         completeProfile(viewModel)
+        authorizeMatching(viewModel)
         viewModel.setOwnAttractiveness(7)
         viewModel.setPartnerMinimumAttractiveness(6)
         viewModel.setRequiresVerifiedPartnerPhoto(false)
@@ -812,6 +817,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         let repository = InMemoryProfileRepository()
         let viewModel = makeViewModel(repository: repository)
         completeProfile(viewModel)
+        authorizeMatching(viewModel)
         viewModel.setOwnAttractiveness(7)
         viewModel.setPartnerMinimumAttractiveness(6)
         let data = UIGraphicsImageRenderer(size: CGSize(width: 40, height: 40)).pngData { context in
@@ -870,6 +876,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         settings.photoID = UUID()
         settings.ownAttractiveness = 10
         settings.partnerMinimumAttractiveness = 7
+        settings.privacyConsent = PrivacyConsentReceipt(version: PrivacyConsentKind.matching.version, acceptedAt: Date(), languageCode: "en")
         settings.isEnabled = true
         let decoded = try JSONDecoder().decode(AutoMatchingSettings.self, from: JSONEncoder().encode(settings))
         XCTAssertEqual(decoded, settings)
@@ -1193,6 +1200,13 @@ final class ProfileCreationViewModelTests: XCTestCase {
         }
         viewModel.setAloneTimeOwn(3)
         viewModel.setAloneTimeImportance(4)
+    }
+
+    private func authorizeMatching(_ model: ProfileCreationViewModel) {
+        XCTAssertTrue(model.setDisplayName("Alex"))
+        model.acceptPrivacy(.profile)
+        model.acknowledgeExplanation()
+        model.acceptPrivacy(.matching)
     }
 
     private func completeProfile(_ viewModel: ProfileCreationViewModel) {

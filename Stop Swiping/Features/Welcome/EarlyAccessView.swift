@@ -4,33 +4,40 @@ struct EarlyAccessView: View {
     @ObservedObject var access: LifetimeAccessStore
     let onContinue: () -> Void
     var onBack: (() -> Void)?
+    var usesSharedLight = false
 
-    @State private var selection = LifetimeProductID.earlyAdopter
+    @State private var selection = LifetimeProductID.lifetime
+    @State private var hasAppeared = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dismiss) private var dismiss
 
     private var canContinue: Bool {
         guard access.isReady, !access.isBusy, !access.isRequestingReminder else { return false }
         if access.hasPaidAccess || (selection == .earlyAdopter && access.hasAccess) { return true }
-        #if DEBUG
-        if selection == .earlyAdopter && access.developmentOfferEnabled { return true }
-        #endif
+        if selection == .earlyAdopter && access.isEarlyAccessRevealed { return true }
         return access.product(selection) != nil && (selection != .earlyAdopter || access.product(.lifetime) != nil)
     }
 
     var body: some View {
         ZStack {
-            OnboardingTheme.background.ignoresSafeArea()
-            RadialGradient(colors: [OnboardingTheme.blue.opacity(0.17), .clear],
-                           center: .topLeading, startRadius: 0, endRadius: 470)
-                .ignoresSafeArea()
+            if !usesSharedLight {
+                Color("WelcomeBackground").ignoresSafeArea()
+            }
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    header
+                VStack(alignment: .leading, spacing: 12) {
+                    lifetimeCard
+                        .accessArrival(visible: hasAppeared, delay: 0.16)
                     if access.canOfferEarlyAccess {
                         planCard(.earlyAdopter)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
+                            .accessArrival(visible: hasAppeared, delay: 0.28)
+                            .transition(.opacity.combined(with: .offset(y: 16)))
+                    } else {
+                        Text(L10n("Your early-adopter deadline has passed. Continue with lifetime access to finish your profile."))
+                            .font(.footnote)
+                            .foregroundStyle(OnboardingTheme.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessArrival(visible: hasAppeared, delay: 0.28)
                     }
-                    lifetimeCard
                     if access.products.isEmpty {
                         VStack(spacing: 8) {
                             Text(L10n("Store prices are currently unavailable."))
@@ -50,63 +57,70 @@ struct EarlyAccessView: View {
                     }
                 }
                 .frame(maxWidth: OnboardingTheme.contentWidth)
-                .padding(.horizontal, 24)
-                .padding(.top, 18)
-                .padding(.bottom, 24)
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 12)
                 .frame(maxWidth: .infinity)
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) { footer }
+        .safeAreaInset(edge: .top, spacing: 0) { lightNavigation }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            footer.accessArrival(visible: hasAppeared, delay: 0.40)
+        }
         .preferredColorScheme(.dark)
         .interactiveDismissDisabled()
         .task {
+            hasAppeared = true
             await access.start()
-            updateSelection()
+            keepSelectionAvailable()
         }
         .onChange(of: access.canOfferEarlyAccess) { _, _ in
             withAnimation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion)) {
-                updateSelection()
+                keepSelectionAvailable()
             }
         }
-        .accessibilityIdentifier("access.screen")
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if let onBack {
-                Button(action: onBack) {
-                    Label(L10n("Back"), systemImage: "chevron.left")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(OnboardingTheme.secondaryText)
-                        .frame(minHeight: 44)
-                }
-                .disabled(access.isBusy)
+    /// Tapping the light, or pulling it down, reverses the shared transition.
+    /// On the welcome screen the artwork belongs to the parent so its phase and
+    /// Metal surface continue unchanged; standalone access routes draw it here.
+    private var lightNavigation: some View {
+        ZStack {
+            if !usesSharedLight {
+                WelcomeLightAnimation(skipsEntrance: true)
+                    .frame(width: 300, height: 630)
+                    .scaleEffect(AccessScreenMotion.lightScale(for: 300))
+                    .position(x: 80, y: AccessScreenMotion.lightCenterY)
             }
-            Image(systemName: "sparkles")
-                .font(.system(size: 28, weight: .medium))
-                .foregroundStyle(OnboardingTheme.cyan)
-                .accessibilityHidden(true)
-            Text(L10n("A connection worth keeping."))
-                .font(.system(size: 31, weight: .semibold))
-                .tracking(-0.8)
-                .accessibilityAddTraits(.isHeader)
-            Text(access.canOfferEarlyAccess
-                 ? L10n("Choose your way in. Make it yours forever.")
-                 : L10n("Your early-adopter deadline has passed. Continue with lifetime access to finish your profile."))
-                .font(.subheadline)
-                .foregroundStyle(OnboardingTheme.secondaryText)
-                .fixedSize(horizontal: false, vertical: true)
+            Button(action: goBack) {
+                Rectangle().fill(.white.opacity(0.001))
+                    .frame(width: 160, height: AccessScreenMotion.headerHeight)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(access.isBusy)
+            .accessibilityLabel(L10n("Back"))
+            .accessibilityIdentifier("access.back")
+            .simultaneousGesture(DragGesture(minimumDistance: 12).onEnded { gesture in
+                if gesture.translation.height > 24 { goBack() }
+            })
         }
+        .frame(width: 160, height: AccessScreenMotion.headerHeight)
+        .frame(maxWidth: .infinity)
+    }
+
+    private func goBack() {
+        guard !access.isBusy else { return }
+        if let onBack { onBack() }
+        else { dismiss() }
     }
 
     private var lifetimeCard: some View {
         planCard(.lifetime)
             .simultaneousGesture(LongPressGesture(minimumDuration: 3).onEnded { _ in
-                #if DEBUG
                 guard !access.isBusy else { return }
-                access.revealDevelopmentOffer()
+                access.revealEarlyAccess()
                 selection = .earlyAdopter
-                #endif
             })
     }
 
@@ -118,37 +132,31 @@ struct EarlyAccessView: View {
                 selection = id
             }
         } label: {
-            VStack(alignment: .leading, spacing: 18) {
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        if early {
-                            Text(L10n("EARLY ADOPTER"))
-                                .font(.system(size: 10, weight: .bold))
-                                .tracking(1.5)
-                                .foregroundStyle(OnboardingTheme.cyan)
-                        }
-                        Text(early ? L10n("Early Adopter Benefits") : L10n("Lifetime Access"))
-                            .font(.system(size: 20, weight: .semibold))
-                            .multilineTextAlignment(.leading)
-                    }
-                    Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .center, spacing: 10) {
                     Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 24, weight: .light))
+                        .font(.system(size: 21, weight: .light))
                         .foregroundStyle(selected ? OnboardingTheme.cyan : OnboardingTheme.tertiaryText)
                         .accessibilityHidden(true)
-                }
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(access.product(id)?.displayPrice ?? "—")
-                        .font(.system(size: 37, weight: .semibold, design: .rounded))
-                        .minimumScaleFactor(0.65)
-                        .lineLimit(1)
-                    if early, let price = access.product(.lifetime)?.displayPrice {
-                        Text(price).font(.title3).strikethrough()
-                            .foregroundStyle(OnboardingTheme.tertiaryText)
+                    Text(early ? L10n("Early Adopter Benefits") : L10n("Lifetime Access"))
+                        .font(.system(size: 17, weight: .semibold))
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(access.product(id)?.displayPrice ?? "—")
+                            .font(.system(size: 20, weight: .semibold))
+                            .tracking(-0.3)
+                            .minimumScaleFactor(0.65)
+                            .lineLimit(1)
+                        if early, let price = access.product(.lifetime)?.displayPrice {
+                            Text(price).font(.system(size: 12)).strikethrough()
+                                .foregroundStyle(OnboardingTheme.tertiaryText)
+                        }
                     }
+                    .layoutPriority(1)
                 }
                 Rectangle().fill(OnboardingTheme.hairline).frame(height: 1)
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 7) {
                     if early {
                         benefit(L10n("Be among the first to join"))
                         benefit(L10n("Free forever:"), detail: L10n("You'll never have to pay"))
@@ -161,7 +169,7 @@ struct EarlyAccessView: View {
                 }
                 if early {
                     Text(L10n("To unlock these benefits, complete your profile within 7 days of signing up."))
-                        .font(.system(size: 12)).italic()
+                        .font(.system(size: 11.5)).italic()
                         .foregroundStyle(OnboardingTheme.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
                     if let deadline = access.ledger.deadline {
@@ -172,18 +180,18 @@ struct EarlyAccessView: View {
                 }
             }
             .foregroundStyle(OnboardingTheme.primaryText)
-            .padding(22)
+            .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
-                RoundedRectangle(cornerRadius: 26)
+                RoundedRectangle(cornerRadius: 22)
                     .fill(selected ? OnboardingTheme.blue.opacity(0.10) : OnboardingTheme.surface)
                     .overlay {
-                        RoundedRectangle(cornerRadius: 26)
+                        RoundedRectangle(cornerRadius: 22)
                             .strokeBorder(selected ? OnboardingTheme.cyan.opacity(0.65) : OnboardingTheme.hairline,
                                           lineWidth: selected ? 1.4 : 1)
                     }
             }
-            .contentShape(RoundedRectangle(cornerRadius: 26))
+            .contentShape(RoundedRectangle(cornerRadius: 22))
         }
         .buttonStyle(.plain)
         .disabled(access.isBusy)
@@ -192,21 +200,21 @@ struct EarlyAccessView: View {
     }
 
     private func benefit(_ title: String, detail: String? = nil) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: 8) {
             Image(systemName: "checkmark")
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(OnboardingTheme.cyan)
                 .padding(.top, 4)
                 .accessibilityHidden(true)
-            (Text(title).fontWeight(.semibold) + Text(detail.map { " \($0)" } ?? ""))
-                .font(.system(size: 14))
+            Text("\(Text(title).fontWeight(.semibold))\(detail.map { " \($0)" } ?? "")")
+                .font(.system(size: 13))
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var footer: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 6) {
             if selection == .earlyAdopter && access.canOfferEarlyAccess {
                 HStack(spacing: 16) {
                     Text(L10n("Send reminder 1 day before deadline"))
@@ -247,14 +255,17 @@ struct EarlyAccessView: View {
             .disabled(access.isBusy)
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
-        .padding(.horizontal, 24)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        .padding(.horizontal, 20)
+        .padding(.top, 6)
+        .padding(.bottom, 4)
         .frame(maxWidth: .infinity)
-        .background(OnboardingTheme.background)
+        .background(Color("WelcomeBackground"))
+        .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion), value: selection)
     }
 
-    private func updateSelection() {
-        selection = access.canOfferEarlyAccess ? .earlyAdopter : .lifetime
+    private func keepSelectionAvailable() {
+        if selection == .earlyAdopter && !access.canOfferEarlyAccess {
+            selection = .lifetime
+        }
     }
 }

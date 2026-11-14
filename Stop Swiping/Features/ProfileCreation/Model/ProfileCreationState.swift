@@ -68,6 +68,9 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
     case hostingGuests
     case diningOut
     case personalStyle
+    case currentAffairs
+    case screenTime
+    case cityOrNature
 
     static let allCases: [Self] = [
         .dateOfBirth, .partnerAgeRange, .height, .partnerHeightRange,
@@ -268,6 +271,11 @@ struct ProfileCreationState: Codable, Equatable {
         get { storedDisplayName ?? "" }
         set { storedDisplayName = newValue }
     }
+
+    var profilePrivacyConsent: PrivacyConsentReceipt?
+    var hasUnderstoodExplanation: Bool?
+    var hasCompletedDemo: Bool?
+    var hasUsedProfileExchange: Bool?
 
     var isUnderageLocked = false
     var completedAt: Date?

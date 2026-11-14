@@ -79,6 +79,9 @@ final class ProfileCreationViewModel: ObservableObject {
         if state.languages.isEmpty {
             state.languages = [AppLocale.languageCode]
         }
+        if !state.hasAcceptedProfilePrivacy || !state.hasAcceptedMatchingPrivacy {
+            state.autoMatching.isEnabled = false
+        }
         self.state = state
         substanceMode = missingSubstanceSide ?? .own
     }
@@ -590,19 +593,30 @@ enum ProfileNameRules {
 extension ProfileCreationViewModel {
     var hasDisplayName: Bool { !state.displayName.isEmpty }
 
-    /// Saves the name on this device and in the stored profile. An empty
-    /// name is rejected, so a name once given is never cleared.
+    /// Initial name entry requires a name. Adjust profile may clear it,
+    /// which restarts the next actions and switches automatic matching off.
     @discardableResult
-    func setDisplayName(_ name: String) -> Bool {
+    func setDisplayName(_ name: String, allowsEmpty: Bool = false) -> Bool {
         let normalized = ProfileNameRules.normalized(name)
-        guard !normalized.isEmpty else { return false }
+        guard allowsEmpty || !normalized.isEmpty else { return false }
         guard normalized != state.displayName else { return true }
-        state.displayName = normalized
-        stateBeforeEditing?.displayName = normalized
-        if let repository, var draft = (try? repository.loadProfile()) ?? nil {
-            draft.displayName = normalized
-            try? repository.saveProfile(draft)
+        var updated = state
+        updated.displayName = normalized
+        if normalized.isEmpty { updated.restartNextActions() }
+        if let repository {
+            do {
+                if var draft = try repository.loadProfile() {
+                    draft.displayName = normalized
+                    if normalized.isEmpty { draft.autoMatching = updated.autoMatching }
+                    try repository.saveProfile(draft)
+                }
+            } catch {
+                return false
+            }
         }
+        state = updated
+        stateBeforeEditing?.displayName = normalized
+        if normalized.isEmpty { stateBeforeEditing?.restartNextActions() }
         persist()
         return true
     }
@@ -614,7 +628,8 @@ extension ProfileCreationViewModel {
     var dealbreakers: MatchDealbreakers { MatchDealbreakers(state: state) }
 
     var canResumeAutoMatching: Bool {
-        isCompleted && state.autoMatching.hasCompletedSetup && state.autoMatching.isReady
+        state.canShareProfile && state.hasUnderstoodExplanation == true && state.hasAcceptedMatchingPrivacy
+            && state.autoMatching.hasCompletedSetup && state.autoMatching.isReady
     }
 
     @discardableResult
@@ -739,7 +754,8 @@ extension ProfileCreationViewModel {
     /// photo must pass verification. The partner requirement is independent.
     @discardableResult
     func joinAutoMatching() -> Bool {
-        guard isCompleted, state.autoMatching.isReady,
+        guard state.canShareProfile, state.hasUnderstoodExplanation == true,
+              state.hasAcceptedMatchingPrivacy, state.autoMatching.isReady,
               state.autoMatching.photoID == nil || state.autoMatching.hasCompletedSetup || hasVerifiedAutoMatchingPhoto else { return false }
         let hadCompletedSetup = state.autoMatching.hasCompletedSetup
         state.autoMatching.isEnabled = true
@@ -796,5 +812,41 @@ extension ProfileDraft {
         }
         profileCreationCompletedAt = completedAt
         if !state.displayName.isEmpty { displayName = state.displayName }
+    }
+}
+
+// MARK: - Next actions and privacy
+
+extension ProfileCreationViewModel {
+    func acceptPrivacy(_ kind: PrivacyConsentKind) {
+        guard state.completedAt != nil, hasDisplayName else { return }
+        let receipt = PrivacyConsentReceipt(version: kind.version, acceptedAt: now(),
+                                            languageCode: AppLanguageSettings.shared.language.rawValue)
+        switch kind {
+        case .profile:
+            state.profilePrivacyConsent = receipt
+            stateBeforeEditing?.profilePrivacyConsent = receipt
+        case .matching:
+            guard state.canShareProfile, state.hasUnderstoodExplanation == true else { return }
+            state.autoMatching.privacyConsent = receipt
+            stateBeforeEditing?.autoMatching.privacyConsent = receipt
+        }
+        persist()
+    }
+
+    func acknowledgeExplanation() {
+        guard state.canShareProfile else { return }
+        state.hasUnderstoodExplanation = true
+        persist()
+    }
+
+    func markDemoCompleted() {
+        state.hasCompletedDemo = true
+        persist()
+    }
+
+    func markProfileExchangeUsed() {
+        state.hasUsedProfileExchange = true
+        persist()
     }
 }

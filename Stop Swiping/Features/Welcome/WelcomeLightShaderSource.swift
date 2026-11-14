@@ -454,14 +454,13 @@ float2 matchCrack(float v, float4 layout) {
     return float2(x, y)*layout.x + float2(0, layout.y);
 }
 
-float3 matchPoint(float u, uint instance, constant WelcomeUniforms &p) {
+float3 matchPointAt(float s, uint instance, constant WelcomeUniforms &p) {
     uint ring = instance / strands;
     uint strand = instance % strands;
     uint sheet = strand / 20;
     float lane = float(strand % 20)/19.0*2 - 1;
     float side = ring == 0 ? 1.0 : -1.0;
     float ringValue = float(ring), sheetValue = float(sheet);
-    float s = u - p.stream.w;
     float seconds = p.shape.w;
     float2 direction;
     float2 base = matchPath(s, side, p.matchLayout, direction);
@@ -472,6 +471,10 @@ float3 matchPoint(float u, uint instance, constant WelcomeUniforms &p) {
         float2 next = matchPath(s + 0.002, side, p.matchLayout, ahead) + matchTwist(s + 0.002, side, seconds, aheadDepth);
         base += twist;
         direction = normalize(next - base + float2(1e-7, 0));
+        // The incoming normal must meet the outgoing normal, rather than
+        // switching sides in a single vertex when s crosses the cusp.
+        float join = smoothstep(matchCuspS - 0.035, matchCuspS, s);
+        direction = normalize(mix(direction, float2(0, -1), join) + float2(side*1e-7, 0));
     }
     float2 normal = float2(-direction.y, direction.x);
     float a = s*tau*4;
@@ -520,14 +523,28 @@ float3 matchPoint(float u, uint instance, constant WelcomeUniforms &p) {
     return float3(q, z);
 }
 
+// Mesh coordinates can round a nominal cusp to the incoming side on a
+// different GPU. Resolve that boundary once; geometric joins use explicit s.
+float3 matchPoint(float u, uint instance, constant WelcomeUniforms &p) {
+    float s = u - p.stream.w;
+    if (abs(s - matchCuspS) < 0.000002) s = matchCuspS;
+    return matchPointAt(s, instance, p);
+}
+
 // One material path, before and after the cusp. Each filament keeps its
 // width and tangent at the join and then travels on around its heart lobe.
 float3 savedMatchRoute(float height, float3 source, float originalHeight,
                        uint instance, constant WelcomeUniforms &p) {
-    if (height < 0) return matchPoint(p.stream.w + savedHeartS(height, p), instance, p);
-    float3 root = matchPoint(p.stream.w + matchCuspS, instance, p);
-    float3 after = matchPoint(p.stream.w + savedHeartS(-0.0001, p), instance, p);
-    float3 tangent = (root - after)/0.0001;
+    if (height < 0) return matchPointAt(savedHeartS(height, p), instance, p);
+    float3 root = matchPointAt(matchCuspS, instance, p);
+    // Use a stable spatial interval, not the difference of two nearly equal
+    // mesh coordinates amplified by 10,000. Never let a numeric outlier turn
+    // this local tangent into a long spur on a physical Apple GPU.
+    const float tangentStep = 0.002;
+    float3 after = matchPointAt(savedHeartS(-tangentStep, p), instance, p);
+    float3 tangent = (root - after)/tangentStep;
+    if (!all(isfinite(tangent)) || tangent.y <= 0) tangent = float3(0, 1, 0);
+    tangent /= max(1.0, length(tangent)/2.0);
     float cuspY = matchCuspY*p.matchLayout.x + p.matchLayout.y;
     float throat = smoothstep(0.0, 0.28, height);
     float curl = (1 - throat)*1.35;

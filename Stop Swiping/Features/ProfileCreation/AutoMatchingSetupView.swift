@@ -14,6 +14,7 @@ struct AutoMatchingSetupView: View {
     @State private var isLoadingPhoto = false
     @State private var photoError: String?
     @State private var saveFailed = false
+    @State private var showsPrivacy = false
     @State private var appearanceMode: PartnerPreferenceScale.Mode = .own
 
     @State private var path: [Route] = []
@@ -49,6 +50,9 @@ struct AutoMatchingSetupView: View {
                 }
         }
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $showsPrivacy) {
+            PrivacyConsentView(kind: .matching) { viewModel.acceptPrivacy(.matching) }
+        }
         .onAppear(perform: loadSavedPhoto)
         .onChange(of: pickerItem) { _, item in
             if let item { loadPhoto(from: item) }
@@ -88,6 +92,10 @@ struct AutoMatchingSetupView: View {
                                 .disabled(isLoadingPhoto)
                         }
                         partnerVerificationCard
+                        PrivacyActionCard(title: L10n("Know what happens to your data"),
+                                          isAccepted: viewModel.state.hasAcceptedMatchingPrivacy) {
+                            showsPrivacy = true
+                        }
                     } else {
                         minimumMatchCard
                         dealbreakersCard
@@ -405,6 +413,10 @@ struct AutoMatchingSetupView: View {
                 Text(L10n("Set both appearance scores to continue."))
                     .font(.footnote)
                     .foregroundStyle(OnboardingTheme.tertiaryText)
+            } else if isFinalStep && !viewModel.state.hasAcceptedMatchingPrivacy {
+                Text(L10n("Accept the data policy to enable auto matching."))
+                    .font(.footnote)
+                    .foregroundStyle(OnboardingTheme.tertiaryText)
             } else if isFinalStep && settings.photoID != nil && !viewModel.hasVerifiedAutoMatchingPhoto {
                 Text(L10n("Verify your photo, or continue without one."))
                     .font(.footnote)
@@ -425,7 +437,7 @@ struct AutoMatchingSetupView: View {
                 }
             }
             .buttonStyle(GlowButtonStyle())
-            .disabled((!settings.isReady && (isFinalStep || missingAppearanceSide == nil)) || isLoadingPhoto || (isFinalStep && settings.photoID != nil && !viewModel.hasVerifiedAutoMatchingPhoto))
+            .disabled((isFinalStep && !viewModel.state.hasAcceptedMatchingPrivacy) || (!settings.isReady && (isFinalStep || missingAppearanceSide == nil)) || isLoadingPhoto || (isFinalStep && settings.photoID != nil && !viewModel.hasVerifiedAutoMatchingPhoto))
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)

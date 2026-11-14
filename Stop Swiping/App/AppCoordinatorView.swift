@@ -7,6 +7,7 @@ struct AppCoordinatorView: View {
     let dependencies: DependencyContainer
 
     @State private var onboardingErrorMessage: String?
+    @State private var showsWelcomeFromAccess = false
 
     var body: some View {
         Group {
@@ -21,7 +22,7 @@ struct AppCoordinatorView: View {
                 if access.hasAccess {
                     onboardingFlow
                 } else {
-                    EarlyAccessView(access: access, onContinue: {})
+                    accessRequiredFlow
                 }
 
             case .signedIn:
@@ -35,7 +36,7 @@ struct AppCoordinatorView: View {
                         }
                     )
                 } else {
-                    EarlyAccessView(access: access, onContinue: {})
+                    accessRequiredFlow
                 }
             }
         }
@@ -45,6 +46,9 @@ struct AppCoordinatorView: View {
             access.updateCompletion(savedCompletionDate)
             await appState.start()
             await access.start()
+        }
+        .onChange(of: access.hasAccess) { _, allowed in
+            if allowed { showsWelcomeFromAccess = false }
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
@@ -97,12 +101,24 @@ struct AppCoordinatorView: View {
         )
     }
 
+    @ViewBuilder
+    private var accessRequiredFlow: some View {
+        if showsWelcomeFromAccess {
+            signedOutFlow
+        } else {
+            EarlyAccessView(access: access, onContinue: {}, onBack: {
+                showsWelcomeFromAccess = true
+            })
+        }
+    }
+
     private var signedOutFlow: some View {
         NavigationStack(path: $appState.navigationPath) {
             WelcomeView(
                 profileCreationStore: dependencies.profileCreationStore,
                 repository: dependencies.profileRepository,
                 access: access,
+                automaticallyShowsAccessOnAppear: !showsWelcomeFromAccess,
                 onSignIn: {
                     appState.navigationPath.append(.signIn)
                 }

@@ -10,23 +10,25 @@ struct AutoMatchingCard: View {
     var body: some View {
         let settings = viewModel.state.autoMatching
         return VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 14) {
-                icon
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(L10n("Join auto matching"))
-                        .font(.system(.body, weight: .semibold))
-                        .foregroundStyle(OnboardingTheme.primaryText)
-                    Text(settings.isEnabled
-                         ? L10n("On · at least \(settings.minimumMatchPercent)% match")
-                         : L10n("Let us propose matches for you."))
-                        .font(.footnote)
-                        .foregroundStyle(OnboardingTheme.secondaryText)
-                        .contentTransition(.opacity)
+            HStack(spacing: 6) {
+                Button(action: onOpenSettings) {
+                    HStack(spacing: 4) {
+                        Text(L10n("Join auto matching"))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                        if settings.isEnabled {
+                            Text(verbatim: "· \(settings.minimumMatchPercent)%")
+                                .foregroundStyle(OnboardingTheme.secondaryText)
+                                .fixedSize()
+                                .layoutPriority(1)
+                        }
+                    }
+                    .font(.system(.body, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 }
-                .accessibilityHidden(true)
-
-                Spacer(minLength: 8)
+                .buttonStyle(.plain)
+                .accessibilityHint(L10n("Auto matching settings"))
 
                 GlowToggle(isOn: settings.isEnabled, label: L10n("Join auto matching")) {
                     resumeFailed = false
@@ -48,30 +50,6 @@ struct AutoMatchingCard: View {
                     .foregroundStyle(OnboardingTheme.pink)
                     .padding(.horizontal, 16)
                     .padding(.bottom, 12)
-            }
-
-            if settings.isEnabled || settings.hasCompletedSetup {
-                Rectangle()
-                    .fill(.white.opacity(0.07))
-                    .frame(height: 0.5)
-                    .padding(.leading, 16)
-
-                Button { onOpenSettings() } label: {
-                    HStack {
-                        Text(L10n("Auto matching settings"))
-                            .font(.system(.subheadline, weight: .medium))
-                            .foregroundStyle(OnboardingTheme.primaryText)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(OnboardingTheme.tertiaryText)
-                            .accessibilityHidden(true)
-                    }
-                    .padding(.horizontal, 16)
-                    .frame(minHeight: 50)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(AutoMatchingSettingsButtonStyle())
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
@@ -95,32 +73,5 @@ struct AutoMatchingCard: View {
                 )
         }
         .animation(.easeInOut(duration: 0.25), value: settings.isEnabled)
-    }
-
-    private var icon: some View {
-        Image(systemName: "sparkles")
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(LinearGradient(
-                colors: [OnboardingTheme.cyan, OnboardingTheme.violet],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ))
-            .frame(width: 36, height: 36)
-            .background {
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .fill(.white.opacity(0.12))
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .strokeBorder(.white.opacity(0.08), lineWidth: 0.5)
-            }
-            .accessibilityHidden(true)
-    }
-}
-
-private struct AutoMatchingSettingsButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .background(.white.opacity(configuration.isPressed ? 0.08 : 0))
     }
 }

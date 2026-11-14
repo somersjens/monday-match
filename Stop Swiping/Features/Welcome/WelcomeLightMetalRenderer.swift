@@ -105,9 +105,25 @@ struct WelcomeLightUniforms {
                           Float(sharedOffset), Float(startSeconds ?? Double(shape.w)))
         apply(WelcomeLightHelix.Arrival.settled)
     }
+
+    mutating func apply(_ request: WelcomeLightMatch.Request, elapsed: Double, startSeconds: Double,
+                        reduceMotion: Bool = false) {
+        apply(WelcomeLightMatch.pose(elapsed: elapsed, isMatch: request.isMatch,
+                                    reduceMotion: reduceMotion, transition: request.transition),
+              layout: .of(isMatch: request.isMatch), startSeconds: startSeconds)
+    }
 }
 
 final class WelcomeLightMetalResources {
+    /// Keep simulator previews and physical-device shader compilation on the
+    /// same floating-point contract, including exact path-boundary decisions.
+    static func compileOptions() -> MTLCompileOptions {
+        let options = MTLCompileOptions()
+        options.mathMode = .safe
+        options.mathFloatingPointFunctions = .precise
+        return options
+    }
+
     let device: MTLDevice
     let queue: MTLCommandQueue
     let ribbons: MTLRenderPipelineState
@@ -214,7 +230,8 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
     static let resources: WelcomeLightMetalResources? = {
         guard let device = MTLCreateSystemDefaultDevice() else { return nil }
         do {
-            let library = try device.makeLibrary(source: WelcomeLightShaderSource.code, options: nil)
+            let library = try device.makeLibrary(source: WelcomeLightShaderSource.code,
+                                                options: WelcomeLightMetalResources.compileOptions())
             return try WelcomeLightMetalResources(device: device, library: library)
         } catch {
             #if DEBUG
@@ -294,12 +311,10 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
                 reduceMotion: reduceMotion))
         }
         if let match {
-            uniforms.apply(WelcomeLightMatch.pose(elapsed: presentationElapsed - matchStartedAt,
-                                                  isMatch: match.isMatch, reduceMotion: reduceMotion,
-                                                  transition: match.transition),
-                           layout: .of(isMatch: match.isMatch),
+            uniforms.apply(match, elapsed: presentationElapsed - matchStartedAt,
                            startSeconds: WelcomeLightHelix.Arrival.motionSeconds(
-                            atPresentation: matchStartedAt, reduceMotion: reduceMotion))
+                            atPresentation: matchStartedAt, reduceMotion: reduceMotion),
+                           reduceMotion: reduceMotion)
         }
         if emission?.width != Int(view.drawableSize.width) || emission?.height != Int(view.drawableSize.height) {
             emission = resources.emissionTexture(size: view.drawableSize)

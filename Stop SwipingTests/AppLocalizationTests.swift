@@ -92,7 +92,7 @@ final class AppLocalizationTests: XCTestCase {
 
     func testExpandedCompatibilityCatalogHasOrderedLocalizedQuestionsAndCompactEndpoints() {
         let english = CompatibilityScaleQuestion.all
-        XCTAssertEqual(english.count, 47)
+        XCTAssertEqual(english.count, 50)
         XCTAssertEqual(Set(english.map(\.id)).count, english.count)
         XCTAssertEqual(english.map(\.step), Array(ProfileCreationStep.allCases.suffix(english.count)))
         XCTAssertEqual(english.first?.step, .aloneTime)

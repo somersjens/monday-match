@@ -4,9 +4,6 @@
     "" : {
 
     },
-    " %@" : {
-
-    },
     "–" : {
 
     },
@@ -968,6 +965,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@, %2$lld"
+          }
+        }
+      }
+    },
+    "%@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$@"
           }
         }
       }
@@ -3140,6 +3147,23 @@
         }
       }
     },
+    "City or nature" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "City or nature"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stad of natuur"
+          }
+        }
+      }
+    },
     "Claim early access" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4265,6 +4289,23 @@
         }
       }
     },
+    "Do you hardly follow the news and current affairs, or keep up with them every day?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you hardly follow the news and current affairs, or keep up with them every day?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volg je het nieuws en de actualiteit nauwelijks, of elke dag op de voet?"
+          }
+        }
+      }
+    },
     "Do you have children?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4618,6 +4659,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deel je gevoelens geleidelijk en gedoseerd, of bespreek je ze graag open en uitgebreid?"
+          }
+        }
+      }
+    },
+    "Do you spend little of your free time on series, games and your phone, or a lot?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you spend little of your free time on series, games and your phone, or a lot?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Besteed je weinig vrije tijd aan series, games en je telefoon, of juist veel?"
           }
         }
       }
@@ -5914,6 +5972,23 @@
         }
       }
     },
+    "Hardly any news" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hardly any news"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nauwelijks nieuws"
+          }
+        }
+      }
+    },
     "Has" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6458,6 +6533,23 @@
         }
       }
     },
+    "In your free time, do you head into the city, or out into nature?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In your free time, do you head into the city, or out into nature?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trek je in je vrije tijd de stad in, of ga je de natuur in?"
+          }
+        }
+      }
+    },
     "Inappropriate content" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6505,6 +6597,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Interesses"
+          }
+        }
+      }
+    },
+    "Into nature" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Into nature"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De natuur in"
+          }
+        }
+      }
+    },
+    "Into the city" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Into the city"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De stad in"
           }
         }
       }
@@ -6640,7 +6766,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Automatisch matchen inschakelen"
+            "value" : "Automatisch matchen"
           }
         }
       }
@@ -7022,6 +7148,23 @@
         }
       }
     },
+    "Little screen time" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Little screen time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weinig schermtijd"
+          }
+        }
+      }
+    },
     "Little time alone" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7324,6 +7467,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Veel nabijheid"
+          }
+        }
+      }
+    },
+    "Lots of screen time" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lots of screen time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veel schermtijd"
           }
         }
       }
@@ -8058,6 +8218,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nieuwe ervaringen"
+          }
+        }
+      }
+    },
+    "News and current affairs" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "News and current affairs"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuws en actualiteit"
+          }
+        }
+      }
+    },
+    "News every day" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "News every day"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dagelijks nieuws"
           }
         }
       }
@@ -10438,6 +10632,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Scores blijven zoals ze waren op de dag van de match."
+          }
+        }
+      }
+    },
+    "Screen time" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screen time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schermtijd"
           }
         }
       }
@@ -15096,6 +15307,210 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je resultaat staat klaar"
+          }
+        }
+      }
+    },
+    "Read about your privacy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read about your privacy"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lees over je privacy"
+          }
+        }
+      }
+    },
+    "Know what happens to your data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Know what happens to your data"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weet wat er met je gegevens gebeurt"
+          }
+        }
+      }
+    },
+    "Show how it works" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show how it works"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laat zien hoe het werkt"
+          }
+        }
+      }
+    },
+    "Play from the beginning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play from the beginning"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speel vanaf het begin"
+          }
+        }
+      }
+    },
+    "I fully understand" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I fully understand"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ik begrijp het helemaal"
+          }
+        }
+      }
+    },
+    "Hold phones against each other" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold phones against each other"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd de telefoons tegen elkaar"
+          }
+        }
+      }
+    },
+    "Read more" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read more"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meer informatie"
+          }
+        }
+      }
+    },
+    "Read the full Privacy Policy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read the full Privacy Policy"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lees de volledige Privacyverklaring"
+          }
+        }
+      }
+    },
+    "Privacy Policy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy Policy"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacyverklaring"
+          }
+        }
+      }
+    },
+    "Accept" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accept"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accepteren"
+          }
+        }
+      }
+    },
+    "Not now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not now"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu niet"
+          }
+        }
+      }
+    },
+    "Accept the data policy to enable auto matching." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accept the data policy to enable auto matching."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accepteer het gegevensbeleid om automatisch matchen aan te zetten."
           }
         }
       }
