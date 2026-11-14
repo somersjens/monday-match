@@ -105,10 +105,18 @@ enum PartnerAgeRules {
 
 enum HeightRules {
     static let defaultCentimeters = 175
-    static let range = 100...240
+    static let range = 50...250
 
     static func clamped(_ centimeters: Int) -> Int {
         min(max(centimeters, range.lowerBound), range.upperBound)
+    }
+
+    static func centimeters(from input: String) -> Int? {
+        let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        let digits = text.hasPrefix("-") || text.hasPrefix("+") ? text.dropFirst() : text[...]
+        guard !digits.isEmpty, digits.allSatisfy({ $0 >= "0" && $0 <= "9" }) else { return nil }
+        // Even pasted integers larger than Int can be clamped safely.
+        return clamped(Int(text) ?? (text.hasPrefix("-") ? Int.min : Int.max))
     }
 
     static func imperialDescription(centimeters: Int) -> String {

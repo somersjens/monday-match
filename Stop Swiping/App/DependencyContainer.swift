@@ -6,10 +6,9 @@ struct DependencyContainer {
     /// Answers from the pre-sign-in profile creation flow, including the
     /// device's underage lock.
     var profileCreationStore: ProfileCreationStateStoring = UserDefaultsProfileCreationStore()
+    var profileSync: ProfileCloudSyncing?
 
     static var live: DependencyContainer {
-        FirebaseBootstrap.configureIfAvailable()
-
         // The file repository can only fail when the documents directory is
         // unavailable. An in-memory repository then keeps the app usable for the
         // current session instead of silently falling back to mock data.
@@ -20,16 +19,14 @@ struct DependencyContainer {
             repository = InMemoryProfileRepository()
         }
 
-        #if canImport(FirebaseAuth)
-        return DependencyContainer(
-            authService: FirebaseAppleAuthService(),
-            profileRepository: repository
-        )
-        #else
-        return DependencyContainer(
-            authService: MockAuthService(),
-            profileRepository: repository
-        )
-        #endif
+        let store = UserDefaultsProfileCreationStore()
+        guard let configuration = SupabaseConfiguration.bundled else {
+            return DependencyContainer(authService: UnconfiguredSupabaseAuthService(), profileRepository: repository,
+                                       profileCreationStore: store)
+        }
+        let client = configuration.makeClient()
+        let sync = SupabaseProfileSync(client: client, projectURL: configuration.url, repository: repository, store: store)
+        return DependencyContainer(authService: SupabaseAuthService(client: client, profileSync: sync),
+                                   profileRepository: repository, profileCreationStore: store, profileSync: sync)
     }
 }

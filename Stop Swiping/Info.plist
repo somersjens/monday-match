@@ -2,8 +2,21 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>SUPABASE_URL</key>
+	<string>https://yrnwzehdzlxwnhyabwja.supabase.co</string>
+	<key>SUPABASE_PUBLISHABLE_KEY</key>
+	<string>sb_publishable_L5aWEpomfOaLUf_c8t_bbQ_Pw8g-kcO</string>
 	<key>CFBundleDisplayName</key>
 	<string>Stop Swiping</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Hakketjak.monday-match.auth</string>
+			<key>CFBundleURLSchemes</key>
+			<array><string>stopswiping</string></array>
+		</dict>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
@@ -18,7 +31,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose photos from your library to use on your profile.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Use the front camera to compare a live face scan with your chosen profile photo. The scan is processed on this device and is not saved or uploaded.</string>
+	<string>The camera scans another person’s profile code, and compares a live face scan with your chosen profile photo. Everything is processed on this device; nothing is saved or uploaded.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Stop Swiping uses your local network to find the phone you hold yours against, so the two of you can exchange profiles directly.</string>
 	<key>NSBonjourServices</key>

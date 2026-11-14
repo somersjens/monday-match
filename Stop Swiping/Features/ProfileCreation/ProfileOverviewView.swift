@@ -111,7 +111,7 @@ struct ProfileOverviewView: View {
             .accessibilityValue(AppLanguageSettings.shared.language.name)
 
             Button { dismiss() } label: {
-                Image(systemName: "xmark")
+                Image(systemName: "checkmark")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(OnboardingTheme.accentGradient)
                     .frame(width: 44, height: 44)

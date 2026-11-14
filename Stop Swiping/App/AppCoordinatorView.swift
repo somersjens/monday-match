@@ -6,6 +6,8 @@ struct AppCoordinatorView: View {
     @Environment(\.scenePhase) private var scenePhase
     let dependencies: DependencyContainer
 
+    /// Codes the app was opened with, for instance from the Camera app.
+    @StateObject private var codeInbox = ProfileCodeInbox()
     @State private var onboardingErrorMessage: String?
     @State private var showsWelcomeFromAccess = false
 
@@ -16,35 +18,51 @@ struct AppCoordinatorView: View {
                 LaunchView()
 
             case .signedOut:
-                signedOutFlow
+                welcomeFlow
 
             case .onboarding:
                 if access.hasAccess {
-                    onboardingFlow
+                    if dependencies.profileCreationStore.load()?.completedAt != nil {
+                        welcomeFlow
+                    } else {
+                        onboardingFlow
+                    }
                 } else {
                     accessRequiredFlow
                 }
 
             case .signedIn:
                 if access.hasAccess {
-                    SignedInRootView(
-                        repository: dependencies.profileRepository,
-                        onSignOut: {
-                            Task {
-                                await appState.signOut()
+                    if dependencies.profileCreationStore.load()?.completedAt != nil {
+                        welcomeFlow
+                    } else {
+                        SignedInRootView(
+                            repository: dependencies.profileRepository,
+                            onSignOut: {
+                                Task {
+                                    await appState.signOut()
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 } else {
                     accessRequiredFlow
                 }
             }
         }
         .background(Color("WelcomeBackground").ignoresSafeArea())
+        .overlay(alignment: .top) {
+            ProfileCodeNoticeBanner(inbox: codeInbox)
+        }
+        .onOpenURL { url in
+            codeInbox.open(url, isProfileReady: dependencies.profileCreationStore.load()?.canShareProfile == true)
+        }
         .task {
             guard appState.sessionState == .loading else { return }
             access.updateCompletion(savedCompletionDate)
             await appState.start()
+            // Session restoration can restore a profile from Supabase too.
+            access.updateCompletion(savedCompletionDate)
             await access.start()
         }
         .onChange(of: access.hasAccess) { _, allowed in
@@ -104,7 +122,7 @@ struct AppCoordinatorView: View {
     @ViewBuilder
     private var accessRequiredFlow: some View {
         if showsWelcomeFromAccess {
-            signedOutFlow
+            welcomeFlow
         } else {
             EarlyAccessView(access: access, onContinue: {}, onBack: {
                 showsWelcomeFromAccess = true
@@ -112,13 +130,18 @@ struct AppCoordinatorView: View {
         }
     }
 
-    private var signedOutFlow: some View {
+    private var welcomeFlow: some View {
         NavigationStack(path: $appState.navigationPath) {
             WelcomeView(
                 profileCreationStore: dependencies.profileCreationStore,
                 repository: dependencies.profileRepository,
                 access: access,
                 automaticallyShowsAccessOnAppear: !showsWelcomeFromAccess,
+                authService: dependencies.authService,
+                hasAccount: appState.sessionState == .signedIn || appState.sessionState == .onboarding,
+                profileSync: dependencies.profileSync,
+                codeInbox: codeInbox,
+                onAccountCreated: appState.showSignedInApp,
                 onSignIn: {
                     appState.navigationPath.append(.signIn)
                 }

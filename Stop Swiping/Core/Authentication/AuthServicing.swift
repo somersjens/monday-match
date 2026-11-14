@@ -17,6 +17,7 @@ protocol AuthServicing {
     func signInWithApple(
         payload: AppleAuthorizationPayload
     ) async throws -> RestoredSession
+    func signInWithGoogle() async throws -> RestoredSession
     func signOut() async throws
 }
 
@@ -33,6 +34,11 @@ struct MockAuthService: AuthServicing {
     }
 
     func signOut() async throws {
-        // No-op in the Firebase-free development configuration.
+        // No-op in previews and tests. The app uses Supabase authentication.
+    }
+
+    func signInWithGoogle() async throws -> RestoredSession {
+        try await Task.sleep(for: .milliseconds(450))
+        return .onboarding
     }
 }

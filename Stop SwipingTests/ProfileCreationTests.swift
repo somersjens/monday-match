@@ -52,11 +52,25 @@ final class ProfileCreationRulesTests: XCTestCase {
     }
 
     func testHeightAndRadiusAreClamped() {
-        XCTAssertEqual(HeightRules.clamped(80), 100)
-        XCTAssertEqual(HeightRules.clamped(300), 240)
+        XCTAssertEqual(HeightRules.clamped(40), 50)
+        XCTAssertEqual(HeightRules.clamped(80), 80)
+        XCTAssertEqual(HeightRules.clamped(300), 250)
         XCTAssertEqual(HeightRules.imperialDescription(centimeters: 175), "5′ 9″")
         XCTAssertEqual(SearchRadiusRules.clamped(0), 1)
         XCTAssertEqual(SearchRadiusRules.clamped(500), 200)
+    }
+
+    func testManualHeightInputClampsWholeNumbersAndRejectsInvalidText() {
+        XCTAssertEqual(HeightRules.centimeters(from: " 175 "), 175)
+        XCTAssertEqual(HeightRules.centimeters(from: "50"), 50)
+        XCTAssertEqual(HeightRules.centimeters(from: "250"), 250)
+        XCTAssertEqual(HeightRules.centimeters(from: "-10"), 50)
+        XCTAssertEqual(HeightRules.centimeters(from: "300"), 250)
+        XCTAssertEqual(HeightRules.centimeters(from: String(repeating: "9", count: 100)), 250)
+        XCTAssertEqual(HeightRules.centimeters(from: "-" + String(repeating: "9", count: 100)), 50)
+        for input in ["", " ", "-", "abc", "175 cm", "175.5"] {
+            XCTAssertNil(HeightRules.centimeters(from: input), input)
+        }
     }
 
     func testSingleSelectPreferenceReplacesItsAnswer() {
@@ -129,6 +143,26 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.feedback?.message, "Go celebrate your birthday, come back tomorrow.")
         XCTAssertEqual(viewModel.currentStep, .dateOfBirth)
         XCTAssertEqual(viewModel.rejectionCount, 1)
+    }
+
+    func testEditingEitherPartnerHeightMovesTheOtherEndpointOnlyWhenCrossed() {
+        let viewModel = makeViewModel()
+        viewModel.updatePartnerHeightRange(minimum: 165, maximum: 190)
+        viewModel.updatePartnerMinimumHeight(180)
+        XCTAssertEqual(viewModel.state.partnerHeightRange, PartnerHeightRange(minimum: 180, maximum: 190))
+        viewModel.updatePartnerMinimumHeight(210)
+        XCTAssertEqual(viewModel.state.partnerHeightRange, PartnerHeightRange(minimum: 210, maximum: 210))
+        viewModel.updatePartnerMaximumHeight(160)
+        XCTAssertEqual(viewModel.state.partnerHeightRange, PartnerHeightRange(minimum: 160, maximum: 160))
+        viewModel.updatePartnerMaximumHeight(180)
+        XCTAssertEqual(viewModel.state.partnerHeightRange, PartnerHeightRange(minimum: 160, maximum: 180))
+        viewModel.updatePartnerMinimumHeight(999)
+        XCTAssertEqual(viewModel.state.partnerHeightRange, PartnerHeightRange(minimum: 250, maximum: 250))
+        viewModel.updatePartnerMaximumHeight(-1)
+        XCTAssertEqual(viewModel.state.partnerHeightRange, PartnerHeightRange(minimum: 50, maximum: 50))
+        viewModel.updatePartnerMinimumHeight(-1)
+        viewModel.updatePartnerMaximumHeight(999)
+        XCTAssertEqual(viewModel.state.partnerHeightRange, .any)
     }
 
     func testAgeAppearsAfterOneFieldChanges() {

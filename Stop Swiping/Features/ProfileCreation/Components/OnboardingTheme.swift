@@ -27,6 +27,7 @@ enum OnboardingTheme {
 
     static let contentWidth: CGFloat = 520
     static let controlWidth: CGFloat = 420
+    static let buttonHeight: CGFloat = 58
 }
 
 enum OnboardingMotion {
@@ -119,7 +120,7 @@ private struct GlowButtonBody: View {
             .font(.system(size: 17, weight: .semibold))
             .foregroundStyle(.white.opacity(isEnabled ? 1 : 0.5))
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 58)
+            .frame(minHeight: OnboardingTheme.buttonHeight)
             .background {
                 RoundedRectangle(cornerRadius: 20)
                     .fill(OnboardingTheme.buttonGradient)

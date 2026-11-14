@@ -8,6 +8,21 @@ enum NotificationPermissionState: Equatable {
     case authorized
 }
 
+/// Account creation always comes first. A previous notification decision,
+/// including a refusal, must not trigger another permission request.
+enum AutoMatchingEntryStep: Equatable {
+    case account, loading, notifications, matching
+
+    static func resolve(hasAccount: Bool, notificationState: NotificationPermissionState?) -> Self {
+        guard hasAccount else { return .account }
+        switch notificationState {
+        case nil: return .loading
+        case .notDetermined: return .notifications
+        case .authorized, .denied: return .matching
+        }
+    }
+}
+
 @MainActor
 final class NotificationPermissionService: ObservableObject {
     @Published private(set) var state: NotificationPermissionState = .notDetermined

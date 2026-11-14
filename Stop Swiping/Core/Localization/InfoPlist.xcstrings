@@ -31,13 +31,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Use the front camera to compare a live face scan with your chosen profile photo. The scan is processed on this device and is not saved or uploaded."
+            "value" : "The camera scans another person’s profile code, and compares a live face scan with your chosen profile photo. Everything is processed on this device; nothing is saved or uploaded."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gebruik de frontcamera om een live gezichtsscan te vergelijken met je gekozen profielfoto. De scan wordt op dit apparaat verwerkt en niet opgeslagen of geüpload."
+            "value" : "De camera scant de profielcode van iemand anders, en vergelijkt een live gezichtsscan met je gekozen profielfoto. Alles wordt op dit apparaat verwerkt; er wordt niets opgeslagen of geüpload."
           }
         }
       }

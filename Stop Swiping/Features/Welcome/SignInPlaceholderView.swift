@@ -2,7 +2,7 @@ import AuthenticationServices
 import SwiftUI
 
 struct SignInPlaceholderView: View {
-    @StateObject private var viewModel: AppleSignInViewModel
+    @StateObject private var viewModel: SignInViewModel
 
     let onAuthenticated: (RestoredSession) -> Void
 
@@ -12,32 +12,30 @@ struct SignInPlaceholderView: View {
     ) {
         self.onAuthenticated = onAuthenticated
         _viewModel = StateObject(
-            wrappedValue: AppleSignInViewModel(
+            wrappedValue: SignInViewModel(
                 authService: authService
             )
         )
     }
 
     var body: some View {
-        VStack(spacing: AppSpacing.xLarge) {
+        VStack(spacing: AppSpacing.large) {
             Spacer()
 
-            Image(systemName: "apple.logo")
+            Image(systemName: "person.crop.circle")
                 .font(.system(size: 56))
+                .foregroundStyle(OnboardingTheme.accentGradient)
                 .accessibilityHidden(true)
 
             VStack(spacing: AppSpacing.small) {
                 Text(L10n("Create your account"))
                     .font(AppTypography.title)
 
-                Text(
-                    FirebaseBootstrap.isAvailable
-                        ? L10n("Sign in securely with Apple. Firebase Authentication receives the Apple identity token and verified nonce.")
-                        : L10n("Firebase is not installed yet, so this button currently uses the mock authentication service.")
-                )
-                .font(AppTypography.body)
-                .foregroundStyle(AppColors.secondaryForeground)
-                .multilineTextAlignment(.center)
+                Text(L10n("Sign in securely with Apple or Google. Your profile is backed up with Supabase so you can restore it on another device."))
+                    .font(AppTypography.body)
+                    .foregroundStyle(AppColors.secondaryForeground)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             if viewModel.isSigningIn {
@@ -53,29 +51,57 @@ struct SignInPlaceholderView: View {
 
             Spacer()
 
-            SignInWithAppleButton(
-                .continue,
-                onRequest: viewModel.configure,
-                onCompletion: {
-                    viewModel.handle(
-                        result: $0,
-                        onAuthenticated: onAuthenticated
-                    )
-                }
-            )
-            .signInWithAppleButtonStyle(.black)
-            .frame(height: 54)
-            .clipShape(
-                RoundedRectangle(
-                    cornerRadius: 14,
-                    style: .continuous
+            VStack(spacing: 12) {
+                SignInWithAppleButton(
+                    .continue,
+                    onRequest: viewModel.configure,
+                    onCompletion: {
+                        viewModel.handle(
+                            result: $0,
+                            onAuthenticated: onAuthenticated
+                        )
+                    }
                 )
-            )
-            .disabled(viewModel.isSigningIn)
+                .signInWithAppleButtonStyle(.white)
+                .frame(height: 54)
+                .clipShape(
+                    RoundedRectangle(
+                        cornerRadius: 14,
+                        style: .continuous
+                    )
+                )
+                .disabled(viewModel.isSigningIn)
+
+                Button {
+                    viewModel.signInWithGoogle(onAuthenticated: onAuthenticated)
+                } label: {
+                    HStack(spacing: 12) {
+                        Image("GoogleSignInLogo")
+                            .resizable()
+                            .renderingMode(.original)
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
+                            .accessibilityHidden(true)
+                        Text(L10n("Continue with Google"))
+                            .font(.system(size: 17, weight: .medium))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .foregroundStyle(Color(red: 0.12, green: 0.12, blue: 0.12))
+                    .frame(maxWidth: .infinity, minHeight: 54)
+                    .background(.white, in: RoundedRectangle(cornerRadius: 14))
+                    .overlay { RoundedRectangle(cornerRadius: 14).strokeBorder(.gray.opacity(0.4), lineWidth: 1) }
+                }
+                .buttonStyle(.plain)
+                .disabled(viewModel.isSigningIn)
+                .opacity(viewModel.isSigningIn ? 0.5 : 1)
+                .accessibilityIdentifier("account.google")
+            }
         }
         .padding(AppSpacing.large)
         .navigationTitle(L10n("Account"))
         .navigationBarTitleDisplayMode(.inline)
+        .background { OnboardingTheme.background.ignoresSafeArea() }
     }
 }
 

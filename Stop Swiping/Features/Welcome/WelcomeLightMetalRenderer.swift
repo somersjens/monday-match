@@ -14,6 +14,8 @@ struct WelcomeLightMetalView: UIViewRepresentable {
     var framesPerSecond = 60
     var helixEntryDistance = 0.0
     var match: WelcomeLightMatch.Request?
+    /// What the code shows once the helix has rewoven into it.
+    var code: WelcomeLightCode.Matrix?
 
     static var isAvailable: Bool { WelcomeLightMetalRenderer.resources != nil }
 
@@ -42,6 +44,7 @@ struct WelcomeLightMetalView: UIViewRepresentable {
         context.coordinator.updateForm(form, pulse: lockPulse, showsCode: showsCode,
                                        helixEntryDistance: helixEntryDistance)
         context.coordinator.updateMatch(match)
+        context.coordinator.updateCode(code)
         view.isPaused = reduceMotion || !isActive
         view.enableSetNeedsDisplay = reduceMotion && isActive
         if view.enableSetNeedsDisplay { view.setNeedsDisplay() }
@@ -63,7 +66,8 @@ struct WelcomeLightUniforms {
     var entrance: SIMD4<Float>
     var stream: SIMD4<Float>
     var lock: SIMD4<Float> = .zero
-    var code: SIMD4<Float> = SIMD4(0, Float(WelcomeLightCode.size), 0, 0)
+    /// Progress from the helix to the code, and the code's modules per side.
+    var code: SIMD4<Float> = .zero
     var helixArrival: SIMD4<Float> = .zero
     var match: SIMD4<Float> = .zero
     var matchLayout: SIMD4<Float> = .zero
@@ -132,7 +136,8 @@ final class WelcomeLightMetalResources {
     let compositor: MTLRenderPipelineState
     let inlet: MTLRenderPipelineState
     let travel: MTLBuffer
-    let codeModules: MTLBuffer
+    /// Bound while no code is shown; the shader always expects modules.
+    private let noCode: MTLBuffer
 
     init(device: MTLDevice, library: MTLLibrary) throws {
         self.device = device
@@ -147,13 +152,10 @@ final class WelcomeLightMetalResources {
                 length: MemoryLayout<Float>.stride * (WelcomeLightGeometry.heartTravel.count + WelcomeLightEntrance.inletTravel.count),
                 options: .storageModeShared
               ),
-              let codeModules = device.makeBuffer(
-                bytes: WelcomeLightCode.modules.isEmpty ? [0] : WelcomeLightCode.modules,
-                length: max(1, WelcomeLightCode.modules.count),
-                options: .storageModeShared
-              ) else { throw RendererError.unavailable }
+              let noCode = device.makeBuffer(bytes: [UInt8(0)], length: 1, options: .storageModeShared)
+        else { throw RendererError.unavailable }
         self.queue = queue
-        self.codeModules = codeModules
+        self.noCode = noCode
         self.controls = controls
         self.travel = travel
         func pipeline(vertex: String, fragment: String, composite: Bool = false) throws -> MTLRenderPipelineState {
@@ -175,12 +177,18 @@ final class WelcomeLightMetalResources {
         compositor = try pipeline(vertex: "welcomeCompositeVertex", fragment: "welcomeCompositeFragment", composite: true)
     }
 
-    func encode(in encoder: MTLRenderCommandEncoder, uniforms: inout WelcomeLightUniforms) {
+    /// The modules of a code, for `render`. Set `uniforms.code.y` to its size.
+    func codeBuffer(for matrix: WelcomeLightCode.Matrix) -> MTLBuffer? {
+        guard matrix.size > 0, matrix.modules.count == matrix.size * matrix.size else { return nil }
+        return device.makeBuffer(bytes: matrix.modules, length: matrix.modules.count, options: .storageModeShared)
+    }
+
+    func encode(in encoder: MTLRenderCommandEncoder, uniforms: inout WelcomeLightUniforms, code: MTLBuffer? = nil) {
         encoder.setVertexBytes(&uniforms, length: MemoryLayout<WelcomeLightUniforms>.stride, index: 0)
         encoder.setFragmentBytes(&uniforms, length: MemoryLayout<WelcomeLightUniforms>.stride, index: 0)
         encoder.setVertexBuffer(controls, offset: 0, index: 1)
         encoder.setVertexBuffer(travel, offset: 0, index: 2)
-        encoder.setFragmentBuffer(codeModules, offset: 0, index: 1)
+        encoder.setFragmentBuffer(code ?? noCode, offset: 0, index: 1)
         encoder.setRenderPipelineState(particles)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: 190)
         if uniforms.entrance.y > 0.0001 {
@@ -206,14 +214,16 @@ final class WelcomeLightMetalResources {
         return device.makeTexture(descriptor: descriptor)
     }
 
-    func render(command: MTLCommandBuffer, target: MTLRenderPassDescriptor, emission: MTLTexture, uniforms: inout WelcomeLightUniforms) {
+    func render(command: MTLCommandBuffer, target: MTLRenderPassDescriptor, emission: MTLTexture,
+                uniforms: inout WelcomeLightUniforms, code: MTLBuffer? = nil) {
+        if code == nil { uniforms.code.y = 0 }
         let lights = MTLRenderPassDescriptor()
         lights.colorAttachments[0].texture = emission
         lights.colorAttachments[0].loadAction = .clear
         lights.colorAttachments[0].storeAction = .store
         lights.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
         guard let lightEncoder = command.makeRenderCommandEncoder(descriptor: lights) else { return }
-        encode(in: lightEncoder, uniforms: &uniforms)
+        encode(in: lightEncoder, uniforms: &uniforms, code: code)
         lightEncoder.endEncoding()
         guard let finalEncoder = command.makeRenderCommandEncoder(descriptor: target) else { return }
         finalEncoder.setRenderPipelineState(compositor)
@@ -251,6 +261,8 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
     private var helixEntryDistance = 0.0
     private var match: WelcomeLightMatch.Request?
     private var matchStartedAt = 0.0
+    private var code: WelcomeLightCode.Matrix?
+    private var codeBuffer: MTLBuffer?
 
     init(skipsEntrance: Bool = false) {
         presentationElapsed = skipsEntrance ? WelcomeLightEntrance.duration + 1 : 0
@@ -282,6 +294,12 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
         match = request
     }
 
+    func updateCode(_ matrix: WelcomeLightCode.Matrix?) {
+        guard matrix != code else { return }
+        code = matrix
+        codeBuffer = matrix.flatMap { Self.resources?.codeBuffer(for: $0) }
+    }
+
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
         if view.isPaused && view.enableSetNeedsDisplay { view.setNeedsDisplay() }
     }
@@ -303,6 +321,7 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
             pixelScale: Float(view.drawableSize.width / max(view.bounds.width, 1)), reduceMotion: reduceMotion
         )
         uniforms.apply(lockMotion.pose(at: now))
+        uniforms.code.y = Float(code?.size ?? 0)
         if currentForm == .helix, helixEntryDistance > 0 {
             uniforms.apply(WelcomeLightHelix.Arrival(
                 elapsed: presentationElapsed - helixStartedAt,
@@ -320,7 +339,8 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
             emission = resources.emissionTexture(size: view.drawableSize)
         }
         guard let emission else { return }
-        resources.render(command: command, target: descriptor, emission: emission, uniforms: &uniforms)
+        resources.render(command: command, target: descriptor, emission: emission, uniforms: &uniforms,
+                         code: codeBuffer)
         command.present(drawable)
         command.commit()
     }

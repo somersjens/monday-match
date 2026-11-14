@@ -42,7 +42,7 @@ struct AutoMatchingCard: View {
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .frame(minHeight: OnboardingTheme.buttonHeight)
 
             if resumeFailed {
                 Text(L10n("Auto matching couldn’t be saved. Try again."))
@@ -52,9 +52,43 @@ struct AutoMatchingCard: View {
                     .padding(.bottom, 12)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .modifier(MatchingActionSurface(isOn: settings.isEnabled))
+        .animation(.easeInOut(duration: 0.25), value: settings.isEnabled)
+    }
+}
+
+/// The switch opens sign-up; it is only on once authentication succeeds.
+struct AccountCreationCard: View {
+    let onCreateAccount: () -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button(action: onCreateAccount) {
+                Text(L10n("Create your account"))
+                    .font(.system(.body, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+
+            GlowToggle(isOn: false, label: L10n("Create your account"), action: onCreateAccount)
+        }
+        .padding(.horizontal, 16)
+        .frame(minHeight: OnboardingTheme.buttonHeight)
+        .modifier(MatchingActionSurface(isOn: false))
+    }
+}
+
+private struct MatchingActionSurface: ViewModifier {
+    let isOn: Bool
+
+    func body(content: Content) -> some View {
+        content
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .background {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(LinearGradient(
                     colors: [OnboardingTheme.blue.opacity(0.20), OnboardingTheme.violet.opacity(0.12)],
                     startPoint: .topLeading,
@@ -62,16 +96,15 @@ struct AutoMatchingCard: View {
                 ))
         }
         .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .strokeBorder(
                     LinearGradient(
-                        colors: [OnboardingTheme.cyan.opacity(settings.isEnabled ? 0.55 : 0.25), OnboardingTheme.violet.opacity(0.18)],
+                        colors: [OnboardingTheme.cyan.opacity(isOn ? 0.55 : 0.25), OnboardingTheme.violet.opacity(0.18)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
                     lineWidth: 1
                 )
         }
-        .animation(.easeInOut(duration: 0.25), value: settings.isEnabled)
     }
 }

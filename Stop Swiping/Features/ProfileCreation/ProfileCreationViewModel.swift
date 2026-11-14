@@ -357,6 +357,16 @@ final class ProfileCreationViewModel: ObservableObject {
         state.partnerHeightRange = range
     }
 
+    func updatePartnerMinimumHeight(_ centimeters: Int) {
+        let value = HeightRules.clamped(centimeters)
+        updatePartnerHeightRange(minimum: value, maximum: max(value, state.partnerHeightRange.maximum))
+    }
+
+    func updatePartnerMaximumHeight(_ centimeters: Int) {
+        let value = HeightRules.clamped(centimeters)
+        updatePartnerHeightRange(minimum: min(value, state.partnerHeightRange.minimum), maximum: value)
+    }
+
     func updateHeight(_ centimeters: Int) {
         let value = HeightRules.clamped(centimeters)
         guard value != state.heightCentimeters else { return }

@@ -423,6 +423,15 @@ struct AutoMatchingSetupView: View {
                     .foregroundStyle(OnboardingTheme.tertiaryText)
             }
 
+            if isFinalStep {
+                Text(L10n("If your future match disputes your height, age, name or picture, you risk losing your account."))
+                    .font(.footnote)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, 4)
+            }
+
             Button(isFinalStep ? L10n("Join auto matching") : L10n("Final step")) {
                 saveFailed = false
                 if !isFinalStep, let missingAppearanceSide {

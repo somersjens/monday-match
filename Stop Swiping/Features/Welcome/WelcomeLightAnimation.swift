@@ -9,6 +9,8 @@ struct WelcomeLightAnimation: View {
     var lockPulse = 0
     /// Rewinds the helix into a QR code. Drawn by the Metal renderer only.
     var showsCode = false
+    /// The code the helix turns into.
+    var code: WelcomeLightCode.Matrix?
     /// Opens on the finished light instead of drawing it in.
     var skipsEntrance = false
     /// Stops drawing while something covers the light.
@@ -33,7 +35,7 @@ struct WelcomeLightAnimation: View {
                 WelcomeLightMetalView(reduceMotion: reduceMotion, isActive: isRunning,
                                       form: form, lockPulse: lockPulse, showsCode: showsCode,
                                       skipsEntrance: skipsEntrance, framesPerSecond: framesPerSecond,
-                                      helixEntryDistance: helixEntryDistance, match: match)
+                                      helixEntryDistance: helixEntryDistance, match: match, code: code)
             } else {
                 TimelineView(.animation(
                     minimumInterval: 1.0 / Double(framesPerSecond),

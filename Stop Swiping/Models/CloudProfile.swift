@@ -68,9 +68,7 @@ struct CloudProfile: Codable, Equatable {
         ownAttractiveness = draft.autoMatching.ownAttractiveness
         partnerMinimumAttractiveness = draft.autoMatching.partnerMinimumAttractiveness
         minimumMatchPercent = draft.autoMatching.minimumMatchPercent
-        profileComplete = !draft.displayName.isEmpty &&
-            !draft.bio.isEmpty &&
-            !photoURLs.isEmpty
+        profileComplete = draft.hasCompletedProfileCreation && !draft.displayName.isEmpty
         self.updatedAt = updatedAt
     }
 

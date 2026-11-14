@@ -9,19 +9,12 @@ import Foundation
 /// modules glow. Coordinates match `WelcomeLightGeometry`'s normalized space,
 /// and the Metal shader mirrors `point` exactly.
 enum WelcomeLightCode {
-    /// What the code encodes. It isn't connected to anything yet.
-    static let message = "Stop Swiping"
     /// The width and height of the module grid.
-    static let side = 1.3
+    static let side = 1.8
     /// Lines run a little past the grid, so their turns are never lit.
     static let reach = 0.54
     static let lineCount = 2 * 2 * WelcomeLightGeometry.strandCount
     static let morphDuration = 1.6
-
-    /// Row-major modules from the top-left, 1 for dark, without quiet zone.
-    static let modules: [UInt8] = matrix.modules
-    static let size: Int = matrix.size
-    static var isAvailable: Bool { size > 0 }
 
     static func point(u: Double, ring: Int, strand: Int, seconds: Double) -> (point: CGPoint, local: CGPoint) {
         let phase = (u + 0.5) * WelcomeLightGeometry.tau
@@ -47,20 +40,35 @@ enum WelcomeLightCode {
         return WelcomeLightLock.ease(amount * 1.55 - 0.45 * row - jitter)
     }
 
-    static func isDark(local: CGPoint) -> Bool {
-        let column = Int(floor((local.x / side + 0.5) * Double(size)))
-        let row = Int(floor((local.y / side + 0.5) * Double(size)))
-        guard (0..<size).contains(column), (0..<size).contains(row) else { return false }
-        return modules[row * size + column] == 1
+    /// One QR code's modules, row-major from the top-left, 1 for dark,
+    /// without the quiet zone.
+    struct Matrix: Equatable {
+        let size: Int
+        let modules: [UInt8]
+
+        /// Nil when the message doesn't fit a QR code.
+        init?(message: String, correctionLevel: String = "M") {
+            guard let matrix = WelcomeLightCode.modules(message: message, correctionLevel: correctionLevel)
+            else { return nil }
+            size = matrix.size
+            modules = matrix.modules
+        }
+
+        func isDark(local: CGPoint) -> Bool {
+            let column = Int(floor((local.x / side + 0.5) * Double(size)))
+            let row = Int(floor((local.y / side + 0.5) * Double(size)))
+            guard (0..<size).contains(column), (0..<size).contains(row) else { return false }
+            return modules[row * size + column] == 1
+        }
     }
 
-    private static let matrix: (size: Int, modules: [UInt8]) = {
+    private static func modules(message: String, correctionLevel: String) -> (size: Int, modules: [UInt8])? {
         let filter = CIFilter.qrCodeGenerator()
         filter.message = Data(message.utf8)
-        filter.correctionLevel = "M"
+        filter.correctionLevel = correctionLevel
         guard let output = filter.outputImage,
               let image = CIContext(options: [.useSoftwareRenderer: true]).createCGImage(output, from: output.extent)
-        else { return (0, []) }
+        else { return nil }
         let width = image.width, height = image.height
         var pixels = [UInt8](repeating: 255, count: width * height)
         let drawn = pixels.withUnsafeMutableBytes { buffer -> Bool in
@@ -73,10 +81,10 @@ enum WelcomeLightCode {
             context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
             return true
         }
-        guard drawn else { return (0, []) }
+        guard drawn else { return nil }
         // The generator adds a quiet zone; the light needs only the modules.
         let dark = pixels.indices.filter { pixels[$0] < 128 }
-        guard !dark.isEmpty else { return (0, []) }
+        guard !dark.isEmpty else { return nil }
         var minX = width, maxX = 0, minY = height, maxY = 0
         for index in dark {
             minX = min(minX, index % width); maxX = max(maxX, index % width)
@@ -92,5 +100,5 @@ enum WelcomeLightCode {
             }
         }
         return (size, modules)
-    }()
+    }
 }

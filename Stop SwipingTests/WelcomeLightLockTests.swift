@@ -265,16 +265,19 @@ final class WelcomeLightLockTests: XCTestCase {
     }
 
     func testCodeIsARealQRGridFilledWithEvenLines() throws {
-        XCTAssertTrue(WelcomeLightCode.isAvailable)
-        let size = WelcomeLightCode.size
+        let matrix = try XCTUnwrap(WelcomeLightCode.Matrix(message: "Stop Swiping"))
+        let size = matrix.size
         XCTAssertEqual(size, 21, "A short message fits a version 1 code.")
+        XCTAssertEqual(matrix.modules.count, size * size)
+        XCTAssertTrue(matrix.isDark(local: CGPoint(x: -WelcomeLightCode.side / 2 + 0.01, y: -WelcomeLightCode.side / 2 + 0.01)))
+        XCTAssertFalse(matrix.isDark(local: CGPoint(x: WelcomeLightCode.side, y: 0)), "Nothing glows outside the grid.")
         // The three finder patterns: dark outer ring, light gap, dark centre.
         for (row, column) in [(0, 0), (0, size - 7), (size - 7, 0)] {
-            XCTAssertEqual(WelcomeLightCode.modules[row * size + column], 1)
-            XCTAssertEqual(WelcomeLightCode.modules[(row + 1) * size + column + 1], 0)
-            XCTAssertEqual(WelcomeLightCode.modules[(row + 3) * size + column + 3], 1)
+            XCTAssertEqual(matrix.modules[row * size + column], 1)
+            XCTAssertEqual(matrix.modules[(row + 1) * size + column + 1], 0)
+            XCTAssertEqual(matrix.modules[(row + 3) * size + column + 3], 1)
         }
-        let timing = (8..<(size - 8)).map { WelcomeLightCode.modules[6 * size + $0] }
+        let timing = (8..<(size - 8)).map { matrix.modules[6 * size + $0] }
         XCTAssertEqual(timing, (8..<(size - 8)).map { $0 % 2 == 0 ? 1 : 0 }, "The timing pattern alternates.")
 
         // Every loop draws two lines across the whole grid, one line apart.
@@ -322,13 +325,15 @@ final class WelcomeLightLockTests: XCTestCase {
     func testRenderedCodeLightsOnlyItsModules() throws {
         let resources = try XCTUnwrap(WelcomeLightMetalRenderer.resources)
         let helix = try render(lock: .init(amount: 1, lift: 0, shake: 0, isHelix: true), resources: resources)
-        let code = try render(lock: .init(amount: 1, lift: 0, shake: 0, isHelix: true, code: 1), resources: resources)
+        let matrix = try XCTUnwrap(WelcomeLightCode.Matrix(message: "Stop Swiping"))
+        let code = try render(lock: .init(amount: 1, lift: 0, shake: 0, isHelix: true, code: 1), code: matrix,
+                              resources: resources)
         let difference = zip(helix, code).reduce(0) { $0 + abs(Int($1.0) - Int($1.1)) }
         XCTAssertGreaterThan(difference, 50_000, "The code replaces the helix.")
         // The centre of the top-left finder glows; its light ring stays dark.
         let scale = 256 * 0.42
         func brightness(row: Double, column: Double) -> Int {
-            let n = Double(WelcomeLightCode.size)
+            let n = Double(matrix.size)
             let x = Int(128 + ((column + 0.5) / n - 0.5) * WelcomeLightCode.side * scale)
             let y = Int(128 + ((row + 0.5) / n - 0.5) * WelcomeLightCode.side * scale)
             let index = (y * 256 + x) * 4
@@ -439,7 +444,8 @@ final class WelcomeLightLockTests: XCTestCase {
         XCTAssertEqual(motion.pose(at: 12), .init(amount: 1, lift: 0, shake: 0))
     }
 
-    private func render(lock: WelcomeLightLock.Pose, elapsed: Double = 0.8, resources: WelcomeLightMetalResources) throws -> [UInt8] {
+    private func render(lock: WelcomeLightLock.Pose, elapsed: Double = 0.8, code: WelcomeLightCode.Matrix? = nil,
+                        resources: WelcomeLightMetalResources) throws -> [UInt8] {
         let size = CGSize(width: 256, height: 256)
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 256, height: 256, mipmapped: false)
         descriptor.storageMode = .shared
@@ -453,7 +459,9 @@ final class WelcomeLightLockTests: XCTestCase {
         let command = try XCTUnwrap(resources.queue.makeCommandBuffer())
         var uniforms = WelcomeLightUniforms(elapsed: elapsed, size: size, pixelScale: 1)
         uniforms.apply(lock)
-        resources.render(command: command, target: target, emission: emission, uniforms: &uniforms)
+        uniforms.code.y = Float(code?.size ?? 0)
+        resources.render(command: command, target: target, emission: emission, uniforms: &uniforms,
+                         code: code.flatMap(resources.codeBuffer))
         command.commit()
         command.waitUntilCompleted()
         XCTAssertNil(command.error)

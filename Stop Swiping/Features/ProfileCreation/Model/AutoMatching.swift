@@ -11,8 +11,8 @@ struct PartnerHeightRange: Codable, Equatable {
 }
 
 enum PartnerHeightRules {
-    static let lowerBound = 140
-    static let upperBound = 220
+    static let lowerBound = HeightRules.range.lowerBound
+    static let upperBound = HeightRules.range.upperBound
 
     static var bounds: ClosedRange<Int> { lowerBound...upperBound }
 

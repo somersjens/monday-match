@@ -322,7 +322,7 @@ float3 helixPoint(float u, uint instance, constant WelcomeUniforms &p) {
 
 // The QR code mirrors WelcomeLightCode in Swift. Each loop runs across and
 // back as two neighbouring lines; the fragment shader lights the dark modules.
-constant float codeSide = 1.3, codeReach = 0.54, codeLines = 240.0;
+constant float codeSide = 1.8, codeReach = 0.54, codeLines = 240.0;
 
 float3 codePoint(float u, uint instance, constant WelcomeUniforms &p, thread float2 &local) {
     uint ring = instance / strands;
@@ -681,9 +681,10 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
                                     : mix(float3(0.30,0.15,0.88), float3(0.52,0.24,0.98), tint));
     // The code runs from cyan through blue to violet, corner to corner.
     float diagonal = clamp((local.x + local.y)/(codeSide*2) + 0.5, 0.0, 1.0);
-    float3 codeColor = mix(mix(float3(0.22,0.78,1.0), float3(0.12,0.36,1.0), smoothstep(0.0, 0.55, diagonal)),
-                           float3(0.50,0.24,0.98), smoothstep(0.45, 1.0, diagonal));
-    codeColor = mix(codeColor, float3(0.45,0.85,1.0), tint*0.25);
+    // Light enough everywhere for a camera to tell the modules from the dark.
+    float3 codeColor = mix(mix(float3(0.42,0.88,1.0), float3(0.36,0.60,1.0), smoothstep(0.0, 0.55, diagonal)),
+                           float3(0.68,0.50,1.0), smoothstep(0.45, 1.0, diagonal));
+    codeColor = mix(codeColor, float3(0.60,0.90,1.0), tint*0.25);
     helixColor = mix(helixColor, codeColor, code);
     color = mix(color, helixColor, max(helix, matchHeart));
     color = mix(color, float3(0.47,0.84,1), highlight*light*0.5);
@@ -720,7 +721,7 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
     float endpoint = 1 - smoothstep(0.55, 0.95, along);
     float helixLight = (0.55 + 1.1*rim - 0.25*aura)*(1 - 0.4*back)*(sheet == 0 ? 1.0 : 0.85)
                      *rungSpan*endpoint;
-    helixLight = mix(helixLight, 1.7, code);
+    helixLight = mix(helixLight, 2.6, code);
     out.intensity *= mix(1.0, helixLight, helix);
     float visible = mix(smoothstep(-0.008,0.008,p.entrance.x-travel),1.0,
                         smoothstep(0.97,1.0,p.entrance.x));
@@ -821,7 +822,7 @@ float codeMask(float2 local, constant WelcomeUniforms &p, device const uchar *mo
     uint size = uint(n);
     if (modules[uint(cell.y)*size + uint(cell.x)] == 0) return 0.0;
     float2 inside = abs(fract(cell) - 0.5);
-    float corner = length(max(inside - (0.41 - 0.12), 0.0)) - 0.12;
+    float corner = length(max(inside - (0.45 - 0.12), 0.0)) - 0.12;
     return 1 - smoothstep(-0.03, 0.01, corner);
 }
 

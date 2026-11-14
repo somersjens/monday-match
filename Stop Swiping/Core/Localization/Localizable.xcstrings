@@ -1345,6 +1345,91 @@
         }
       }
     },
+    "Account creation is temporarily unavailable. Please try again later." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account creation is temporarily unavailable. Please try again later."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een account aanmaken is tijdelijk niet mogelijk. Probeer het later opnieuw."
+          }
+        }
+      }
+    },
+    "Please sign in again to sync your profile." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please sign in again to sync your profile."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meld je opnieuw aan om je profiel te synchroniseren."
+          }
+        }
+      }
+    },
+    "Profile backup couldn’t be saved. Tap to retry." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile backup couldn’t be saved. Tap to retry."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je profielback-up kon niet worden opgeslagen. Tik om opnieuw te proberen."
+          }
+        }
+      }
+    },
+    "Continue with Google" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue with Google"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doorgaan met Google"
+          }
+        }
+      }
+    },
+    "Sign in securely with Apple or Google. Your profile is backed up with Supabase so you can restore it on another device." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in securely with Apple or Google. Your profile is backed up with Supabase so you can restore it on another device."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meld je veilig aan met Apple of Google. Je profiel wordt bewaard bij Supabase, zodat je het op een ander toestel kunt herstellen."
+          }
+        }
+      }
+    },
     "Account" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2144,19 +2229,274 @@
         }
       }
     },
-    "Ask the other person to tap Share profile too." : {
+    "Let someone else scan your code" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ask the other person to tap Share profile too."
+            "value" : "Let someone else scan your code"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vraag de ander om ook op Profiel delen te tikken."
+            "value" : "Laat iemand anders jouw code scannen"
+          }
+        }
+      }
+    },
+    "Then see on their phone whether you’re a match. They scan with the camera button at the top right, or with their iPhone’s camera." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Then see on their phone whether you’re a match. They scan with the camera button at the top right, or with their iPhone’s camera."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bekijk daarna op hun telefoon of jullie een match zijn. Scannen kan met de cameraknop rechtsboven, of met de gewone camera van hun iPhone."
+          }
+        }
+      }
+    },
+    "Then see on their phone whether you’re a match. Or hold your phones together, top to top." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Then see on their phone whether you’re a match. Or hold your phones together, top to top."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bekijk daarna op hun telefoon of jullie een match zijn. Of houd jullie telefoons tegen elkaar, bovenkant tegen bovenkant."
+          }
+        }
+      }
+    },
+    "Scan a code" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan a code"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan een code"
+          }
+        }
+      }
+    },
+    "Opens the camera to scan someone else’s code." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the camera to scan someone else’s code."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opent de camera om de code van iemand anders te scannen."
+          }
+        }
+      }
+    },
+    "Scan their code" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan their code"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan hun code"
+          }
+        }
+      }
+    },
+    "Camera access needed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera access needed"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cameratoegang nodig"
+          }
+        }
+      }
+    },
+    "Camera unavailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera unavailable"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera niet beschikbaar"
+          }
+        }
+      }
+    },
+    "Point your camera at the code on the other person’s screen. You’ll see right here whether you’re a match." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Point your camera at the code on the other person’s screen. You’ll see right here whether you’re a match."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richt je camera op de code op het scherm van de ander. Je ziet hier meteen of jullie een match zijn."
+          }
+        }
+      }
+    },
+    "Allow camera access in Settings to scan a code. You can also scan it with your iPhone’s Camera app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow camera access in Settings to scan a code. You can also scan it with your iPhone’s Camera app."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geef in Instellingen toegang tot de camera om een code te scannen. Je kunt de code ook scannen met de Camera-app van je iPhone."
+          }
+        }
+      }
+    },
+    "This device’s camera can’t be used right now. You can also scan the code with your iPhone’s Camera app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device’s camera can’t be used right now. You can also scan the code with your iPhone’s Camera app."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De camera van dit apparaat kan nu niet worden gebruikt. Je kunt de code ook scannen met de Camera-app van je iPhone."
+          }
+        }
+      }
+    },
+    "That isn’t a Stop Swiping code." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That isn’t a Stop Swiping code."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dat is geen Stop Swiping-code."
+          }
+        }
+      }
+    },
+    "Complete your profile first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complete your profile first"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak eerst je profiel compleet"
+          }
+        }
+      }
+    },
+    "This code can’t be read" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This code can’t be read"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze code kan niet worden gelezen"
+          }
+        }
+      }
+    },
+    "As soon as it’s finished, you’ll see whether you and {0} are a match." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As soon as it’s finished, you’ll see whether you and {0} are a match."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zodra het af is, zie je of jij en {0} een match zijn."
+          }
+        }
+      }
+    },
+    "Ask the other person to show their code again, or update the app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask the other person to show their code again, or update the app."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vraag de ander om de code opnieuw te tonen, of werk de app bij."
           }
         }
       }
@@ -5496,74 +5836,6 @@
         }
       }
     },
-    "Firebase did not return an authentication result." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Firebase did not return an authentication result."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Firebase heeft geen aanmeldresultaat teruggestuurd."
-          }
-        }
-      }
-    },
-    "Firebase is not installed yet, so this button currently uses the mock authentication service." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Firebase is not installed yet, so this button currently uses the mock authentication service."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Firebase is nog niet geïnstalleerd. Deze knop gebruikt voorlopig een testaanmelding."
-          }
-        }
-      }
-    },
-    "Firebase Storage did not return a download URL." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Firebase Storage did not return a download URL."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Firebase Storage heeft geen downloadlink teruggestuurd."
-          }
-        }
-      }
-    },
-    "Firebase Storage did not return upload metadata." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Firebase Storage did not return upload metadata."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Firebase Storage heeft geen uploadgegevens teruggestuurd."
-          }
-        }
-      }
-    },
     "First name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6444,6 +6716,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Identiteit"
+          }
+        }
+      }
+    },
+    "If your future match disputes your height, age, name or picture, you risk losing your account." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If your future match disputes your height, age, name or picture, you risk losing your account."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als je toekomstige match je lengte, leeftijd, naam of foto betwist, loop je het risico je account te verliezen."
           }
         }
       }
@@ -11231,6 +11520,23 @@
         }
       }
     },
+    "Show QR code" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show QR code"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon QR-code"
+          }
+        }
+      }
+    },
     "Show your helix" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11346,23 +11652,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toont je QR-code."
-          }
-        }
-      }
-    },
-    "Sign in securely with Apple. Firebase Authentication receives the Apple identity token and verified nonce." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sign in securely with Apple. Firebase Authentication receives the Apple identity token and verified nonce."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meld je veilig aan met Apple. Firebase Authentication ontvangt het Apple-identiteitstoken en de gecontroleerde nonce."
           }
         }
       }
@@ -12077,6 +12366,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spraakzaam"
+          }
+        }
+      }
+    },
+    "Tap a number to edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap a number to edit"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tik op een getal om het aan te passen"
           }
         }
       }
@@ -12914,23 +13220,6 @@
         }
       }
     },
-    "Top to top, and your profiles are exchanged." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Top to top, and your profiles are exchanged."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bovenkant tegen bovenkant, en jullie profielen worden uitgewisseld."
-          }
-        }
-      }
-    },
     "Travel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13029,6 +13318,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verandert terug in je DNA."
+          }
+        }
+      }
+    },
+    "Top to top, and your profiles are exchanged." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top to top, and your profiles are exchanged."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bovenkant tegen bovenkant, en jullie profielen worden uitgewisseld."
           }
         }
       }
@@ -15358,6 +15664,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Laat zien hoe het werkt"
+          }
+        }
+      }
+    },
+    "Both turn on AirDrop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Both turn on AirDrop"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zet allebei AirDrop aan"
+          }
+        }
+      }
+    },
+    "Example" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Example"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voorbeeld"
           }
         }
       }
