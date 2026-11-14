@@ -67,6 +67,7 @@ struct WelcomeLightUniforms {
     var helixArrival: SIMD4<Float> = .zero
     var match: SIMD4<Float> = .zero
     var matchLayout: SIMD4<Float> = .zero
+    var matchMorph: SIMD4<Float> = .zero
 
     init(elapsed: Double, size: CGSize, pixelScale: Float, flowElapsed: Double? = nil) {
         let frame = WelcomeLightGeometry.Frame(elapsed: elapsed, flowElapsed: flowElapsed)
@@ -96,9 +97,12 @@ struct WelcomeLightUniforms {
                              Float(arrival.reach * arrival.side))
     }
 
-    mutating func apply(_ pose: WelcomeLightMatch.Pose, layout: WelcomeLightMatch.Layout) {
+    mutating func apply(_ pose: WelcomeLightMatch.Pose, layout: WelcomeLightMatch.Layout, startSeconds: Double? = nil) {
         match = SIMD4(Float(pose.exit), Float(pose.head), Float(pose.tail), Float(pose.breakAmount))
         matchLayout = SIMD4(Float(layout.scale), Float(layout.offsetY), Float(layout.lineY), 1)
+        let sharedOffset = pose.morph.map { WelcomeLightMatch.sharedOffset(progress: $0, layout: layout) } ?? 0
+        matchMorph = SIMD4(Float(pose.morph ?? 0), pose.morph == nil ? 0 : 1,
+                          Float(sharedOffset), Float(startSeconds ?? Double(shape.w)))
         apply(WelcomeLightHelix.Arrival.settled)
     }
 }
@@ -291,8 +295,11 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
         }
         if let match {
             uniforms.apply(WelcomeLightMatch.pose(elapsed: presentationElapsed - matchStartedAt,
-                                                  isMatch: match.isMatch, reduceMotion: reduceMotion),
-                           layout: .of(isMatch: match.isMatch))
+                                                  isMatch: match.isMatch, reduceMotion: reduceMotion,
+                                                  transition: match.transition),
+                           layout: .of(isMatch: match.isMatch),
+                           startSeconds: WelcomeLightHelix.Arrival.motionSeconds(
+                            atPresentation: matchStartedAt, reduceMotion: reduceMotion))
         }
         if emission?.width != Int(view.drawableSize.width) || emission?.height != Int(view.drawableSize.height) {
             emission = resources.emissionTexture(size: view.drawableSize)

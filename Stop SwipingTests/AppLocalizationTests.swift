@@ -96,7 +96,7 @@ final class AppLocalizationTests: XCTestCase {
         XCTAssertEqual(Set(english.map(\.id)).count, english.count)
         XCTAssertEqual(english.map(\.step), Array(ProfileCreationStep.allCases.suffix(english.count)))
         XCTAssertEqual(english.first?.step, .aloneTime)
-        XCTAssertEqual(english.last?.step, .sharedFinances)
+        XCTAssertEqual(english.last?.step, .spendingMoney)
 
         AppLanguageSettings.shared.language = .dutch
         let dutch = CompatibilityScaleQuestion.all

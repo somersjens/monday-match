@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct StopSwipingApp: App {
     @StateObject private var appState: AppState
+    @StateObject private var lifetimeAccess = LifetimeAccessStore()
     private let dependencies: DependencyContainer
 
     init() {
@@ -24,6 +25,7 @@ struct StopSwipingApp: App {
         WindowGroup {
             AppCoordinatorView(
                 appState: appState,
+                access: lifetimeAccess,
                 dependencies: dependencies
             )
             .environment(\.locale, AppLanguageSettings.shared.language.locale)

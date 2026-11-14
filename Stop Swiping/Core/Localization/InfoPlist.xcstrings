@@ -75,6 +75,40 @@
           }
         }
       }
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Swiping uses your local network to find the phone you hold yours against, so the two of you can exchange profiles directly."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Swiping gebruikt je lokale netwerk om de telefoon te vinden waar je de jouwe tegenaan houdt, zodat jullie rechtstreeks profielen kunnen uitwisselen."
+          }
+        }
+      }
+    },
+    "NSNearbyInteractionUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Swiping measures the distance to another phone, so profiles are only exchanged when you hold your phones together."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Swiping meet de afstand tot een andere telefoon, zodat profielen alleen worden uitgewisseld als jullie de telefoons tegen elkaar houden."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

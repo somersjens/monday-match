@@ -19,5 +19,14 @@
 	<string>Choose photos from your library to use on your profile.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Use the front camera to compare a live face scan with your chosen profile photo. The scan is processed on this device and is not saved or uploaded.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Stop Swiping uses your local network to find the phone you hold yours against, so the two of you can exchange profiles directly.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_stopswiping._tcp</string>
+		<string>_stopswiping._udp</string>
+	</array>
+	<key>NSNearbyInteractionUsageDescription</key>
+	<string>Stop Swiping measures the distance to another phone, so profiles are only exchanged when you hold your phones together.</string>
 </dict>
 </plist>

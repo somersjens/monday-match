@@ -129,6 +129,30 @@ The next build block can connect onboarding completion to Firebase:
 - retry failed uploads
 - restore a cloud profile
 - decide onboarding versus dashboard from Firestore
+## Profile exchange and match scores
+
+Two people who both tap **Share profile** and hold their phones together
+exchange profiles directly, without an account or internet
+(`Features/Match/Exchange`):
+
+- Phones find each other with MultipeerConnectivity (encrypted) and measure
+  the distance with NearbyInteraction (ultra wideband). Held together, both
+  say they are ready; a profile is only sent once both have. Tapping
+  **Exchange** on both phones does the same where distance can't be measured.
+- What leaves the phone is `ProfileCreationState.sharedCopy`: the answers,
+  the age (not the birthday), a location rounded to about a kilometre, and
+  no auto-matching data. Received profiles are validated before use.
+- Needs `NSLocalNetworkUsageDescription`, `NSBonjourServices` and
+  `NSNearbyInteractionUsageDescription` (in `Info.plist`). The distance
+  trigger (`ProximityGate`, 15 cm) still has to be tuned on real devices.
+
+Scores (`MatchReport`) are a weighted average of how close each answer is to
+what was looked for. Importance 1-5 weighs 0, 1, 2, 4, 8. Alcohol, smoking
+and drugs count too: the closer to the seeker's own use the better, with an
+importance derived from how strict their limit is. A match is possible as
+long as every requirement is met both ways, including being at or under each
+limit.
+
 ## Photo verification
 
 Local front-camera photo verification and upload guidelines are integrated into

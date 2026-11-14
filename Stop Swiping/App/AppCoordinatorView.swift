@@ -2,6 +2,8 @@ import SwiftUI
 
 struct AppCoordinatorView: View {
     @ObservedObject var appState: AppState
+    @ObservedObject var access: LifetimeAccessStore
+    @Environment(\.scenePhase) private var scenePhase
     let dependencies: DependencyContainer
 
     @State private var onboardingErrorMessage: String?
@@ -16,23 +18,40 @@ struct AppCoordinatorView: View {
                 signedOutFlow
 
             case .onboarding:
-                onboardingFlow
+                if access.hasAccess {
+                    onboardingFlow
+                } else {
+                    EarlyAccessView(access: access, onContinue: {})
+                }
 
             case .signedIn:
-                SignedInRootView(
-                    repository: dependencies.profileRepository,
-                    onSignOut: {
-                        Task {
-                            await appState.signOut()
+                if access.hasAccess {
+                    SignedInRootView(
+                        repository: dependencies.profileRepository,
+                        onSignOut: {
+                            Task {
+                                await appState.signOut()
+                            }
                         }
-                    }
-                )
+                    )
+                } else {
+                    EarlyAccessView(access: access, onContinue: {})
+                }
             }
         }
         .background(Color("WelcomeBackground").ignoresSafeArea())
         .task {
             guard appState.sessionState == .loading else { return }
+            access.updateCompletion(savedCompletionDate)
             await appState.start()
+            await access.start()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            Task {
+                access.updateCompletion(savedCompletionDate)
+                await access.start()
+            }
         }
         .alert(
             L10n("Could not save your profile"),
@@ -56,7 +75,8 @@ struct AppCoordinatorView: View {
     private func completeOnboarding(_ draft: ProfileDraft) {
         do {
             try dependencies.profileRepository.saveProfile(draft)
-            appState.showSignedInApp()
+            access.updateCompletion(draft.profileCreationCompletedAt ?? Date())
+            if access.hasAccess { appState.showSignedInApp() }
         } catch {
             onboardingErrorMessage = error.localizedDescription
         }
@@ -82,6 +102,7 @@ struct AppCoordinatorView: View {
             WelcomeView(
                 profileCreationStore: dependencies.profileCreationStore,
                 repository: dependencies.profileRepository,
+                access: access,
                 onSignIn: {
                     appState.navigationPath.append(.signIn)
                 }
@@ -104,7 +125,8 @@ struct AppCoordinatorView: View {
 
         case .earlyAccess:
             EarlyAccessView(
-                onClaimAccess: {
+                access: access,
+                onContinue: {
                     appState.navigationPath.append(.signIn)
                 }
             )
@@ -138,9 +160,15 @@ struct AppCoordinatorView: View {
         }
     }
 
+    private var savedCompletionDate: Date? {
+        dependencies.profileCreationStore.load()?.completedAt
+            ?? ((try? dependencies.profileRepository.loadProfile()) ?? nil)?.profileCreationCompletedAt
+    }
+
     private func handleAuthenticatedSession(
         _ session: RestoredSession
     ) {
+        access.updateCompletion(savedCompletionDate)
         switch session {
         case .signedOut:
             break

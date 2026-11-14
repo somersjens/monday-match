@@ -2,6 +2,8 @@ import SwiftUI
 
 struct WelcomeView: View {
     let onSignIn: () -> Void
+    @ObservedObject var access: LifetimeAccessStore
+    @State private var showsAccess = false
 
     @StateObject private var profileCreation: ProfileCreationViewModel
     @StateObject private var locationService = LocationService()
@@ -23,11 +25,16 @@ struct WelcomeView: View {
     @State private var showsCode = false
 
     @StateObject private var savedMatches = SavedMatchStore()
+    /// Looks for other phones while the profile is being shared.
+    @StateObject private var exchange = ProfileExchangeSession()
+    @State private var exchanges = 0
+    @State private var showsMatchProfile = false
     /// The match shown in place of the home controls.
     @State private var activeMatch: ActiveMatch?
     /// What the light draws. It trails `activeMatch` while the heart fades out.
     @State private var lightMatch: WelcomeLightMatch.Request?
     @State private var matchReveal = MatchReveal.hidden
+    @State private var matchStartedAt = Date()
     @State private var matchTask: Task<Void, Never>?
     @State private var scoreDetail: MatchReport.Perspective?
     @State private var showsSavedMatches = false
@@ -60,9 +67,11 @@ struct WelcomeView: View {
     init(
         profileCreationStore: ProfileCreationStateStoring,
         repository: ProfileRepository?,
+        access: LifetimeAccessStore,
         onSignIn: @escaping () -> Void
     ) {
         self.onSignIn = onSignIn
+        self.access = access
         let model = ProfileCreationViewModel(store: profileCreationStore, repository: repository)
         _profileCreation = StateObject(wrappedValue: model)
         let stage: Stage = model.isCompleted ? .complete : .landing
@@ -74,6 +83,14 @@ struct WelcomeView: View {
     private let skipsEntrance: Bool
     private var isOnboarding: Bool { lightStage == .onboarding }
     private var canShowCode: Bool { WelcomeLightMetalView.isAvailable && WelcomeLightCode.isAvailable }
+
+    /// Profiles are only offered while the code is on screen and nothing
+    /// else is: the profile can't change underneath an exchange.
+    private var isSharing: Bool {
+        showsCode && stage == .complete && lightStage == .complete && activeMatch == nil
+            && scenePhase == .active && profileCreation.hasDisplayName
+            && !showsOverview && !showsAutoMatching && !showsSavedMatches && !showsAccess
+    }
 
     private var lightForm: WelcomeLightForm {
         switch lightStage {
@@ -154,7 +171,10 @@ struct WelcomeView: View {
                         ),
                         reveal: matchReveal,
                         isSaved: savedMatches.contains(activeMatch.snapshot.id),
+                        lightTransition: lightMatch?.transition ?? .newMatch,
+                        lightStartedAt: matchStartedAt,
                         onShowScores: { scoreDetail = $0 },
+                        onShowProfile: { showsMatchProfile = true },
                         onRename: renameMatch,
                         onSave: { saveMatch(activeMatch.snapshot) },
                         onClose: closeMatch,
@@ -193,9 +213,32 @@ struct WelcomeView: View {
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.6), trigger: lockPulse)
         .sensoryFeedback(.error, trigger: showsUnderageNotice) { _, shown in shown }
         .sensoryFeedback(.success, trigger: demoStarts)
+        .sensoryFeedback(.success, trigger: exchanges)
         .sensoryFeedback(.warning, trigger: nameNudges)
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { profileCreation.persist() }
+            else { checkAccess() }
+        }
+        .task {
+            access.updateCompletion(profileCreation.state.completedAt)
+            await access.start()
+            checkAccess()
+        }
+        .onChange(of: access.hasAccess) { _, allowed in
+            if !allowed { checkAccess() }
+        }
+        .fullScreenCover(isPresented: $showsAccess) {
+            EarlyAccessView(access: access, onContinue: {
+                showsAccess = false
+                if profileCreation.isCompleted {
+                    stage = .complete
+                    lightStage = .complete
+                } else {
+                    openOnboarding()
+                }
+            }, onBack: access.canOfferEarlyAccess ? {
+                showsAccess = false
+            } : nil)
         }
         .fullScreenCover(isPresented: $showsOverview) {
             ProfileOverviewView(viewModel: profileCreation, locationService: locationService,
@@ -215,6 +258,23 @@ struct WelcomeView: View {
                 MatchScoreDetailView(report: activeMatch.report, perspective: perspective,
                                      name: activeMatch.snapshot.name)
             }
+        }
+        .sheet(isPresented: $showsMatchProfile) {
+            if let activeMatch {
+                MatchProfileView(match: activeMatch.snapshot)
+            }
+        }
+        .onChange(of: isSharing, initial: true) { _, sharing in
+            if sharing {
+                exchange.start(profile: profileCreation.state)
+            } else {
+                exchange.stop()
+            }
+        }
+        .onChange(of: exchange.result) { _, result in
+            guard let result, stage == .complete, activeMatch == nil else { return }
+            exchanges += 1
+            present(MatchSnapshot(id: result.id, matchedAt: Date(), you: result.you, them: result.them))
         }
         .onAppear {
             if lightStage == .complete { waitForHelixEntrance() }
@@ -255,7 +315,10 @@ struct WelcomeView: View {
             VStack(spacing: 12) {
                 // A name comes first; auto matching appears once it is saved.
                 Group {
-                    if profileCreation.hasDisplayName {
+                    if showsCode && profileCreation.hasDisplayName {
+                        ProfileExchangeCard(session: exchange)
+                            .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                    } else if profileCreation.hasDisplayName {
                         AutoMatchingCard(viewModel: profileCreation) {
                             guard !isTransitioning else { return }
                             showsAutoMatching = true
@@ -277,7 +340,8 @@ struct WelcomeView: View {
                         LongPressGesture(minimumDuration: Self.demoHoldDuration)
                             .onEnded { _ in startDemoMatch() }
                     )
-                    .accessibilityHint(showsCode ? L10n("Shows your profile DNA.") : L10n("Shows your QR code."))
+                    .accessibilityHint(showsCode ? L10n("Shows your profile DNA.")
+                                       : L10n("Shows your QR code and looks for phones held against yours."))
                     .accessibilityAction(named: L10n("Start a demo match"), startDemoMatch)
 
                 HStack(spacing: 8) {
@@ -296,6 +360,7 @@ struct WelcomeView: View {
             .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion),
                        value: profileCreation.hasDisplayName)
             .animation(.easeInOut(duration: 0.25), value: savedMatches.matches.isEmpty)
+            .animation(.easeInOut(duration: 0.3), value: showsCode)
         }
     }
 
@@ -304,7 +369,8 @@ struct WelcomeView: View {
     private func handleGetStarted() {
         guard !isTransitioning else { return }
         guard profileCreation.isUnderageLocked else {
-            openOnboarding()
+            if access.isReady && access.hasAccess { openOnboarding() }
+            else { showsAccess = true }
             return
         }
         registerResetTap()
@@ -325,7 +391,8 @@ struct WelcomeView: View {
         resetTapCount = 0
         self.lastResetTap = nil
         profileCreation.restartAfterUnderageLock()
-        openOnboarding(delay: reduceMotion ? 0 : 0.9)
+        if access.hasAccess { openOnboarding(delay: reduceMotion ? 0 : 0.9) }
+        else { showsAccess = true }
     }
 
     private func openOnboarding(delay: Double = 0) {
@@ -348,6 +415,12 @@ struct WelcomeView: View {
 
     private func toggleCode() {
         guard !isTransitioning, activeMatch == nil else { return }
+        // Sharing starts with a name: it is the first thing the other sees.
+        guard showsCode || profileCreation.hasDisplayName else {
+            nameNudges += 1
+            isNameFocused = true
+            return
+        }
         showsCode.toggle()
     }
 
@@ -368,9 +441,9 @@ struct WelcomeView: View {
         present(snapshot)
     }
 
-    /// The helix streams up and returns as the match heart; the labels
-    /// follow the light's own timeline.
-    private func present(_ snapshot: MatchSnapshot) {
+    /// New matches send the helix away; saved matches unfold it in place.
+    /// The labels follow the selected light timeline.
+    private func present(_ snapshot: MatchSnapshot, transition: WelcomeLightMatch.Transition = .newMatch) {
         let report = snapshot.report
         isTransitioning = true
         isNameFocused = false
@@ -379,7 +452,8 @@ struct WelcomeView: View {
         withAnimation(.easeOut(duration: 0.35)) {
             activeMatch = ActiveMatch(snapshot: snapshot, report: report)
         }
-        lightMatch = WelcomeLightMatch.Request(id: snapshot.id, isMatch: report.isMatch)
+        matchStartedAt = Date()
+        lightMatch = WelcomeLightMatch.Request(id: snapshot.id, isMatch: report.isMatch, transition: transition)
         AccessibilityNotification.Announcement(report.isMatch
             ? L10n("\(report.average) percent, a match with \(snapshot.name).")
             : L10n("\(report.average) percent, no match with \(snapshot.name).")).post()
@@ -392,7 +466,8 @@ struct WelcomeView: View {
             if !report.isMatch { beats.append((WelcomeLightMatch.issuesRevealTime, .issues)) }
             beats.append((WelcomeLightMatch.controlsRevealTime(isMatch: report.isMatch), .controls))
             var elapsed = 0.0
-            for (time, step) in beats {
+            for (newMatchTime, step) in beats {
+                let time = transition.time(newMatchTime, isMatch: report.isMatch)
                 if !reduceMotion {
                     try? await Task.sleep(for: .seconds(max(0, time - elapsed)))
                     elapsed = time
@@ -407,6 +482,7 @@ struct WelcomeView: View {
     private func saveMatch(_ snapshot: MatchSnapshot) {
         savedMatches.save(snapshot)
         AccessibilityNotification.Announcement(L10n("Match saved.")).post()
+        closeMatch()
     }
 
     private func renameMatch(to name: String) {
@@ -427,6 +503,7 @@ struct WelcomeView: View {
         matchTask?.cancel()
         isTransitioning = true
         scoreDetail = nil
+        showsMatchProfile = false
         Task {
             withAnimation(.easeOut(duration: 0.3)) {
                 activeMatch = nil
@@ -453,15 +530,30 @@ struct WelcomeView: View {
     private func openSavedMatch(_ snapshot: MatchSnapshot) {
         showsSavedMatches = false
         Task {
-            // Let the cover finish closing before the helix starts to leave.
+            // Let the cover finish closing before the in-place morph starts.
             try? await Task.sleep(for: .seconds(0.45))
-            present(snapshot)
+            present(snapshot, transition: .savedMatch)
         }
     }
 
     /// The heart fades where it is; the helix turns in from below the screen
     /// on its renderer's clock, passing behind the controls.
+    private func checkAccess() {
+        access.updateCompletion(profileCreation.state.completedAt)
+        guard access.isReady, access.ledger.startedAt != nil, !access.hasAccess else { return }
+        showsOverview = false
+        showsAutoMatching = false
+        showsSavedMatches = false
+        showsCode = false
+        showsAccess = true
+    }
+
     private func showCompletion() {
+        access.updateCompletion(profileCreation.state.completedAt)
+        guard access.hasAccess else {
+            showsAccess = true
+            return
+        }
         isTransitioning = true
         AccessibilityNotification.Announcement(L10n("Your profile is complete.")).post()
         Task {
@@ -606,6 +698,7 @@ struct ProfileCreationGateView: View {
         WelcomeView(
             profileCreationStore: InMemoryProfileCreationStore(),
             repository: InMemoryProfileRepository(),
+            access: LifetimeAccessStore(),
             onSignIn: {}
         )
     }
