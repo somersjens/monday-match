@@ -23,7 +23,8 @@ nonisolated final class ChatKeyStore {
         var pending: [ChatPendingMessage] = []
     }
     private let account: String
-    private let service = "com.stopswiping.secure-chat.v1"
+    private let service = ChatKeyStore.service
+    private static let service = "com.stopswiping.secure-chat.v1"
     init(scope: String) { account = scope }
     private var query: [String: Any] {
         [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
@@ -52,6 +53,14 @@ nonisolated final class ChatKeyStore {
             let added = SecItemAdd(query.merging(values) { _,new in new } as CFDictionary, nil)
             guard added == errSecSuccess else { throw KeychainError(status: added) }
         } else if status != errSecSuccess { throw KeychainError(status: status) }
+    }
+    /// Every conversation's keys and unsent messages on this phone.
+    static func removeAll() throws {
+        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
+                                    kSecAttrService as String: service,
+                                    kSecAttrSynchronizable as String: kSecAttrSynchronizableAny]
+        let status = SecItemDelete(query as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else { throw KeychainError(status: status) }
     }
     func remove() throws {
         let status=SecItemDelete(query as CFDictionary)

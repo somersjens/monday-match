@@ -277,7 +277,14 @@ final class SavedMatchStore: ObservableObject {
     private let defaults: UserDefaults
     private let key: String
 
-    init(defaults: UserDefaults = .standard, key: String = "savedMatches.v1") {
+    static let storageKey = "savedMatches.v1"
+
+    /// Removes every saved match from the phone.
+    static func clear(defaults: UserDefaults = .standard) {
+        defaults.removeObject(forKey: storageKey)
+    }
+
+    init(defaults: UserDefaults = .standard, key: String = SavedMatchStore.storageKey) {
         self.defaults = defaults
         self.key = key
         if let data = defaults.data(forKey: key),

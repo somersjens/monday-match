@@ -18,7 +18,14 @@ struct SupabaseConfiguration {
     static var bundled: Self? { Self(values: Bundle.main.infoDictionary ?? [:]) }
 
     func makeClient() -> SupabaseClient {
-        SupabaseClient(supabaseURL: url, supabaseKey: publishableKey)
+        // Opts in to the next major release's behaviour: the stored session is
+        // emitted as-is, even when expired. Only the client's own listener
+        // observes it, and it picks up the refreshed token right after.
+        SupabaseClient(
+            supabaseURL: url,
+            supabaseKey: publishableKey,
+            options: SupabaseClientOptions(auth: .init(emitLocalSessionAsInitialSession: true))
+        )
     }
 }
 

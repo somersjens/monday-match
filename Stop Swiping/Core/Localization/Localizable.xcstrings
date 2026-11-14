@@ -16476,6 +16476,125 @@
           }
         }
       }
+    },
+    "Delete your profile?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete your profile?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je profiel verwijderen?"
+          }
+        }
+      }
+    },
+    "Delete profile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete profile"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiel verwijderen"
+          }
+        }
+      }
+    },
+    "This can’t be undone. Your profile, photos, matches and chats are removed from this iPhone and from auto matching. Purchases stay linked to your Apple ID." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This can’t be undone. Your profile, photos, matches and chats are removed from this iPhone and from auto matching. Purchases stay linked to your Apple ID."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit kan niet ongedaan worden gemaakt. Je profiel, foto’s, matches en chats worden van deze iPhone en uit automatisch matchen verwijderd. Aankopen blijven gekoppeld aan je Apple ID."
+          }
+        }
+      }
+    },
+    "Your profile couldn’t be deleted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your profile couldn’t be deleted"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je profiel kon niet worden verwijderd"
+          }
+        }
+      }
+    },
+    "Deleting your profile…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleting your profile…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je profiel wordt verwijderd…"
+          }
+        }
+      }
+    },
+    "Check your connection and try again. Nothing was deleted." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check your connection and try again. Nothing was deleted."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleer je verbinding en probeer het opnieuw. Er is niets verwijderd."
+          }
+        }
+      }
+    },
+    "Asks for confirmation first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asks for confirmation first."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vraagt eerst om bevestiging."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

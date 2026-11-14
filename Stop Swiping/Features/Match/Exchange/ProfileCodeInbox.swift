@@ -21,8 +21,9 @@ final class ProfileCodeInbox: ObservableObject {
     /// Takes in a link the app was opened with. Returns whether it was a
     /// profile code at all, readable or not.
     @discardableResult
-    func open(_ url: URL, isProfileReady: Bool, today: CalendarDate = .today()) -> Bool {
+    func open(_ url: URL, isProfileReady: Bool, today: CalendarDate? = nil) -> Bool {
         guard ProfileCode.isCode(url) else { return false }
+        let today = today ?? .today()
         if let profile = ProfileCode.profile(from: url, today: today) {
             pending = profile
             show(isProfileReady ? nil : .needsProfile(name: profile.displayName))

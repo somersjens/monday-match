@@ -42,6 +42,9 @@ nonisolated enum AWSPhotoVerificationError: LocalizedError {
         }
     }
 }
+/// Decoded off the main actor by Supabase, so these must not be main-actor isolated.
+private nonisolated struct AWSMatchingStatus: Decodable { let photo_verified:Bool }
+private nonisolated struct AWSVerificationResult: Decodable { let verified:Bool; let pending:Bool? }
 @MainActor
 final class AWSPhotoVerificationService {
     static let consentVersion="2026-11-14.aws.v1"
@@ -60,15 +63,13 @@ final class AWSPhotoVerificationService {
     }
     func photoIsVerified() async throws -> Bool {
         try await profileSync.synchronize()
-        struct Status: Decodable { let photo_verified:Bool }
-        let result:Status=try await client.rpc("matching_status").execute().value
+        let result:AWSMatchingStatus=try await client.rpc("matching_status").execute().value
         return result.photo_verified
     }
     func complete(_ session: AWSPhotoVerificationSession) async throws {
         struct Body: Encodable { let action="complete"; let request_id:UUID }
-        struct Result: Decodable { let verified:Bool; let pending:Bool? }
         for _ in 0..<10 {
-            let result: Result = try await client.functions.invoke("aws-face-verification",
+            let result: AWSVerificationResult = try await client.functions.invoke("aws-face-verification",
                 options:FunctionInvokeOptions(body:Body(request_id:session.id)))
             if result.verified { return }
             guard result.pending==true else { throw AWSPhotoVerificationError.notVerified }

@@ -48,6 +48,8 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     private var worker: Task<Void, Error>?
     private var needsSync = false
     private var uploadedPhotos: [String: [UUID: Data]] = [:]
+    /// Set while a profile is being deleted, so no upload can bring it back.
+    private var isDeleting = false
 
     struct Row: Codable {
         let id: String
@@ -103,7 +105,7 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     }
 
     private func uploadCurrentProfile() async throws {
-        guard let state = store.load(), state.completedAt != nil,
+        guard !isDeleting, let state = store.load(), state.completedAt != nil,
               state.hasAcceptedProfilePrivacy, !state.isUnderageLocked,
               let draft = try repository.loadProfile() else { return }
         let userID = try await client.auth.session.user.id.uuidString.lowercased()
@@ -118,6 +120,48 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         let profile = CloudProfile(draft: backup.draft, photoURLs: urls)
         try await client.from("profiles").upsert(Row(id: userID, profile: profile, backup: backup), onConflict: "id")
             .execute()
+    }
+
+    /// Stops uploads and waits for one already running to finish.
+    func beginDeletion() async {
+        isDeleting = true
+        needsSync = false
+        _ = try? await worker?.value
+    }
+
+    /// Uploads may resume. After a deleted account the phone belongs to no
+    /// account until the next sign-in claims it.
+    func endDeletion(accountDeleted: Bool) {
+        isDeleting = false
+        guard accountDeleted else { return }
+        uploadedPhotos = [:]
+        defaults.removeObject(forKey: ownerKey)
+    }
+
+    /// Apple's tokens must be revoked when such an account is deleted.
+    var usesSignInWithApple: Bool {
+        get async {
+            (try? await client.auth.session)?.user.identities?.contains { $0.provider == "apple" } == true
+        }
+    }
+
+    /// Removes the signed-in account and everything stored for it. Without a
+    /// session there is nothing on the server to remove.
+    func deleteAccount(appleAuthorizationCode: String? = nil) async throws {
+        guard let session = try? await client.auth.session else { return }
+        let userID = session.user.id.uuidString.lowercased()
+        if let appleAuthorizationCode {
+            // A failed revocation must not keep someone from deleting their
+            // account; the account itself, and every token it issued, goes below.
+            try? await client.functions.invoke("apple-revoke", options: FunctionInvokeOptions(
+                body: ["authorizationCode": appleAuthorizationCode]))
+        }
+        let bucket = client.storage.from(SupabaseProfilePhotoUploader.bucket)
+        // Storage refuses SQL deletes, so photos go first, through its API.
+        let files = try await bucket.list(path: userID, options: SearchOptions(limit: 1000))
+        let paths = files.map { "\(userID)/\($0.name)" }
+        if !paths.isEmpty { _ = try await bucket.remove(paths: paths) }
+        try await client.rpc("delete_account").execute()
     }
 
     private func load(userID: String) async throws -> Row? {

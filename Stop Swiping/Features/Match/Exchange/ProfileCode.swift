@@ -128,7 +128,7 @@ enum ProfileCode {
             bits.write(text: location.placeName ?? "", lengthBits: 6, maximumBytes: maximumPlaceBytes)
         }
 
-        let languages = profile.languages.compactMap(LanguageCode.init).prefix(maximumLanguages)
+        let languages = profile.languages.compactMap { LanguageCode($0) }.prefix(maximumLanguages)
         bits.write(languages.count, bits: 5)
         for language in languages { language.write(to: &bits) }
 

@@ -10,6 +10,12 @@ struct DependencyContainer {
     var chatRepository: SecureChatRepository?
     var photoVerification: AWSPhotoVerificationService?
 
+    @MainActor
+    var profileDeletion: ProfileDeletionService {
+        ProfileDeletionService(profileRepository: profileRepository, profileCreationStore: profileCreationStore,
+                               server: profileSync as? SupabaseProfileSync, authService: authService)
+    }
+
     static var live: DependencyContainer {
         // The file repository can only fail when the documents directory is
         // unavailable. An in-memory repository then keeps the app usable for the

@@ -7,10 +7,15 @@ struct ProfileOverviewView: View {
     @ObservedObject var locationService: LocationService
     /// The edited birthday turned out to be underage; the cover must close.
     let onUnderage: () -> Void
+    /// Erases the profile from the phone and the server. Nil hides the option.
+    var onDeleteProfile: (() async throws -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @State private var path: [Route] = []
     @State private var showsLanguagePicker = false
+    @State private var confirmsDeletion = false
+    @State private var isDeleting = false
+    @State private var deletionError: String?
 
     enum Route: Hashable {
         case edit(ProfileCreationStep)
@@ -38,6 +43,47 @@ struct ProfileOverviewView: View {
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showsLanguagePicker) {
             AppLanguagePicker()
+        }
+        .alert(L10n("Delete your profile?"), isPresented: $confirmsDeletion) {
+            Button(L10n("Delete profile"), role: .destructive, action: deleteProfile)
+            Button(L10n("Cancel"), role: .cancel) {}
+        } message: {
+            Text(L10n("This can’t be undone. Your profile, photos, matches and chats are removed from this iPhone and from auto matching. Purchases stay linked to your Apple ID."))
+        }
+        .alert(
+            L10n("Your profile couldn’t be deleted"),
+            isPresented: Binding(get: { deletionError != nil }, set: { if !$0 { deletionError = nil } })
+        ) {
+            Button(L10n("OK"), role: .cancel) {}
+        } message: {
+            Text(deletionError ?? "")
+        }
+        .overlay {
+            if isDeleting {
+                ZStack {
+                    Color.black.opacity(0.55).ignoresSafeArea()
+                    ProgressView(L10n("Deleting your profile…"))
+                        .tint(OnboardingTheme.primaryText)
+                        .foregroundStyle(OnboardingTheme.primaryText)
+                }
+                .transition(.opacity)
+            }
+        }
+        .interactiveDismissDisabled(isDeleting)
+    }
+
+    private func deleteProfile() {
+        guard let onDeleteProfile, !isDeleting else { return }
+        withAnimation(.easeInOut(duration: 0.2)) { isDeleting = true }
+        Task {
+            do {
+                try await onDeleteProfile()
+            } catch is CancellationError {
+                // Closed Apple's confirmation: nothing was deleted, nothing to say.
+            } catch {
+                deletionError = L10n("Check your connection and try again. Nothing was deleted.")
+            }
+            withAnimation(.easeInOut(duration: 0.2)) { isDeleting = false }
         }
     }
 
@@ -70,6 +116,10 @@ struct ProfileOverviewView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                         .onboardingSurface(cornerRadius: 24)
                     }
+                }
+
+                if onDeleteProfile != nil {
+                    deleteRow
                 }
             }
             .frame(maxWidth: OnboardingTheme.contentWidth)
@@ -169,6 +219,34 @@ struct ProfileOverviewView: View {
         .accessibilityValue(answer.compact)
         .accessibilityHint(L10n("Opens this question."))
         .accessibilityAddTraits(.isButton)
+    }
+
+    private var deleteRow: some View {
+        Button { confirmsDeletion = true } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "trash")
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 36, height: 36)
+                    .background {
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                            .fill(Color.red.opacity(0.14))
+                    }
+                    .accessibilityHidden(true)
+                Text(L10n("Delete profile"))
+                    .font(.system(.body, weight: .semibold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .foregroundStyle(Color(red: 1, green: 0.38, blue: 0.40))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(AnswerRowStyle())
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .onboardingSurface(cornerRadius: 24)
+        .disabled(isDeleting)
+        .padding(.top, 12)
+        .accessibilityHint(L10n("Asks for confirmation first."))
     }
 
     // MARK: - Editing

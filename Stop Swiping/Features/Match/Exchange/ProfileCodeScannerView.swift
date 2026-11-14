@@ -79,7 +79,7 @@ final class ProfileCodeScannerModel: ObservableObject {
 
     func start() {
         guard camera == nil else { return }
-        Task {
+        Task { [weak self] in
             let authorized: Bool
             switch AVCaptureDevice.authorizationStatus(for: .video) {
             case .authorized: authorized = true
@@ -87,14 +87,14 @@ final class ProfileCodeScannerModel: ObservableObject {
             default: authorized = false
             }
             guard authorized else {
-                phase = .denied
+                self?.phase = .denied
                 return
             }
-            guard camera == nil else { return }
+            guard let model = self, model.camera == nil else { return }
             let camera = ProfileCodeCamera { [weak self] text in
                 Task { @MainActor [weak self] in self?.read(text) }
             }
-            self.camera = camera
+            model.camera = camera
             camera.start { [weak self] running in
                 Task { @MainActor [weak self] in self?.phase = running ? .scanning : .unavailable }
             }
@@ -107,8 +107,9 @@ final class ProfileCodeScannerModel: ObservableObject {
     }
 
     /// Decodes what the camera read. The first profile found ends the scan.
-    func read(_ text: String, today: CalendarDate = .today()) {
+    func read(_ text: String, today: CalendarDate? = nil) {
         guard profile == nil else { return }
+        let today = today ?? .today()
         // The camera reports the same code many times a second.
         if text == lastRejected {
             if showsUnknownCode { showUnknownCode() }

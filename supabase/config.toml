@@ -2,3 +2,8 @@
 # Keep the legacy gateway JWT check enabled as an additional layer.
 [functions.aws-face-verification]
 verify_jwt = true
+
+# User tokens are signed with the project's ECC key, which the gateway's legacy
+# check rejects. The function verifies the caller itself with auth.getUser.
+[functions.apple-revoke]
+verify_jwt = false

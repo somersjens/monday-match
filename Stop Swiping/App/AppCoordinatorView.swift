@@ -143,6 +143,11 @@ struct AppCoordinatorView: View {
                 chatRepository: dependencies.chatRepository,
                 photoVerification: dependencies.photoVerification,
                 codeInbox: codeInbox,
+                onDeleteProfile: deleteProfile,
+                onProfileDeleted: {
+                    access.updateCompletion(nil)
+                    appState.showWelcomeAfterProfileDeletion()
+                },
                 onAccountCreated: appState.showSignedInApp,
                 onSignIn: {
                     appState.navigationPath.append(.signIn)
@@ -152,6 +157,16 @@ struct AppCoordinatorView: View {
                 destination(for: route)
             }
         }
+        // A deleted profile leaves nothing of the old screens behind.
+        .id(appState.profileGeneration)
+    }
+
+    private func deleteProfile() async throws {
+        let deletion = dependencies.profileDeletion
+        // Closing Apple's sheet cancels the deletion before anything is removed.
+        let appleCode = await deletion.needsAppleAuthorization
+            ? try await AppleReauthorization().authorizationCode() : nil
+        try await deletion.deleteProfile(appleAuthorizationCode: appleCode)
     }
 
     @ViewBuilder

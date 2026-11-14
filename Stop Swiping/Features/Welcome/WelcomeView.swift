@@ -8,6 +8,8 @@ struct WelcomeView: View {
     private let chatRepository: SecureChatRepository?
     private let photoVerification: AWSPhotoVerificationService?
     private let automaticallyShowsAccessOnAppear: Bool
+    private let onDeleteProfile: (() async throws -> Void)?
+    private let onProfileDeleted: () -> Void
     @ObservedObject var access: LifetimeAccessStore
     /// Codes scanned outside the app, with the iPhone's own camera.
     @ObservedObject private var codeInbox: ProfileCodeInbox
@@ -94,12 +96,16 @@ struct WelcomeView: View {
         chatRepository: SecureChatRepository? = nil,
         photoVerification: AWSPhotoVerificationService? = nil,
         codeInbox: ProfileCodeInbox? = nil,
+        onDeleteProfile: (() async throws -> Void)? = nil,
+        onProfileDeleted: @escaping () -> Void = {},
         onAccountCreated: @escaping () -> Void = {},
         onSignIn: @escaping () -> Void
     ) {
         self.codeInbox = codeInbox ?? ProfileCodeInbox()
         self.onSignIn = onSignIn
         self.onAccountCreated = onAccountCreated
+        self.onDeleteProfile = onDeleteProfile
+        self.onProfileDeleted = onProfileDeleted
         self.authService = authService
         self.profileSync = profileSync
         self.chatRepository = chatRepository
@@ -408,8 +414,7 @@ struct WelcomeView: View {
             .preferredColorScheme(.dark)
         }
         .fullScreenCover(isPresented: $showsOverview) {
-            ProfileOverviewView(viewModel: profileCreation, locationService: locationService,
-                                onUnderage: showUnderageNotice)
+            profileOverview
         }
         .fullScreenCover(isPresented: $showsAutoMatching) {
             AutoMatchingSetupView(viewModel: profileCreation, locationService: locationService,
@@ -458,6 +463,12 @@ struct WelcomeView: View {
         .onAppear {
             if lightStage == .complete { waitForHelixEntrance() }
         }
+    }
+
+    private var profileOverview: ProfileOverviewView {
+        let deletion: (() async throws -> Void)? = onDeleteProfile == nil ? nil : { try await deleteProfile() }
+        return ProfileOverviewView(viewModel: profileCreation, locationService: locationService,
+                                   onUnderage: showUnderageNotice, onDeleteProfile: deletion)
     }
 
     private var landingControls: some View {
@@ -571,11 +582,9 @@ struct WelcomeView: View {
             ProgressView()
                 .frame(maxWidth: .infinity, minHeight: OnboardingTheme.buttonHeight)
         case .notifications:
-            Button(L10n("Allow notifications")) {
+            NotificationPermissionCard(isRequesting: notifications.isRequesting) {
                 Task { await notifications.requestAuthorization() }
             }
-            .buttonStyle(GlowButtonStyle())
-            .disabled(notifications.isRequesting)
         case .matching:
             AutoMatchingCard(viewModel: profileCreation) {
                 guard !isTransitioning else { return }
@@ -659,6 +668,18 @@ struct WelcomeView: View {
     private func adjustProfile() {
         guard !isTransitioning else { return }
         showsOverview = true
+    }
+
+    /// Everything is erased first; only then does the overview close and the
+    /// app return to the first welcome screen.
+    private func deleteProfile() async throws {
+        guard let onDeleteProfile else { return }
+        cancelDemo()
+        showsCode = false
+        try await onDeleteProfile()
+        showsOverview = false
+        try? await Task.sleep(for: .seconds(0.45))
+        onProfileDeleted()
     }
 
     private func toggleCode() {

@@ -81,6 +81,34 @@ struct AccountCreationCard: View {
     }
 }
 
+/// Asks for notification permission. The switch slides on while the system
+/// prompt is open; the decision itself then replaces this card.
+struct NotificationPermissionCard: View {
+    let isRequesting: Bool
+    let onAllow: () -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button(action: onAllow) {
+                Text(L10n("Allow notifications"))
+                    .font(.system(.body, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHidden(true)
+
+            GlowToggle(isOn: isRequesting, label: L10n("Allow notifications"), action: onAllow)
+        }
+        .padding(.horizontal, 16)
+        .frame(minHeight: OnboardingTheme.buttonHeight)
+        .modifier(MatchingActionSurface(isOn: isRequesting))
+        .disabled(isRequesting)
+    }
+}
+
 private struct MatchingActionSurface: ViewModifier {
     let isOn: Bool
 

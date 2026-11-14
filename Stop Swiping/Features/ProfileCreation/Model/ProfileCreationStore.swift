@@ -3,6 +3,7 @@ import Foundation
 protocol ProfileCreationStateStoring {
     func load() -> ProfileCreationState?
     func save(_ state: ProfileCreationState)
+    func clear()
 }
 
 struct UserDefaultsProfileCreationStore: ProfileCreationStateStoring {
@@ -23,6 +24,10 @@ struct UserDefaultsProfileCreationStore: ProfileCreationStateStoring {
         guard let data = try? JSONEncoder().encode(state) else { return }
         defaults.set(data, forKey: key)
     }
+
+    func clear() {
+        defaults.removeObject(forKey: key)
+    }
 }
 
 final class InMemoryProfileCreationStore: ProfileCreationStateStoring {
@@ -34,4 +39,5 @@ final class InMemoryProfileCreationStore: ProfileCreationStateStoring {
 
     func load() -> ProfileCreationState? { state }
     func save(_ state: ProfileCreationState) { self.state = state }
+    func clear() { state = nil }
 }

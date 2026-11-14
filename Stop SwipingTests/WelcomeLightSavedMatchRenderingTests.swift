@@ -47,7 +47,6 @@ final class WelcomeLightSavedMatchRenderingTests: XCTestCase {
                 XCTAssertNil(command.error)
                 let buffer = output.contents().bindMemory(to: SIMD4<Float>.self, capacity: count)
                 let points = Array(UnsafeBufferPointer(start: buffer, count: count))
-                let cuspY = Float(-0.62 * layout.scale + layout.offsetY)
                 var rotationError: Float = 0
                 var lowerMotionError: Float = 0
                 for (index, point) in points.enumerated() {

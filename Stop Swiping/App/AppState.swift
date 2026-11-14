@@ -12,6 +12,8 @@ final class AppState: ObservableObject {
 
     @Published private(set) var sessionState: SessionState = .loading
     @Published var navigationPath: [AppRoute] = []
+    /// Changes when the profile is deleted, so every screen starts over.
+    @Published private(set) var profileGeneration = 0
 
     private let authService: AuthServicing
 
@@ -44,6 +46,14 @@ final class AppState: ObservableObject {
     func showSignedInApp() {
         sessionState = .signedIn
         navigationPath.removeAll()
+    }
+
+    /// The profile is gone from the phone and the server: back to the first
+    /// welcome screen, as on a fresh install.
+    func showWelcomeAfterProfileDeletion() {
+        sessionState = .signedOut
+        navigationPath.removeAll()
+        profileGeneration += 1
     }
 
     func signOut() async {
