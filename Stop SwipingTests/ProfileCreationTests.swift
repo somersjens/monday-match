@@ -339,15 +339,6 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertEqual(draft.matchLocation?.radiusKilometers, 60)
     }
 
-    func testOnboardingRefusesToFinishWithoutAnAdultProfileCreation() {
-        var draft = ProfileDraft()
-        draft.dateOfBirth = Calendar.current.date(byAdding: .year, value: -15, to: Date())!
-        draft.profileCreationCompletedAt = Date()
-        let viewModel = OnboardingViewModel(repository: InMemoryProfileRepository(profile: draft))
-        XCTAssertTrue(viewModel.requiresProfileCreation)
-        XCTAssertFalse(viewModel.finishOnboarding())
-    }
-
     func testLifestyleQuestionsEachNeedAnAnswer() {
         let viewModel = makeViewModel()
         for step in ProfileCreationStep.allCases where step >= .hasChildren {

@@ -56,7 +56,7 @@ final class AppLocalizationTests: XCTestCase {
     func testInterpolationPreservesNamesBracesAndPercentCharacters() {
         let name = "Alex {1} 100%"
         XCTAssertEqual(AppLocalization.string("Remove \(name)", language: .dutch), "Alex {1} 100% verwijderen")
-        XCTAssertEqual(AppLocalization.string("About \(12) km away", language: .dutch), "Op ongeveer 12 km afstand")
+        XCTAssertEqual(AppLocalization.string("\(40) or older", language: .dutch), "40 of ouder")
         XCTAssertEqual(AppLocalization.string("Step \(3) of \(17)", language: .english), "Step 3 of 17")
     }
 
@@ -149,7 +149,7 @@ final class AppLocalizationTests: XCTestCase {
 
     func testFaceModelMetadataAndPredictionsWorkInDutch() throws {
         AppLanguageSettings.shared.language = .dutch
-        let model = try SFaceEmbeddingModel(bundle: Bundle(for: OnboardingViewModel.self))
+        let model = try SFaceEmbeddingModel(bundle: Bundle(for: ProfileCreationViewModel.self))
         let image = UIGraphicsImageRenderer(size: CGSize(width: 112, height: 112)).image { context in
             UIColor.gray.setFill()
             context.fill(CGRect(x: 0, y: 0, width: 112, height: 112))

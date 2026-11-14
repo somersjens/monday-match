@@ -48,13 +48,14 @@ select pg_temp.check_test(matching_private.directional_score(p,jsonb_set(p,'{rel
 select pg_temp.check_test(matching_private.directional_score(jsonb_set(p,'{lifestyle,openToPartnerWithChildren}','false'),jsonb_set(p,'{lifestyle,hasChildren}','true')) is null,'Children preference enforced') from matching_fixture;
 select pg_temp.check_test(matching_private.directional_score(jsonb_set(p,'{lifestyle,futureChildren}','"yes"'),jsonb_set(p,'{lifestyle,futureChildren}','"no"')) is null,'Future children preference enforced') from matching_fixture;
 select pg_temp.check_test(matching_private.directional_score(jsonb_set(p,'{lifestyle,substances,smoking,partnerMaximumLevel}','0'),jsonb_set(p,'{lifestyle,substances,smoking,ownLevel}','1')) is null,'Substance maximum enforced') from matching_fixture;
+select pg_temp.check_test(matching_private.directional_score(p,jsonb_set(jsonb_set(jsonb_set(p,'{lifestyle,substances,alcohol,ownLevel}','5'),'{lifestyle,substances,smoking,ownLevel}','5'),'{lifestyle,substances,drugs,ownLevel}','5'))=100,'Habits within the limit do not change the score') from matching_fixture;
 do $$ declare p jsonb; c jsonb; q text; begin
     select f.p into p from matching_fixture f; c:=p;
     foreach q in array matching_private.question_ids() loop
         if q='aloneTime' then c:=jsonb_set(c,'{lifestyle,aloneTime,own}','4');
         else c:=jsonb_set(c,array['lifestyle','storedCompatibilityAnswers',q,'own'],'4'); end if;
     end loop;
-    perform pg_temp.check_test(matching_private.directional_score(p,c)=76,'Weighted score includes all 50 questions and 3 habits');
+    perform pg_temp.check_test(matching_private.directional_score(p,c)=75,'Weighted score counts only the 50 questions');
 end; $$;
 
 -- Reserved IDs: collision aborts rather than touching an existing account.
@@ -238,7 +239,7 @@ update matching_private.pool set joined_at='2000-01-01' where user_id='a7fa0000-
 insert into public.profiles(id,profile,backup) select 'a7fa0000-0000-4000-8000-000000000403',p || '{"gender":"man","interestedIn":["woman"],"languages":["test-tie"]}',b from matching_fixture;
 select pg_temp.check_test(exists(select 1 from public.matches where user_low='a7fa0000-0000-4000-8000-000000000401' and user_high='a7fa0000-0000-4000-8000-000000000403' and ended_at is null),'Equal means choose longest-waiting candidate');
 
-select pg_temp.check_test((select matching_private.directional_score(a.profile,b.profile)=76 from public.profiles a cross join public.profiles b where a.id='a7fa0000-0000-4000-8000-000000000302' and b.id='a7fa0000-0000-4000-8000-000000000303'),'Reverse threshold fixture fails its own minimum despite higher mean');
+select pg_temp.check_test((select matching_private.directional_score(a.profile,b.profile)=75 from public.profiles a cross join public.profiles b where a.id='a7fa0000-0000-4000-8000-000000000302' and b.id='a7fa0000-0000-4000-8000-000000000303'),'Reverse threshold fixture fails its own minimum despite higher mean');
 create temporary table live_chat_test_match(id uuid);
 insert into live_chat_test_match select match_id from matching_private.active_members where user_id='a7fa0000-0000-4000-8000-000000000103';
 grant select on live_chat_test_match to authenticated;

@@ -24,23 +24,6 @@
         }
       }
     },
-    "{0} – {1}, ideally {2}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} – {1}, ideally {2}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} – {1}, ideaal {2}"
-          }
-        }
-      }
-    },
     "{0} {1} or more often" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -292,23 +275,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "{0} kilometer"
-          }
-        }
-      }
-    },
-    "{0} km" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} km"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} km"
           }
         }
       }
@@ -738,23 +704,6 @@
         }
       }
     },
-    "{0}: {1} · closest to you: {2}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}: {1} · closest to you: {2}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}: {1} · dichtst bij jou: {2}"
-          }
-        }
-      }
-    },
     "{0}: {1}, wanted: {2}, importance: {3} of 5" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -874,107 +823,12 @@
         }
       }
     },
-    "{0}/7 · prefers {1}–{2}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}/7 · prefers {1}–{2}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}/7 · voorkeur {1}–{2}"
-          }
-        }
-      }
-    },
-    "{0}% compatibility" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}% compatibility"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}% compatibiliteit"
-          }
-        }
-      }
-    },
-    "{0}d {1}h {2}m" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}d {1}h {2}m"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}d {1}u {2}m"
-          }
-        }
-      }
-    },
-    "{0}h {1}m {2}s" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}h {1}m {2}s"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}u {1}m {2}s"
-          }
-        }
-      }
-    },
-    "{0}m {1}s" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}m {1}s"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}m {1}s"
-          }
-        }
-      }
-    },
     "%@ · %lld%%" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ · %2$lld%%"
-          }
-        }
-      }
-    },
-    "%@, %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$lld"
           }
         }
       }
@@ -998,16 +852,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld %2$@"
-          }
-        }
-      }
-    },
-    "%lld/%lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld/%2$lld"
           }
         }
       }
@@ -1079,23 +923,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "4+ dagen per week"
-          }
-        }
-      }
-    },
-    "A clear explanation of profile and matching data will appear here." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A clear explanation of profile and matching data will appear here."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hier komt een duidelijke uitleg over profiel- en matchinggegevens."
           }
         }
       }
@@ -1232,23 +1059,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Over {0}"
-          }
-        }
-      }
-    },
-    "About {0} km away" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "About {0} km away"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Op ongeveer {0} km afstand"
           }
         }
       }
@@ -1440,23 +1250,6 @@
         }
       }
     },
-    "Add a display name and a bio of at least 20 characters." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add a display name and a bio of at least 20 characters."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voeg een profielnaam en een bio van minstens 20 tekens toe."
-          }
-        }
-      }
-    },
     "Add a language" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1508,40 +1301,6 @@
         }
       }
     },
-    "Add at least one and up to {0} photos. The first photo becomes your main profile photo." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add at least one and up to {0} photos. The first photo becomes your main profile photo."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voeg minimaal één en maximaal {0} foto's toe. De eerste foto wordt je hoofdfoto."
-          }
-        }
-      }
-    },
-    "Add at least one profile photo." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add at least one profile photo."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voeg minstens één profielfoto toe."
-          }
-        }
-      }
-    },
     "Add language" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1555,40 +1314,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Taal toevoegen"
-          }
-        }
-      }
-    },
-    "Add your best photos" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add your best photos"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voeg je beste foto's toe"
-          }
-        }
-      }
-    },
-    "Added privately" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added privately"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Privé toegevoegd"
           }
         }
       }
@@ -1729,23 +1454,6 @@
         }
       }
     },
-    "Alcohol, smoking and drugs" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alcohol, smoking and drugs"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alcohol, roken en drugs"
-          }
-        }
-      }
-    },
     "All features included:" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1827,23 +1535,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Meldingen toestaan"
-          }
-        }
-      }
-    },
-    "Allow notifications for Saturday reminders, Sunday reveals and chat messages." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow notifications for Saturday reminders, Sunday reveals and chat messages."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sta meldingen toe voor herinneringen op zaterdag, matches op zondag en chatberichten."
           }
         }
       }
@@ -2239,23 +1930,6 @@
         }
       }
     },
-    "Ask {0} about cooking for friends or a favorite coffee place." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ask {0} about cooking for friends or a favorite coffee place."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vraag {0} naar koken voor vrienden of een favoriete koffieplek."
-          }
-        }
-      }
-    },
     "Ask the other person to show their code again, or update the app." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2269,6 +1943,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vraag de ander om de code opnieuw te tonen, of werk de app bij."
+          }
+        }
+      }
+    },
+    "Asks for confirmation first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asks for confirmation first."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vraagt eerst om bevestiging."
           }
         }
       }
@@ -2426,23 +2117,6 @@
         }
       }
     },
-    "Basic information" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Basic information"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Basisgegevens"
-          }
-        }
-      }
-    },
     "Basics" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2545,23 +2219,6 @@
         }
       }
     },
-    "Bio" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bio"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bio"
-          }
-        }
-      }
-    },
     "Birthday" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2626,40 +2283,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deze persoon blokkeren?"
-          }
-        }
-      }
-    },
-    "Blocked profiles" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blocked profiles"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geblokkeerde profielen"
-          }
-        }
-      }
-    },
-    "Blocked profiles will appear here after backend synchronization is added." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blocked profiles will appear here after backend synchronization is added."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geblokkeerde profielen verschijnen hier zodra synchronisatie met de server is toegevoegd."
           }
         }
       }
@@ -3004,23 +2627,6 @@
         }
       }
     },
-    "Changes made after this time apply to the next weekly round." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Changes made after this time apply to the next weekly round."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wijzigingen na dit tijdstip gelden voor de volgende wekelijkse ronde."
-          }
-        }
-      }
-    },
     "Character and choices" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3038,19 +2644,19 @@
         }
       }
     },
-    "Chat notifications" : {
+    "Check your connection and try again. Nothing was deleted." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chat notifications"
+            "value" : "Check your connection and try again. Nothing was deleted."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chatmeldingen"
+            "value" : "Controleer je verbinding en probeer het opnieuw. Er is niets verwijderd."
           }
         }
       }
@@ -3068,40 +2674,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Controleren…"
-          }
-        }
-      }
-    },
-    "Chicken answer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chicken answer"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Antwoord over kip"
-          }
-        }
-      }
-    },
-    "Chicken compatibility" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chicken compatibility"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Match op kipvoorkeur"
           }
         }
       }
@@ -3140,23 +2712,6 @@
         }
       }
     },
-    "Choose a clear, recent photo where your face is easy to recognize." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a clear, recent photo where your face is easy to recognize."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies een duidelijke, recente foto waarop je gezicht goed herkenbaar is."
-          }
-        }
-      }
-    },
     "Choose all that apply. No selection means open to all." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3170,57 +2725,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kies alle passende opties. Zonder selectie sta je voor iedereen open."
-          }
-        }
-      }
-    },
-    "Choose at least one relationship type." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose at least one relationship type."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies minstens één relatievorm."
-          }
-        }
-      }
-    },
-    "Choose at least three interests." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose at least three interests."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies minstens drie interesses."
-          }
-        }
-      }
-    },
-    "Choose at least three interests. These help create conversation starters and can contribute to compatibility later." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose at least three interests. These help create conversation starters and can contribute to compatibility later."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies minstens drie interesses. Ze helpen een gesprek op gang en kunnen later bijdragen aan een goede match."
           }
         }
       }
@@ -3255,23 +2759,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kies één optie, of sla deze vraag over. Tik op een geselecteerde optie om die te wissen."
-          }
-        }
-      }
-    },
-    "Choose photos" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose photos"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Foto's kiezen"
           }
         }
       }
@@ -3568,23 +3055,6 @@
         }
       }
     },
-    "Community guidelines" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Community guidelines"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Communityrichtlijnen"
-          }
-        }
-      }
-    },
     "Compare this code with your match by phone or in person. It must be identical on both phones." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3598,40 +3068,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vergelijk deze code met je match, telefonisch of in het echt. De code moet op beide telefoons hetzelfde zijn."
-          }
-        }
-      }
-    },
-    "Compatibility" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Compatibility"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Compatibiliteit"
-          }
-        }
-      }
-    },
-    "Compatible participants are being compared privately." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Compatible participants are being compared privately."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geschikte deelnemers worden vertrouwelijk met elkaar vergeleken."
           }
         }
       }
@@ -3670,40 +3106,6 @@
         }
       }
     },
-    "Complete profile" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Complete profile"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Volledig profiel"
-          }
-        }
-      }
-    },
-    "Complete the compatibility question." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Complete the compatibility question."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beantwoord de compatibiliteitsvraag."
-          }
-        }
-      }
-    },
     "Complete your profile" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3717,23 +3119,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Maak je profiel af"
-          }
-        }
-      }
-    },
-    "Complete your profile before joining." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Complete your profile before joining."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Maak je profiel af voordat je meedoet."
           }
         }
       }
@@ -3942,23 +3327,6 @@
         }
       }
     },
-    "Could not save your profile" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not save your profile"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je profiel kon niet worden opgeslagen"
-          }
-        }
-      }
-    },
     "Create your account" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3972,23 +3340,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Maak je account aan"
-          }
-        }
-      }
-    },
-    "Curious, kind and always ready to try a new restaurant." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Curious, kind and always ready to try a new restaurant."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nieuwsgierig, vriendelijk en altijd in voor een nieuw restaurant."
           }
         }
       }
@@ -4044,23 +3395,6 @@
         }
       }
     },
-    "Dashboard" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dashboard"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dashboard"
-          }
-        }
-      }
-    },
     "Day" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4095,57 +3429,6 @@
         }
       }
     },
-    "Delete local data" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete local data"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lokale gegevens verwijderen"
-          }
-        }
-      }
-    },
-    "Delete local profile data" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete local profile data"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lokale profielgegevens verwijderen"
-          }
-        }
-      }
-    },
-    "Delete local profile data?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete local profile data?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lokale profielgegevens verwijderen?"
-          }
-        }
-      }
-    },
     "Delete match" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4159,6 +3442,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Match verwijderen"
+          }
+        }
+      }
+    },
+    "Delete profile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete profile"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiel verwijderen"
           }
         }
       }
@@ -4180,6 +3480,23 @@
         }
       }
     },
+    "Delete your profile?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete your profile?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je profiel verwijderen?"
+          }
+        }
+      }
+    },
     "Deleting removes your match with {0} for good." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4193,6 +3510,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je match met {0} wordt definitief verwijderd."
+          }
+        }
+      }
+    },
+    "Deleting your profile…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleting your profile…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je profiel wordt verwijderd…"
           }
         }
       }
@@ -4329,23 +3663,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gevoelens bespreken"
-          }
-        }
-      }
-    },
-    "Display name" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Display name"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profielnaam"
           }
         }
       }
@@ -5234,19 +4551,19 @@
         }
       }
     },
-    "Each answer counts by its importance: every step up counts double, and 1 doesn’t count at all. For alcohol, smoking and drugs, a stricter limit means more important." : {
+    "Each answer counts by its importance: every step up counts double, and 1 doesn’t count at all." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Each answer counts by its importance: every step up counts double, and 1 doesn’t count at all. For alcohol, smoking and drugs, a stricter limit means more important."
+            "value" : "Each answer counts by its importance: every step up counts double, and 1 doesn’t count at all."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elk antwoord telt mee naar belang: elke stap hoger telt dubbel, en 1 telt helemaal niet mee. Bij alcohol, roken en drugs geldt: hoe strenger de grens, hoe belangrijker."
+            "value" : "Elk antwoord telt mee naar belang: elke stap hoger telt dubbel, en 1 telt helemaal niet mee."
           }
         }
       }
@@ -5353,23 +4670,6 @@
         }
       }
     },
-    "Edit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bewerken"
-          }
-        }
-      }
-    },
     "Edit match name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5383,40 +4683,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Matchnaam aanpassen"
-          }
-        }
-      }
-    },
-    "Edit profile" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit profile"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profiel bewerken"
-          }
-        }
-      }
-    },
-    "Enable notifications in Settings so you do not miss a reveal or message." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enable notifications in Settings so you do not miss a reveal or message."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schakel meldingen in via Instellingen om geen match of bericht te missen."
           }
         }
       }
@@ -6390,23 +5656,6 @@
         }
       }
     },
-    "Home" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Home"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start"
-          }
-        }
-      }
-    },
     "Home and tidiness" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6713,23 +5962,6 @@
         }
       }
     },
-    "Ideal" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ideal"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ideaal"
-          }
-        }
-      }
-    },
     "Identity" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6900,23 +6132,6 @@
         }
       }
     },
-    "Interests" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Interests"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Interesses"
-          }
-        }
-      }
-    },
     "Into nature" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6947,23 +6162,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "De stad in"
-          }
-        }
-      }
-    },
-    "Introduce yourself" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Introduce yourself"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stel jezelf voor"
           }
         }
       }
@@ -7036,23 +6234,6 @@
         }
       }
     },
-    "Join a weekly round from the dashboard. Your next result will appear here after Sunday’s reveal." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Join a weekly round from the dashboard. Your next result will appear here after Sunday’s reveal."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doe via het dashboard mee aan een wekelijkse ronde. Na de bekendmaking op zondag verschijnt hier je resultaat."
-          }
-        }
-      }
-    },
     "Join as an early adopter and help build the first thoughtful matching community." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7100,23 +6281,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Meedoen aan toekomstige matchrondes"
-          }
-        }
-      }
-    },
-    "Join this week's round" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Join this week's round"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doe mee aan de ronde van deze week"
           }
         }
       }
@@ -7668,23 +6832,6 @@
         }
       }
     },
-    "Local storage error" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Local storage error"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fout bij lokaal opslaan"
-          }
-        }
-      }
-    },
     "Location" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7787,23 +6934,6 @@
         }
       }
     },
-    "Looking for" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Looking for"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Op zoek naar"
-          }
-        }
-      }
-    },
     "Looks aren't everything, right?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7868,23 +6998,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Veel eigen tijd"
-          }
-        }
-      }
-    },
-    "Main photo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Main photo"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hoofdfoto"
           }
         }
       }
@@ -8025,57 +7138,6 @@
         }
       }
     },
-    "Matching distance" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Matching distance"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afstand voor matches"
-          }
-        }
-      }
-    },
-    "Matching is in progress" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Matching is in progress"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Matches worden gezocht"
-          }
-        }
-      }
-    },
-    "Matching reminders" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Matching reminders"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Herinneringen voor matchrondes"
-          }
-        }
-      }
-    },
     "Max" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8106,40 +7168,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Maximum"
-          }
-        }
-      }
-    },
-    "Maximum distance" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Maximum distance"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Maximale afstand"
-          }
-        }
-      }
-    },
-    "Maximum reached" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Maximum reached"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Maximum bereikt"
           }
         }
       }
@@ -8310,23 +7338,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minimum"
-          }
-        }
-      }
-    },
-    "Minimum 20 characters. Avoid sharing your home address, phone number or other sensitive details." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minimum 20 characters. Avoid sharing your home address, phone number or other sensitive details."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minimaal 20 tekens. Deel geen huisadres, telefoonnummer of andere gevoelige gegevens."
           }
         }
       }
@@ -8518,9 +7529,6 @@
         }
       }
     },
-    "MVP build 9" : {
-
-    },
     "My mom thinks I'm cute" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8606,23 +7614,6 @@
         }
       }
     },
-    "Never miss your reveal" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Never miss your reveal"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mis de bekendmaking van je match niet"
-          }
-        }
-      }
-    },
     "New experiences" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8670,23 +7661,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dagelijks nieuws"
-          }
-        }
-      }
-    },
-    "Next" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Next"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Volgende"
           }
         }
       }
@@ -8755,23 +7729,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geen actieve toegang gevonden. Een verlopen early-adopteraanbod kun je niet opnieuw claimen."
-          }
-        }
-      }
-    },
-    "No active result" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No active result"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geen actief resultaat"
           }
         }
       }
@@ -8861,23 +7818,6 @@
         }
       }
     },
-    "No photos added yet" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No photos added yet"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nog geen foto's toegevoegd"
-          }
-        }
-      }
-    },
     "No religion" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8929,23 +7869,6 @@
         }
       }
     },
-    "No strong match this week" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No strong match this week"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deze week geen sterke match"
-          }
-        }
-      }
-    },
     "No subscription, ever" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8959,23 +7882,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nooit een abonnement"
-          }
-        }
-      }
-    },
-    "Not added" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not added"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Niet toegevoegd"
           }
         }
       }
@@ -9065,23 +7971,6 @@
         }
       }
     },
-    "Not participating" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not participating"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doet niet mee"
-          }
-        }
-      }
-    },
     "Not selected" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9116,40 +8005,6 @@
         }
       }
     },
-    "Notifications" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meldingen"
-          }
-        }
-      }
-    },
-    "Notifications are off" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications are off"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meldingen staan uit"
-          }
-        }
-      }
-    },
     "Notifications are off. You can allow them in Settings to receive your reminder." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9163,40 +8018,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Meldingen staan uit. Sta ze toe in Instellingen om je herinnering te ontvangen."
-          }
-        }
-      }
-    },
-    "Notifications are on" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications are on"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meldingen staan aan"
-          }
-        }
-      }
-    },
-    "Notifications enabled" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications enabled"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meldingen ingeschakeld"
           }
         }
       }
@@ -9524,23 +8345,6 @@
         }
       }
     },
-    "Open chat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open chat"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chat openen"
-          }
-        }
-      }
-    },
     "Open relationship" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9609,23 +8413,6 @@
         }
       }
     },
-    "Open your match result to see what happened." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open your match result to see what happened."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open je matchresultaat om te zien wat het is geworden."
-          }
-        }
-      }
-    },
     "Openly and in depth" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9690,23 +8477,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Opent deze vraag."
-          }
-        }
-      }
-    },
-    "Opt in before the deadline to be considered for Sunday’s reveal." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opt in before the deadline to be considered for Sunday’s reveal."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meld je voor de deadline aan om mee te doen aan de bekendmaking op zondag."
           }
         }
       }
@@ -9826,23 +8596,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieren horen erbij"
-          }
-        }
-      }
-    },
-    "Participating" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Participating"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doet mee"
           }
         }
       }
@@ -10051,23 +8804,6 @@
         }
       }
     },
-    "Photo {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Photo {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Foto {0}"
-          }
-        }
-      }
-    },
     "Photo guidelines" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10115,23 +8851,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Foto geverifieerd"
-          }
-        }
-      }
-    },
-    "Photos are compressed locally before upload. Metadata is not intentionally preserved in the processed JPEG." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Photos are compressed locally before upload. Metadata is not intentionally preserved in the processed JPEG."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Foto's worden lokaal verkleind voor het uploaden. Metadata wordt niet bewust bewaard in de verwerkte JPEG."
           }
         }
       }
@@ -10323,23 +9042,6 @@
         }
       }
     },
-    "Preferred partner answer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preferred partner answer"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gewenst antwoord van partner"
-          }
-        }
-      }
-    },
     "Preparing your camera…" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10374,23 +9076,6 @@
         }
       }
     },
-    "Privacy and safety" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Privacy and safety"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Privacy en veiligheid"
-          }
-        }
-      }
-    },
     "Privacy in a relationship" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10404,23 +9089,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Privacy in een relatie"
-          }
-        }
-      }
-    },
-    "Privacy overview" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Privacy overview"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Privacyoverzicht"
           }
         }
       }
@@ -10442,40 +9110,6 @@
         }
       }
     },
-    "Private matching details" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Private matching details"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Privégegevens voor matches"
-          }
-        }
-      }
-    },
-    "Profile" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profile"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profiel"
-          }
-        }
-      }
-    },
     "Profile backup couldn’t be saved. Tap to retry." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10489,57 +9123,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je profielback-up kon niet worden opgeslagen. Tik om opnieuw te proberen."
-          }
-        }
-      }
-    },
-    "Profile edit deadline" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profile edit deadline"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deadline voor profielwijzigingen"
-          }
-        }
-      }
-    },
-    "Profile preview" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profile preview"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profielvoorbeeld"
-          }
-        }
-      }
-    },
-    "Profiles can no longer be changed for this round." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profiles can no longer be changed for this round."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profielen kunnen voor deze ronde niet meer worden aangepast."
           }
         }
       }
@@ -10816,23 +9399,6 @@
         }
       }
     },
-    "Relationship" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Relationship"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Relatie"
-          }
-        }
-      }
-    },
     "Relationship conversations" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10846,23 +9412,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Relatiegesprekken"
-          }
-        }
-      }
-    },
-    "Relationship type" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Relationship type"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Relatievorm"
           }
         }
       }
@@ -10986,23 +9535,6 @@
         }
       }
     },
-    "Request again" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Request again"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opnieuw aanvragen"
-          }
-        }
-      }
-    },
     "Restore purchases" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11033,40 +9565,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Resultaten"
-          }
-        }
-      }
-    },
-    "Reveal countdown" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reveal countdown"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aftellen tot de bekendmaking"
-          }
-        }
-      }
-    },
-    "Review your profile before completing onboarding. You can edit these details later." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Review your profile before completing onboarding. You can edit these details later."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Controleer je profiel voordat je de aanmelding afrondt. Je kunt dit later aanpassen."
           }
         }
       }
@@ -11135,23 +9633,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ongeveer op tijd"
-          }
-        }
-      }
-    },
-    "Safety and conduct rules will appear here." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Safety and conduct rules will appear here."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hier komen de veiligheids- en gedragsregels."
           }
         }
       }
@@ -11445,23 +9926,6 @@
         }
       }
     },
-    "Select every option you are genuinely open to. These preferences will be treated as an important matching filter." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select every option you are genuinely open to. These preferences will be treated as an important matching filter."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selecteer alle opties waarvoor je openstaat. Deze voorkeuren worden gebruikt als belangrijk matchfilter."
-          }
-        }
-      }
-    },
     "Select everyone you’re open to." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11645,23 +10109,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stel beide scores voor uiterlijk in om door te gaan."
-          }
-        }
-      }
-    },
-    "Set partner preference around my answer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set partner preference around my answer"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Partnervoorkeur rond mijn antwoord instellen"
           }
         }
       }
@@ -12040,23 +10487,6 @@
         }
       }
     },
-    "Shown first on your profile" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shown first on your profile"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wordt als eerste op je profiel getoond"
-          }
-        }
-      }
-    },
     "Shows the answers behind this score." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12138,23 +10568,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Meld je veilig aan met Apple of Google. Je profiel wordt bewaard bij Supabase, zodat je het op een ander toestel kunt herstellen."
-          }
-        }
-      }
-    },
-    "Sign out" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sign out"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uitloggen"
           }
         }
       }
@@ -12550,23 +10963,6 @@
         }
       }
     },
-    "Start the conversation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start the conversation"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Begin het gesprek"
-          }
-        }
-      }
-    },
     "Step {0} of {1}" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12618,23 +11014,6 @@
         }
       }
     },
-    "Stored privately" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stored privately"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Privé opgeslagen"
-          }
-        }
-      }
-    },
     "Style-conscious" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12682,23 +11061,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voorgesteld"
-          }
-        }
-      }
-    },
-    "SUNDAY" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SUNDAY"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ZONDAG"
           }
         }
       }
@@ -13213,23 +11575,6 @@
         }
       }
     },
-    "The conversation will close and you can opt in again for a future round." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The conversation will close and you can opt in again for a future round."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Het gesprek wordt gesloten. Je kunt je opnieuw aanmelden voor een volgende ronde."
-          }
-        }
-      }
-    },
     "The face moved out of the scan. Start again with your face inside the circle." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13281,23 +11626,6 @@
         }
       }
     },
-    "The ideal value can move independently, while the minimum and maximum define what you still consider acceptable." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The ideal value can move independently, while the minimum and maximum define what you still consider acceptable."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De ideale waarde is los instelbaar. Het minimum en maximum bepalen wat je nog acceptabel vindt."
-          }
-        }
-      }
-    },
     "The image could not be compressed." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13328,23 +11656,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Het formaat van de afbeelding kon niet worden aangepast."
-          }
-        }
-      }
-    },
-    "The next build block can add photo selection and a real profile preview." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The next build block can add photo selection and a real profile preview."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In een volgende versie kunnen fotoselectie en een echt profielvoorbeeld worden toegevoegd."
           }
         }
       }
@@ -13621,6 +11932,23 @@
         }
       }
     },
+    "This can’t be undone. Your profile, photos, matches and chats are removed from this iPhone and from auto matching. Purchases stay linked to your Apple ID." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This can’t be undone. Your profile, photos, matches and chats are removed from this iPhone and from auto matching. Purchases stay linked to your Apple ID."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit kan niet ongedaan worden gemaakt. Je profiel, foto’s, matches en chats worden van deze iPhone en uit automatisch matchen verwijderd. Aankopen blijven gekoppeld aan je Apple ID."
+          }
+        }
+      }
+    },
     "This code can’t be read" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13685,23 +12013,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "De camera van dit apparaat kan nu niet worden gebruikt. Je kunt de code ook scannen met de Camera-app van je iPhone."
-          }
-        }
-      }
-    },
-    "This is how your match sees you." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This is how your match sees you."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zo ziet je match jou."
           }
         }
       }
@@ -13787,57 +12098,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deze aankoop is momenteel niet beschikbaar. Probeer het opnieuw."
-          }
-        }
-      }
-    },
-    "This removes the locally saved profile from this device. Backend account deletion will be added later." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This removes the locally saved profile from this device. Backend account deletion will be added later."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hiermee verwijder je het lokaal opgeslagen profiel van dit apparaat. Accountverwijdering op de server wordt later toegevoegd."
-          }
-        }
-      }
-    },
-    "This round is locked" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This round is locked"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deze ronde is gesloten"
-          }
-        }
-      }
-    },
-    "This round is no longer open." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This round is no longer open."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deze ronde is niet meer open."
           }
         }
       }
@@ -14097,23 +12357,6 @@
         }
       }
     },
-    "Use a first name or nickname and write a short bio that gives your match something real to respond to." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use a first name or nickname and write a short bio that gives your match something real to respond to."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gebruik een voornaam of bijnaam en schrijf een korte bio waar je match op kan reageren."
-          }
-        }
-      }
-    },
     "Use a photo containing exactly one face: yours." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14369,23 +12612,6 @@
         }
       }
     },
-    "Verify your main photo with a live face scan before continuing." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verify your main photo with a live face scan before continuing."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verifieer je hoofdfoto met een live gezichtsscan voordat je doorgaat."
-          }
-        }
-      }
-    },
     "Verify your photo with a live face scan to continue." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14590,23 +12816,6 @@
         }
       }
     },
-    "We can alert you about deadlines, reveals and new messages." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "We can alert you about deadlines, reveals and new messages."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "We kunnen je herinneren aan deadlines, nieuwe matches en berichten."
-          }
-        }
-      }
-    },
     "We compare a live front-camera scan with this photo. Slowly move your head in a small circle to fill the ring. A match is required to continue with this photo." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14654,23 +12863,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je locatie kon niet worden gevonden. Tik op de kaart om een plek te kiezen."
-          }
-        }
-      }
-    },
-    "We did not find a pairing above the 60% compatibility threshold. That is better than forcing a weak match." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "We did not find a pairing above the 60% compatibility threshold. That is better than forcing a weak match."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "We vonden geen match boven de grens van 60% compatibiliteit. Liever geen match dan een slechte match."
           }
         }
       }
@@ -14760,23 +12952,6 @@
         }
       }
     },
-    "What are you into?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What are you into?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wat zijn je interesses?"
-          }
-        }
-      }
-    },
     "What describes you best?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14790,23 +12965,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wat past het beste bij jou?"
-          }
-        }
-      }
-    },
-    "What happens next" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What happens next"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wat gebeurt er hierna?"
           }
         }
       }
@@ -14858,23 +13016,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wat is jouw religie of levensbeschouwing?"
-          }
-        }
-      }
-    },
-    "What kind of relationship are you looking for?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What kind of relationship are you looking for?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wat voor relatie zoek je?"
           }
         }
       }
@@ -15304,23 +13445,6 @@
         }
       }
     },
-    "You already have an active match." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You already have an active match."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je hebt al een actieve match."
-          }
-        }
-      }
-    },
     "You are {0} cm, outside {1}’s height range" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15440,23 +13564,6 @@
         }
       }
     },
-    "You can add at most {0} photos." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You can add at most {0} photos."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je kunt maximaal {0} foto's toevoegen."
-          }
-        }
-      }
-    },
     "You can cancel or continue without a photo. You can request up to five checks per day. Only a server-confirmed result counts as a verified photo." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15470,23 +13577,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je kunt annuleren of zonder foto doorgaan. Je kunt maximaal vijf controles per dag aanvragen. Alleen een door de server bevestigde uitslag telt als geverifieerde foto."
-          }
-        }
-      }
-    },
-    "You can leave the round until Saturday’s deadline." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You can leave the round until Saturday’s deadline."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je kunt je tot de deadline op zaterdag afmelden."
           }
         }
       }
@@ -15593,23 +13683,6 @@
         }
       }
     },
-    "You matched" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You matched"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je hebt een match"
-          }
-        }
-      }
-    },
     "You matched. Be kind, curious and respectful." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15623,23 +13696,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je hebt een match. Wees vriendelijk, nieuwsgierig en respectvol."
-          }
-        }
-      }
-    },
-    "You must be at least {0} years old." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You must be at least {0} years old."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je moet minstens {0} jaar zijn."
           }
         }
       }
@@ -15695,23 +13751,6 @@
         }
       }
     },
-    "You will not be matched unless you actively opt in." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You will not be matched unless you actively opt in."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je krijgt alleen een match als je je zelf aanmeldt."
-          }
-        }
-      }
-    },
     "You: {0}" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15725,23 +13764,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jij: {0}"
-          }
-        }
-      }
-    },
-    "You: {0} · closest to {1}: {2}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You: {0} · closest to {1}: {2}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jij: {0} · dichtst bij {1}: {2}"
           }
         }
       }
@@ -15763,23 +13785,6 @@
         }
       }
     },
-    "You: {0}/7. Partner preference: {1}–{2}, ideally {3}." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You: {0}/7. Partner preference: {1}–{2}, ideally {3}."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jij: {0}/7. Partnervoorkeur: {1}–{2}, ideaal {3}."
-          }
-        }
-      }
-    },
     "You'll never have to pay" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15793,23 +13798,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je hoeft nooit te betalen"
-          }
-        }
-      }
-    },
-    "You're in this week's round" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You're in this week's round"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je doet mee aan de ronde van deze week"
           }
         }
       }
@@ -16018,23 +14006,6 @@
         }
       }
     },
-    "Your interests" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your interests"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jouw interesses"
-          }
-        }
-      }
-    },
     "Your live scan matches this photo." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16188,57 +14159,6 @@
         }
       }
     },
-    "Your name" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your name"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je naam"
-          }
-        }
-      }
-    },
-    "Your next matching round will appear here." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your next matching round will appear here."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je volgende matchronde verschijnt hier."
-          }
-        }
-      }
-    },
-    "Your next weekly round" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your next weekly round"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je volgende wekelijkse ronde"
-          }
-        }
-      }
-    },
     "Your own appearance" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16273,23 +14193,6 @@
         }
       }
     },
-    "Your photos" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your photos"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je foto's"
-          }
-        }
-      }
-    },
     "Your profile" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16303,6 +14206,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je profiel"
+          }
+        }
+      }
+    },
+    "Your profile couldn’t be deleted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your profile couldn’t be deleted"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je profiel kon niet worden verwijderd"
           }
         }
       }
@@ -16337,57 +14257,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je profiel is compleet."
-          }
-        }
-      }
-    },
-    "Your profile is taking shape." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your profile is taking shape."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je profiel krijgt vorm."
-          }
-        }
-      }
-    },
-    "Your profile stays ready. Review your preferences, update anything that changed, and opt in again for the next round." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your profile stays ready. Review your preferences, update anything that changed, and opt in again for the next round."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je profiel blijft klaarstaan. Controleer je voorkeuren, werk wijzigingen bij en meld je aan voor de volgende ronde."
-          }
-        }
-      }
-    },
-    "Your profile will be considered when matching starts Saturday night." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your profile will be considered when matching starts Saturday night."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je profiel doet mee wanneer het matchen op zaterdagavond begint."
           }
         }
       }
@@ -16456,142 +14325,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je herinnering kon niet worden gepland. Probeer deze opnieuw aan te zetten."
-          }
-        }
-      }
-    },
-    "Your result is ready" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your result is ready"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je resultaat staat klaar"
-          }
-        }
-      }
-    },
-    "Delete your profile?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete your profile?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je profiel verwijderen?"
-          }
-        }
-      }
-    },
-    "Delete profile" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete profile"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profiel verwijderen"
-          }
-        }
-      }
-    },
-    "This can’t be undone. Your profile, photos, matches and chats are removed from this iPhone and from auto matching. Purchases stay linked to your Apple ID." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This can’t be undone. Your profile, photos, matches and chats are removed from this iPhone and from auto matching. Purchases stay linked to your Apple ID."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dit kan niet ongedaan worden gemaakt. Je profiel, foto’s, matches en chats worden van deze iPhone en uit automatisch matchen verwijderd. Aankopen blijven gekoppeld aan je Apple ID."
-          }
-        }
-      }
-    },
-    "Your profile couldn’t be deleted" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your profile couldn’t be deleted"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je profiel kon niet worden verwijderd"
-          }
-        }
-      }
-    },
-    "Deleting your profile…" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deleting your profile…"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je profiel wordt verwijderd…"
-          }
-        }
-      }
-    },
-    "Check your connection and try again. Nothing was deleted." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Check your connection and try again. Nothing was deleted."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Controleer je verbinding en probeer het opnieuw. Er is niets verwijderd."
-          }
-        }
-      }
-    },
-    "Asks for confirmation first." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Asks for confirmation first."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vraagt eerst om bevestiging."
           }
         }
       }

@@ -28,16 +28,15 @@ final class DemoMatchTests: XCTestCase {
         let report = MatchReport(you: you, them: them, on: today)
         let questions = Double(CompatibilityScaleQuestion.all.count)
         // "Not important at all" doesn't count, so yours is the one question
-        // that matters (weight 8, half right) and three matching habits
-        // nobody is strict about (weight 1 each).
-        let yours: Double = (8 * 0.5 + 3) / (8 + 3) * 100
+        // that matters (weight 8, half right). Habits never count.
+        let yours: Double = 50
         XCTAssertEqual(report.yourScore, Int(yours.rounded()))
         // Every answer is two steps from what they want, at weight 8.
-        let theirs: Double = (questions * 4 + 3) / (questions * 8 + 3) * 100
+        let theirs: Double = (questions * 4) / (questions * 8) * 100
         XCTAssertEqual(report.theirScore, Int(theirs.rounded()))
         let average = Double(report.yourScore + report.theirScore) / 2
         XCTAssertEqual(report.average, Int(average.rounded()))
-        XCTAssertEqual(report.rows(.yours).count, CompatibilityScaleQuestion.all.count + Substance.allCases.count)
+        XCTAssertEqual(report.rows(.yours).count, CompatibilityScaleQuestion.all.count)
         let alone = report.rows(.yours).first { $0.step == .aloneTime }
         XCTAssertEqual(alone, MatchReport.Row(step: .aloneTime, value: 4, wanted: 2, importance: 5))
         let theirAlone = report.rows(.theirs).first { $0.step == .aloneTime }

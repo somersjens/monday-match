@@ -40,44 +40,23 @@ final class ProfileExchangeTests: XCTestCase {
         XCTAssertEqual(closeness, [1, 0.75, 0.5, 0.25, 0])
     }
 
-    func testStricterSubstanceLimitsCountMore() {
-        XCTAssertEqual((0...5).map { MatchWeighting.substanceImportance(maximumLevel: $0, top: 5) }, [5, 4, 4, 3, 3, 2])
-        XCTAssertEqual(MatchWeighting.substanceImportance(maximumLevel: 9, top: 5), 2)
-    }
-
-    func testSubstancesScoreByClosenessToYourOwnUse() {
+    func testSubstancesNeverCountTowardsTheScore() {
         var you = profile(name: "Jens")
-        // Everything else is irrelevant to you, so only alcohol decides.
-        for question in CompatibilityScaleQuestion.all {
-            you.lifestyle[question] = CompatibilityScaleAnswer(own: 3, partner: 3, isPartnerCustomized: true, importance: 1)
-        }
-        you.lifestyle[.smoking] = SubstanceAnswer()
-        you.lifestyle[.drugs] = SubstanceAnswer()
         you.lifestyle[.alcohol] = SubstanceAnswer(ownLevel: 1, partnerMaximumLevel: 3)
-
-        var scores: [Int] = []
+        let baseline = MatchReport(you: you, them: profile(name: "Emma", gender: .woman, partnerGenders: [.man]),
+                                   on: today).yourScore
         for level in 0...5 {
             var them = profile(name: "Emma", gender: .woman, partnerGenders: [.man])
             them.lifestyle[.alcohol] = SubstanceAnswer(ownLevel: level, partnerMaximumLevel: 5)
+            them.lifestyle[.smoking] = SubstanceAnswer(ownLevel: level, partnerMaximumLevel: 5)
+            them.lifestyle[.drugs] = SubstanceAnswer(ownLevel: level, partnerMaximumLevel: 5)
             let report = MatchReport(you: you, them: them, on: today)
-            scores.append(report.yourScore)
-            // At or under your limit a match stays possible; over it never.
+            XCTAssertEqual(report.yourScore, baseline, "level \(level)")
+            XCTAssertFalse(report.rows(.yours).contains { $0.step.substance != nil })
+            // Your limit still decides whether a match is possible at all.
             XCTAssertEqual(report.theirIssues.isEmpty, level <= 3, "level \(level)")
             XCTAssertEqual(report.isMatch, level <= 3, "level \(level)")
-            let row = report.rows(.yours).first { $0.step == .alcohol }
-            XCTAssertEqual(row, MatchReport.Row(step: .alcohol, value: level, wanted: 1, importance: 3, span: 5))
         }
-        XCTAssertEqual(scores, [80, 100, 80, 60, 40, 20], "The closer to your own use, the better.")
-    }
-
-    func testSubstanceTargetNeverExceedsYourLimit() {
-        var you = profile(name: "Jens")
-        you.lifestyle[.alcohol] = SubstanceAnswer(ownLevel: 4, partnerMaximumLevel: 1)
-        var them = profile(name: "Emma", gender: .woman, partnerGenders: [.man])
-        them.lifestyle[.alcohol] = SubstanceAnswer(ownLevel: 1, partnerMaximumLevel: 5)
-        let row = MatchReport(you: you, them: them, on: today).rows(.yours).first { $0.step == .alcohol }
-        XCTAssertEqual(row, MatchReport.Row(step: .alcohol, value: 1, wanted: 1, importance: 4, span: 5))
-        XCTAssertEqual(row?.closeness, 1)
     }
 
     func testBothPhonesComputeTheSameReport() {

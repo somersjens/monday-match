@@ -130,17 +130,8 @@ final class PerformanceRegressionTests: XCTestCase {
         }
     }
 
-    func testPhotoPickersStoreBoundedImagesAndPreserveTheirCapacity() async throws {
+    func testAutoMatchingPhotoPickerReplacesThePhotoAndResetsVerification() async throws {
         let data = try makeImageData(size: CGSize(width: 2000, height: 1000))
-        let onboarding = OnboardingViewModel()
-        await onboarding.addPhotoData([data, data, data, data])
-        XCTAssertEqual(onboarding.draft.photos.count, onboarding.maximumPhotos)
-        for photo in onboarding.draft.photos {
-            let image = try XCTUnwrap(UIImage(data: photo.imageData)?.cgImage)
-            XCTAssertEqual(image.width, 1600)
-            XCTAssertEqual(image.height, 800)
-        }
-
         let repository = InMemoryProfileRepository()
         let state = ProfileCreationState(today: .today(), applicationLanguage: "en")
         let model = ProfileCreationViewModel(store: InMemoryProfileCreationStore(state: state), repository: repository)

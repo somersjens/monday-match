@@ -48,13 +48,14 @@ select pg_temp.check_test(matching_private.directional_score(p,jsonb_set(p,'{rel
 select pg_temp.check_test(matching_private.directional_score(jsonb_set(p,'{lifestyle,openToPartnerWithChildren}','false'),jsonb_set(p,'{lifestyle,hasChildren}','true')) is null,'Children preference enforced') from matching_fixture;
 select pg_temp.check_test(matching_private.directional_score(jsonb_set(p,'{lifestyle,futureChildren}','"yes"'),jsonb_set(p,'{lifestyle,futureChildren}','"no"')) is null,'Future children preference enforced') from matching_fixture;
 select pg_temp.check_test(matching_private.directional_score(jsonb_set(p,'{lifestyle,substances,smoking,partnerMaximumLevel}','0'),jsonb_set(p,'{lifestyle,substances,smoking,ownLevel}','1')) is null,'Substance maximum enforced') from matching_fixture;
+select pg_temp.check_test(matching_private.directional_score(p,jsonb_set(jsonb_set(jsonb_set(p,'{lifestyle,substances,alcohol,ownLevel}','5'),'{lifestyle,substances,smoking,ownLevel}','5'),'{lifestyle,substances,drugs,ownLevel}','5'))=100,'Habits within the limit do not change the score') from matching_fixture;
 do $$ declare p jsonb; c jsonb; q text; begin
     select f.p into p from matching_fixture f; c:=p;
     foreach q in array matching_private.question_ids() loop
         if q='aloneTime' then c:=jsonb_set(c,'{lifestyle,aloneTime,own}','4');
         else c:=jsonb_set(c,array['lifestyle','storedCompatibilityAnswers',q,'own'],'4'); end if;
     end loop;
-    perform pg_temp.check_test(matching_private.directional_score(p,c)=76,'Weighted score includes all 50 questions and 3 habits');
+    perform pg_temp.check_test(matching_private.directional_score(p,c)=75,'Weighted score counts only the 50 questions');
 end; $$;
 
 -- Reserved IDs: collision aborts rather than touching an existing account.

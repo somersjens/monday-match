@@ -42,32 +42,6 @@ final class FaceVerificationTests: XCTestCase {
         XCTAssertFalse(receipt.belongs(to: id, imageData: Data([1, 2, 4])))
     }
 
-    func testOnboardingRejectsUnverifiedPhotoAndRevalidatesReorderingAndReplacement() {
-        let viewModel = OnboardingViewModel()
-        viewModel.currentStep = .photos
-        let first = ProfilePhoto(imageData: Data([1]), order: 0)
-        let second = ProfilePhoto(imageData: Data([2]), order: 1)
-        viewModel.draft.photos = [first, second]
-        XCTAssertFalse(viewModel.canContinue)
-        for outcome: FaceVerificationOutcome in [.noMatch, .failed("Cancelled")] {
-            viewModel.recordPhotoVerification(.init(photoID: first.id, imageData: first.imageData, outcome: outcome))
-            XCTAssertFalse(viewModel.canContinue)
-        }
-        viewModel.recordPhotoVerification(.init(photoID: first.id, imageData: first.imageData, outcome: .match))
-        XCTAssertTrue(viewModel.canContinue)
-        viewModel.movePhoto(from: IndexSet(integer: 1), to: 0)
-        XCTAssertFalse(viewModel.canContinue)
-        // A delayed completion for the old main photo cannot verify the new one.
-        viewModel.recordPhotoVerification(.init(photoID: first.id, imageData: first.imageData, outcome: .match))
-        XCTAssertFalse(viewModel.canContinue)
-        viewModel.recordPhotoVerification(.init(photoID: second.id, imageData: second.imageData, outcome: .match))
-        XCTAssertTrue(viewModel.canContinue)
-        viewModel.draft.photos[0].imageData = Data([3])
-        XCTAssertFalse(viewModel.canContinue)
-        viewModel.removePhoto(id: second.id)
-        XCTAssertFalse(viewModel.canContinue)
-    }
-
     func testEmbeddingsRejectInvalidValuesAndCompareNormalizedVectors() throws {
         XCTAssertEqual(try SFaceEmbeddingModel.cosine([3, 4], [6, 8]), 1, accuracy: 0.00001)
         XCTAssertEqual(try SFaceEmbeddingModel.cosine([1, 0], [0, 1]), 0, accuracy: 0.00001)
@@ -91,7 +65,7 @@ final class FaceVerificationTests: XCTestCase {
     }
 
     func testBundledSFaceModelProducesFiniteNormalized128DimensionalEmbeddings() throws {
-        let model = try SFaceEmbeddingModel(bundle: Bundle(for: OnboardingViewModel.self))
+        let model = try SFaceEmbeddingModel(bundle: Bundle(for: ProfileCreationViewModel.self))
         let image = CIImage(color: CIColor(red: 0.3, green: 0.5, blue: 0.7))
             .cropped(to: CGRect(x: 0, y: 0, width: 112, height: 112))
         let embedding = try model.embedding(alignedImage: image)
@@ -102,7 +76,7 @@ final class FaceVerificationTests: XCTestCase {
     }
 
     func testModelInputUsesTopToBottomRGBPixelsInOriginal255Scale() throws {
-        let model = try SFaceEmbeddingModel(bundle: Bundle(for: OnboardingViewModel.self))
+        let model = try SFaceEmbeddingModel(bundle: Bundle(for: ProfileCreationViewModel.self))
         let top = CIImage(color: CIColor(red: 0, green: 1, blue: 0))
             .cropped(to: CGRect(x: 0, y: 56, width: 112, height: 56))
         let bottom = CIImage(color: CIColor(red: 1, green: 0, blue: 0))

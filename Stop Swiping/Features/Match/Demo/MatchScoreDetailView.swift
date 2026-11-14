@@ -11,8 +11,6 @@ struct MatchScoreDetailView: View {
     /// The number columns carry their own side room, so the trailing inset is
     /// smaller: the last digit then sits about as far in as the titles do.
     private static let sectionGap: CGFloat = 20
-    /// Keeps an answer in words clear of the importance column beside it.
-    private static let answerInset: CGFloat = 6
     private static let rowInsets = EdgeInsets(top: 11, leading: 16, bottom: 11, trailing: 4)
 
     /// How far an answer sits from the one that was looked for.
@@ -45,20 +43,6 @@ struct MatchScoreDetailView: View {
             LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                 header
                     .padding(.bottom, 14)
-                let habits = Substance.allCases.compactMap { rows[$0.step] }
-                if !habits.isEmpty {
-                    Section {
-                        VStack(spacing: 0) {
-                            ForEach(habits) { row in
-                                habitRow(row, isLast: row.id == habits.last?.id)
-                            }
-                        }
-                        .onboardingSurface(cornerRadius: 20)
-                        .padding(.bottom, Self.sectionGap)
-                    } header: {
-                        sectionHeader(L10n("Alcohol, smoking and drugs"), showsWanted: false)
-                    }
-                }
                 ForEach(CompatibilityScaleQuestion.sections, id: \.title) { section in
                     let answered = section.questions.compactMap { rows[$0.step] }
                     if !answered.isEmpty {
@@ -75,7 +59,7 @@ struct MatchScoreDetailView: View {
                         }
                     }
                 }
-                Text(L10n("Each answer counts by its importance: every step up counts double, and 1 doesn’t count at all. For alcohol, smoking and drugs, a stricter limit means more important."))
+                Text(L10n("Each answer counts by its importance: every step up counts double, and 1 doesn’t count at all."))
                     .font(.footnote)
                     .foregroundStyle(OnboardingTheme.tertiaryText)
                     .fixedSize(horizontal: false, vertical: true)
@@ -118,9 +102,8 @@ struct MatchScoreDetailView: View {
         .accessibilityAddTraits(.isHeader)
     }
 
-    /// Pinned, so the column names stay readable while scrolling. The habits
-    /// show one answer in words, so there the "wanted" column is left out.
-    private func sectionHeader(_ title: String, showsWanted: Bool = true) -> some View {
+    /// Pinned, so the column names stay readable while scrolling.
+    private func sectionHeader(_ title: String) -> some View {
         let subject = perspective == .yours ? name : L10n("You")
         return HStack(alignment: .lastTextBaseline, spacing: 0) {
             Text(title.uppercased())
@@ -130,14 +113,8 @@ struct MatchScoreDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityLabel(title)
                 .accessibilityAddTraits(.isHeader)
-            if showsWanted {
-                columnTitle(subject)
-                columnTitle(L10n("Wanted"))
-            } else {
-                columnTitle(subject, width: nil)
-                    .padding(.leading, 12)
-                    .padding(.trailing, Self.answerInset)
-            }
+            columnTitle(subject)
+            columnTitle(L10n("Wanted"))
             columnTitle(L10n("Importance"))
         }
         .padding(.leading, Self.rowInsets.leading)
@@ -146,16 +123,13 @@ struct MatchScoreDetailView: View {
         .background(OnboardingTheme.background.opacity(0.94))
     }
 
-    private func columnTitle(
-        _ text: String,
-        width: CGFloat? = MatchScoreDetailView.columnWidth
-    ) -> some View {
+    private func columnTitle(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 10, weight: .semibold))
             .foregroundStyle(OnboardingTheme.secondaryText)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
-            .frame(width: width)
+            .frame(width: Self.columnWidth)
             .accessibilityHidden(true)
     }
 
@@ -177,40 +151,6 @@ struct MatchScoreDetailView: View {
         .accessibilityValue(perspective == .yours
             ? L10n("\(name): \(row.value), wanted: \(row.wanted), importance: \(row.importance) of 5")
             : L10n("You: \(row.value), \(name) wants: \(row.wanted), importance: \(row.importance) of 5"))
-    }
-
-    /// How often, in words: the frequencies don't fit a number column. Only
-    /// the answer itself is shown, coloured by how far it is from what was
-    /// looked for; VoiceOver still reads both.
-    private func habitRow(_ row: MatchReport.Row, isLast: Bool) -> some View {
-        let levels = row.step.substance?.levels ?? []
-        func level(_ index: Int) -> String { levels.indices.contains(index) ? levels[index].lowercased() : "" }
-        let answer = levels.indices.contains(row.value) ? levels[row.value] : ""
-        let detail = perspective == .yours
-            ? L10n("\(name): \(level(row.value)) · closest to you: \(level(row.wanted))")
-            : L10n("You: \(level(row.value)) · closest to \(name): \(level(row.wanted))")
-        return HStack(spacing: 0) {
-            Text(row.step.shortTitle)
-                .font(.subheadline)
-                .foregroundStyle(OnboardingTheme.primaryText)
-                .lineLimit(2)
-                .layoutPriority(1)
-            Text(answer)
-                .font(.system(.footnote, design: .rounded, weight: .medium))
-                .foregroundStyle(fit(row).color)
-                .multilineTextAlignment(.trailing)
-                .lineLimit(2)
-                .minimumScaleFactor(0.85)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding(.leading, 12)
-                .padding(.trailing, Self.answerInset)
-            importance(row)
-        }
-        .padding(Self.rowInsets)
-        .overlay(alignment: .bottom) { divider(isLast: isLast) }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(row.step.shortTitle)
-        .accessibilityValue(L10n("\(detail), importance: \(row.importance) of 5"))
     }
 
     @ViewBuilder

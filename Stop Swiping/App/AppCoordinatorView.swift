@@ -8,7 +8,6 @@ struct AppCoordinatorView: View {
 
     /// Codes the app was opened with, for instance from the Camera app.
     @StateObject private var codeInbox = ProfileCodeInbox()
-    @State private var onboardingErrorMessage: String?
     @State private var showsWelcomeFromAccess = false
 
     var body: some View {
@@ -20,30 +19,12 @@ struct AppCoordinatorView: View {
             case .signedOut:
                 welcomeFlow
 
-            case .onboarding:
+            case .onboarding, .signedIn:
                 if access.hasAccess {
                     if dependencies.profileCreationStore.load()?.completedAt != nil {
                         welcomeFlow
                     } else {
                         onboardingFlow
-                    }
-                } else {
-                    accessRequiredFlow
-                }
-
-            case .signedIn:
-                if access.hasAccess {
-                    if dependencies.profileCreationStore.load()?.completedAt != nil {
-                        welcomeFlow
-                    } else {
-                        SignedInRootView(
-                            repository: dependencies.profileRepository,
-                            onSignOut: {
-                                Task {
-                                    await appState.signOut()
-                                }
-                            }
-                        )
                     }
                 } else {
                     accessRequiredFlow
@@ -75,40 +56,18 @@ struct AppCoordinatorView: View {
                 await access.start()
             }
         }
-        .alert(
-            L10n("Could not save your profile"),
-            isPresented: Binding(
-                get: { onboardingErrorMessage != nil },
-                set: { isPresented in
-                    if !isPresented {
-                        onboardingErrorMessage = nil
-                    }
-                }
-            )
-        ) {
-            Button(L10n("OK"), role: .cancel) {}
-        } message: {
-            Text(onboardingErrorMessage ?? "")
-        }
     }
 
-    /// Persists the onboarding result before entering the signed-in app.
-    /// Without this the whole onboarding flow would be discarded.
-    private func completeOnboarding(_ draft: ProfileDraft) {
-        do {
-            try dependencies.profileRepository.saveProfile(draft)
-            access.updateCompletion(draft.profileCreationCompletedAt ?? Date())
-            if access.hasAccess { appState.showSignedInApp() }
-        } catch {
-            onboardingErrorMessage = error.localizedDescription
-        }
-    }
-
+    /// Accounts without a finished profile go through the profile creation
+    /// questionnaire; once it is done the welcome screen takes over.
     private var onboardingFlow: some View {
-        OnboardingFlowView(
+        ProfileCreationGateView(
+            store: dependencies.profileCreationStore,
             repository: dependencies.profileRepository,
-            profileCreationStore: dependencies.profileCreationStore,
-            onComplete: completeOnboarding,
+            onComplete: {
+                access.updateCompletion(savedCompletionDate)
+                appState.showSignedInApp()
+            },
             // An underage answer ends the session; the landing page then
             // shows the lock from the shared profile-creation state.
             onUnderage: {
@@ -196,23 +155,6 @@ struct AppCoordinatorView: View {
         case .onboarding:
             onboardingFlow
 
-        case .dashboard:
-            DashboardView()
-
-        case .profile:
-            ProfileView(
-                profile: .constant(.mockCompleted)
-            )
-
-        case .settings:
-            SettingsView(
-                onSignOut: {
-                    Task {
-                        await appState.signOut()
-                    }
-                },
-                onDeleteLocalProfile: {}
-            )
         }
     }
 
@@ -229,7 +171,7 @@ struct AppCoordinatorView: View {
         case .signedOut:
             break
         case .onboarding:
-            if OnboardingViewModel(repository: dependencies.profileRepository).isReadyToComplete {
+            if savedCompletionDate != nil {
                 appState.showSignedInApp()
             } else {
                 appState.showOnboarding()

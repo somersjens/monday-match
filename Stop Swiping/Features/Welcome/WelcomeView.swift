@@ -59,6 +59,8 @@ struct WelcomeView: View {
     @State private var scoreDetail: MatchReport.Perspective?
     @State private var showsSavedMatches = false
     @State private var demoStarts = 0
+    /// Fake matches alternate between a match and no match.
+    @State private var nextFakeMatchSucceeds = true
     @State private var showsProfilePrivacy = false
     @State private var isDemoPlaying = false
     /// The two phones that explain an exchange; nil while this screen is
@@ -84,6 +86,8 @@ struct WelcomeView: View {
     /// Taps on Get started while locked that restart the birthday step.
     private static let resetTapThreshold = 10
     private static let resetTapWindow: TimeInterval = 3
+    /// Holding Adjust profile this long shows a made-up match.
+    private static let fakeMatchHoldDuration = 3.0
 
     init(
         profileCreationStore: ProfileCreationStateStoring,
@@ -533,11 +537,13 @@ struct WelcomeView: View {
                     // The finished flow: the profile itself, and every match it made.
                     Button(L10n("Adjust profile"), action: adjustProfile)
                         .buttonStyle(GlowButtonStyle())
+                        .modifier(fakeMatchHold)
                     Button(L10n("Saved matches"), action: openSavedMatches)
                         .buttonStyle(QuietButtonStyle())
                 } else if profileCreation.state.nextAction != .explanation {
                     Button(L10n("Adjust profile"), action: adjustProfile)
                         .buttonStyle(QuietButtonStyle())
+                        .modifier(fakeMatchHold)
                 }
             }
             .frame(maxWidth: OnboardingTheme.controlWidth)
@@ -666,7 +672,7 @@ struct WelcomeView: View {
     }
 
     private func adjustProfile() {
-        guard !isTransitioning else { return }
+        guard !isTransitioning, activeMatch == nil else { return }
         showsOverview = true
     }
 
@@ -785,6 +791,26 @@ struct WelcomeView: View {
             guard await wait(ExchangeDemo.takeoverDuration) else { return }
             demoPhase = nil
         }
+    }
+
+    /// Before launch there is nobody to match with: holding Adjust profile
+    /// shows a made-up match, alternately a match and no match.
+    private var fakeMatchHold: FakeMatchHold {
+        FakeMatchHold(duration: Self.fakeMatchHoldDuration, action: startFakeMatch)
+    }
+
+    private func startFakeMatch() {
+        guard stage == .complete, lightStage == .complete, profileCreation.state.canShareProfile,
+              demoPhase == nil, activeMatch == nil, !isTransitioning else { return }
+        var generator = SystemRandomNumberGenerator()
+        let snapshot = DemoMatchGenerator.makeMatch(for: profileCreation.state,
+                                                    shouldMatch: nextFakeMatchSucceeds,
+                                                    using: &generator)
+        nextFakeMatchSucceeds.toggle()
+        scoreDetail = nil
+        showsMatchProfile = false
+        demoStarts += 1
+        present(snapshot)
     }
 
     /// Puts the screen back at once. A match that already started simply
@@ -1141,5 +1167,21 @@ struct ProfileCreationGateView: View {
             access: LifetimeAccessStore(),
             onSignIn: {}
         )
+    }
+}
+
+/// Runs `action` after the button is held for `duration`, without taking
+/// over the button's own tap.
+private struct FakeMatchHold: ViewModifier {
+    let duration: Double
+    let action: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: duration)
+                    .onEnded { _ in action() }
+            )
+            .accessibilityAction(named: L10n("Start a demo match"), action)
     }
 }

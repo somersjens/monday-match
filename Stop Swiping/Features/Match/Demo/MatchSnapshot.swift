@@ -46,8 +46,9 @@ struct MatchReport: Equatable {
         var id: String { rawValue }
     }
 
-    /// One weighed answer, seen by whoever is looking for a partner: a 1–5
-    /// question, or how often the other person drinks, smokes or uses drugs.
+    /// One weighed 1–5 question, seen by whoever is looking for a partner.
+    /// Alcohol, smoking and drugs never count towards a score: they are only
+    /// hard limits.
     struct Row: Identifiable, Equatable {
         let step: ProfileCreationStep
         /// The other person's own answer.
@@ -56,23 +57,13 @@ struct MatchReport: Equatable {
         let wanted: Int
         /// How much it matters to the seeker, 1–5.
         let importance: Int
-        /// The largest possible distance between two answers.
-        let span: Int
-
-        init(step: ProfileCreationStep, value: Int, wanted: Int, importance: Int,
-             span: Int = MatchWeighting.scaleSpan) {
-            self.step = step
-            self.value = value
-            self.wanted = wanted
-            self.importance = importance
-            self.span = span
-        }
 
         var id: Int { step.rawValue }
 
         /// 1 for the answer that was looked for, falling evenly to 0 at the
         /// far end of the scale.
         var closeness: Double {
+            let span = MatchWeighting.scaleSpan
             guard span > 0 else { return 1 }
             return 1 - Double(min(abs(value - wanted), span)) / Double(span)
         }
@@ -115,26 +106,15 @@ struct MatchReport: Equatable {
 
     // MARK: - Scores
 
-    /// Alcohol, smoking and drugs first, then every 1–5 question.
+    /// Every answered 1–5 question; alcohol, smoking and drugs are left out.
     static func rows(seeker: ProfileCreationState, candidate: ProfileCreationState) -> [Row] {
-        let habits: [Row] = Substance.allCases.compactMap { substance in
-            let wish = seeker.lifestyle[substance]
-            guard let own = wish.ownLevel, let value = candidate.lifestyle[substance].ownLevel else { return nil }
-            let top = substance.levels.count - 1
-            let limit = wish.partnerMaximumLevel ?? top
-            // The closer to how often the seeker does it the better, but
-            // never aiming above the most they accept.
-            return Row(step: substance.step, value: value, wanted: min(own, limit),
-                       importance: MatchWeighting.substanceImportance(maximumLevel: limit, top: top), span: top)
-        }
-        let questions: [Row] = CompatibilityScaleQuestion.orderedSteps.compactMap { step in
+        CompatibilityScaleQuestion.orderedSteps.compactMap { step in
             guard let question = step.compatibilityQuestion else { return nil }
             let wish = seeker.lifestyle[question]
             guard let wanted = wish.partner, let value = candidate.lifestyle[question].own else { return nil }
             return Row(step: step, value: value, wanted: wanted,
                        importance: wish.importance ?? CompatibilityScaleAnswer.defaultImportance)
         }
-        return habits + questions
     }
 
     /// The weighted average of how close each answer is to what was looked
@@ -246,25 +226,6 @@ enum MatchWeighting {
     static func weight(importance: Int) -> Double {
         weights[min(max(importance, 1), weights.count) - 1]
     }
-
-    /// Nobody is asked how much alcohol, smoking or drugs matter, so the
-    /// limit set for a partner says it: accepting every level reads as
-    /// "slightly important" (2), accepting only "never" as "very important" (5).
-    static func substanceImportance(maximumLevel: Int, top: Int) -> Int {
-        guard top > 0 else { return 2 }
-        let strictness = Double(top - min(max(maximumLevel, 0), top)) / Double(top)
-        return 2 + Int((strictness * 3).rounded())
-    }
-}
-
-extension Substance {
-    var step: ProfileCreationStep {
-        switch self {
-        case .alcohol: .alcohol
-        case .smoking: .smoking
-        case .drugs: .drugs
-        }
-    }
 }
 
 // MARK: - Saved matches
@@ -277,7 +238,7 @@ final class SavedMatchStore: ObservableObject {
     private let defaults: UserDefaults
     private let key: String
 
-    static let storageKey = "savedMatches.v1"
+    nonisolated static let storageKey = "savedMatches.v1"
 
     /// Removes every saved match from the phone.
     static func clear(defaults: UserDefaults = .standard) {
