@@ -1,25 +1,20 @@
 import SwiftUI
 
-/// Where the rings sit while the conversation is open, in screen points. The
-/// light shrinks around the rings' middle and rises under the header.
+/// Chat preserves the match heart's full-size canvas and shoulder position.
+/// Reserve the same space in the scroll view, including the moving ribbon glow.
 enum MatchChatLayout {
-    /// How large the light is drawn while chatting.
-    static let lightScale: CGFloat = 0.72
     static let headerHeight: CGFloat = 64
 
-    /// - Parameter unit: Points per normalized unit of the light at full size.
-    static func ringsCenterY(unit: CGFloat) -> CGFloat {
-        headerHeight + 0.64 * unit * lightScale + 6
+    static func ringsBottom(unit: CGFloat, lightCenterY: CGFloat) -> CGFloat {
+        lightCenterY + CGFloat(WelcomeLightMatch.Chat.bottomExtent) * unit
     }
 
-    /// The light's own centre, so the rings land on `ringsCenterY`.
-    static func lightCenterY(unit: CGFloat) -> CGFloat {
-        ringsCenterY(unit: unit) - CGFloat(WelcomeLightMatch.Chat.ringCenterY) * unit * lightScale
-    }
-
-    /// Messages fade out as they scroll up behind the rings.
-    static func ringsBottom(unit: CGFloat) -> CGFloat {
-        ringsCenterY(unit: unit) + 0.56 * unit * lightScale
+    /// Leave a readable message below the fade when the keyboard reduces
+    /// the viewport, while keeping the artwork in its original position.
+    static func messageFade(viewportHeight: CGFloat, ringsBottom: CGFloat, headerHeight: CGFloat) -> (clear: CGFloat, gradient: CGFloat) {
+        let gradient = min(100, max(0, viewportHeight) * 0.3)
+        let clear = min(max(0, ringsBottom - headerHeight - 90), max(0, viewportHeight - gradient - 112))
+        return (clear, gradient)
     }
 }
 
@@ -110,13 +105,15 @@ struct MatchChatPanel: View {
             .scrollIndicators(.hidden)
             .mask {
                 // Messages dissolve into the rings instead of running over them.
-                VStack(spacing: 0) {
-                    Color.clear
-                        .frame(height: max(0, ringsBottom - headerHeight - 90))
-                    LinearGradient(colors: [.clear, .black],
-                                   startPoint: .top, endPoint: .bottom)
-                        .frame(height: 100)
-                    Color.black
+                GeometryReader { proxy in
+                    let fade = MatchChatLayout.messageFade(viewportHeight: proxy.size.height,
+                                                           ringsBottom: ringsBottom, headerHeight: headerHeight)
+                    VStack(spacing: 0) {
+                        Color.clear.frame(height: fade.clear)
+                        LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
+                            .frame(height: fade.gradient)
+                        Color.black
+                    }
                 }
             }
             .onChange(of: visibleMessages.last?.id) { _, _ in scrollToBottom(proxy) }

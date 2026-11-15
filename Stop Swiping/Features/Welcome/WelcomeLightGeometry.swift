@@ -63,6 +63,7 @@ enum WelcomeLightGeometry {
         let heart: Double
         let separation: Double
         let radius: CGSize
+        let rotation: Double
         let rotationCos: Double
         let rotationSin: Double
         let volume: Double
@@ -83,7 +84,7 @@ enum WelcomeLightGeometry {
             heart = min(max(values[0], 0), 1)
             separation = max(0, values[1])
             radius = CGSize(width: values[2], height: values[3])
-            let rotation = phase + 0.12*sin(phase)
+            rotation = phase + 0.12*sin(phase)
             rotationCos = cos(rotation)
             rotationSin = sin(rotation)
             // Keep the accepted circular ribbon pose while letting all waves

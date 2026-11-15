@@ -1,3 +1,5 @@
+import Foundation
+
 /// Compiled by the system Metal driver once per process; no media assets.
 enum WelcomeLightShaderSource {
     static let code = #"""
@@ -22,7 +24,7 @@ struct WelcomeUniforms {
     float4 match;       // helix exit, strand head, strand tail, break
     float4 matchLayout; // heart scale, vertical offset, score line height, 1 while a match shows
     float4 matchMorph;  // progress, saved match enabled, shared vertical offset, captured helix seconds
-    float4 chat;        // heart-to-rings progress, rings' turn in radians
+    float4 chat;        // heart-to-rings progress, welcome deformation clock, rotation cosine/sine
     float4 personality; // helix-to-chart progress, chart-to-chart progress, from kind, to kind
     float4 personalityShape; // from value count, to value count
     float4 personalityFrom[3];
@@ -742,32 +744,53 @@ float2 matchCrack(float v, float4 layout) {
     return float2(x, y)*layout.x + float2(0, layout.y);
 }
 
-// The chat rings mirror WelcomeLightMatch.Chat. Each strand's visible part,
-// from the cusp to its end, becomes one closed ring around its own lobe: it
-// starts at the cusp, runs over the top and round, and its last stretch
-// overlaps the start while fading, so the ring has no seam.
-constant float chatRingEnd = 0.94;
-constant float chatSeamWidth = 0.06;
-constant float chatRingX = \#(WelcomeLightMatch.Chat.ringCenterX), chatRingY = \#(WelcomeLightMatch.Chat.ringCenterY);
-constant float chatRingRadius = \#(WelcomeLightMatch.Chat.ringRadius);
-// Each ring leans back or forward by this much once it has closed, and is
-// drawn this much taller, so it still looks round while leaning.
-constant float chatRingLean = \#(WelcomeLightMatch.Chat.ringLean);
-constant float chatRingStretch = \#(WelcomeLightMatch.Chat.ringStretch);
-
-float2 chatRingCenter(float side, float4 layout) {
-    return float2(side*chatRingX, chatRingY)*layout.x + float2(0, layout.y);
+// Shared by the welcome circle pose and the conversation. Rotation, depth,
+// perspective, sheet torsion and travelling waves must stay identical.
+float3 circleRibbonPoint(float u, uint instance, float clock, float separation,
+                         float2 radius, float volume, float2 rotation) {
+    uint strand = instance % strands, sheet = strand / 20;
+    float lane = (float(strand % 20)/19.0 - 0.5)*2 + 0.018*sin(float(strand)*7.31 + clock);
+    float side = instance / strands == 0 ? -1.0 : 1.0;
+    float a = u*tau;
+    float phase = float(sheet)*2.15 + side*1.25 + lane*0.55;
+    float flowSpeed = sheet == 0 ? -3.0 : (sheet == 1 ? 2.0 : -2.0);
+    float flow = 2*a + flowSpeed*clock + phase;
+    float2 base = float2(side*separation - sin(a)*radius.x, -cos(a)*radius.y);
+    float2 radial = base - float2(side*separation, 0);
+    float radialWave = 0.045*(0.85*sin(flow) + 0.35*sin(3*a - clock + phase));
+    float spread = lane*0.065*sin(2*a + clock + phase);
+    float2 point = base + radial*(radialWave + spread);
+    point += float2(0.022*sin(3*a - 2*clock + phase), 0.020*cos(2*a + 3*clock + phase));
+    point.y += 0.016*sin(clock + phase);
+    float z = volume*(0.78*sin(2*a - 2*clock + phase) + lane*0.48*cos(3*a + clock + phase));
+    float lag = 0.065*sin(clock + phase) + lane*0.020;
+    float c = rotation.x*cos(lag) - rotation.y*sin(lag);
+    float r = rotation.y*cos(lag) + rotation.x*sin(lag);
+    float x = point.x*c + z*r;
+    float depth = -point.x*r + z*c;
+    float tilt = 0.025*sin(clock + phase);
+    float perspective = 1.0/(1.0 + depth*0.12);
+    return float3(float2(x + point.y*tilt, point.y - x*tilt + depth*0.035)*perspective, depth);
 }
 
-float2 chatRing(float s, float side, float4 layout, float seconds, float stretch, thread float2 &direction) {
-    float2 center = chatRingCenter(side, layout);
-    float radius = chatRingRadius*layout.x*(1 + 0.018*sin(seconds*1.3 + side*0.9));
-    // Start where the cusp sits on this ring, running the lobe's way round.
-    float2 cusp = float2(0, matchCuspY)*layout.x + float2(0, layout.y) - center;
-    float start = atan2(cusp.y, side*cusp.x);
-    float angle = start + (s - matchCuspS)/(chatRingEnd - matchCuspS)*tau;
-    direction = float2(-side*sin(angle), cos(angle)*stretch);
-    return center + float2(side*cos(angle), sin(angle)*stretch)*radius;
+// The open heart strand closes around its own shoulder. Its overlapping
+// ends share an exactly periodic position, tangent and weave.
+constant float chatRingEnd = 0.94;
+constant float chatSeamWidth = 0.06;
+constant float chatRingY = \#(WelcomeLightMatch.Chat.ringCenterY);
+constant float chatSeparation = \#(WelcomeLightMatch.Chat.circle.separation);
+constant float2 chatRadius = float2(\#(WelcomeLightMatch.Chat.circle.radius.width), \#(WelcomeLightMatch.Chat.circle.radius.height));
+constant float chatVolume = \#(WelcomeLightMatch.Chat.circle.volume);
+constant float2 chatScale = float2(\#(WelcomeLightMatch.Chat.scaleX), \#(WelcomeLightMatch.Chat.scaleY));
+
+float3 chatRingPoint(float s, uint instance, constant WelcomeUniforms &p) {
+    float side = instance / strands == 0 ? 1.0 : -1.0;
+    float start = -asin(chatSeparation/chatRadius.x);
+    float u = side*(start/tau + (s - matchCuspS)/(chatRingEnd - matchCuspS));
+    float3 q = circleRibbonPoint(u, instance, p.chat.y, chatSeparation, chatRadius, chatVolume, p.chat.zw);
+    q.xy = (q.xy*chatScale + float2(0, chatRingY))*p.matchLayout.x + float2(0, p.matchLayout.y);
+    q.z *= p.matchLayout.x;
+    return q;
 }
 
 // Light along a ring: the start fades in exactly where the end fades out.
@@ -784,27 +807,9 @@ float chatAmount(float s, constant WelcomeUniforms &p) {
     return k*k*(3 - 2*k);
 }
 
-// Like the welcome screen's rings: the two overlap and hook into each other
-// like links of a chain, one leaning back and the other forward, so where
-// they cross one passes in front at the top and the other at the bottom.
-// The linked pair then turns as one piece round a vertical axis through its
-// middle, drawn with perspective so the near side grows and the far side
-// recedes and dims.
-float3 chatOrbit(float2 q, float z, float side, constant WelcomeUniforms &p) {
-    float settle = smoothstep(0.45, 1.0, p.chat.x);
-    float2 center = chatRingCenter(side, p.matchLayout);
-    float2 local = q - center;
-    float lean = side*chatRingLean*settle;
-    float3 link = float3(q.x, center.y + local.y*cos(lean), local.y*sin(lean));
-    float c = cos(p.chat.y), s = sin(p.chat.y);
-    float x = link.x*c + link.z*s;
-    float depth = -link.x*s + link.z*c;
-    float perspective = 1.0/(1.0 + depth*0.32);
-    // Perspective about the pair's middle, so the rings stay where they are.
-    return float3(x*perspective, center.y + (link.y - center.y)*perspective, z + depth*0.9);
-}
-
 float3 matchPointAt(float s, uint instance, constant WelcomeUniforms &p) {
+    float chat = chatAmount(s, p);
+    if (chat >= 1) return chatRingPoint(s, instance, p);
     uint ring = instance / strands;
     uint strand = instance % strands;
     uint sheet = strand / 20;
@@ -825,15 +830,6 @@ float3 matchPointAt(float s, uint instance, constant WelcomeUniforms &p) {
         // switching sides in a single vertex when s crosses the cusp.
         float join = smoothstep(matchCuspS - 0.035, matchCuspS, s);
         direction = normalize(mix(direction, float2(0, -1), join) + float2(side*1e-7, 0));
-    }
-    float chat = chatAmount(s, p);
-    if (chat > 0) {
-        float2 ringDirection;
-        // Taller exactly as fast as the ring leans, so it always looks round.
-        float settle = smoothstep(0.45, 1.0, p.chat.x);
-        float2 ring = chatRing(s, side, p.matchLayout, seconds, mix(1.0, chatRingStretch, settle), ringDirection);
-        base = mix(base, ring, chat);
-        direction = normalize(mix(direction, ringDirection, chat) + float2(1e-7, 0));
     }
     float2 normal = float2(-direction.y, direction.x);
     float a = s*tau*4;
@@ -880,7 +876,7 @@ float3 matchPointAt(float s, uint instance, constant WelcomeUniforms &p) {
                       + float2(side*0.06, 0.03)*split*p.matchLayout.x;
         q = mix(q, turned, lobe);
     }
-    if (p.chat.x > 0) return chatOrbit(q, z, side, p);
+    if (chat > 0) return mix(float3(q, z), chatRingPoint(s, instance, p), chat);
     return float3(q, z);
 }
 
@@ -964,6 +960,11 @@ float3 lockedRibbonPoint(float u, uint instance, constant WelcomeUniforms &p, de
 }
 
 float3 ribbonPoint(float u, uint instance, constant WelcomeUniforms &p, device const float2 *controls) {
+    if (p.shape.y <= 0 && p.stream.y <= 0.0001) {
+        float3 circle = circleRibbonPoint(u, instance, p.shape.x, p.shape.z, p.projection.xy, p.space.x, p.projection.zw);
+        circle.xy = circle.xy*p.calibration.xy + p.space.yz;
+        return circle;
+    }
     uint ring = instance / strands;
     uint strand = instance % strands;
     uint sheet = strand / 20;

@@ -249,13 +249,13 @@ struct WelcomeView: View {
                                           personality: personalityResult?.visual)
                         .frame(width: animationWidth, height: drawingHeight)
                         .scaleEffect(showsAccess ? AccessScreenMotion.lightScale(for: animationWidth)
-                                     : (isOnboarding ? 0.62 : (isChatting ? MatchChatLayout.lightScale : 1)))
+                                     : (isOnboarding ? 0.62 : 1))
                         .opacity(showsAccess ? 1 : (isLightHidden ? 0 : (isOnboarding ? (showsUnderageNotice ? 0.55 : 0.3) : 1)))
                         .position(
                             x: proxy.size.width / 2,
                             y: showsAccess ? AccessScreenMotion.lightCenterY
                                 : (isOnboarding ? min(36, animationHeight / 2)
-                                   : (isChatting ? MatchChatLayout.lightCenterY(unit: animationWidth * 0.42) : animationHeight / 2))
+                                   : animationHeight / 2)
                         )
 
                     if !showsAccess && stage == .complete && lightStage == .complete && canShowCode && activeMatch == nil {
@@ -346,7 +346,8 @@ struct WelcomeView: View {
                             onUnderstandDemo: understandDemoAction,
                             chat: activeChat,
                             isChatting: isChatting,
-                            chatRingsBottom: MatchChatLayout.ringsBottom(unit: animationWidth * 0.42),
+                            chatRingsBottom: MatchChatLayout.ringsBottom(unit: animationWidth * 0.42,
+                                                                       lightCenterY: animationHeight / 2),
                             onSendMessage: startChat,
                             onStartDemoChat: { startDemoChat(activeMatch.snapshot) },
                             onViewProfile: { showsOverview = true },

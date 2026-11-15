@@ -75,7 +75,7 @@ struct WelcomeLightUniforms {
     var match: SIMD4<Float> = .zero
     var matchLayout: SIMD4<Float> = .zero
     var matchMorph: SIMD4<Float> = .zero
-    /// Heart-to-rings progress and the rings' turn, while the chat is open.
+    /// Heart-to-rings progress, welcome deformation clock, rotation cosine/sine.
     var chat: SIMD4<Float> = .zero
     /// Helix-to-chart progress, chart-to-chart progress, and both charts' kinds.
     var personality: SIMD4<Float> = .zero
@@ -100,6 +100,12 @@ struct WelcomeLightUniforms {
         self.init(elapsed: state.loopElapsed, size: size, pixelScale: pixelScale, flowElapsed: state.flowElapsed)
         entrance = SIMD4(Float(state.reveal), Float(state.inletOpacity), Float(state.headGlow), Float(state.dustOpacity))
         stream = SIMD4(Float(state.reveal), Float(state.streamStrength), Float(state.reveal-1), Float(WelcomeLightGeometry.entranceStartU))
+    }
+
+    mutating func applyChat(elapsed: Double, reduceMotion: Bool = false) {
+        let frame = WelcomeLightMatch.Chat.frame(elapsed: elapsed, reduceMotion: reduceMotion)
+        chat = SIMD4(Float(WelcomeLightMatch.Chat.progress(elapsed: elapsed, reduceMotion: reduceMotion)),
+                     Float(frame.deformationClock), Float(frame.rotationCos), Float(frame.rotationSin))
     }
 
     mutating func apply(_ pose: WelcomeLightLock.Pose) {
@@ -136,7 +142,11 @@ struct WelcomeLightUniforms {
 
     mutating func apply(_ request: WelcomeLightMatch.Request, elapsed: Double, startSeconds: Double,
                         reduceMotion: Bool = false) {
-        apply(WelcomeLightMatch.pose(elapsed: elapsed, isMatch: request.isMatch,
+        // A conversation can reopen at elapsed == 0. Its underlying heart must
+        // already be complete, otherwise the entrance window hides the rings.
+        let matchElapsed = request.isChatting
+            ? max(elapsed, request.transition.time(WelcomeLightMatch.heartEnd)) : elapsed
+        apply(WelcomeLightMatch.pose(elapsed: matchElapsed, isMatch: request.isMatch,
                                     reduceMotion: reduceMotion, transition: request.transition),
               layout: .of(isMatch: request.isMatch), startSeconds: startSeconds)
     }
@@ -379,10 +389,7 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
                            reduceMotion: reduceMotion)
             if let chatStartedAt {
                 let elapsed = presentationElapsed - chatStartedAt
-                uniforms.chat = SIMD4(Float(WelcomeLightMatch.Chat.progress(elapsed: elapsed, reduceMotion: reduceMotion)),
-                                      Float(WelcomeLightMatch.Chat.orbitAngle(elapsed: elapsed, reduceMotion: reduceMotion)
-                                        .truncatingRemainder(dividingBy: 2 * .pi)),
-                                      0, 0)
+                uniforms.applyChat(elapsed: elapsed, reduceMotion: reduceMotion)
             }
         }
         if emission?.width != Int(view.drawableSize.width) || emission?.height != Int(view.drawableSize.height) {

@@ -116,14 +116,15 @@ enum WelcomeLightMatch {
 
     /// Heart to rings for the conversation. The tip rises first, the strand
     /// that ran under the scores is drawn up into the rings, and once they
-    /// are closed the pair starts to turn around its middle, slowly at first.
+    /// are closed the welcome screen's forward rotation eases into motion.
     enum Chat {
         static let morphDuration = 2.6
         /// When the turning starts, and how long it takes to reach full speed.
         static let orbitStart = 1.8
         static let orbitRamp = 2.6
-        /// One full turn of the linked pair, in seconds.
-        static let orbitPeriod = 8.0
+        /// Use the welcome animation's complete forward turn and speed curve.
+        static let orbitPeriod = WelcomeLightGeometry.duration
+        static let circle = WelcomeLightGeometry.Frame(elapsed: WelcomeLightGeometry.circleTime)
 
         static func progress(elapsed: Double, reduceMotion: Bool = false) -> Double {
             if reduceMotion { return 1 }
@@ -131,29 +132,36 @@ enum WelcomeLightMatch {
             return t*t*t*(t*(t*6 - 15) + 10)
         }
 
-        /// The pair's turn in radians. Speed eases in from rest, so the rings
-        /// leave the heart's pose without a jolt.
-        static func orbitAngle(elapsed: Double, reduceMotion: Bool = false) -> Double {
+        /// Integrate the start-up speed before feeding the welcome clock. Once
+        /// settled, pose rotation and ribbon deformation advance together.
+        static func motionElapsed(elapsed: Double, reduceMotion: Bool = false) -> Double {
             if reduceMotion { return 0 }
-            let speed = 2 * Double.pi / orbitPeriod
-            let t = elapsed - orbitStart
-            guard t > 0 else { return 0 }
+            let t = max(0, elapsed - orbitStart)
             if t < orbitRamp {
-                // ∫ smoothstep: x³ − x⁴/2.
                 let x = t / orbitRamp
-                return speed * orbitRamp * (x*x*x - x*x*x*x / 2)
+                return orbitRamp * (x*x*x - x*x*x*x / 2)
             }
-            return speed * (orbitRamp / 2 + t - orbitRamp)
+            return t - orbitRamp / 2
         }
 
-        /// The middle of the rings, in the light's normalized space.
-        static let ringCenterY = -0.40
-        /// Less than the radius: the rings overlap, so they can hook together.
-        static let ringCenterX = 0.38
-        static let ringRadius = 0.47
-        /// How far each ring leans out of the screen's plane, in radians.
-        static let ringLean = 0.42
-        static let ringStretch = 1.0 / cos(ringLean)
+        static func frame(elapsed: Double, reduceMotion: Bool = false) -> WelcomeLightGeometry.Frame {
+            WelcomeLightGeometry.Frame(elapsed: WelcomeLightGeometry.circleTime
+                + motionElapsed(elapsed: elapsed, reduceMotion: reduceMotion))
+        }
+
+        static func orbitAngle(elapsed: Double, reduceMotion: Bool = false) -> Double {
+            frame(elapsed: elapsed, reduceMotion: reduceMotion).rotation - circle.rotation
+        }
+
+        /// Match the original heart's shoulders: x = ±0.97, top = −0.88.
+        /// Only the tip retracts; neither the light's frame nor its scale moves.
+        static let ringCenterY = -0.30
+        static let halfWidth = 0.97
+        static let radiusY = 0.58
+        static var scaleX: Double { halfWidth / (circle.separation + circle.radius.width) }
+        static var scaleY: Double { radiusY / circle.radius.height }
+        /// Includes the moving silk and its glow, for the message scroll mask.
+        static let bottomExtent = ringCenterY + radiusY + 0.14
     }
 
     /// Where the heart and the line between the scores sit.

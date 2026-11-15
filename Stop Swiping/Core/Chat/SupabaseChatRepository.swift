@@ -107,7 +107,7 @@ struct CloudChatMessage: Decodable {
 
 /// Reports against this account: 1 is a warning, 2 blocks matching and chat
 /// for 7 days, 3 bans the account.
-struct ModerationStatus: Decodable, Equatable {
+nonisolated struct ModerationStatus: Decodable, Equatable {
     let strikes: Int
     let strikesSeen: Int
     let suspendedUntil: Date?
@@ -219,7 +219,7 @@ final class SupabaseChatRepository: SecureChatRepository {
         try await client.rpc("my_matches").execute().value
     }
     func moderation() async throws -> ModerationStatus {
-        struct Status: Decodable { let moderation: ModerationStatus }
+        nonisolated struct Status: Decodable { let moderation: ModerationStatus }
         let status: Status = try await client.rpc("matching_status").execute().value
         return status.moderation
     }
