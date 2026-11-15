@@ -16,6 +16,8 @@ struct WelcomeLightMetalView: UIViewRepresentable {
     var match: WelcomeLightMatch.Request?
     /// What the code shows once the helix has rewoven into it.
     var code: WelcomeLightCode.Matrix?
+    /// A personality chart the helix rewinds into.
+    var personality: WelcomeLightPersonality.Visual?
 
     static var isAvailable: Bool { WelcomeLightMetalRenderer.resources != nil }
 
@@ -45,6 +47,7 @@ struct WelcomeLightMetalView: UIViewRepresentable {
                                        helixEntryDistance: helixEntryDistance)
         context.coordinator.updateMatch(match)
         context.coordinator.updateCode(code)
+        context.coordinator.updatePersonality(personality)
         view.isPaused = reduceMotion || !isActive
         view.enableSetNeedsDisplay = reduceMotion && isActive
         if view.enableSetNeedsDisplay { view.setNeedsDisplay() }
@@ -74,6 +77,12 @@ struct WelcomeLightUniforms {
     var matchMorph: SIMD4<Float> = .zero
     /// Heart-to-rings progress and the rings' turn, while the chat is open.
     var chat: SIMD4<Float> = .zero
+    /// Helix-to-chart progress, chart-to-chart progress, and both charts' kinds.
+    var personality: SIMD4<Float> = .zero
+    /// Both charts' value counts.
+    var personalityShape: SIMD4<Float> = .zero
+    var personalityFrom: (SIMD4<Float>, SIMD4<Float>, SIMD4<Float>) = (.zero, .zero, .zero)
+    var personalityTo: (SIMD4<Float>, SIMD4<Float>, SIMD4<Float>) = (.zero, .zero, .zero)
 
     init(elapsed: Double, size: CGSize, pixelScale: Float, flowElapsed: Double? = nil) {
         let frame = WelcomeLightGeometry.Frame(elapsed: elapsed, flowElapsed: flowElapsed)
@@ -110,6 +119,19 @@ struct WelcomeLightUniforms {
         matchMorph = SIMD4(Float(pose.morph ?? 0), pose.morph == nil ? 0 : 1,
                           Float(sharedOffset), Float(startSeconds ?? Double(shape.w)))
         apply(WelcomeLightHelix.Arrival.settled)
+    }
+
+    mutating func apply(_ pose: WelcomeLightPersonality.Pose) {
+        func pack(_ values: [Double]) -> (SIMD4<Float>, SIMD4<Float>, SIMD4<Float>) {
+            var padded = values.prefix(WelcomeLightPersonality.maximumValues).map(Float.init)
+            padded += Array(repeating: 0, count: WelcomeLightPersonality.maximumValues - padded.count)
+            return (SIMD4(padded[0..<4]), SIMD4(padded[4..<8]), SIMD4(padded[8..<12]))
+        }
+        personality = SIMD4(Float(pose.amount), Float(pose.cross),
+                            Float(pose.from.kind.rawValue), Float(pose.to.kind.rawValue))
+        personalityShape = SIMD4(Float(pose.from.values.count), Float(pose.to.values.count), 0, 0)
+        personalityFrom = pack(pose.from.values)
+        personalityTo = pack(pose.to.values)
     }
 
     mutating func apply(_ request: WelcomeLightMatch.Request, elapsed: Double, startSeconds: Double,
@@ -266,6 +288,7 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
     private var chatStartedAt: Double?
     private var code: WelcomeLightCode.Matrix?
     private var codeBuffer: MTLBuffer?
+    private var personalityMotion = WelcomeLightPersonality.Motion()
 
     init(skipsEntrance: Bool = false) {
         presentationElapsed = skipsEntrance ? WelcomeLightEntrance.duration + 1 : 0
@@ -294,8 +317,13 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
         guard request != match else { return }
         if let request, request.id != match?.id { matchStartedAt = presentationElapsed }
         if request == nil, match != nil { helixStartedAt = presentationElapsed }
-        if request?.isChatting == true {
-            if chatStartedAt == nil || request?.id != match?.id { chatStartedAt = presentationElapsed }
+        if let request, request.isChatting {
+            if request.id != match?.id {
+                // Reopening a conversation: the rings are already formed.
+                chatStartedAt = presentationElapsed - WelcomeLightMatch.Chat.morphDuration
+            } else if chatStartedAt == nil {
+                chatStartedAt = presentationElapsed
+            }
         } else {
             chatStartedAt = nil
         }
@@ -306,6 +334,10 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
         guard matrix != code else { return }
         code = matrix
         codeBuffer = matrix.flatMap { Self.resources?.codeBuffer(for: $0) }
+    }
+
+    func updatePersonality(_ visual: WelcomeLightPersonality.Visual?) {
+        personalityMotion.update(visual, now: ProcessInfo.processInfo.systemUptime, animated: !reduceMotion)
     }
 
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
@@ -336,6 +368,9 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
                 distance: helixEntryDistance,
                 startSeconds: WelcomeLightHelix.Arrival.motionSeconds(atPresentation: helixStartedAt, reduceMotion: reduceMotion),
                 reduceMotion: reduceMotion))
+        }
+        if match == nil, let pose = personalityMotion.pose(at: now) {
+            uniforms.apply(pose)
         }
         if let match {
             uniforms.apply(match, elapsed: presentationElapsed - matchStartedAt,

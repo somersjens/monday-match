@@ -250,7 +250,8 @@ struct MatchResultOverlay: View {
             .accessibilityLabel(L10n("Show \(match.name)’s answers"))
             .accessibilityIdentifier("match.profile")
 
-            if isSaved || match.isLive {
+            // A live match is the only thing the app does until it ends.
+            if isSaved && !match.isLive {
                 Button(action: onClose) {
                     Image(systemName: "xmark")
                         .font(.system(size: 18, weight: .semibold))
@@ -271,20 +272,8 @@ struct MatchResultOverlay: View {
 
     /// While chatting: back, who it is, and one gear for everything else.
     private var chatHeader: some View {
+        // No way back: while matched, this conversation is the app.
         HStack(spacing: 10) {
-            Button(action: onClose) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(OnboardingTheme.accentGradient)
-                    .frame(width: 44, height: 44)
-                    .background { Circle().fill(.white.opacity(0.08)) }
-                    .overlay { Circle().strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5) }
-                    .contentShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(L10n("Back"))
-            .accessibilityIdentifier("chat.back")
-
             VStack(alignment: .leading, spacing: 1) {
                 Text(match.name)
                     .font(.system(.title3, design: .rounded, weight: .semibold))
@@ -302,7 +291,8 @@ struct MatchResultOverlay: View {
             MatchSettingsMenu(name: match.name, onViewProfile: onViewProfile, onShowScores: onShowScores,
                               onReport: { reportReason = $0 }, onBreak: { confirmsBreak = true })
         }
-        .padding(.horizontal, 16)
+        .padding(.leading, 20)
+        .padding(.trailing, 16)
         .padding(.top, 10)
         .frame(height: MatchChatLayout.headerHeight, alignment: .top)
     }
@@ -435,7 +425,7 @@ struct MatchResultOverlay: View {
             if match.isLive && report.isMatch, let chat {
                 // A match the server made: both met every requirement and
                 // cleared each other's minimum score, so they can talk.
-                LiveMatchControls(chat: chat, name: match.name, onSendMessage: onSendMessage, onClose: onClose)
+                LiveMatchControls(chat: chat, name: match.name, onSendMessage: onSendMessage)
             } else {
                 if isSaved {
                     Button(L10n("Close"), action: onClose)
@@ -540,7 +530,6 @@ private struct LiveMatchControls: View {
     @ObservedObject var chat: ChatViewModel
     let name: String
     let onSendMessage: () -> Void
-    let onClose: () -> Void
 
     var body: some View {
         let unread = chat.unreadMessages
@@ -553,8 +542,6 @@ private struct LiveMatchControls: View {
             Button(unread.isEmpty ? L10n("Send a message") : L10n("Reply to \(name)"), action: onSendMessage)
                 .buttonStyle(GlowButtonStyle())
                 .accessibilityIdentifier("match.sendMessage")
-            Button(L10n("Close"), action: onClose)
-                .buttonStyle(QuietButtonStyle())
         }
         .animation(.spring(duration: 0.45, bounce: 0.2), value: unread.count)
     }

@@ -37,6 +37,7 @@ select pg_temp.check_test(not matching_private.eligible(p || '{"ownAttractivenes
 select pg_temp.check_test(not matching_private.eligible(p || '{"minimumMatchPercent":null}',b),'Null score threshold rejected') from matching_fixture;
 select pg_temp.check_test(not matching_private.eligible(p || '{"preferredRadiusKilometers":null}',b),'Null radius rejected') from matching_fixture;
 select pg_temp.check_test(matching_private.directional_score(p,p)=100,'Exact score is 100, unrestricted height supported') from matching_fixture;
+select pg_temp.check_test(matching_private.directional_score(p,jsonb_set(p,'{lifestyle,substances,smoking,ownLevel}','1'))=100,'Allowed habits do not affect personality percentage') from matching_fixture;
 select pg_temp.check_test(matching_private.directional_score(p,p || '{"gender":"man"}') is null,'Gender preference enforced') from matching_fixture;
 select pg_temp.check_test(matching_private.directional_score(p,p || '{"dateOfBirth":"1940-01-01"}') is null,'Age preference enforced') from matching_fixture;
 select pg_temp.check_test(matching_private.directional_score(p || '{"preferredPartnerMaximumHeight":170}',p) is null,'Height preference enforced') from matching_fixture;

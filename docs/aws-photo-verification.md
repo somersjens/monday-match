@@ -44,10 +44,15 @@ verification valid after relaunch while preserving invalidation on replacement.
 
 ## Account setup still needed
 
-The AWS account was not available when this integration was written. No real
-AWS biometric check or paid AWS API request was performed. Finish the AWS signup
-and supply account access before activation. Do not paste secret keys into chat
-or commit them to this repository.
+The AWS account is available. The approved CloudFormation stack
+`stop-swiping-face-verification` reached **CREATE_COMPLETE** in Ireland on
+15 November 2026. It created the worker user and streaming role defined below.
+The role ARN is saved in Supabase as `AWS_LIVENESS_STREAM_ROLE_ARN`.
+The remaining activation step is for the account owner to create the worker's
+access key and enter `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` directly in
+Supabase Edge Secrets. No secret access key has been created or read by the
+assistant. No real AWS biometric check or paid Rekognition API request was
+performed. Do not paste secret keys into chat or commit them to this repository.
 
 The reviewable infrastructure template is `supabase/aws/liveness.yaml`:
 
@@ -78,9 +83,12 @@ or the Supabase service-role key belongs in `Info.plist`, Swift source, an app
 bundle, or a public environment file.
 
 Apply `202611140006_aws_photo_verification.sql` once after migrations 001–005,
-then deploy `supabase/functions/aws-face-verification`. `supabase/config.toml`
-keeps JWT verification enabled; the function additionally validates the actual
-access token with `auth.getUser` and uses the caller's JWT for starting attempts.
+then deploy `supabase/functions/aws-face-verification`. The database migration
+and function are installed in the live project; AWS secrets/account activation
+remain required before a real check can run. `supabase/config.toml`
+disables the gateway legacy-secret check for this ECC-token project. The function
+authenticates every caller with `auth.getUser` before reading data or calling AWS,
+and uses the caller's JWT for starting attempts.
 All worker/attestation RPCs are denied to anonymous and authenticated clients.
 Until the AWS secrets are present, authenticated calls return 503 and no AWS
 session is created. Keep the default verified-photo requirement enabled: missing
@@ -90,7 +98,17 @@ AWS charges for usage. The per-user quota is a first abuse bound, not a global
 spending cap. Set the account's intended cost limit/monitoring before public
 activation. This code does not configure billing or subscribe to a paid plan.
 
-## Validate
+## Validation completed
+
+On 14 November 2026, the live rollback-only SQL suite passed **85 assertions**,
+with zero fixture accounts/profiles left behind and RLS on every real matching
+table. The current iOS chat/AWS/Supabase run passed **28 tests**; a prior broader
+run passed **101**. The Edge Function typecheck and all **3** policy/input tests
+passed. Live requests with no session, an invalid session, and only a publishable
+key each returned **401 Authentication required**. These checks do not send
+photos/videos to AWS.
+
+## Re-run validation
 
 - `deno check --lock deno.lock index.ts` in the Edge Function directory.
 - `deno test policy_test.ts` checks the combined liveness/identity threshold,

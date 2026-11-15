@@ -11,3 +11,23 @@ export function passesVerification(status: string | undefined, confidence: numbe
 export function uuid(value: unknown): value is string {
   return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
+
+export async function readLimitedJSON(request: Request, maximum = 2048): Promise<Record<string, unknown>> {
+  const reader = request.body?.getReader();
+  if (!reader) throw new SyntaxError("JSON body required");
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  while (true) {
+    const chunk = await reader.read();
+    if (chunk.done) break;
+    length += chunk.value.byteLength;
+    if (length > maximum) { await reader.cancel(); throw new RangeError("Request too large"); }
+    chunks.push(chunk.value);
+  }
+  const bytes = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  const body = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  if (!body || Array.isArray(body) || typeof body !== "object") throw new SyntaxError("JSON object required");
+  return body;
+}

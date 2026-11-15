@@ -15032,6 +15032,3219 @@
           }
         }
       }
+    },
+    "Belbin team roles" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belbin team roles"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belbin-teamrollen"
+          }
+        }
+      }
+    },
+    "TMA (Talent Motivation Analysis)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TMA (Talent Motivation Analysis)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TMA (Talent Motivatie Analyse)"
+          }
+        }
+      }
+    },
+    "16 personality types" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "16 personality types"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "16 persoonlijkheidstypes"
+          }
+        }
+      }
+    },
+    "4 behavioural styles" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4 behavioural styles"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4 gedragsstijlen"
+          }
+        }
+      }
+    },
+    "5 personality dimensions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 personality dimensions"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 persoonlijkheidsdimensies"
+          }
+        }
+      }
+    },
+    "9 types with core motivations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9 types with core motivations"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9 types met kernmotivaties"
+          }
+        }
+      }
+    },
+    "16 types with an identity trait" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "16 types with an identity trait"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "16 types met een identiteitskenmerk"
+          }
+        }
+      }
+    },
+    "4 colour energies" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4 colour energies"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4 kleurenergieën"
+          }
+        }
+      }
+    },
+    "6 basic dimensions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "6 basic dimensions"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "6 basisdimensies"
+          }
+        }
+      }
+    },
+    "9 roles within a team" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9 roles within a team"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "9 rollen binnen een team"
+          }
+        }
+      }
+    },
+    "4 behavioural drives at work" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4 behavioural drives at work"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4 gedragsdrijfveren op het werk"
+          }
+        }
+      }
+    },
+    "Drives and talents" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drives and talents"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drijfveren en talenten"
+          }
+        }
+      }
+    },
+    "Coming soon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coming soon"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binnenkort"
+          }
+        }
+      }
+    },
+    "Personality test" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personality test"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Persoonlijkheidstest"
+          }
+        }
+      }
+    },
+    "An estimate from your compatibility answers, not the official test." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An estimate from your compatibility answers, not the official test."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een inschatting op basis van je compatibiliteitsantwoorden, geen officiële test."
+          }
+        }
+      }
+    },
+    "Shows your personality estimates." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows your personality estimates."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toont je persoonlijkheidsinschattingen."
+          }
+        }
+      }
+    },
+    "Extravert" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extravert"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extravert"
+          }
+        }
+      }
+    },
+    "Introvert" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introvert"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introvert"
+          }
+        }
+      }
+    },
+    "Sensing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensing"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zintuiglijk"
+          }
+        }
+      }
+    },
+    "Intuitive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intuitive"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intuïtief"
+          }
+        }
+      }
+    },
+    "Thinking" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thinking"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denkend"
+          }
+        }
+      }
+    },
+    "Feeling" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feeling"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voelend"
+          }
+        }
+      }
+    },
+    "Judging" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Judging"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oordelend"
+          }
+        }
+      }
+    },
+    "Perceiving" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perceiving"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waarnemend"
+          }
+        }
+      }
+    },
+    "Strategic and independent. You think in systems and long-term plans, and prefer depth over small talk." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strategic and independent. You think in systems and long-term plans, and prefer depth over small talk."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strategisch en onafhankelijk. Je denkt in systemen en plannen voor de lange termijn, en kiest diepgang boven small talk."
+          }
+        }
+      }
+    },
+    "Curious and analytical. You love ideas, take your time to think and keep your options open." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Curious and analytical. You love ideas, take your time to think and keep your options open."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwsgierig en analytisch. Je houdt van ideeën, neemt de tijd om na te denken en houdt je opties open."
+          }
+        }
+      }
+    },
+    "Decisive and driven. You take the lead, set clear goals and like to see things move." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decisive and driven. You take the lead, set clear goals and like to see things move."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daadkrachtig en gedreven. Je neemt de leiding, stelt heldere doelen en ziet dingen graag in beweging komen."
+          }
+        }
+      }
+    },
+    "Quick and inventive. You enjoy a good debate, new possibilities and a bit of chaos." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick and inventive. You enjoy a good debate, new possibilities and a bit of chaos."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snel en vindingrijk. Je houdt van een goede discussie, nieuwe mogelijkheden en een beetje chaos."
+          }
+        }
+      }
+    },
+    "Thoughtful and idealistic. You read people well and look for meaning and depth in connection." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thoughtful and idealistic. You read people well and look for meaning and depth in connection."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedachtzaam en idealistisch. Je voelt mensen goed aan en zoekt betekenis en diepgang in contact."
+          }
+        }
+      }
+    },
+    "Warm and imaginative. You follow your values, feel deeply and need room to be yourself." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warm and imaginative. You follow your values, feel deeply and need room to be yourself."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warm en fantasierijk. Je volgt je waarden, voelt diep en hebt ruimte nodig om jezelf te zijn."
+          }
+        }
+      }
+    },
+    "Warm and inspiring. You bring people together and care a lot about the people around you." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warm and inspiring. You bring people together and care a lot about the people around you."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warm en inspirerend. Je brengt mensen samen en geeft veel om de mensen om je heen."
+          }
+        }
+      }
+    },
+    "Enthusiastic and open. You see possibilities everywhere and connect easily with others." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enthusiastic and open. You see possibilities everywhere and connect easily with others."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enthousiast en open. Je ziet overal mogelijkheden en maakt makkelijk contact met anderen."
+          }
+        }
+      }
+    },
+    "Reliable and structured. You keep your word, value order and like things done properly." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reliable and structured. You keep your word, value order and like things done properly."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betrouwbaar en gestructureerd. Je komt je afspraken na, houdt van orde en doet dingen graag goed."
+          }
+        }
+      }
+    },
+    "Caring and loyal. You quietly look after others and value stability and familiar routines." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caring and loyal. You quietly look after others and value stability and familiar routines."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorgzaam en loyaal. Je let in stilte op anderen en hecht aan stabiliteit en vertrouwde gewoontes."
+          }
+        }
+      }
+    },
+    "Practical and organised. You like clear agreements, structure and getting things done." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practical and organised. You like clear agreements, structure and getting things done."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Praktisch en georganiseerd. Je houdt van duidelijke afspraken, structuur en dingen afronden."
+          }
+        }
+      }
+    },
+    "Sociable and helpful. You create harmony, remember the details and like being there for others." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sociable and helpful. You create harmony, remember the details and like being there for others."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sociaal en behulpzaam. Je zorgt voor harmonie, onthoudt de details en staat graag voor anderen klaar."
+          }
+        }
+      }
+    },
+    "Calm and practical. You solve problems hands-on and like the freedom to do things your own way." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calm and practical. You solve problems hands-on and like the freedom to do things your own way."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rustig en praktisch. Je lost problemen hands-on op en wilt de vrijheid om dingen op je eigen manier te doen."
+          }
+        }
+      }
+    },
+    "Gentle and spontaneous. You live in the moment, have an eye for beauty and follow your feelings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gentle and spontaneous. You live in the moment, have an eye for beauty and follow your feelings."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zacht en spontaan. Je leeft in het moment, hebt oog voor schoonheid en volgt je gevoel."
+          }
+        }
+      }
+    },
+    "Energetic and bold. You love action, act quickly and like being where things happen." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Energetic and bold. You love action, act quickly and like being where things happen."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Energiek en gedurfd. Je houdt van actie, handelt snel en bent graag waar het gebeurt."
+          }
+        }
+      }
+    },
+    "Lively and spontaneous. You enjoy people, fun and the moment, and bring energy wherever you go." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lively and spontaneous. You enjoy people, fun and the moment, and bring energy wherever you go."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Levendig en spontaan. Je geniet van mensen, plezier en het moment, en brengt overal energie mee."
+          }
+        }
+      }
+    },
+    "Extraverted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extraverted"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extravert"
+          }
+        }
+      }
+    },
+    "Introverted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introverted"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introvert"
+          }
+        }
+      }
+    },
+    "Observant" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Observant"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Observerend"
+          }
+        }
+      }
+    },
+    "Prospecting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prospecting"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verkennend"
+          }
+        }
+      }
+    },
+    "Assertive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assertive"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assertief"
+          }
+        }
+      }
+    },
+    "Turbulent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turbulent"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turbulent"
+          }
+        }
+      }
+    },
+    "Diplomat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diplomat"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diplomaat"
+          }
+        }
+      }
+    },
+    "Analyst" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyst"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analist"
+          }
+        }
+      }
+    },
+    "Sentinel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sentinel"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wachter"
+          }
+        }
+      }
+    },
+    "Explorer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explorer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontdekker"
+          }
+        }
+      }
+    },
+    "You are self-assured and stay calm under stress." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are self-assured and stay calm under stress."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent zelfverzekerd en blijft rustig onder stress."
+          }
+        }
+      }
+    },
+    "You are self-critical and driven to keep improving." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are self-critical and driven to keep improving."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent kritisch op jezelf en wilt jezelf steeds verbeteren."
+          }
+        }
+      }
+    },
+    "Architect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Architect"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Architect"
+          }
+        }
+      }
+    },
+    "Logician" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logician"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logicus"
+          }
+        }
+      }
+    },
+    "Commander" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commander"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commandant"
+          }
+        }
+      }
+    },
+    "Debater" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debater"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debater"
+          }
+        }
+      }
+    },
+    "Advocate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advocate"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advocaat"
+          }
+        }
+      }
+    },
+    "Mediator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mediator"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bemiddelaar"
+          }
+        }
+      }
+    },
+    "Protagonist" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protagonist"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protagonist"
+          }
+        }
+      }
+    },
+    "Campaigner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Campaigner"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Campagnevoerder"
+          }
+        }
+      }
+    },
+    "Logistician" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logistician"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logisticus"
+          }
+        }
+      }
+    },
+    "Defender" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Defender"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verdediger"
+          }
+        }
+      }
+    },
+    "Executive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Executive"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directeur"
+          }
+        }
+      }
+    },
+    "Consul" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consul"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consul"
+          }
+        }
+      }
+    },
+    "Virtuoso" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Virtuoso"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Virtuoos"
+          }
+        }
+      }
+    },
+    "Adventurer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adventurer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avonturier"
+          }
+        }
+      }
+    },
+    "Entrepreneur" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrepreneur"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ondernemer"
+          }
+        }
+      }
+    },
+    "Entertainer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entertainer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entertainer"
+          }
+        }
+      }
+    },
+    "Dominance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dominance"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dominantie"
+          }
+        }
+      }
+    },
+    "Influence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Influence"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invloed"
+          }
+        }
+      }
+    },
+    "Steadiness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steadiness"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabiliteit"
+          }
+        }
+      }
+    },
+    "Conscientiousness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conscientiousness"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consciëntieusheid"
+          }
+        }
+      }
+    },
+    "Direct and results-driven. You decide quickly, like a challenge and take charge when things need to move." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direct and results-driven. You decide quickly, like a challenge and take charge when things need to move."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direct en resultaatgericht. Je beslist snel, houdt van een uitdaging en neemt de leiding als er iets moet gebeuren."
+          }
+        }
+      }
+    },
+    "Enthusiastic and persuasive. You energise people, like to talk things through and bring optimism." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enthusiastic and persuasive. You energise people, like to talk things through and bring optimism."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enthousiast en overtuigend. Je geeft mensen energie, praat dingen graag door en brengt optimisme."
+          }
+        }
+      }
+    },
+    "Calm and dependable. You are patient and supportive, and value harmony and a steady pace." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calm and dependable. You are patient and supportive, and value harmony and a steady pace."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rustig en betrouwbaar. Je bent geduldig en steunend, en hecht aan harmonie en een vast tempo."
+          }
+        }
+      }
+    },
+    "Precise and thoughtful. You value quality and accuracy, and like doing things well considered." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precise and thoughtful. You value quality and accuracy, and like doing things well considered."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nauwkeurig en bedachtzaam. Je hecht aan kwaliteit en precisie, en doet dingen graag weloverwogen."
+          }
+        }
+      }
+    },
+    "Fiery Red" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fiery Red"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vurig rood"
+          }
+        }
+      }
+    },
+    "Sunshine Yellow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunshine Yellow"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zonnig geel"
+          }
+        }
+      }
+    },
+    "Earth Green" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Earth Green"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aards groen"
+          }
+        }
+      }
+    },
+    "Cool Blue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cool Blue"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koel blauw"
+          }
+        }
+      }
+    },
+    "Red" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Red"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rood"
+          }
+        }
+      }
+    },
+    "Yellow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yellow"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geel"
+          }
+        }
+      }
+    },
+    "Green" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Green"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groen"
+          }
+        }
+      }
+    },
+    "Blue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blue"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blauw"
+          }
+        }
+      }
+    },
+    "Action-oriented and determined. You are direct and competitive, and want results." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Action-oriented and determined. You are direct and competitive, and want results."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actiegericht en vastberaden. Je bent direct en competitief, en wilt resultaat zien."
+          }
+        }
+      }
+    },
+    "Sociable and dynamic. You are enthusiastic and expressive, and love working with people." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sociable and dynamic. You are enthusiastic and expressive, and love working with people."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sociaal en dynamisch. Je bent enthousiast en expressief, en werkt graag met mensen."
+          }
+        }
+      }
+    },
+    "Caring and patient. You are loyal and encouraging, and value relationships and values." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caring and patient. You are loyal and encouraging, and value relationships and values."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorgzaam en geduldig. Je bent loyaal en bemoedigend, en hecht aan relaties en waarden."
+          }
+        }
+      }
+    },
+    "Analytical and precise. You are cautious, think things through and want to understand first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analytical and precise. You are cautious, think things through and want to understand first."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analytisch en precies. Je bent voorzichtig, denkt dingen goed door en wilt eerst begrijpen."
+          }
+        }
+      }
+    },
+    "Second colour: {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Second colour: {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tweede kleur: {0}"
+          }
+        }
+      }
+    },
+    "Openness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Openness"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Openheid"
+          }
+        }
+      }
+    },
+    "You are curious and open to new ideas, experiences and depth." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are curious and open to new ideas, experiences and depth."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent nieuwsgierig en staat open voor nieuwe ideeën, ervaringen en diepgang."
+          }
+        }
+      }
+    },
+    "You like the familiar and prefer practical, proven ways." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You like the familiar and prefer practical, proven ways."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je houdt van het vertrouwde en kiest liever praktische, beproefde wegen."
+          }
+        }
+      }
+    },
+    "You are organised and reliable, and like to plan ahead." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are organised and reliable, and like to plan ahead."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent georganiseerd en betrouwbaar, en plant graag vooruit."
+          }
+        }
+      }
+    },
+    "You are flexible and spontaneous, and don’t need everything planned." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are flexible and spontaneous, and don’t need everything planned."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent flexibel en spontaan, en hoeft niet alles te plannen."
+          }
+        }
+      }
+    },
+    "Extraversion" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extraversion"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extraversie"
+          }
+        }
+      }
+    },
+    "You get energy from people and like being social and active." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You get energy from people and like being social and active."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je krijgt energie van mensen en bent graag sociaal en actief."
+          }
+        }
+      }
+    },
+    "You recharge on your own and prefer calm and small circles." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You recharge on your own and prefer calm and small circles."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je laadt op in je eentje en houdt van rust en kleine kring."
+          }
+        }
+      }
+    },
+    "Agreeableness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agreeableness"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vriendelijkheid"
+          }
+        }
+      }
+    },
+    "You are warm and cooperative, and seek harmony with others." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are warm and cooperative, and seek harmony with others."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent warm en meegaand, en zoekt harmonie met anderen."
+          }
+        }
+      }
+    },
+    "You are direct and critical, and don’t shy away from a debate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are direct and critical, and don’t shy away from a debate."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent direct en kritisch, en gaat een discussie niet uit de weg."
+          }
+        }
+      }
+    },
+    "Strongest: {0} · Lowest: {1}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strongest: {0} · Lowest: {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sterkst: {0} · Laagst: {1}"
+          }
+        }
+      }
+    },
+    "Neuroticism" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuroticism"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuroticisme"
+          }
+        }
+      }
+    },
+    "You feel things intensely and look for reassurance and closeness under stress." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You feel things intensely and look for reassurance and closeness under stress."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je voelt dingen intens en zoekt onder stress geruststelling en nabijheid."
+          }
+        }
+      }
+    },
+    "You stay calm under pressure and are emotionally steady." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You stay calm under pressure and are emotionally steady."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je blijft rustig onder druk en bent emotioneel stabiel."
+          }
+        }
+      }
+    },
+    "Honesty-Humility" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Honesty-Humility"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eerlijkheid-Bescheidenheid"
+          }
+        }
+      }
+    },
+    "You are modest and sincere, and status or luxury matter little to you." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are modest and sincere, and status or luxury matter little to you."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent bescheiden en oprecht, en status of luxe betekenen weinig voor je."
+          }
+        }
+      }
+    },
+    "You enjoy status, style and the good things in life." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You enjoy status, style and the good things in life."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je geniet van status, stijl en de mooie dingen van het leven."
+          }
+        }
+      }
+    },
+    "Emotionality" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emotionality"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emotionaliteit"
+          }
+        }
+      }
+    },
+    "You are sensitive and empathetic, and like support when things get tough." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are sensitive and empathetic, and like support when things get tough."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent gevoelig en empathisch, en waardeert steun als het moeilijk wordt."
+          }
+        }
+      }
+    },
+    "You are independent and stay level-headed when things get tough." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are independent and stay level-headed when things get tough."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent onafhankelijk en houdt het hoofd koel als het moeilijk wordt."
+          }
+        }
+      }
+    },
+    "Reformer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reformer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perfectionist"
+          }
+        }
+      }
+    },
+    "Helper" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helper"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helper"
+          }
+        }
+      }
+    },
+    "Achiever" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Achiever"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Presteerder"
+          }
+        }
+      }
+    },
+    "Individualist" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Individualist"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Individualist"
+          }
+        }
+      }
+    },
+    "Investigator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Investigator"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onderzoeker"
+          }
+        }
+      }
+    },
+    "Loyalist" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loyalist"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loyalist"
+          }
+        }
+      }
+    },
+    "Enthusiast" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enthusiast"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Levensgenieter"
+          }
+        }
+      }
+    },
+    "Challenger" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Challenger"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitdager"
+          }
+        }
+      }
+    },
+    "Peacemaker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peacemaker"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vredestichter"
+          }
+        }
+      }
+    },
+    "Principled and conscientious. You want to do things right and make things better, and fear being wrong or careless." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Principled and conscientious. You want to do things right and make things better, and fear being wrong or careless."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Principieel en plichtsgetrouw. Je wilt het goed doen en dingen verbeteren, en bent bang om fouten te maken of slordig te zijn."
+          }
+        }
+      }
+    },
+    "Caring and generous. You want to be loved and needed, and fear being unwanted." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caring and generous. You want to be loved and needed, and fear being unwanted."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorgzaam en gul. Je wilt geliefd zijn en nodig zijn, en bent bang om niet gewenst te zijn."
+          }
+        }
+      }
+    },
+    "Ambitious and adaptable. You want to succeed and be valued, and fear being worthless." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambitious and adaptable. You want to succeed and be valued, and fear being worthless."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambitieus en flexibel. Je wilt slagen en gewaardeerd worden, en bent bang om waardeloos te zijn."
+          }
+        }
+      }
+    },
+    "Expressive and sensitive. You want to be authentic and understood, and fear having no identity of your own." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expressive and sensitive. You want to be authentic and understood, and fear having no identity of your own."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expressief en gevoelig. Je wilt authentiek zijn en begrepen worden, en bent bang om geen eigen identiteit te hebben."
+          }
+        }
+      }
+    },
+    "Perceptive and independent. You want to understand the world, and fear being overwhelmed or incapable." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perceptive and independent. You want to understand the world, and fear being overwhelmed or incapable."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opmerkzaam en onafhankelijk. Je wilt de wereld begrijpen, en bent bang om overweldigd of onbekwaam te zijn."
+          }
+        }
+      }
+    },
+    "Loyal and responsible. You want security and support, and fear being left without guidance." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loyal and responsible. You want security and support, and fear being left without guidance."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loyaal en verantwoordelijk. Je wilt zekerheid en steun, en bent bang om zonder houvast te staan."
+          }
+        }
+      }
+    },
+    "Spontaneous and versatile. You want freedom and new experiences, and fear missing out or being limited." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spontaneous and versatile. You want freedom and new experiences, and fear missing out or being limited."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spontaan en veelzijdig. Je wilt vrijheid en nieuwe ervaringen, en bent bang om iets te missen of beperkt te worden."
+          }
+        }
+      }
+    },
+    "Strong and decisive. You want to be in control of your own life, and fear being controlled or hurt." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strong and decisive. You want to be in control of your own life, and fear being controlled or hurt."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sterk en daadkrachtig. Je wilt zelf de regie over je leven, en bent bang om gecontroleerd of gekwetst te worden."
+          }
+        }
+      }
+    },
+    "Easygoing and supportive. You want inner peace and harmony, and fear conflict and disconnection." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Easygoing and supportive. You want inner peace and harmony, and fear conflict and disconnection."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gemoedelijk en steunend. Je wilt innerlijke rust en harmonie, en bent bang voor conflict en verwijdering."
+          }
+        }
+      }
+    },
+    "wing {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wing {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vleugel {0}"
+          }
+        }
+      }
+    },
+    "Plant" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plant"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plant"
+          }
+        }
+      }
+    },
+    "Resource Investigator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resource Investigator"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brononderzoeker"
+          }
+        }
+      }
+    },
+    "Co-ordinator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Co-ordinator"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voorzitter"
+          }
+        }
+      }
+    },
+    "Shaper" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shaper"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vormgever"
+          }
+        }
+      }
+    },
+    "Monitor Evaluator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitor Evaluator"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitor"
+          }
+        }
+      }
+    },
+    "Teamworker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teamworker"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groepswerker"
+          }
+        }
+      }
+    },
+    "Implementer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Implementer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedrijfsman"
+          }
+        }
+      }
+    },
+    "Completer Finisher" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completer Finisher"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorgdrager"
+          }
+        }
+      }
+    },
+    "Specialist" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Specialist"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Specialist"
+          }
+        }
+      }
+    },
+    "Creative and imaginative. You come up with original ideas and solve difficult problems in your own way." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creative and imaginative. You come up with original ideas and solve difficult problems in your own way."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creatief en fantasierijk. Je bedenkt originele ideeën en lost lastige problemen op je eigen manier op."
+          }
+        }
+      }
+    },
+    "Outgoing and enthusiastic. You explore opportunities, build contacts and bring in new ideas from outside." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outgoing and enthusiastic. You explore opportunities, build contacts and bring in new ideas from outside."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extravert en enthousiast. Je verkent kansen, legt contacten en haalt nieuwe ideeën van buiten binnen."
+          }
+        }
+      }
+    },
+    "Calm and confident. You clarify goals, bring out the best in others and keep the group together." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calm and confident. You clarify goals, bring out the best in others and keep the group together."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rustig en zelfverzekerd. Je maakt doelen helder, haalt het beste uit anderen en houdt de groep bij elkaar."
+          }
+        }
+      }
+    },
+    "Challenging and dynamic. You keep the pace up and have the drive to overcome obstacles." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Challenging and dynamic. You keep the pace up and have the drive to overcome obstacles."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitdagend en dynamisch. Je houdt het tempo hoog en hebt de drive om obstakels te overwinnen."
+          }
+        }
+      }
+    },
+    "Sober and strategic. You weigh up all the options and judge them carefully." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sober and strategic. You weigh up all the options and judge them carefully."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuchter en strategisch. Je weegt alle opties af en beoordeelt ze zorgvuldig."
+          }
+        }
+      }
+    },
+    "Cooperative and diplomatic. You listen, build bridges and keep the atmosphere in the team good." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cooperative and diplomatic. You listen, build bridges and keep the atmosphere in the team good."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coöperatief en diplomatiek. Je luistert, slaat bruggen en houdt de sfeer in het team goed."
+          }
+        }
+      }
+    },
+    "Practical and reliable. You turn ideas into concrete actions and get them done efficiently." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practical and reliable. You turn ideas into concrete actions and get them done efficiently."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Praktisch en betrouwbaar. Je zet ideeën om in concrete acties en voert ze efficiënt uit."
+          }
+        }
+      }
+    },
+    "Precise and conscientious. You spot the mistakes others miss and finish things properly." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precise and conscientious. You spot the mistakes others miss and finish things properly."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precies en plichtsgetrouw. Je ziet de fouten die anderen missen en maakt dingen netjes af."
+          }
+        }
+      }
+    },
+    "Dedicated and knowledgeable. You bring deep expertise and like to master your subject." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dedicated and knowledgeable. You bring deep expertise and like to master your subject."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toegewijd en deskundig. Je brengt diepgaande kennis in en beheerst je vak graag tot in detail."
+          }
+        }
+      }
+    },
+    "Also: {0}, {1}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also: {0}, {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ook: {0}, {1}"
+          }
+        }
+      }
+    },
+    "Collaborative" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collaborative"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samenwerkend"
+          }
+        }
+      }
+    },
+    "Independent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Independent"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onafhankelijk"
+          }
+        }
+      }
+    },
+    "Reserved" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reserved"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gereserveerd"
+          }
+        }
+      }
+    },
+    "Social" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Social"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sociaal"
+          }
+        }
+      }
+    },
+    "Fast-paced" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fast-paced"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snel"
+          }
+        }
+      }
+    },
+    "Steady" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steady"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestendig"
+          }
+        }
+      }
+    },
+    "Informal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informeel"
+          }
+        }
+      }
+    },
+    "Precise" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precise"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nauwkeurig"
+          }
+        }
+      }
+    },
+    "Achievement" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Achievement"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prestatie"
+          }
+        }
+      }
+    },
+    "Status" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        }
+      }
+    },
+    "Leadership" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leadership"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leiderschap"
+          }
+        }
+      }
+    },
+    "Social contact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Social contact"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sociaal contact"
+          }
+        }
+      }
+    },
+    "Helping others" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helping others"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anderen helpen"
+          }
+        }
+      }
+    },
+    "Structure" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Structure"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Structuur"
+          }
+        }
+      }
+    },
+    "Change" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verandering"
+          }
+        }
+      }
+    },
+    "Autonomy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autonomy"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zelfstandigheid"
+          }
+        }
+      }
+    },
+    "You are motivated by goals, growth and doing well." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are motivated by goals, growth and doing well."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je wordt gemotiveerd door doelen, groei en het goed doen."
+          }
+        }
+      }
+    },
+    "Recognition and appearance matter to you; you like to be seen." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognition and appearance matter to you; you like to be seen."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erkenning en uitstraling zijn belangrijk voor je; je wordt graag gezien."
+          }
+        }
+      }
+    },
+    "You like to take the lead and influence decisions." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You like to take the lead and influence decisions."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je neemt graag de leiding en hebt graag invloed op beslissingen."
+          }
+        }
+      }
+    },
+    "You get energy from being around people and sharing things." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You get energy from being around people and sharing things."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je krijgt energie van mensen om je heen en dingen delen."
+          }
+        }
+      }
+    },
+    "You are driven to support others and make a difference for them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are driven to support others and make a difference for them."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je wilt anderen steunen en echt iets voor ze betekenen."
+          }
+        }
+      }
+    },
+    "You like clarity and order, and knowing where you stand." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You like clarity and order, and knowing where you stand."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je houdt van duidelijkheid en orde, en wilt weten waar je aan toe bent."
+          }
+        }
+      }
+    },
+    "You look for variety, new experiences and change." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You look for variety, new experiences and change."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je zoekt afwisseling, nieuwe ervaringen en verandering."
+          }
+        }
+      }
+    },
+    "You want the freedom to make your own choices and work your own way." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You want the freedom to make your own choices and work your own way."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je wilt de vrijheid om je eigen keuzes te maken en op je eigen manier te werken."
+          }
+        }
+      }
+    },
+    "Analytical and disciplined. You work precisely and independently and want to get the facts right." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analytical and disciplined. You work precisely and independently and want to get the facts right."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analytisch en gedisciplineerd. Je werkt nauwkeurig en zelfstandig en wilt de feiten kloppend hebben."
+          }
+        }
+      }
+    },
+    "Analytical and assertive. You think ahead, solve problems and like to steer by the facts." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analytical and assertive. You think ahead, solve problems and like to steer by the facts."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analytisch en assertief. Je denkt vooruit, lost problemen op en stuurt graag op feiten."
+          }
+        }
+      }
+    },
+    "Precise and in control. You set high standards and keep a firm grip on the details." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precise and in control. You set high standards and keep a firm grip on the details."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precies en in controle. Je legt de lat hoog en houdt de details stevig in de hand."
+          }
+        }
+      }
+    },
+    "Independent and bold. You take risks, move fast and like to work your own way." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Independent and bold. You take risks, move fast and like to work your own way."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onafhankelijk en gedurfd. Je neemt risico's, schakelt snel en werkt graag op je eigen manier."
+          }
+        }
+      }
+    },
+    "Driven and decisive. You take charge, move fast and like to set the direction." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driven and decisive. You take charge, move fast and like to set the direction."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gedreven en daadkrachtig. Je neemt de leiding, schakelt snel en bepaalt graag de richting."
+          }
+        }
+      }
+    },
+    "Innovative and daring. You look past the rules for new ways and bring others along." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Innovative and daring. You look past the rules for new ways and bring others along."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vernieuwend en gedurfd. Je kijkt voorbij de regels naar nieuwe wegen en neemt anderen mee."
+          }
+        }
+      }
+    },
+    "Persuasive and energetic. You enjoy convincing people and taking on new challenges." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Persuasive and energetic. You enjoy convincing people and taking on new challenges."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overtuigend en energiek. Je overtuigt graag mensen en gaat graag nieuwe uitdagingen aan."
+          }
+        }
+      }
+    },
+    "Sociable and informal. You build relationships easily and like variety and people." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sociable and informal. You build relationships easily and like variety and people."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sociaal en informeel. Je bouwt makkelijk relaties op en houdt van afwisseling en mensen."
+          }
+        }
+      }
+    },
+    "Independent and self-assured. You follow your own judgement and like freedom." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Independent and self-assured. You follow your own judgement and like freedom."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onafhankelijk en zelfverzekerd. Je volgt je eigen oordeel en houdt van vrijheid."
+          }
+        }
+      }
+    },
+    "Friendly and considerate. You like helping others and doing things properly." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Friendly and considerate. You like helping others and doing things properly."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vriendelijk en attent. Je helpt graag anderen en doet dingen graag goed."
+          }
+        }
+      }
+    },
+    "Warm and cooperative. You enjoy working with others and building a good team." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warm and cooperative. You enjoy working with others and building a good team."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warm en coöperatief. Je werkt graag samen en bouwt graag aan een goed team."
+          }
+        }
+      }
+    },
+    "Patient and steady. You work calmly and consistently and like a stable environment." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Patient and steady. You work calmly and consistently and like a stable environment."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geduldig en bestendig. Je werkt rustig en consequent en houdt van een stabiele omgeving."
+          }
+        }
+      }
+    },
+    "Steady and precise. You build deep expertise and take care to get things right." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steady and precise. You build deep expertise and take care to get things right."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestendig en precies. Je bouwt diepgaande kennis op en zorgt dat dingen kloppen."
+          }
+        }
+      }
+    },
+    "Patient and thorough. You work carefully and steadily and take pride in quality." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Patient and thorough. You work carefully and steadily and take pride in quality."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geduldig en grondig. Je werkt zorgvuldig en gestaag en bent trots op kwaliteit."
+          }
+        }
+      }
+    },
+    "Careful and conscientious. You follow the rules and make sure everything is correct." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Careful and conscientious. You follow the rules and make sure everything is correct."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorgvuldig en plichtsgetrouw. Je volgt de regels en zorgt dat alles klopt."
+          }
+        }
+      }
+    },
+    "Thoughtful and analytical. You like to dig deep and become an expert in your field." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thoughtful and analytical. You like to dig deep and become an expert in your field."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedachtzaam en analytisch. Je duikt graag diep in een onderwerp en wordt expert in je vak."
+          }
+        }
+      }
+    },
+    "Flexible and versatile. You adapt easily to what a situation asks of you." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flexible and versatile. You adapt easily to what a situation asks of you."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flexibel en veelzijdig. Je past je makkelijk aan aan wat een situatie van je vraagt."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

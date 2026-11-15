@@ -23,6 +23,10 @@ struct WelcomeUniforms {
     float4 matchLayout; // heart scale, vertical offset, score line height, 1 while a match shows
     float4 matchMorph;  // progress, saved match enabled, shared vertical offset, captured helix seconds
     float4 chat;        // heart-to-rings progress, rings' turn in radians
+    float4 personality; // helix-to-chart progress, chart-to-chart progress, from kind, to kind
+    float4 personalityShape; // from value count, to value count
+    float4 personalityFrom[3];
+    float4 personalityTo[3];
 };
 
 struct RibbonVertex {
@@ -356,6 +360,289 @@ float codeAmount(float u, uint instance, constant WelcomeUniforms &p) {
 
 float3 ribbonPoint(float u, uint instance, constant WelcomeUniforms &p, device const float2 *controls);
 
+// Personality charts mirror WelcomeLightPersonality in Swift. Like the code,
+// each loop runs across and back as two neighbouring threads.
+\#(WelcomeLightPersonality.shaderConstants)
+
+struct PersonalitySample {
+    float3 point;
+    float light;
+    float3 color;
+};
+
+float personalityValue(constant float4 *values, uint index) {
+    return values[min(index, 11u)/4][min(index, 11u)%4];
+}
+
+// A slow sway shared by the flat charts, so they hang in the same space as the helix.
+float3 chartSpace(float2 q, float lift, float seconds) {
+    float yaw = 0.12*sin(seconds*0.45 + 0.4);
+    float pitch = 0.05*sin(seconds*0.33 + 1.1);
+    float z = q.x*sin(yaw) + (q.y - chartCenterY)*sin(pitch);
+    float perspective = 1/(1 - z*0.30);
+    return float3(q.x*cos(yaw)*perspective, chartCenterY + (q.y - chartCenterY)*cos(pitch)*perspective,
+                  0.12 + z*0.8 + lift);
+}
+
+float2 chartNormal(float2 a, float2 b) {
+    float2 d = b - a;
+    return float2(-d.y, d.x)/max(length(d), 1e-6);
+}
+
+float spectrumRowY(float row, float count) {
+    float spacing = count > 1 ? min(spectrumMaxSpacing, spectrumSpan/(count - 1)) : 0.0;
+    return (row - (count - 1)*0.5)*spacing + spectrumCenterY;
+}
+
+// Rows with two poles. The threads swell into a bright bead where the user
+// stands and burn brighter between the centre and that bead.
+PersonalitySample spectrumSample(float u, uint instance, float count, constant float4 *values, float seconds) {
+    uint rows = uint(clamp(count, 1.0, 12.0));
+    uint row = instance % rows;
+    uint index = instance / rows;
+    float perRow = float((2*strands + rows - 1 - row)/rows);
+    float phase = (u + 0.5)*tau;
+    float h = asin(0.995*cos(phase))/asin(0.995);
+    float pass = tanh(sin(phase)/0.04);
+    float lane = ((float(index) + 0.5 + 0.25*pass)/perRow)*2 - 1;
+    float value = clamp(personalityValue(values, row), -1.0, 1.0);
+    float x = h*spectrumHalfWidth;
+    float marker = value*spectrumHalfWidth;
+    float near = exp(-pow((x - marker)/0.13, 2.0));
+    float low = min(0.0, marker), high = max(0.0, marker);
+    float fill = smoothstep(low - 0.03, low + 0.03, x)*(1 - smoothstep(high - 0.03, high + 0.03, x));
+    float ends = 1 - pow(abs(h), 10.0);
+    float thickness = (0.018 + 0.010*fill + 0.062*near)*(0.5 + 0.5*ends);
+    float rowPhase = float(row)*1.7;
+    float wave = 0.011*sin(4.5*x - 1.2*seconds + rowPhase)*(1 - near);
+    float braid = 0.0045*sin(11*x + lane*3.1 - 1.9*seconds + rowPhase);
+    float y = spectrumRowY(float(row), float(rows)) + lane*thickness + wave + braid;
+    PersonalitySample out;
+    out.point = chartSpace(float2(x, y), lane*0.03, seconds);
+    float centre = exp(-pow(x/0.010, 2.0));
+    out.light = (0.40 + 0.85*fill + 1.7*near + 0.6*centre)*(0.30 + 0.70*ends)
+        *(1 - smoothstep(0.94, 1.0, abs(h)));
+    float side = smoothstep(-0.8, 0.8, h);
+    out.color = mix(float3(0.26,0.80,1.0), float3(0.62,0.32,1.0), side);
+    out.color = mix(out.color, float3(0.78,0.92,1.0), near*0.5);
+    return out;
+}
+
+float2 radarCorner(uint i, uint n, float radius) {
+    float a = -M_PI_F*0.5 + tau*float(i % n)/float(n);
+    return float2(cos(a), sin(a))*radius + float2(0, chartCenterY);
+}
+
+// The values as a closed polygon over a faint web of rings and spokes.
+PersonalitySample radarSample(float u, uint instance, float count, constant float4 *values, float seconds) {
+    uint n = uint(clamp(count, 3.0, 12.0));
+    uint group = instance % 4;
+    uint index = instance / 4;
+    float t = fract(u);
+    float lane;
+    PersonalitySample out;
+    float2 q;
+    if (group == 0 || group == 2) {
+        // The profile itself: 60 loops around the polygon.
+        uint loop = instance/2;
+        lane = (float(loop) + 0.5)/60.0*2 - 1;
+        float seg = t*float(n);
+        uint i = uint(floor(seg)) % n;
+        float f = fract(seg);
+        float vi = clamp(personalityValue(values, i), 0.0, 1.0);
+        float vj = clamp(personalityValue(values, (i + 1) % n), 0.0, 1.0);
+        float2 a = radarCorner(i, n, radarRadius*(0.10 + 0.90*vi));
+        float2 b = radarCorner(i + 1, n, radarRadius*(0.10 + 0.90*vj));
+        float edge = length(b - a);
+        float nearA = exp(-pow(f*edge/0.075, 2.0))*(0.3 + 0.7*vi*vi);
+        float nearB = exp(-pow((1 - f)*edge/0.075, 2.0))*(0.3 + 0.7*vj*vj);
+        float near = max(nearA, nearB);
+        float thickness = 0.016 + 0.055*near;
+        float wave = 0.008*sin(tau*3*t - 1.3*seconds + lane*1.7)*(1 - near);
+        q = mix(a, b, f) + chartNormal(a, b)*(lane*thickness + wave);
+        out.light = 0.75 + 2.0*near;
+        float hue = 0.5 + 0.5*sin(t*tau - 0.6);
+        out.color = mix(mix(float3(0.26,0.80,1.0), float3(0.62,0.32,1.0), hue), float3(0.80,0.92,1.0), near*0.55);
+    } else if (group == 1) {
+        // Rings at the full and half scale.
+        bool inner = index % 3 == 2;
+        lane = (float(index % 10) + 0.5)/10.0*2 - 1;
+        float radius = radarRadius*(inner ? 0.5 : 1.0);
+        float seg = t*float(n);
+        uint i = uint(floor(seg)) % n;
+        float2 a = radarCorner(i, n, radius), b = radarCorner(i + 1, n, radius);
+        q = mix(a, b, fract(seg)) + chartNormal(a, b)*lane*0.006;
+        out.light = inner ? 0.16 : 0.26;
+        out.color = float3(0.20, 0.36, 1.0);
+    } else {
+        // Spokes, each loop out to the rim and back.
+        uint spoke = index % n;
+        float phase = (u + 0.5)*tau;
+        float h = asin(0.995*cos(phase))/asin(0.995);
+        float pass = tanh(sin(phase)/0.04);
+        lane = pass*0.5;
+        float2 rim = radarCorner(spoke, n, radarRadius);
+        float2 centre = float2(0, chartCenterY);
+        q = mix(centre, rim, 0.5 + 0.5*h) + chartNormal(centre, rim)*pass*0.003;
+        out.light = 0.24*(1 - smoothstep(0.9, 1.0, abs(h)));
+        out.color = float3(0.24, 0.40, 1.0);
+    }
+    out.point = chartSpace(q, lane*0.03, seconds);
+    return out;
+}
+
+float2 enneagramPoint(uint type) {
+    float a = tau*float(type % 9)/9.0;
+    return float2(sin(a), -cos(a))*enneagramRadius + float2(0, chartCenterY);
+}
+
+constant uint enneagramHexad[6] = {1, 4, 2, 8, 5, 7};
+constant uint enneagramTriangle[3] = {9, 3, 6};
+
+// The circle with its triangle and hexad; an orb at each point grows with
+// how much of that type the answers show.
+PersonalitySample enneagramSample(float u, uint instance, constant float4 *values, float seconds) {
+    uint type = uint(clamp(personalityValue(values, 9), 1.0, 9.0));
+    uint wing = uint(clamp(personalityValue(values, 10), 1.0, 9.0));
+    uint group = instance % 3;
+    uint index = instance / 3;
+    float t = fract(u);
+    PersonalitySample out;
+    float2 q;
+    float lane;
+    if (group == 0) {
+        lane = (float(index) + 0.5)/40.0*2 - 1;
+        float a = t*tau;
+        float2 dir = float2(sin(a), -cos(a));
+        float typeAngle = tau*float(type % 9)/9.0;
+        float gap = abs(fract((a - typeAngle)/tau + 0.5) - 0.5)*tau;
+        float near = exp(-pow(gap/0.16, 2.0));
+        q = dir*(enneagramRadius + lane*(0.010 + 0.030*near)) + float2(0, chartCenterY);
+        out.light = 0.45 + 1.4*near;
+        out.color = mix(float3(0.26,0.70,1.0), float3(0.55,0.30,1.0), 0.5 + 0.5*sin(a));
+    } else if (group == 1) {
+        bool triangle = index % 3 == 0;
+        uint corners = triangle ? 3 : 6;
+        lane = (float(index % 9) + 0.5)/9.0*2 - 1;
+        float seg = t*float(corners);
+        uint i = uint(floor(seg)) % corners;
+        uint from = triangle ? enneagramTriangle[i] : enneagramHexad[i];
+        uint to = triangle ? enneagramTriangle[(i + 1) % corners] : enneagramHexad[(i + 1) % corners];
+        float2 a = enneagramPoint(from), b = enneagramPoint(to);
+        q = mix(a, b, fract(seg)) + chartNormal(a, b)*lane*0.007;
+        bool touches = from == type || to == type;
+        out.light = touches ? 1.05 : 0.32;
+        out.color = touches ? float3(0.45,0.85,1.0) : float3(0.30,0.32,0.95);
+    } else {
+        uint point = index % 9 + 1;
+        float ring = float(index / 9);
+        float affinity = clamp(personalityValue(values, point - 1), 0.0, 1.0);
+        float strength = point == type ? 1.5 : (point == wing ? 1.1 : 0.35 + 0.65*affinity);
+        float radius = (0.012 + 0.013*ring)*strength*(1 + 0.05*sin(seconds*1.6 + float(point)));
+        float a = t*tau;
+        lane = ring/2 - 1;
+        q = enneagramPoint(point) + float2(cos(a), sin(a))*radius;
+        out.light = point == type ? 3.0 : (point == wing ? 1.8 : 0.5 + 1.2*affinity*affinity);
+        out.color = point == type ? float3(0.80,0.94,1.0) : float3(0.45,0.70,1.0);
+    }
+    out.point = chartSpace(q, lane*0.02, seconds);
+    return out;
+}
+
+float3 wheelColor(float2 q) {
+    bool right = q.x >= 0, below = q.y >= chartCenterY;
+    // Top left, top right, bottom right, bottom left.
+    if (!right && !below) return float3(1.0, 0.36, 0.46);
+    if (right && !below) return float3(1.0, 0.80, 0.30);
+    if (right && below) return float3(0.36, 0.95, 0.56);
+    return float3(0.30, 0.60, 1.0);
+}
+
+float wheelStrength(float2 q, constant float4 *values) {
+    bool right = q.x >= 0, below = q.y >= chartCenterY;
+    uint quadrant = !below ? (right ? 1u : 0u) : (right ? 2u : 3u);
+    return clamp(personalityValue(values, 2 + quadrant), 0.0, 1.0);
+}
+
+// Four coloured quarters, each as bright as that style is strong, and an orb
+// where the answers put the user.
+PersonalitySample wheelSample(float u, uint instance, constant float4 *values, float seconds) {
+    float2 marker = float2(clamp(personalityValue(values, 0), -1.0, 1.0),
+                           clamp(personalityValue(values, 1), -1.0, 1.0))*wheelRadius + float2(0, chartCenterY);
+    uint group = instance % 3;
+    uint index = instance / 3;
+    float t = fract(u);
+    PersonalitySample out;
+    float2 q;
+    float lane;
+    if (group == 0) {
+        lane = (float(index) + 0.5)/40.0*2 - 1;
+        float a = t*tau;
+        float2 dir = float2(sin(a), -cos(a));
+        float strength = wheelStrength(dir*wheelRadius + float2(0, chartCenterY), values);
+        float wave = 0.008*sin(5*a - 1.2*seconds + lane*2.0);
+        q = dir*(wheelRadius + lane*(0.012 + 0.030*strength) + wave) + float2(0, chartCenterY);
+        out.light = 0.30 + 1.5*strength;
+        out.color = wheelColor(q);
+    } else if (group == 1) {
+        bool vertical = index % 2 == 0;
+        float phase = (u + 0.5)*tau;
+        float h = asin(0.995*cos(phase))/asin(0.995);
+        float pass = tanh(sin(phase)/0.04);
+        lane = pass*0.5;
+        float along = h*wheelRadius*0.96;
+        float across = pass*0.0035 + (float(index/2) - 9.5)*0.0006;
+        q = (vertical ? float2(across, along) : float2(along, across)) + float2(0, chartCenterY);
+        out.light = 0.28*(1 - smoothstep(0.9, 1.0, abs(h)));
+        out.color = float3(0.40, 0.55, 1.0);
+    } else {
+        float ring = float(index % 40);
+        float a = t*tau;
+        float radius = (0.012 + 0.0022*ring)*(1 + 0.06*sin(seconds*1.6));
+        lane = ring/20 - 1;
+        q = marker + float2(cos(a), sin(a))*radius;
+        out.light = 2.6*(1 - 0.6*ring/40);
+        out.color = mix(float3(0.92,0.97,1.0), wheelColor(marker), ring/40*0.8);
+    }
+    out.point = chartSpace(q, lane*0.02, seconds);
+    return out;
+}
+
+PersonalitySample personalitySample(float kind, float count, constant float4 *values,
+                                    float u, uint instance, float seconds) {
+    if (kind > 3.5) return wheelSample(u, instance, values, seconds);
+    if (kind > 2.5) return enneagramSample(u, instance, values, seconds);
+    if (kind > 1.5) return radarSample(u, instance, count, values, seconds);
+    return spectrumSample(u, instance, count, values, seconds);
+}
+
+float personalityEase(float k) { return k*k*k*(k*(k*6 - 15) + 10); }
+
+// Rows weave in from the top down, each loop with its own small delay.
+float personalityAmount(float u, uint instance, constant WelcomeUniforms &p) {
+    if (p.lock.w < 0.5 || p.personality.x <= 0 || p.matchLayout.w > 0.5) return 0.0;
+    uint rows = uint(clamp(p.personalityShape.y, 1.0, 12.0));
+    float order = rows > 1 ? float(instance % rows)/float(rows - 1) : 0.0;
+    float jitter = 0.18*(0.5 + 0.5*sin(u*tau + float(instance)*0.37));
+    return personalityEase(clamp(p.personality.x*1.6 - 0.40*order - jitter, 0.0, 1.0));
+}
+
+PersonalitySample personalityTarget(float u, uint instance, constant WelcomeUniforms &p) {
+    float seconds = p.shape.w;
+    PersonalitySample to = personalitySample(p.personality.w, p.personalityShape.y, p.personalityTo,
+                                             u, instance, seconds);
+    if (p.personality.y >= 1) return to;
+    PersonalitySample from = personalitySample(p.personality.z, p.personalityShape.x, p.personalityFrom,
+                                               u, instance, seconds);
+    float jitter = 0.30*(0.5 + 0.5*sin(u*tau + float(instance)*0.53));
+    float k = personalityEase(clamp(p.personality.y*1.3 - jitter, 0.0, 1.0));
+    PersonalitySample out;
+    out.point = mix(from.point, to.point, k);
+    out.light = mix(from.light, to.light, k);
+    out.color = mix(from.color, to.color, k);
+    return out;
+}
+
 // The match heart mirrors WelcomeLightMatch. Each ring is one open strand:
 // in from above, through the top cusp into the opposite lobe, through the tip
 // and along the line under the opposite score. Ring 0's lobe is on the right.
@@ -463,20 +750,24 @@ constant float chatRingEnd = 0.94;
 constant float chatSeamWidth = 0.06;
 constant float chatRingX = \#(WelcomeLightMatch.Chat.ringCenterX), chatRingY = \#(WelcomeLightMatch.Chat.ringCenterY);
 constant float chatRingRadius = \#(WelcomeLightMatch.Chat.ringRadius);
+// Each ring leans back or forward by this much once it has closed, and is
+// drawn this much taller, so it still looks round while leaning.
+constant float chatRingLean = \#(WelcomeLightMatch.Chat.ringLean);
+constant float chatRingStretch = \#(WelcomeLightMatch.Chat.ringStretch);
 
 float2 chatRingCenter(float side, float4 layout) {
     return float2(side*chatRingX, chatRingY)*layout.x + float2(0, layout.y);
 }
 
-float2 chatRing(float s, float side, float4 layout, float seconds, thread float2 &direction) {
+float2 chatRing(float s, float side, float4 layout, float seconds, float stretch, thread float2 &direction) {
     float2 center = chatRingCenter(side, layout);
     float radius = chatRingRadius*layout.x*(1 + 0.018*sin(seconds*1.3 + side*0.9));
     // Start where the cusp sits on this ring, running the lobe's way round.
     float2 cusp = float2(0, matchCuspY)*layout.x + float2(0, layout.y) - center;
     float start = atan2(cusp.y, side*cusp.x);
     float angle = start + (s - matchCuspS)/(chatRingEnd - matchCuspS)*tau;
-    direction = float2(-side*sin(angle), cos(angle));
-    return center + float2(side*cos(angle), sin(angle))*radius;
+    direction = float2(-side*sin(angle), cos(angle)*stretch);
+    return center + float2(side*cos(angle), sin(angle)*stretch)*radius;
 }
 
 // Light along a ring: the start fades in exactly where the end fades out.
@@ -493,21 +784,24 @@ float chatAmount(float s, constant WelcomeUniforms &p) {
     return k*k*(3 - 2*k);
 }
 
-// The rings circle each other round a vertical axis through their middle,
-// seen from a little above: the far ring rises, shrinks and dims, the near
-// one passes in front. Each ring also turns a little on its own axis.
+// Like the welcome screen's rings: the two overlap and hook into each other
+// like links of a chain, one leaning back and the other forward, so where
+// they cross one passes in front at the top and the other at the bottom.
+// The linked pair then turns as one piece round a vertical axis through its
+// middle, drawn with perspective so the near side grows and the far side
+// recedes and dims.
 float3 chatOrbit(float2 q, float z, float side, constant WelcomeUniforms &p) {
-    float theta = p.chat.y;
-    if (theta == 0) return float3(q, z);
+    float settle = smoothstep(0.45, 1.0, p.chat.x);
     float2 center = chatRingCenter(side, p.matchLayout);
-    float2 pivot = float2(0, center.y);
     float2 local = q - center;
-    float c = cos(theta), s = sin(theta);
-    float yaw = 0.42*s;
-    float depth = center.x*s + local.x*sin(yaw);
-    float2 moved = float2(center.x*c + local.x*cos(yaw), center.y - center.x*s*0.24 + local.y);
-    float perspective = 1.0/(1.0 + depth*0.42);
-    return float3(pivot + (moved - pivot)*perspective, z + depth*0.9);
+    float lean = side*chatRingLean*settle;
+    float3 link = float3(q.x, center.y + local.y*cos(lean), local.y*sin(lean));
+    float c = cos(p.chat.y), s = sin(p.chat.y);
+    float x = link.x*c + link.z*s;
+    float depth = -link.x*s + link.z*c;
+    float perspective = 1.0/(1.0 + depth*0.32);
+    // Perspective about the pair's middle, so the rings stay where they are.
+    return float3(x*perspective, center.y + (link.y - center.y)*perspective, z + depth*0.9);
 }
 
 float3 matchPointAt(float s, uint instance, constant WelcomeUniforms &p) {
@@ -535,7 +829,9 @@ float3 matchPointAt(float s, uint instance, constant WelcomeUniforms &p) {
     float chat = chatAmount(s, p);
     if (chat > 0) {
         float2 ringDirection;
-        float2 ring = chatRing(s, side, p.matchLayout, seconds, ringDirection);
+        // Taller exactly as fast as the ring leans, so it always looks round.
+        float settle = smoothstep(0.45, 1.0, p.chat.x);
+        float2 ring = chatRing(s, side, p.matchLayout, seconds, mix(1.0, chatRingStretch, settle), ringDirection);
         base = mix(base, ring, chat);
         direction = normalize(mix(direction, ringDirection, chat) + float2(1e-7, 0));
     }
@@ -655,6 +951,8 @@ float3 lockedRibbonPoint(float u, uint instance, constant WelcomeUniforms &p, de
         float2 local;
         target = mix(target, codePoint(u, instance, p, local), code);
     }
+    float chart = personalityAmount(u, instance, p);
+    if (chart > 0) target = mix(target, personalityTarget(u, instance, p).point, chart);
     return mix(heart, target, k);
 }
 
@@ -732,8 +1030,13 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
     float code = codeAmount(u, instance, p)*(1 - matchHeart);
     float2 local = float2(0);
     if (code > 0) codePoint(u, instance, p, local);
+    float chart = personalityAmount(u, instance, p)*(1 - matchHeart);
+    PersonalitySample chartSample;
+    chartSample.light = 1;
+    chartSample.color = float3(0);
+    if (chart > 0) chartSample = personalityTarget(u, instance, p);
     float light = pow(0.5 + 0.5*sin(u*tau*2 - lightClock*3 + phase), 3.0);
-    float highlight = (strand % 20 == 6 && sheet != 1) ? 1.0 - code : 0.0;
+    float highlight = (strand % 20 == 6 && sheet != 1) ? (1.0 - code)*(1.0 - chart) : 0.0;
     float3 cyan = mix(float3(0.035, 0.63, 1.0), float3(0.22, 0.63, 0.88), heartFlow);
     float3 blue = float3(0.07, 0.18, 0.95);
     float3 pink = mix(float3(0.68, 0.085, 0.50), float3(0.56, 0.18, 0.80), heartFlow);
@@ -751,6 +1054,7 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
                            float3(0.68,0.50,1.0), smoothstep(0.45, 1.0, diagonal));
     codeColor = mix(codeColor, float3(0.60,0.90,1.0), tint*0.25);
     helixColor = mix(helixColor, codeColor, code);
+    helixColor = mix(helixColor, mix(chartSample.color, float3(0.60,0.90,1.0), tint*0.2), chart);
     color = mix(color, helixColor, max(helix, matchHeart));
     color = mix(color, float3(0.47,0.84,1), highlight*light*0.5);
     RibbonVertex out;
@@ -787,6 +1091,7 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
     float helixLight = (0.55 + 1.1*rim - 0.25*aura)*(1 - 0.4*back)*(sheet == 0 ? 1.0 : 0.85)
                      *rungSpan*endpoint;
     helixLight = mix(helixLight, 2.6, code);
+    helixLight = mix(helixLight, chartSample.light, chart);
     out.intensity *= mix(1.0, helixLight, helix);
     float visible = mix(smoothstep(-0.008,0.008,p.entrance.x-travel),1.0,
                         smoothstep(0.97,1.0,p.entrance.x));

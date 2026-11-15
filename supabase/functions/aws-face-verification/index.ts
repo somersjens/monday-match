@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.95.3";
 import { RekognitionClient, CreateFaceLivenessSessionCommand, GetFaceLivenessSessionResultsCommand,
   DetectFacesCommand, CompareFacesCommand } from "npm:@aws-sdk/client-rekognition@3.1010.0";
 import { STSClient, AssumeRoleCommand } from "npm:@aws-sdk/client-sts@3.1010.0";
-import { CONSENT, MINIMUM_SIMILARITY, REGION, passesVerification, uuid } from "./policy.ts";
+import { CONSENT, MINIMUM_SIMILARITY, REGION, passesVerification, uuid, readLimitedJSON } from "./policy.ts";
 
 const response = (status: number, body: object) => new Response(JSON.stringify(body), {
   status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
@@ -24,9 +24,7 @@ Deno.serve(async (request: Request) => {
   const sts = new STSClient({ region: REGION, credentials });
   try {
     if (Number(request.headers.get("Content-Length") ?? 0) > 2048) return response(413, { error: "Request too large" });
-    const raw = await request.text();
-    if (raw.length > 2048) return response(413, { error: "Request too large" });
-    const body = JSON.parse(raw);
+    const body = await readLimitedJSON(request);
     const userID = auth.user.id;
     if (body.action === "start") {
       if (!uuid(body.photo_id) || body.consent_version !== CONSENT) return response(400, { error: "Photo and consent required" });
@@ -87,7 +85,9 @@ Deno.serve(async (request: Request) => {
     });
     if (completionError) return response(409, { error: "Photo or session changed; start again" });
     return response(200, { verified: verified === true });
-  } catch {
+  } catch (error) {
+    if (error instanceof RangeError) return response(413, { error: "Request too large" });
+    if (error instanceof SyntaxError || error instanceof TypeError) return response(400, { error: "Invalid request" });
     return response(502, { error: "Verification service unavailable. Start a new check or try again shortly." });
   } finally {
     aws.destroy(); sts.destroy();

@@ -1,8 +1,8 @@
 # Supabase matching backend
 
-Migrations `202611140002_matching.sql` through `202611140006_aws_photo_verification.sql`
+Migrations `202611140002_matching.sql` through `202611140009_match_chat.sql`
 extend the existing private profile backup. Apply them once, in order, after
-`202611140001_profiles.sql`. Migrations 002–005 were applied manually to the Stop Swiping
+`202611140001_profiles.sql`. Migrations 002–009 were applied manually to the Stop Swiping
 Supabase project on 14 November 2026 through its SQL Editor. Do not replay them
 against that project. Manual SQL Editor application does not register versions
 in the Supabase CLI migration history; reconcile that history before adopting
@@ -61,8 +61,8 @@ are additional automatic-matching checks beyond the local exchange report.
 
 The 50 question IDs match `CompatibilityScaleQuestion`. Scores use the local
 `MatchReport` formula: weights 0/1/2/4/8 for importance 1–5, linear closeness
-over the four-step personality scale and five-step substance scale, including
-the inferred substance importance. Each direction must meet that user's own
+over the four-step personality scale. Alcohol, smoking and drugs are hard
+limits only and do not influence the percentage (migration 008). Each direction must meet that user's own
 minimum percentage; an average cannot conceal one failing direction. Both
 scores and the algorithm version are frozen in the match row.
 
@@ -191,12 +191,15 @@ tests, asserts the lifecycle/score/security rules, then rolls back. On failure
 the transaction aborts; run `rollback` if reusing a direct database connection.
 The identity sequence may advance, but no fixture rows remain.
 
-Live validation on 14 November 2026: all **54 assertions passed**. A separate
+Live validation on 14 November 2026: all **85 assertions passed** against the
+current question-only scoring, chat and AWS-verification schema. A separate
 post-rollback check found zero remaining fixture accounts/profiles, zero users
 simultaneously waiting and reserved, zero invalid active reservations and zero
-matching tables without RLS. The 50 server question IDs were also checked
-against the current Swift catalog. Those original checks predate the live chat/AWS changes; additional verification
-is recorded with the current implementation.
+matching tables without RLS. The deployed Edge Function also rejected missing,
+invalid and publishable-key-only sessions with HTTP 401. The 50 server question IDs were also checked
+against the current Swift catalog. The current iOS chat/AWS/Supabase regression run also passed **28 tests**; the
+earlier broader run passed **101 tests**. Chat renders were checked at 320 and
+393 points. The Edge Function typecheck and its three policy/input tests pass.
 
 The initial design serializes writers and scans candidate profiles. It is suited
 to validating the first real pool; it has not been load-tested with concurrent

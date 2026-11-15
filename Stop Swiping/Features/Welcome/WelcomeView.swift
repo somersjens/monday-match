@@ -41,6 +41,10 @@ struct WelcomeView: View {
     /// The profile as a code. It stays while the code turns back into the helix.
     @State private var shareCode: WelcomeLightCode.Matrix?
     @State private var showsScanner = false
+    /// The personality model the helix is shown as; nil shows the helix.
+    @State private var personalityTest: PersonalityTest?
+    /// The model the helix opens on next time.
+    @State private var lastPersonalityTest = PersonalityTest.mbti
     /// A profile read by the in-app scanner, waiting for its match to be shown.
     @State private var scannedProfile: ProfileCreationState?
 
@@ -165,6 +169,13 @@ struct WelcomeView: View {
         }
     }
 
+    /// The chart the helix is rewoven into, while nothing else needs the light.
+    private var personalityResult: PersonalityResult? {
+        guard let personalityTest, stage == .complete, lightStage == .complete, activeMatch == nil,
+              demoPhase == nil, !showsCode, !showsAccess else { return nil }
+        return PersonalityEstimator.result(for: personalityTest, state: profileCreation.state)
+    }
+
     private var restartDemoAction: (() -> Void)? { isDemoPlaying ? { startDemoMatch() } : nil }
 
     /// This screen as a phone in the explanation.
@@ -218,7 +229,8 @@ struct WelcomeView: View {
                                           framesPerSecond: isOnboarding ? 30 : 60,
                                           helixEntryDistance: sideEntry / max(animationWidth * 0.42, 1)
                                             + WelcomeLightHelix.radius + 0.12,
-                                          match: lightMatch)
+                                          match: lightMatch,
+                                          personality: personalityResult?.visual)
                         .frame(width: animationWidth, height: drawingHeight)
                         .scaleEffect(showsAccess ? AccessScreenMotion.lightScale(for: animationWidth)
                                      : (isOnboarding ? 0.62 : (isChatting ? MatchChatLayout.lightScale : 1)))
@@ -231,7 +243,7 @@ struct WelcomeView: View {
                         )
 
                     if !showsAccess && stage == .complete && lightStage == .complete && canShowCode && activeMatch == nil {
-                        Button(action: toggleCode) {
+                        Button(action: tapHelix) {
                             Color.clear
                                 .frame(width: min(proxy.size.width, 620) * 0.6, height: lightHeight * 0.85)
                                 .contentShape(Rectangle())
@@ -240,7 +252,20 @@ struct WelcomeView: View {
                         .position(x: proxy.size.width / 2, y: animationHeight / 2)
                         .disabled(isTransitioning)
                         .accessibilityLabel(showsCode ? L10n("QR code") : L10n("Your profile DNA"))
-                        .accessibilityHint(showsCode ? L10n("Turns back into your DNA.") : L10n("Turns into a QR code."))
+                        .accessibilityHint(showsCode || personalityTest != nil
+                                           ? L10n("Turns back into your DNA.")
+                                           : L10n("Shows your personality estimates."))
+
+                        if let personalityResult {
+                            PersonalityChartLabels(result: personalityResult,
+                                                   center: CGPoint(x: proxy.size.width / 2, y: animationHeight / 2),
+                                                   unit: animationWidth * 0.42)
+                                .id(personalityResult.test)
+                                .transition(.asymmetric(
+                                    insertion: .opacity.animation(.easeInOut(duration: 0.45)
+                                        .delay(reduceMotion ? 0 : WelcomeLightPersonality.crossDuration * 0.75)),
+                                    removal: .opacity.animation(.easeOut(duration: 0.2))))
+                        }
 
                         // Fixed to the screen's safe top-right corner.
                         HelixCodeButton(showsCode: showsCode, action: toggleCode)
@@ -316,6 +341,12 @@ struct WelcomeView: View {
                     } else if stage == .complete, demoPhase != nil {
                         // The explanation's phones show only their light.
                         Color.clear
+                    } else if stage == .complete, let personalityResult {
+                        PersonalityPanel(result: personalityResult, onSelect: selectPersonalityTest,
+                                         onClose: closePersonality)
+                            .transition(reduceMotion
+                                ? .opacity
+                                : .opacity.combined(with: .scale(scale: 0.97, anchor: .bottom)))
                     } else if stage == .complete {
                         completionControls
                             .transition(reduceMotion
@@ -466,6 +497,11 @@ struct WelcomeView: View {
         }
         .onChange(of: canShowScannedMatch && (scannedProfile != nil || codeInbox.pending != nil), initial: true) { _, ready in
             if ready { showScannedMatch() }
+        }
+        // With a match you are matched with that one person only: the app
+        // opens on it, and straight into the conversation once it has started.
+        .onChange(of: canShowScannedMatch && hasAccount && liveMatches.match != nil, initial: true) { _, ready in
+            if ready { openLiveMatch() }
         }
         .onChange(of: showsOverview) { _, shown in
             // The code holds the answers themselves, so edits change it.
@@ -719,8 +755,32 @@ struct WelcomeView: View {
         onProfileDeleted()
     }
 
+    /// The helix opens its personality estimates; the code and the charts
+    /// turn back into the helix.
+    private func tapHelix() {
+        guard !isTransitioning, activeMatch == nil else { return }
+        if showsCode {
+            toggleCode()
+        } else if personalityTest != nil {
+            closePersonality()
+        } else {
+            withAnimation(.easeInOut(duration: 0.3)) { personalityTest = lastPersonalityTest }
+        }
+    }
+
+    private func selectPersonalityTest(_ test: PersonalityTest) {
+        guard test.isAvailable else { return }
+        lastPersonalityTest = test
+        withAnimation(.easeInOut(duration: 0.3)) { personalityTest = test }
+    }
+
+    private func closePersonality() {
+        withAnimation(.easeInOut(duration: 0.3)) { personalityTest = nil }
+    }
+
     private func toggleCode() {
         guard !isTransitioning, activeMatch == nil else { return }
+        personalityTest = nil
         guard profileCreation.state.canShareProfile else {
             if profileCreation.hasDisplayName { showsProfilePrivacy = true }
             return
@@ -781,6 +841,7 @@ struct WelcomeView: View {
         scoreDetail = nil
         showsMatchProfile = false
         showsCode = false
+        personalityTest = nil
         guard !reduceMotion, WelcomeLightMetalView.isAvailable else {
             demoStarts += 1
             present(snapshot)
@@ -867,15 +928,29 @@ struct WelcomeView: View {
 
     /// New matches send the helix away; saved matches unfold it in place.
     /// The labels follow the selected light timeline.
-    private func present(_ snapshot: MatchSnapshot, transition: WelcomeLightMatch.Transition = .newMatch) {
+    private func present(_ snapshot: MatchSnapshot, transition: WelcomeLightMatch.Transition = .newMatch,
+                         chatting: Bool = false) {
         let report = snapshot.report
-        isTransitioning = true
         showsCode = false
+        personalityTest = nil
+        matchStartedAt = Date()
+        if chatting {
+            // Back into an open conversation: the helix flows straight into
+            // the rings and the messages are already there.
+            matchTask?.cancel()
+            matchReveal = .controls
+            isChatting = true
+            activeMatch = ActiveMatch(snapshot: snapshot, report: report)
+            lightMatch = WelcomeLightMatch.Request(id: snapshot.id, isMatch: report.isMatch,
+                                                   transition: transition, isChatting: true)
+            isTransitioning = false
+            return
+        }
+        isTransitioning = true
         matchReveal = .hidden
         withAnimation(.easeOut(duration: 0.35)) {
             activeMatch = ActiveMatch(snapshot: snapshot, report: report)
         }
-        matchStartedAt = Date()
         lightMatch = WelcomeLightMatch.Request(id: snapshot.id, isMatch: report.isMatch, transition: transition)
         AccessibilityNotification.Announcement(report.isMatch
             ? L10n("\(report.average) percent, a match with \(snapshot.name).")
@@ -964,7 +1039,8 @@ struct WelcomeView: View {
         liveMatches.markSeen(snapshot.id)
         showsCode = false
         activeChat = liveMatches.chat
-        present(snapshot, transition: transition)
+        present(snapshot, transition: transition,
+                chatting: activeChat != nil && liveMatches.hasStartedChat(snapshot.id))
     }
 
     /// The heart's tip pulls up into two rings, the light rises under the
@@ -981,6 +1057,7 @@ struct WelcomeView: View {
             isChatting = true
         }
         activeChat?.markAllRead()
+        if activeChat?.isLive == true { liveMatches.markChatStarted(activeMatch.snapshot.id) }
         AccessibilityNotification.Announcement(L10n("Conversation with \(activeMatch.snapshot.name)")).post()
     }
 

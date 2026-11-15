@@ -122,8 +122,8 @@ enum WelcomeLightMatch {
         /// When the turning starts, and how long it takes to reach full speed.
         static let orbitStart = 1.8
         static let orbitRamp = 2.6
-        /// One full turn of the pair, in seconds.
-        static let orbitPeriod = 9.0
+        /// One full turn of the linked pair, in seconds.
+        static let orbitPeriod = 8.0
 
         static func progress(elapsed: Double, reduceMotion: Bool = false) -> Double {
             if reduceMotion { return 1 }
@@ -148,8 +148,12 @@ enum WelcomeLightMatch {
 
         /// The middle of the rings, in the light's normalized space.
         static let ringCenterY = -0.40
-        static let ringCenterX = 0.48
+        /// Less than the radius: the rings overlap, so they can hook together.
+        static let ringCenterX = 0.38
         static let ringRadius = 0.47
+        /// How far each ring leans out of the screen's plane, in radians.
+        static let ringLean = 0.42
+        static let ringStretch = 1.0 / cos(ringLean)
     }
 
     /// Where the heart and the line between the scores sit.

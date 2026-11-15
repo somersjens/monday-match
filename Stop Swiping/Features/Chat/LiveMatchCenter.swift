@@ -83,6 +83,10 @@ final class LiveMatchCenter: ObservableObject {
     func hasBeenSeen(_ id: UUID) -> Bool { defaults.bool(forKey: Self.key("seen", id)) }
     func markSeen(_ id: UUID) { defaults.set(true, forKey: Self.key("seen", id)) }
 
+    /// Once the conversation has been opened, the app opens straight into it.
+    func hasStartedChat(_ id: UUID) -> Bool { defaults.bool(forKey: Self.key("chatting", id)) }
+    func markChatStarted(_ id: UUID) { defaults.set(true, forKey: Self.key("chatting", id)) }
+
     /// Called after breaking or reporting: the server match is gone.
     func forget() {
         match = nil

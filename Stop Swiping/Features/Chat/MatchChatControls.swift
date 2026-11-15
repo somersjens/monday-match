@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// The single gear in the chat's top right: your own profile, both scores,
-/// and the two ways out of a match.
+/// and the two ways out of a match. Drawn as its own panel so every option
+/// fits on one line.
 struct MatchSettingsMenu: View {
     let name: String
     let onViewProfile: () -> Void
@@ -9,26 +10,10 @@ struct MatchSettingsMenu: View {
     let onReport: (ReportReason) -> Void
     let onBreak: () -> Void
 
+    @State private var isOpen = false
+
     var body: some View {
-        Menu {
-            Button(L10n("View your profile"), systemImage: "person.crop.circle", action: onViewProfile)
-            Section {
-                Button(L10n("Your match with \(name)"), systemImage: "arrow.right.circle") { onShowScores(.yours) }
-                Button(L10n("\(name)’s match with you"), systemImage: "arrow.left.circle") { onShowScores(.theirs) }
-            }
-            Section {
-                Menu {
-                    ForEach(ReportReason.allCases) { reason in
-                        Button(reason.title, systemImage: reason.symbol) { onReport(reason) }
-                    }
-                } label: {
-                    Label(L10n("Report your match"), systemImage: "exclamationmark.triangle")
-                }
-                Button(role: .destructive, action: onBreak) {
-                    Label(L10n("Break your match"), systemImage: "heart.slash")
-                }
-            }
-        } label: {
+        Button { isOpen = true } label: {
             Image(systemName: "gearshape")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(OnboardingTheme.accentGradient)
@@ -37,8 +22,131 @@ struct MatchSettingsMenu: View {
                 .overlay { Circle().strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5) }
                 .contentShape(Circle())
         }
+        .buttonStyle(.plain)
         .accessibilityLabel(L10n("Match settings"))
         .accessibilityIdentifier("chat.settings")
+        .popover(isPresented: $isOpen, attachmentAnchor: .point(.bottom), arrowEdge: .top) {
+            MatchSettingsPanel(name: name) { choice in
+                isOpen = false
+                Task {
+                    // Let the panel close before a sheet or alert takes over.
+                    try? await Task.sleep(for: .milliseconds(380))
+                    switch choice {
+                    case .profile: onViewProfile()
+                    case .scores(let perspective): onShowScores(perspective)
+                    case .report(let reason): onReport(reason)
+                    case .breakMatch: onBreak()
+                    }
+                }
+            }
+            .presentationCompactAdaptation(.popover)
+            .presentationBackground(.ultraThinMaterial)
+            .preferredColorScheme(.dark)
+        }
+    }
+}
+
+private struct MatchSettingsPanel: View {
+    enum Choice {
+        case profile
+        case scores(MatchReport.Perspective)
+        case report(ReportReason)
+        case breakMatch
+    }
+
+    let name: String
+    let onChoose: (Choice) -> Void
+
+    @State private var showsReasons = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            if showsReasons {
+                reasons
+                    .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
+            } else {
+                options
+                    .transition(reduceMotion ? .opacity : .move(edge: .leading).combined(with: .opacity))
+            }
+        }
+        .frame(width: 310)
+        .padding(.vertical, 6)
+        .animation(.spring(duration: 0.32, bounce: 0.1), value: showsReasons)
+    }
+
+    private var options: some View {
+        VStack(spacing: 0) {
+            row(L10n("View your profile"), symbol: "person.crop.circle") { onChoose(.profile) }
+            divider
+            row(L10n("Your match with \(name)"), symbol: "arrow.right.circle") { onChoose(.scores(.yours)) }
+            row(L10n("\(name)’s match with you"), symbol: "arrow.left.circle") { onChoose(.scores(.theirs)) }
+            divider
+            row(L10n("Report your match"), symbol: "exclamationmark.triangle", showsChevron: true) { showsReasons = true }
+            row(L10n("Break your match"), symbol: "heart.slash", isDestructive: true) { onChoose(.breakMatch) }
+        }
+    }
+
+    private var reasons: some View {
+        VStack(spacing: 0) {
+            Button { showsReasons = false } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 14, weight: .semibold))
+                        .frame(width: 24)
+                    Text(L10n("Report your match"))
+                        .font(.body.weight(.semibold))
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .foregroundStyle(OnboardingTheme.primaryText)
+                .padding(.horizontal, 16)
+                .frame(minHeight: 46)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(MenuRowStyle())
+            divider
+            ForEach(ReportReason.allCases) { reason in
+                row(reason.title, symbol: reason.symbol) { onChoose(.report(reason)) }
+            }
+        }
+    }
+
+    private var divider: some View {
+        Rectangle().fill(OnboardingTheme.hairline).frame(height: 0.5).padding(.vertical, 4)
+    }
+
+    private func row(_ title: String, symbol: String, isDestructive: Bool = false,
+                     showsChevron: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .font(.system(size: 16, weight: .medium))
+                    .frame(width: 24)
+                Text(title)
+                    .font(.body)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Spacer(minLength: 0)
+                if showsChevron {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(OnboardingTheme.tertiaryText)
+                }
+            }
+            .foregroundStyle(isDestructive ? Color(red: 1, green: 0.36, blue: 0.4) : OnboardingTheme.primaryText)
+            .padding(.horizontal, 16)
+            .frame(minHeight: 46)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(MenuRowStyle())
+    }
+}
+
+private struct MenuRowStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(.white.opacity(configuration.isPressed ? 0.10 : 0))
     }
 }
 
