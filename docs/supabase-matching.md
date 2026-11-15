@@ -1,55 +1,111 @@
 # Supabase matching backend
 
-Migrations `202611140002_matching.sql` through `202611140009_match_chat.sql`
-extend the existing private profile backup. Apply them once, in order, after
-`202611140001_profiles.sql`. Migrations 002–009 were applied manually to the Stop Swiping
-Supabase project on 14 November 2026 through its SQL Editor. Do not replay them
-against that project. Manual SQL Editor application does not register versions
-in the Supabase CLI migration history; reconcile that history before adopting
-CLI deployment for this existing project.
+Migrations `202611140002_matching.sql` through `202611150010_matching_v3_moderation_history.sql`
+extend the private profile backup. Apply them once, in order, after
+`202611140001_profiles.sql`. Migrations 002–009 were applied on 14 November 2026
+and 010 on 15 November 2026, manually through the SQL Editor of the Stop
+Swiping project. Do not replay them against that project. Manual SQL Editor
+application does not register versions in the Supabase CLI migration history;
+reconcile that history before adopting CLI deployment for this project.
+
+Migration 010 renamed the pieces whose names no longer said what they do:
+
+| Before | Now |
+| --- | --- |
+| `matching_private.active_members` | `matching_private.matched_users` |
+| `matching_private.reconcile(uuid)` | `matching_private.try_match(uuid, force)` |
+| `matching_private.verified_photo(uuid, jsonb)` | `matching_private.has_verified_photo(uuid, photo_id)` |
+| `current_chat_match()` | `current_match()` |
+| `end_match(id, 'closed' \| 'blocked')` | `break_match(id)` |
+| `report_match(..., p_end_match)` | `report_partner(..., p_break_match)` |
+| `publish_match_key_bundle` | folded into `register_chat_device` |
+| `end_reason` `closed` / `blocked` | `broken` / `reported`, plus `profile_deleted`, `moderation` |
 
 ## Admission and lifecycle
 
 Every insert or update of `profiles.profile` / `profiles.backup` runs the engine
-inside the same transaction. The iOS app's existing profile synchronization
-therefore activates matching without a second network request. A failed match
-transaction also rolls back the profile update and can be retried by the app.
+inside the same transaction, so the app's normal profile sync is what enters
+someone into matching. A failed match transaction rolls back the profile save
+and can be retried.
 
 Admission requires a completed adult profile, both current privacy receipts,
-auto-matching enabled, valid matching settings, all 50 personality answers and
-all three substance answers. Missing or malformed data remains backed up but
-does not enter the pool. An unrestricted height range is encoded by the app as
-absent bounds and means 50–250 cm.
+auto-matching enabled, valid matching settings, all 50 personality answers, all
+three substance answers, and no active block or ban. Missing or malformed data
+stays backed up but does not enter the pool. An unrestricted height range is
+encoded by the app as absent bounds and means 50–250 cm.
 
-1. Already matched: return the existing match ID, with no new pool entry.
-2. Eligible and available: enter the pool; retain the original queue timestamp
-   on subsequent profile saves or retries.
-3. Evaluate all available candidates, excluding every previous pair.
-4. Check requirements and minimum scores in **both** directions.
-5. Among qualifying candidates choose the highest exact mean of both directional
-   scores. Equal means prefer the longest-waiting candidate, then UUID. Insert
-   that match, reserve both user IDs and remove both pool entries atomically.
-6. Otherwise retain the user in the pool for the next arrival or profile edit.
+1. Already matched: return the existing match ID.
+2. Build the pool entry: every requirement as a plain column, the 50 answers as
+   three small integer arrays (own answer, wanted answer, weight), the sign-in
+   identity hashes and an `inputs_hash` of all of it.
+3. Already waiting with the same `inputs_hash` (a save that changed nothing the
+   matcher uses): stop. Every arrival since already compared itself with this
+   entry, so a new search cannot find anyone. This keeps routine syncs free.
+4. Otherwise keep the original queue time and search with one SQL query: cheap
+   column filters first (gender both ways and the age window, which use the
+   `pool_gender_birth` index, plus a latitude box), then every hard requirement
+   both ways (`meets_requirements`), the verified-photo preference, both personal
+   minimum scores, and never anyone this person was matched with before.
+5. Highest sum of both scores wins; equal sums prefer the longest-waiting
+   candidate, then UUID. Insert the match, reserve both people, store both
+   identity hashes with it and remove both from the pool atomically.
 
-A global transaction advisory lock serializes matching, ending, key publication
-and message sends. A primary key on the active user reservations independently
-prevents double booking. A unique, canonically ordered pair in `matches`
-prevents the same two account IDs ever matching again, including after profile
-deletion/recreation, off/on toggles, retries, or ending/blocking the match.
-This exclusion applies to account IDs; a newly registered account has a new
-identity and cannot be linked automatically to a deleted account.
+Matching, breaking, moderation and photo verification share one transaction
+advisory lock. Chat does not take it any more: `send_encrypted_message` and
+`register_chat_device` take a share lock on the match row, which `break_match`
+must update, so a message lands either before the break or not at all. A primary
+key on `matched_users` independently prevents double booking.
 
-`end_match` retains the record, records who ended it and why, frees both
-reservations, and immediately tries to match both participants again if their
-saved opt-in is enabled. Turning off auto-matching removes a waiting user;
-it leaves an existing conversation active. To stop searching after ending a
-match, save auto-matching off before calling `end_match`.
+### Never the same two people again
 
-Deleting a profile closes its active match and returns an eligible surviving
-partner to the pool. That partner can search immediately with `retry_matching`;
-otherwise the next eligible arrival/profile update can find them. Deleting an
-Auth account also clears its identity references from history, preserves the
-survivor's ended record, and removes the deleted user's key bundles/messages.
+`unique (user_low, user_high)` blocks the same two accounts. In addition each
+match stores the sha256 of both people's sign-in identities (provider + subject,
+e.g. their Apple ID) in `matching_private.match_identities`. Someone who deletes
+their account and signs up again with the same Apple or Google account is still
+never matched with anyone they were matched with before. Off/on toggles,
+profile edits, retries and every way a match can end keep the exclusion.
+
+### Breaking, and the history after it
+
+`break_match` (either participant) records who broke it and when, frees both
+people and immediately lets both search again if their saved opt-in is still
+on. The conversation stays: `my_matches()` lists every match, active and broken,
+and the encrypted messages and key bundles stay readable for both participants.
+No new message or device can be added to a broken match. In the app a broken
+match appears under **My matches** with "Match" struck through; opening it shows
+the match heart, the partner's profile, and the conversation where a non-match
+lists its reasons. Tapping the conversation opens it in full, read-only.
+
+### Deleting a profile or account
+
+Deleting a profile ends its active match with `profile_deleted` and lets the
+partner search again straight away. Participant IDs stay in the match and on
+their messages (no foreign keys to `auth.users` there), so the survivor keeps
+the pair exclusion and can still decrypt the conversation they took part in.
+The deleted account's profile, match card, read state and reports it filed (the
+reporter is set to null; the report keeps counting) go with it. When both
+participants are gone, `matching_private.account_deleted` removes the
+conversation's messages, keys, cards and read states.
+
+### Reports: warning, 7-day block, ban
+
+`report_partner` stores a report about the other participant. Only the first
+report per match counts as a strike, so one person can add at most one strike
+to someone (two people can match only once). Strikes follow the reported
+person's sign-in identity hashes, so a new account with the same Apple or Google
+ID keeps them.
+
+| Strikes | Consequence |
+| --- | --- |
+| 1 | Warning. Matching and the current conversation continue. |
+| 2 | Blocked for 7 days from the second report: the current match ends (`moderation`, or `reported` when the reporter broke it), the person leaves the pool and is not admitted again until the block ends. Their next profile sync after that re-admits them. |
+| 3 | Banned: as above, permanently. Signing up again with the same sign-in stays banned. |
+
+`matching_status()` returns `moderation: {strikes, strikes_seen, suspended_until,
+banned}`; the app shows a notice once per new strike and calls
+`acknowledge_moderation()`. An administrator can withdraw an unfounded report
+with `select matching_private.dismiss_report('<report id>')`, which lifts a block
+or ban it caused and lets the person search again.
 
 ## Requirements and scores
 
@@ -95,16 +151,19 @@ Authenticated client operations:
 
 | Operation | API |
 | --- | --- |
-| Read own current state | `rpc("matching_status")` |
-| Retry search after reconnect | `rpc("retry_matching")` |
-| Read own current/past matches | `from("matches").select()` |
-| End/block a match | `rpc("end_match", {p_match_id, p_reason: "closed" or "blocked"})` |
-| Publish a device's public bundle | `rpc("publish_match_key_bundle", {p_match_id, p_device_id, p_public_bundle})` |
+| Read own state and moderation | `rpc("matching_status")` |
+| Acknowledge the newest moderation notice | `rpc("acknowledge_moderation")` |
+| Search again now | `rpc("retry_matching")` |
+| The active match for the home screen | `rpc("current_match")` |
+| Every match, active and broken | `rpc("my_matches")` |
+| Break a match | `rpc("break_match", {p_match_id})` |
+| Report the other participant | `rpc("report_partner", {p_match_id, p_reason, p_details, p_break_match})` |
+| Register this device's public key | `rpc("register_chat_device", {p_match_id, p_device_id, p_public_bundle, p_replace_device})` |
 | Read both participants' bundles | `from("match_key_bundles").select().eq("match_id", matchID)` |
-| Store encrypted envelope | `rpc("send_encrypted_message", {p_match_id, p_client_message_id, p_sender_device_id, p_recipient_device_id, p_ciphertext, p_protocol_version: "e2ee-v1"})` |
+| Store encrypted envelope | `rpc("send_encrypted_message", {p_match_id, p_client_message_id, p_sender_device_id, p_recipient_device_id, p_ciphertext, p_protocol_version: "hpke-auth-x25519-v1"})` |
 | Read encrypted history | `from("encrypted_messages").select().eq("match_id", matchID).gt("id", cursor).order("id").limit(100)` |
 
-`matching_status` returns `{state, match_id, photo_verified}`. History contains
+`matching_status` returns `{state, match_id, photo_verified, moderation}` where state is `matched`, `banned`, `suspended`, `waiting`, `ineligible` or `disabled`. History contains
 `user_low` and `user_high`; the other ID is the conversation partner. RLS filters
 all three public tables to those two participants. Anonymous access and direct
 client writes are denied; mutation functions derive the sender from `auth.uid()`.
@@ -122,7 +181,7 @@ opt out of that requirement can match without a photo.
 A trusted database worker may write `matching_private.photo_verifications`
 after actually validating the selected uploaded image. Store its Storage object
 ID and exact `storage.objects.updated_at` value captured for the verified bytes.
-After attestation call `matching_private.reconcile(userID)` in the same trusted
+After attestation call `matching_private.try_match(userID)` in the same trusted
 workflow to search again. A replaced object/version or a different selected photo
 does not inherit verification. Do not accept an arbitrary client-supplied flag,
 timestamp, or local receipt as a trusted attestation.
@@ -185,23 +244,22 @@ No trusted verification is fabricated when AWS is unavailable.
 
 ## Validation and scaling
 
-Run `supabase/tests/matching.sql` as `postgres` in SQL Editor. It creates isolated
-fixtures inside a transaction, switches to `authenticated` for authorization
-tests, asserts the lifecycle/score/security rules, then rolls back. On failure
-the transaction aborts; run `rollback` if reusing a direct database connection.
-The identity sequence may advance, but no fixture rows remain.
+Two SQL files run as `postgres` in SQL Editor ("Run without RLS"). Each creates
+isolated fixtures inside a transaction, switches to `authenticated` for the
+authorization checks, asserts, and rolls back:
 
-Live validation on 14 November 2026: all **85 assertions passed** against the
-current question-only scoring, chat and AWS-verification schema. A separate
-post-rollback check found zero remaining fixture accounts/profiles, zero users
-simultaneously waiting and reserved, zero invalid active reservations and zero
-matching tables without RLS. The deployed Edge Function also rejected missing,
-invalid and publishable-key-only sessions with HTTP 401. The 50 server question IDs were also checked
-against the current Swift catalog. The current iOS chat/AWS/Supabase regression run also passed **28 tests**; the
-earlier broader run passed **101 tests**. Chat renders were checked at 320 and
-393 points. The Edge Function typecheck and its three policy/input tests pass.
+* `supabase/tests/matching_regression.sql`: admission, scoring, ranking, pair
+  exclusion, device rotation, E2EE storage rules and AWS photo verification.
+* `supabase/tests/lifecycle_moderation.sql`: the whole lifecycle end to end —
+  pool entry, skipped unchanged saves, automatic match, chat, breaking, readable
+  history, account deletion, recreated accounts, and warning → block → ban,
+  dismissal and ban evasion.
 
-The initial design serializes writers and scans candidate profiles. It is suited
+On 15 November 2026, after migration 010, both passed against the live project:
+**85** and **72** assertions, with zero fixture accounts, profiles, matches,
+reports or pool entries left afterwards.
+
+Matching still serializes writers behind one lock, and a search reads the whole pool (cheaply: plain columns and integer arrays, no JSON parsing). It is suited
 to validating the first real pool; it has not been load-tested with concurrent
 clients. At scale, normalize/index admission/filter fields, reduce candidate
 scans, replace the global lock with a proven reservation strategy, add request

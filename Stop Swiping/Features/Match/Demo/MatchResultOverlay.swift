@@ -118,8 +118,18 @@ struct MatchResultOverlay: View {
 
                 VStack(spacing: 0) {
                     Spacer(minLength: 0)
-                        .frame(height: max(0, frame.point(0, layout.lineY).y + 68))
-                    if !report.isMatch {
+                        // A broken match's card sits under the score labels.
+                        .frame(height: max(0, frame.point(0, layout.lineY).y + (match.isBroken ? 64 : 68)))
+                    if let ended = match.ended, let chat {
+                        // Where a non-match lists its reasons, a broken match
+                        // keeps its conversation. Tapping opens it in full.
+                        BrokenMatchHistory(chat: chat, name: match.name, ended: ended, onOpen: onSendMessage)
+                            .frame(maxWidth: OnboardingTheme.controlWidth)
+                            .padding(.horizontal, 28)
+                            .opacity(reveal >= .scores ? 1 : 0)
+                            .offset(y: reveal >= .scores || reduceMotion ? 0 : 8)
+                            .allowsHitTesting(reveal >= .scores)
+                    } else if !report.isMatch {
                         issues
                             .opacity(reveal >= .issues ? 1 : 0)
                             .offset(y: reveal >= .issues || reduceMotion ? 0 : 8)
@@ -251,7 +261,7 @@ struct MatchResultOverlay: View {
             .accessibilityIdentifier("match.profile")
 
             // A live match is the only thing the app does until it ends.
-            if isSaved && !match.isLive {
+            if match.isBroken || (isSaved && !match.isLive) {
                 Button(action: onClose) {
                     Image(systemName: "xmark")
                         .font(.system(size: 18, weight: .semibold))
@@ -289,7 +299,23 @@ struct MatchResultOverlay: View {
             Spacer(minLength: 0)
 
             MatchSettingsMenu(name: match.name, onViewProfile: onViewProfile, onShowScores: onShowScores,
-                              onReport: { reportReason = $0 }, onBreak: { confirmsBreak = true })
+                              onReport: { reportReason = $0 }, onBreak: { confirmsBreak = true },
+                              canBreak: !match.isBroken)
+
+            if match.isBroken {
+                // A broken match is only looked back on, so it can be left.
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(OnboardingTheme.accentGradient)
+                        .frame(width: 44, height: 44)
+                        .background { Circle().fill(.white.opacity(0.08)) }
+                        .overlay { Circle().strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5) }
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n("Close"))
+            }
         }
         .padding(.leading, 20)
         .padding(.trailing, 16)
@@ -308,11 +334,22 @@ struct MatchResultOverlay: View {
                 .font(.system(size: 14, weight: .medium))
                 .tracking(4)
                 .textCase(.uppercase)
-                .foregroundStyle(report.isMatch ? Color.white.opacity(0.88) : OnboardingTheme.pink)
+                .strikethrough(match.isBroken, color: OnboardingTheme.pink)
+                .foregroundStyle(match.isBroken ? OnboardingTheme.secondaryText
+                    : report.isMatch ? Color.white.opacity(0.88) : OnboardingTheme.pink)
+            if match.isBroken {
+                Text(L10n("No longer active"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(1.6)
+                    .textCase(.uppercase)
+                    .foregroundStyle(OnboardingTheme.pink)
+            }
         }
         .fixedSize()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(report.isMatch
+        .accessibilityLabel(match.isBroken
+            ? L10n("\(report.average) percent, a match that is no longer active")
+            : report.isMatch
             ? L10n("\(report.average) percent, a match")
             : L10n("\(report.average) percent, no match"))
     }
@@ -422,7 +459,10 @@ struct MatchResultOverlay: View {
 
     private var controls: some View {
         VStack(spacing: 12) {
-            if match.isLive && report.isMatch, let chat {
+            if match.isBroken {
+                // The header's close button is the way out; the room goes to the conversation.
+                EmptyView()
+            } else if match.isLive && report.isMatch, let chat {
                 // A match the server made: both met every requirement and
                 // cleared each other's minimum score, so they can talk.
                 LiveMatchControls(chat: chat, name: match.name, onSendMessage: onSendMessage)
@@ -566,5 +606,84 @@ private struct ChatHeaderSubtitle: View {
         .font(.footnote)
         .lineLimit(1)
         .animation(.easeInOut(duration: 0.2), value: chat.isPartnerTyping)
+    }
+}
+
+/// A broken match's conversation in place of the reasons a non-match shows:
+/// why it ended, its last messages and what being broken means.
+private struct BrokenMatchHistory: View {
+    @ObservedObject var chat: ChatViewModel
+    let name: String
+    let ended: MatchSnapshot.Ended
+    let onOpen: () -> Void
+
+    private var recent: [ChatMessage] {
+        Array(chat.conversation.messages.filter { $0.sender != .system }.suffix(2))
+    }
+
+    var body: some View {
+        Button(action: onOpen) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "heart.slash")
+                        .foregroundStyle(OnboardingTheme.pink)
+                    Text(Self.reason(ended, name: name))
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(OnboardingTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(OnboardingTheme.secondaryText)
+                        .accessibilityHidden(true)
+                }
+                if recent.isEmpty {
+                    Text(L10n("No messages were sent."))
+                        .font(.footnote)
+                        .foregroundStyle(OnboardingTheme.secondaryText)
+                } else {
+                    // One line per message keeps the card short; tapping opens all of it.
+                    VStack(alignment: .leading, spacing: 5) {
+                        ForEach(recent) { message in
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                Text(message.sender == .currentUser ? L10n("You") : name)
+                                    .font(.footnote.weight(.semibold))
+                                    .foregroundStyle(message.sender == .currentUser ? OnboardingTheme.cyan : OnboardingTheme.pink)
+                                Text(message.text)
+                                    .font(.footnote)
+                                    .foregroundStyle(OnboardingTheme.primaryText.opacity(0.88))
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                            }
+                        }
+                    }
+                }
+                Text(L10n("Once a match is broken, no more messages can be sent and you can never be matched again."))
+                    .font(.caption)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onboardingSurface(cornerRadius: 22)
+        .accessibilityElement(children: .combine)
+        .accessibilityHint(L10n("Opens the conversation"))
+        .accessibilityIdentifier("match.history")
+        .task { await chat.refresh() }
+    }
+
+    static func reason(_ ended: MatchSnapshot.Ended, name: String) -> String {
+        let date = ended.at.formatted(.dateTime.day().month(.abbreviated).year().locale(AppLocale.current))
+        switch ended.reason {
+        case .profileDeleted where !ended.byMe:
+            return L10n("\(name) deleted their profile on \(date)")
+        case .moderation:
+            return L10n("Ended by moderation on \(date)")
+        default:
+            return ended.byMe ? L10n("You broke this match on \(date)") : L10n("\(name) broke this match on \(date)")
+        }
     }
 }

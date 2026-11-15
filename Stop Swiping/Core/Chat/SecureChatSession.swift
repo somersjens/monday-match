@@ -166,11 +166,11 @@ final class SecureChatSession {
             return ChatMessage(id:pending.id,sender:.currentUser,text:text,sentAt:pending.createdAt,isRead:false)
         }
     }
-    func end(block: Bool) async throws { try await identity(); try await repository.end(match.id,reason:block ? "blocked":"closed"); isClosed=true }
-    func report(reason: String,details: String,endMatch: Bool = false) async throws {
+    func breakMatch() async throws { try await identity(); try await repository.breakMatch(match.id); isClosed=true }
+    func report(reason: String,details: String,breakMatch: Bool = false) async throws {
         try await identity()
-        try await repository.report(match.id,reason:reason,details:details,endMatch:endMatch)
-        if endMatch { isClosed=true }
+        try await repository.report(match.id,reason:reason,details:details,breakMatch:breakMatch)
+        if breakMatch { isClosed=true }
     }
     /// The newest server row of a message from the partner, for read receipts.
     private var newestPartnerRowID: Int64?

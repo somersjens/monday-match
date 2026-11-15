@@ -114,6 +114,41 @@ final class PrivacyFlowLayoutTests: XCTestCase {
         }
     }
 
+    func testBrokenMatchShowsItsConversationWhereReasonsWouldBe() async throws {
+        let originalLanguage = AppLanguageSettings.shared.language
+        defer { AppLanguageSettings.shared.language = originalLanguage }
+        var state = ProfileCreationState(today: .today(), applicationLanguage: "en")
+        state.completedAt = Date()
+        state.displayName = "Alex"
+        state.dateOfBirth = .init(year: 1996, month: 4, day: 21)
+        state.gender = .man
+        state.partnerGenders = [.woman]
+        var rng = SystemRandomNumberGenerator()
+        let demo = DemoMatchGenerator.makeMatch(for: state, shouldMatch: true, using: &rng)
+        var match = MatchSnapshot(id: demo.id, matchedAt: demo.matchedAt, you: demo.you, them: demo.them,
+                                  fixedScores: .init(yours: 86, theirs: 91))
+        match.ended = .init(at: Date(), reason: .broken, byMe: false)
+        let chat = ChatViewModel(conversation: ChatConversation(matchID: match.id, participantName: match.name, messages: [
+            ChatMessage(sender: .currentUser, text: "Hey! Coffee this weekend?", sentAt: Date().addingTimeInterval(-7200)),
+            ChatMessage(sender: .match, text: "Sounds good, Saturday?", sentAt: Date().addingTimeInterval(-7000)),
+            ChatMessage(sender: .match, text: "Actually, I don't think this works for me. Take care!", sentAt: Date().addingTimeInterval(-3600))
+        ], isClosed: true))
+        let size = CGSize(width: 393, height: 852)
+        for language in [AppLanguage.english, .dutch] {
+            AppLanguageSettings.shared.language = language
+            try await render(
+                MatchResultOverlay(
+                    match: match, report: match.report,
+                    frame: MatchStageFrame(center: CGPoint(x: size.width / 2, y: (size.height - 160) / 2),
+                                           unit: size.width * 0.42),
+                    reveal: .controls, isSaved: false,
+                    onShowScores: { _ in }, onShowProfile: {}, onRename: { _ in },
+                    onSave: {}, onClose: {}, onDelete: {}, chat: chat
+                ).background(OnboardingTheme.background).preferredColorScheme(.dark),
+                name: "broken-\(language.rawValue)", size: size)
+        }
+    }
+
     private func render<Content: View>(_ content: Content, name: String, size: CGSize) async throws {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let window = UIWindow(windowScene: scene)

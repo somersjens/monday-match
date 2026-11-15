@@ -18636,6 +18636,346 @@
           }
         }
       }
+    },
+    "My matches" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My matches"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn matches"
+          }
+        }
+      }
+    },
+    "No matches yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No matches yet."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nog geen matches."
+          }
+        }
+      }
+    },
+    "No longer active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No longer active"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet meer actief"
+          }
+        }
+      }
+    },
+    "{0} percent, a match that is no longer active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} percent, a match that is no longer active"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} procent, een match die niet meer actief is"
+          }
+        }
+      }
+    },
+    "{0}, {1} percent, a match that is no longer active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0}, {1} percent, a match that is no longer active"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0}, {1} procent, een match die niet meer actief is"
+          }
+        }
+      }
+    },
+    "This match is broken. No more messages can be sent, and you can never be matched again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This match is broken. No more messages can be sent, and you can never be matched again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze match is verbroken. Er kunnen geen berichten meer worden verstuurd en jullie kunnen nooit meer met elkaar matchen."
+          }
+        }
+      }
+    },
+    "No messages were sent." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No messages were sent."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er zijn geen berichten verstuurd."
+          }
+        }
+      }
+    },
+    "Once a match is broken, no more messages can be sent and you can never be matched again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once a match is broken, no more messages can be sent and you can never be matched again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zodra een match verbroken is, kunnen er geen berichten meer worden verstuurd en kunnen jullie nooit meer met elkaar matchen."
+          }
+        }
+      }
+    },
+    "Opens the conversation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the conversation"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opent het gesprek"
+          }
+        }
+      }
+    },
+    "{0} deleted their profile on {1}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} deleted their profile on {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} heeft op {1} het profiel verwijderd"
+          }
+        }
+      }
+    },
+    "Ended by moderation on {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ended by moderation on {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Op {0} beëindigd door moderatie"
+          }
+        }
+      }
+    },
+    "You broke this match on {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You broke this match on {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je hebt deze match op {0} verbroken"
+          }
+        }
+      }
+    },
+    "{0} broke this match on {1}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} broke this match on {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} heeft deze match op {1} verbroken"
+          }
+        }
+      }
+    },
+    "I understand" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I understand"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ik begrijp het"
+          }
+        }
+      }
+    },
+    "Your account is banned" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account is banned"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je account is verbannen"
+          }
+        }
+      }
+    },
+    "Your account is blocked for 7 days" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account is blocked for 7 days"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je account is 7 dagen geblokkeerd"
+          }
+        }
+      }
+    },
+    "You were reported" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You were reported"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent gerapporteerd"
+          }
+        }
+      }
+    },
+    "You were reported three times. Your account can no longer match or chat. You can still delete it from your profile." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You were reported three times. Your account can no longer match or chat. You can still delete it from your profile."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent drie keer gerapporteerd. Je account kan niet meer matchen of chatten. Je kunt het nog wel verwijderen via je profiel."
+          }
+        }
+      }
+    },
+    "You were reported a second time. Until {0} you can’t match or chat. A third report bans your account." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You were reported a second time. Until {0} you can’t match or chat. A third report bans your account."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent voor de tweede keer gerapporteerd. Tot {0} kun je niet matchen of chatten. Bij een derde melding wordt je account verbannen."
+          }
+        }
+      }
+    },
+    "Someone you matched with reported you. This is a warning: a second report blocks you for 7 days, a third bans your account." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Someone you matched with reported you. This is a warning: a second report blocks you for 7 days, a third bans your account."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iemand met wie je matchte heeft je gerapporteerd. Dit is een waarschuwing: bij een tweede melding word je 7 dagen geblokkeerd, bij een derde wordt je account verbannen."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

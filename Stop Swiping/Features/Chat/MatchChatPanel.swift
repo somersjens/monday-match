@@ -204,10 +204,13 @@ struct MatchChatPanel: View {
     }
 
     private var closedBanner: some View {
-        Label(L10n("This match has ended."), systemImage: "heart.slash")
+        Label(L10n("This match is broken. No more messages can be sent, and you can never be matched again."),
+              systemImage: "heart.slash")
             .font(.footnote)
             .foregroundStyle(OnboardingTheme.secondaryText)
+            .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
+            .padding(.horizontal, 20)
             .padding(.vertical, 16)
             .background(.ultraThinMaterial.opacity(0.6))
     }

@@ -9,6 +9,8 @@ struct MatchSettingsMenu: View {
     let onShowScores: (MatchReport.Perspective) -> Void
     let onReport: (ReportReason) -> Void
     let onBreak: () -> Void
+    /// False once the match is broken: only reporting is left.
+    var canBreak = true
 
     @State private var isOpen = false
 
@@ -26,7 +28,7 @@ struct MatchSettingsMenu: View {
         .accessibilityLabel(L10n("Match settings"))
         .accessibilityIdentifier("chat.settings")
         .popover(isPresented: $isOpen, attachmentAnchor: .point(.bottom), arrowEdge: .top) {
-            MatchSettingsPanel(name: name) { choice in
+            MatchSettingsPanel(name: name, canBreak: canBreak) { choice in
                 isOpen = false
                 Task {
                     // Let the panel close before a sheet or alert takes over.
@@ -55,6 +57,7 @@ private struct MatchSettingsPanel: View {
     }
 
     let name: String
+    let canBreak: Bool
     let onChoose: (Choice) -> Void
 
     @State private var showsReasons = false
@@ -83,7 +86,9 @@ private struct MatchSettingsPanel: View {
             row(L10n("\(name)’s match with you"), symbol: "arrow.left.circle") { onChoose(.scores(.theirs)) }
             divider
             row(L10n("Report your match"), symbol: "exclamationmark.triangle", showsChevron: true) { showsReasons = true }
-            row(L10n("Break your match"), symbol: "heart.slash", isDestructive: true) { onChoose(.breakMatch) }
+            if canBreak {
+                row(L10n("Break your match"), symbol: "heart.slash", isDestructive: true) { onChoose(.breakMatch) }
+            }
         }
     }
 

@@ -148,6 +148,6 @@ private final class FakeSecureChatRepository: SecureChatRepository {
         sent[pending.id]=pending
         if loseNextAcknowledgement { loseNextAcknowledgement=false; throw URLError(.networkConnectionLost) }
     }
-    func end(_ matchID:UUID,reason:String) async throws {}
+    func breakMatch(_ matchID:UUID) async throws {}
     func report(_ matchID:UUID,reason:String,details:String) async throws {}
 }

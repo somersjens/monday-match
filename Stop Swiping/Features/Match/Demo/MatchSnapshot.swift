@@ -14,10 +14,20 @@ struct MatchSnapshot: Codable, Identifiable, Equatable {
     /// Scores decided by the server for a match it made. The server only
     /// makes a match when every requirement is met both ways.
     var fixedScores: FixedScores?
+    /// Set for a server match that was broken. Its conversation stays
+    /// readable, but no more messages can be sent and the two never match again.
+    var ended: Ended?
 
     struct FixedScores: Codable, Equatable {
         let yours: Int
         let theirs: Int
+    }
+
+    struct Ended: Codable, Equatable {
+        let at: Date
+        let reason: CloudChatMatch.EndReason?
+        /// This person broke it.
+        let byMe: Bool
     }
 
     init(id: UUID = UUID(), matchedAt: Date, you: ProfileCreationState, them: ProfileCreationState,
@@ -31,6 +41,9 @@ struct MatchSnapshot: Codable, Identifiable, Equatable {
 
     /// A match made by the server, with a conversation behind it.
     var isLive: Bool { fixedScores != nil }
+
+    /// A server match that is no longer active.
+    var isBroken: Bool { ended != nil }
 
     var name: String { customName ?? them.displayName }
 

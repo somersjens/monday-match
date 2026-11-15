@@ -117,7 +117,7 @@ photos/videos to AWS.
 - `deno check --lock deno.lock index.ts` in the Edge Function directory.
 - `deno test policy_test.ts` checks the combined liveness/identity threshold,
   NaN/infinite/out-of-range scores, multiple faces/matches and malformed IDs.
-- `supabase/tests/aws_photo_verification.sql` runs all matching/chat regressions
+- `supabase/tests/matching_regression.sql` runs all matching/chat regressions
   and synthetic trusted-worker tests in one rollback-only transaction. Those
   prove consent, authorization, quota, expiry, session/selection binding,
   idempotence and immediate matching after both photos are approved. They do

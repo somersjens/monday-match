@@ -154,7 +154,7 @@ final class ChatViewModel: ObservableObject {
             Task {
                 defer { isPerformingAction=false }
                 do {
-                    try await secureSession.end(block:block)
+                    try await secureSession.breakMatch()
                     conversation.isBlocked=block; conversation.isClosed=true; errorMessage=nil; updateSecurityState()
                 } catch { errorMessage=error.localizedDescription }
             }
@@ -170,7 +170,7 @@ final class ChatViewModel: ObservableObject {
             Task {
                 defer { isPerformingAction=false }
                 do {
-                    try await secureSession.report(reason:reason.rawValue,details:report.details,endMatch:endMatch)
+                    try await secureSession.report(reason:reason.rawValue,details:report.details,breakMatch:endMatch)
                     lastReport=report; showsReportSheet=false
                     if endMatch { conversation.isClosed=true; updateSecurityState() }
                 }

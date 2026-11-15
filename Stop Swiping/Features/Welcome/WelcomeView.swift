@@ -62,6 +62,8 @@ struct WelcomeView: View {
     @StateObject private var savedMatches = SavedMatchStore()
     /// The account's active server match and its conversation.
     @StateObject private var liveMatches: LiveMatchCenter
+    /// Strikes whose notice was dismissed on this screen, before the server confirms.
+    @State private var acknowledgedStrikes = 0
     /// The conversation behind the match on screen, live or demo.
     @State private var activeChat: ChatViewModel?
     /// The heart has turned into the rings and the conversation is open.
@@ -489,7 +491,8 @@ struct WelcomeView: View {
             .preferredColorScheme(.dark)
         }
         .fullScreenCover(isPresented: $showsSavedMatches) {
-            SavedMatchesView(store: savedMatches, onOpen: openSavedMatch)
+            SavedMatchesView(store: savedMatches, center: liveMatches, onOpen: openSavedMatch,
+                             onOpenBroken: openBrokenMatch)
         }
         .fullScreenCover(isPresented: $showsScanner) {
             ProfileCodeScannerView(onScan: finishScanning) { showsScanner = false }
@@ -505,6 +508,14 @@ struct WelcomeView: View {
         .onChange(of: showsOverview) { _, shown in
             // The code holds the answers themselves, so edits change it.
             if !shown, showsCode { refreshShareCode() }
+        }
+        .alert(moderationTitle, isPresented: showsModerationNotice) {
+            Button(L10n("I understand")) {
+                acknowledgedStrikes = liveMatches.moderation?.strikes ?? acknowledgedStrikes
+                Task { await liveMatches.acknowledgeModeration() }
+            }
+        } message: {
+            Text(moderationMessage)
         }
         .sheet(item: $scoreDetail) { perspective in
             if let activeMatch {
@@ -663,7 +674,7 @@ struct WelcomeView: View {
                     Button(L10n("Adjust profile"), action: adjustProfile)
                         .buttonStyle(GlowButtonStyle())
                         .modifier(fakeMatchHold)
-                    Button(L10n("Saved matches"), action: openSavedMatches)
+                    Button(L10n("My matches"), action: openSavedMatches)
                         .buttonStyle(QuietButtonStyle())
                 } else if profileCreation.state.nextAction != .explanation {
                     Button(L10n("Adjust profile"), action: adjustProfile)
@@ -686,6 +697,34 @@ struct WelcomeView: View {
     private var profileSyncRevision: Data? {
         guard hasAccount else { return nil }
         return try? JSONEncoder().encode(profileCreation.state)
+    }
+
+    // MARK: - Reports against this account
+
+    private var showsModerationNotice: Binding<Bool> {
+        Binding(get: {
+            guard hasAccount, let status = liveMatches.moderation else { return false }
+            return status.strikes > max(status.strikesSeen, acknowledgedStrikes)
+        }, set: { _ in })
+    }
+
+    private var moderationTitle: String {
+        guard let status = liveMatches.moderation else { return "" }
+        if status.banned { return L10n("Your account is banned") }
+        if status.isSuspended() { return L10n("Your account is blocked for 7 days") }
+        return L10n("You were reported")
+    }
+
+    private var moderationMessage: String {
+        guard let status = liveMatches.moderation else { return "" }
+        if status.banned {
+            return L10n("You were reported three times. Your account can no longer match or chat. You can still delete it from your profile.")
+        }
+        if status.isSuspended(), let until = status.suspendedUntil {
+            let date = until.formatted(.dateTime.day().month(.wide).hour().minute().locale(AppLocale.current))
+            return L10n("You were reported a second time. Until \(date) you can’t match or chat. A third report bans your account.")
+        }
+        return L10n("Someone you matched with reported you. This is a warning: a second report blocks you for 7 days, a third bans your account.")
     }
 
     private func syncProfile() async {
@@ -1247,6 +1286,19 @@ struct WelcomeView: View {
               !isTransitioning, activeMatch == nil else { return }
         showsCode = false
         showsSavedMatches = true
+        Task { await liveMatches.loadHistory() }
+    }
+
+    /// A broken automatic match: its heart with "Match" struck through, and
+    /// its conversation where a non-match would list its reasons.
+    private func openBrokenMatch(_ match: CloudChatMatch) {
+        showsSavedMatches = false
+        Task {
+            try? await Task.sleep(for: .seconds(0.45))
+            guard activeMatch == nil else { return }
+            activeChat = liveMatches.historyChat(for: match)
+            present(liveMatches.snapshot(of: match, fallbackYou: profileCreation.state), transition: .savedMatch)
+        }
     }
 
     private func openSavedMatch(_ snapshot: MatchSnapshot) {
