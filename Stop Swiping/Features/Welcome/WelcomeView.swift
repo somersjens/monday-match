@@ -45,6 +45,9 @@ struct WelcomeView: View {
     @State private var personalityTest: PersonalityTest?
     /// The model the helix opens on next time.
     @State private var lastPersonalityTest = PersonalityTest.mbti
+    /// Every model's estimate, worked out once when the charts open and again
+    /// only when the answers change, never during a frame.
+    @State private var personalityResults: [PersonalityTest: PersonalityResult] = [:]
     /// A profile read by the in-app scanner, waiting for its match to be shown.
     @State private var scannedProfile: ProfileCreationState?
 
@@ -173,7 +176,7 @@ struct WelcomeView: View {
     private var personalityResult: PersonalityResult? {
         guard let personalityTest, stage == .complete, lightStage == .complete, activeMatch == nil,
               demoPhase == nil, !showsCode, !showsAccess else { return nil }
-        return PersonalityEstimator.result(for: personalityTest, state: profileCreation.state)
+        return personalityResults[personalityTest]
     }
 
     private var restartDemoAction: (() -> Void)? { isDemoPlaying ? { startDemoMatch() } : nil }
@@ -449,6 +452,9 @@ struct WelcomeView: View {
             do { try await Task.sleep(for: .milliseconds(400)) }
             catch { return }
             await syncProfile()
+        }
+        .onChange(of: profileCreation.state) { _, _ in
+            if personalityTest != nil { refreshPersonalityResults() }
         }
         .onChange(of: profileCreation.hasDisplayName) { _, hasName in
             if !hasName { showsCode = false }
@@ -764,12 +770,21 @@ struct WelcomeView: View {
         } else if personalityTest != nil {
             closePersonality()
         } else {
+            refreshPersonalityResults()
             withAnimation(.easeInOut(duration: 0.3)) { personalityTest = lastPersonalityTest }
         }
     }
 
+    private func refreshPersonalityResults() {
+        let answers = PersonalityAnswers(state: profileCreation.state)
+        var results: [PersonalityTest: PersonalityResult] = [:]
+        for test in PersonalityTest.allCases {
+            results[test] = PersonalityEstimator.result(for: test, answers: answers)
+        }
+        personalityResults = results
+    }
+
     private func selectPersonalityTest(_ test: PersonalityTest) {
-        guard test.isAvailable else { return }
         lastPersonalityTest = test
         withAnimation(.easeInOut(duration: 0.3)) { personalityTest = test }
     }

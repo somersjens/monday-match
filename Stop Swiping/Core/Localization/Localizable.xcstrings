@@ -15237,23 +15237,6 @@
         }
       }
     },
-    "Coming soon" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Coming soon"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Binnenkort"
-          }
-        }
-      }
-    },
     "Personality test" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15267,23 +15250,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Persoonlijkheidstest"
-          }
-        }
-      }
-    },
-    "An estimate from your compatibility answers, not the official test." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "An estimate from your compatibility answers, not the official test."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Een inschatting op basis van je compatibiliteitsantwoorden, geen officiële test."
           }
         }
       }
@@ -18242,6 +18208,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Flexibel en veelzijdig. Je past je makkelijk aan aan wat een situatie van je vraagt."
+          }
+        }
+      }
+    },
+    "Estimated from your answers · not an official test" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estimated from your answers · not an official test"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschat op basis van je antwoorden · geen officiële test"
           }
         }
       }

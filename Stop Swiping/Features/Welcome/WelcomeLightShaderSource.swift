@@ -940,20 +940,27 @@ float3 lockedRibbonPoint(float u, uint instance, constant WelcomeUniforms &p, de
         return savedMatchPoint(u, instance, p);
     }
     if (p.matchLayout.w > 0.5 && p.match.x >= 1) return matchPoint(u, instance, p);
-    float3 heart = ribbonPoint(u, instance, p, controls);
-    if (p.lock.x <= 0) return heart;
+    if (p.lock.x <= 0) return ribbonPoint(u, instance, p, controls);
     float stagger = 0.35*(0.5 + 0.5*sin(u*tau + float(instance)*0.37));
     float k = clamp(p.lock.x*1.35 - stagger, 0.0, 1.0);
     k = k*k*k*(k*(k*6 - 15) + 10);
-    float3 target = p.lock.w > 0.5 ? helixPoint(u, instance, p) : lockPoint(u, instance, p);
-    float code = codeAmount(u, instance, p);
-    if (code > 0) {
-        float2 local;
-        target = mix(target, codePoint(u, instance, p, local), code);
-    }
+    // Once a form has fully left the heart, or a chart has fully left the
+    // helix, the shape underneath is invisible: don't evaluate it per vertex.
     float chart = personalityAmount(u, instance, p);
-    if (chart > 0) target = mix(target, personalityTarget(u, instance, p).point, chart);
-    return mix(heart, target, k);
+    float3 target;
+    if (chart >= 1) {
+        target = personalityTarget(u, instance, p).point;
+    } else {
+        target = p.lock.w > 0.5 ? helixPoint(u, instance, p) : lockPoint(u, instance, p);
+        float code = codeAmount(u, instance, p);
+        if (code > 0) {
+            float2 local;
+            target = mix(target, codePoint(u, instance, p, local), code);
+        }
+        if (chart > 0) target = mix(target, personalityTarget(u, instance, p).point, chart);
+    }
+    if (k >= 1) return target;
+    return mix(ribbonPoint(u, instance, p, controls), target, k);
 }
 
 float3 ribbonPoint(float u, uint instance, constant WelcomeUniforms &p, device const float2 *controls) {
