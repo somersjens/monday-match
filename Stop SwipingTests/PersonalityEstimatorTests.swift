@@ -144,6 +144,24 @@ final class PersonalityEstimatorTests: XCTestCase {
         }
     }
 
+    /// Codes such as OCEAN or HEXACO are spelled out in the info view;
+    /// labels that are already words are not repeated.
+    func testInfoSpellsOutEveryCodeAndLinksSecurely() throws {
+        let expected: [PersonalityTest: Int] = [
+            .mbti: 4, .sixteenPersonalities: 5, .predictiveIndex: 4, .bigFive: 5, .hexaco: 6,
+            .disc: 4, .insights: 0, .belbin: 9, .enneagram: 9, .tma: 0,
+        ]
+        for test in PersonalityTest.allCases {
+            let result = try XCTUnwrap(PersonalityEstimator.result(for: test, answers: outgoingPlanner))
+            XCTAssertEqual(result.legend.count, expected[test], test.title)
+            XCTAssertEqual(Set(result.legend.map(\.key)).count, result.legend.count, "\(test.title) keys are unique")
+            XCTAssertEqual(test.infoURL.scheme, "https", test.title)
+            XCTAssertFalse(test.about.isEmpty, test.title)
+        }
+        let hexaco = try XCTUnwrap(PersonalityEstimator.result(for: .hexaco, answers: outgoingPlanner))
+        XCTAssertEqual(hexaco.legend.map(\.key), ["H", "E", "X", "A", "C", "O"])
+    }
+
     func testEnneagramWingNeighboursItsType() throws {
         for profile in [outgoingPlanner, quietDreamer, answers([:], default: 0.5)] {
             guard case .enneagram(let traits, let type, let wing) = PersonalityEstimator.enneagram(profile).chart else {

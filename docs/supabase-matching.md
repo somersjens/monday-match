@@ -180,7 +180,7 @@ SDK, separate explicit biometric consent and server-confirmed attestation.
 The local offline onboarding verification remains local. Existing/current
 server photo verification can be restored without repeating a paid AWS scan.
 See [AWS activation](aws-photo-verification.md) for the implementation, Ireland
-region, server-only credentials, IAM template and remaining account activation.
+region, server-only credentials, IAM template and remaining real-device validation.
 No trusted verification is fabricated when AWS is unavailable.
 
 ## Validation and scaling

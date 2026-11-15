@@ -38,21 +38,27 @@ final class AppleReauthorization: NSObject, ASAuthorizationControllerDelegate,
     }
 
     nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        MainActor.assumeIsolated {
-            let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-            if let keyWindow = scenes.flatMap(\.windows).first(where: \.isKeyWindow) {
-                return keyWindow
-            }
-            // Apple's sheet is only requested from on-screen UI, so a scene is always connected.
-            guard let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first else {
-                preconditionFailure("No window scene to present Sign in with Apple in")
-            }
-            return ASPresentationAnchor(windowScene: scene)
-        }
+        MainActor.assumeIsolated { AppleSheetAnchor.current() }
     }
 
     private func finish(_ result: Result<String, Error>) {
         continuation?.resume(with: result)
         continuation = nil
+    }
+}
+
+/// The window Apple's sheet is presented over.
+@MainActor
+enum AppleSheetAnchor {
+    static func current() -> ASPresentationAnchor {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        if let keyWindow = scenes.flatMap(\.windows).first(where: \.isKeyWindow) {
+            return keyWindow
+        }
+        // Apple's sheet is only requested from on-screen UI, so a scene is always connected.
+        guard let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first else {
+            preconditionFailure("No window scene to present Sign in with Apple in")
+        }
+        return ASPresentationAnchor(windowScene: scene)
     }
 }

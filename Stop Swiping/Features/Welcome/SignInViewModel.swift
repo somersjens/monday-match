@@ -4,87 +4,63 @@ import Foundation
 
 @MainActor
 final class SignInViewModel: ObservableObject {
-    @Published private(set) var isSigningIn = false
+    enum Provider: Equatable {
+        case apple
+        case google
+    }
+
+    /// The provider whose sheet or request is in progress.
+    @Published private(set) var activeProvider: Provider?
     @Published var errorMessage: String?
+
+    var isSigningIn: Bool { activeProvider != nil }
 
     private let authService: AuthServicing
     private let nonceGenerator = NonceGenerator()
-    private var currentNonce: String?
 
     init(authService: AuthServicing) {
         self.authService = authService
     }
 
-    func configure(
-        request: ASAuthorizationAppleIDRequest
-    ) {
-        guard !isSigningIn else { return }
-        errorMessage = nil
-        isSigningIn = true
-        do {
+    func signInWithApple(onAuthenticated: @escaping (RestoredSession) -> Void) {
+        start(.apple, onAuthenticated: onAuthenticated) { [authService, nonceGenerator] in
             let nonce = try nonceGenerator.randomNonce()
-            currentNonce = nonce
-
-            request.requestedScopes = [
-                .fullName,
-                .email
-            ]
-            request.nonce = nonceGenerator.sha256(nonce)
-        } catch {
-            errorMessage = error.localizedDescription
-            isSigningIn = false
-        }
-    }
-
-    func handle(
-        result: Result<ASAuthorization, Error>,
-        onAuthenticated: @escaping (RestoredSession) -> Void
-    ) {
-        Task {
-            isSigningIn = true
-            defer { isSigningIn = false }
-
-            do {
-                let authorization = try result.get()
-
-                guard
-                    let credential = authorization.credential
-                        as? ASAuthorizationAppleIDCredential,
-                    let tokenData = credential.identityToken,
-                    let token = String(
-                        data: tokenData,
-                        encoding: .utf8
-                    ),
-                    let nonce = currentNonce
-                else {
-                    throw AppleSignInError.invalidCredential
-                }
-
-                let session = try await authService.signInWithApple(
-                    payload: AppleAuthorizationPayload(
-                        identityToken: token,
-                        rawNonce: nonce,
-                        fullName: credential.fullName
-                    )
-                )
-
-                onAuthenticated(session)
-            } catch { handleSignInError(error) }
-
-            currentNonce = nil
+            let credential = try await AppleSignInPrompt().credential(hashedNonce: nonceGenerator.sha256(nonce))
+            guard let tokenData = credential.identityToken,
+                  let token = String(data: tokenData, encoding: .utf8) else {
+                throw AppleSignInError.invalidCredential
+            }
+            return try await authService.signInWithApple(
+                payload: AppleAuthorizationPayload(identityToken: token, rawNonce: nonce,
+                                                   fullName: credential.fullName)
+            )
         }
     }
 
     func signInWithGoogle(onAuthenticated: @escaping (RestoredSession) -> Void) {
-        guard !isSigningIn else { return }
+        start(.google, onAuthenticated: onAuthenticated) { [authService] in
+            try await authService.signInWithGoogle()
+        }
+    }
+
+    func clearError() {
         errorMessage = nil
-        isSigningIn = true
+    }
+
+    private func start(_ provider: Provider, onAuthenticated: @escaping (RestoredSession) -> Void,
+                       signIn: @escaping @MainActor () async throws -> RestoredSession) {
+        guard activeProvider == nil else { return }
+        errorMessage = nil
+        activeProvider = provider
         Task {
-            defer { isSigningIn = false }
             do {
-                let session = try await authService.signInWithGoogle()
+                let session = try await signIn()
+                activeProvider = nil
                 onAuthenticated(session)
-            } catch { handleSignInError(error) }
+            } catch {
+                handleSignInError(error)
+                activeProvider = nil
+            }
         }
     }
 

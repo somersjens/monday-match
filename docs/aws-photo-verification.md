@@ -42,17 +42,20 @@ download and compare its SHA-256 digest. Identical bytes leave the object/versio
 alone; different bytes require selecting/uploading a new photo ID. This keeps
 verification valid after relaunch while preserving invalidation on replacement.
 
-## Account setup still needed
+## Account setup and activation status
 
 The AWS account is available. The approved CloudFormation stack
 `stop-swiping-face-verification` reached **CREATE_COMPLETE** in Ireland on
 15 November 2026. It created the worker user and streaming role defined below.
 The role ARN is saved in Supabase as `AWS_LIVENESS_STREAM_ROLE_ARN`.
-The remaining activation step is for the account owner to create the worker's
-access key and enter `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` directly in
-Supabase Edge Secrets. No secret access key has been created or read by the
-assistant. No real AWS biometric check or paid Rekognition API request was
-performed. Do not paste secret keys into chat or commit them to this repository.
+The account owner created a replacement worker access-key pair and entered it
+directly in Supabase Edge Secrets. On 15 November 2026, the dashboard confirmed
+the presence of `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and
+`AWS_LIVENESS_STREAM_ROLE_ARN`. Only secret names were checked; credential values
+were not opened or read by the assistant. Their presence does not validate the
+key pair or AWS runtime access. A real-device verification remains to be tested;
+no real AWS biometric check or paid Rekognition API request was performed.
+Do not paste secret keys into chat or commit them to this repository.
 
 The reviewable infrastructure template is `supabase/aws/liveness.yaml`:
 
@@ -84,8 +87,9 @@ bundle, or a public environment file.
 
 Apply `202611140006_aws_photo_verification.sql` once after migrations 001–005,
 then deploy `supabase/functions/aws-face-verification`. The database migration
-and function are installed in the live project; AWS secrets/account activation
-remain required before a real check can run. `supabase/config.toml`
+and function are installed in the live project, and the required AWS secret names
+are present. The remaining end-to-end check is a consenting user's verification
+on a physical iPhone. `supabase/config.toml`
 disables the gateway legacy-secret check for this ECC-token project. The function
 authenticates every caller with `auth.getUser` before reading data or calling AWS,
 and uses the caller's JWT for starting attempts.

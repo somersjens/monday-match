@@ -48,7 +48,7 @@ struct ProfileOverviewView: View {
             Button(L10n("Delete profile"), role: .destructive, action: deleteProfile)
             Button(L10n("Cancel"), role: .cancel) {}
         } message: {
-            Text(L10n("This can’t be undone. Your profile, photos, matches and chats are removed from this iPhone and from auto matching. Purchases stay linked to your Apple ID."))
+            Text(L10n("This can’t be undone. Your account, profile, photos, matches and chats are deleted from this iPhone and from our servers, so signing in again won’t bring them back. Purchases stay linked to your Apple ID."))
         }
         .alert(
             L10n("Your profile couldn’t be deleted"),

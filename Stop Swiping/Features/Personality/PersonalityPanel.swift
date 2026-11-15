@@ -1,20 +1,27 @@
 import SwiftUI
 
 /// Opened from the helix: a model picker and the estimated result, while the
-/// light above turns into that model's chart. The picker opens inside the
-/// card, so it never covers the light with a system menu.
+/// light above turns into that model's chart. The picker and the model's
+/// introduction open inside the card, so nothing covers the light.
 struct PersonalityPanel: View {
     let result: PersonalityResult
+    /// Every model's result. The result area is as tall as the tallest of
+    /// them, so switching models never resizes the card.
+    let results: [PersonalityResult]
     let onSelect: (PersonalityTest) -> Void
     let onClose: () -> Void
 
-    @State private var isChoosing = false
+    private enum Mode { case result, choosing, info }
+
+    @State private var mode = Mode.result
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let cornerRadius: CGFloat = 26
     private var motion: Animation {
         OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion)
     }
+    private static let quickRemoval = AnyTransition.asymmetric(
+        insertion: .opacity, removal: .opacity.animation(.easeOut(duration: 0.12)))
 
     var body: some View {
         VStack {
@@ -27,17 +34,24 @@ struct PersonalityPanel: View {
                     closeButton
                 }
 
-                if isChoosing {
+                switch mode {
+                case .choosing:
+                    // Gone almost at once, so its rows never cross the result
+                    // while the card shrinks back.
                     testList
-                        .transition(.opacity)
-                } else {
-                    resultText
-                        .id(result.test)
-                        .transition(.asymmetric(insertion: .onboardingReveal(reduceMotion: reduceMotion),
-                                                removal: .opacity.animation(.easeOut(duration: 0.12))))
-                    disclaimer
                         .transition(.asymmetric(insertion: .opacity,
-                                                removal: .opacity.animation(.easeOut(duration: 0.12))))
+                                                removal: .opacity.animation(.linear(duration: 0.06))))
+                case .info:
+                    info
+                        .transition(Self.quickRemoval)
+                case .result:
+                    resultArea
+                        .transition(Self.quickRemoval)
+                }
+
+                if mode != .choosing {
+                    infoButton
+                        .transition(Self.quickRemoval)
                 }
             }
             .padding(18)
@@ -58,11 +72,14 @@ struct PersonalityPanel: View {
             .padding(.bottom, 18)
             .animation(motion, value: result.test)
         }
+        .onChange(of: result.test) { _, _ in
+            if mode == .info { mode = .result }
+        }
     }
 
     private var pickerButton: some View {
         Button {
-            if isChoosing { fold() } else { withAnimation(motion) { isChoosing = true } }
+            if mode == .choosing { fold() } else { withAnimation(motion) { mode = .choosing } }
         } label: {
             HStack(spacing: 8) {
                 Text(verbatim: result.test.title)
@@ -73,7 +90,7 @@ struct PersonalityPanel: View {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(OnboardingTheme.cyan)
-                    .rotationEffect(.degrees(isChoosing ? 180 : 0))
+                    .rotationEffect(.degrees(mode == .choosing ? 180 : 0))
             }
             .padding(.horizontal, 14)
             .frame(height: 36)
@@ -103,10 +120,27 @@ struct PersonalityPanel: View {
     /// Folding is quick, so the shrinking card never carries the list's
     /// rows along with it.
     private func fold() {
-        withAnimation(.easeOut(duration: 0.18)) { isChoosing = false }
+        withAnimation(.easeOut(duration: 0.18)) { mode = .result }
     }
 
-    private var resultText: some View {
+    /// The shown result over invisible copies of every other one: the old
+    /// and new result cross in place instead of stacking, and the area keeps
+    /// the tallest result's height.
+    private var resultArea: some View {
+        ZStack(alignment: .topLeading) {
+            ForEach(results, id: \.test) { other in
+                resultText(other)
+                    .hidden()
+                    .accessibilityHidden(true)
+            }
+            resultText(result)
+                .id(result.test)
+                .transition(.asymmetric(insertion: .onboardingReveal(reduceMotion: reduceMotion),
+                                        removal: .opacity.animation(.easeOut(duration: 0.12))))
+        }
+    }
+
+    private func resultText(_ result: PersonalityResult) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(verbatim: result.headline)
                 .font(.system(size: 34, weight: .bold, design: .rounded))
@@ -122,36 +156,98 @@ struct PersonalityPanel: View {
                 .foregroundStyle(OnboardingTheme.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// One line, so it never pushes the text above around.
-    private var disclaimer: some View {
-        HStack(spacing: 5) {
-            Text(L10n("Estimated from your answers · not an official test"))
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-            Image(systemName: "info.circle")
+    /// One line, so it never pushes the text above around. Tapping it opens
+    /// the model's introduction, and closes it again.
+    private var infoButton: some View {
+        Button {
+            withAnimation(motion) { mode = mode == .info ? .result : .info }
+        } label: {
+            HStack(spacing: 5) {
+                Text(L10n("Estimated from your answers · not an official test"))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                Image(systemName: mode == .info ? "info.circle.fill" : "info.circle")
+                    .foregroundStyle(mode == .info ? OnboardingTheme.cyan : OnboardingTheme.tertiaryText)
+            }
+            .font(.caption2)
+            .foregroundStyle(OnboardingTheme.tertiaryText)
+            .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
+            .contentShape(Rectangle())
         }
-        .font(.caption2)
-        .foregroundStyle(OnboardingTheme.tertiaryText)
-        .accessibilityElement(children: .combine)
+        .buttonStyle(.plain)
+        .accessibilityLabel(L10n("Estimated from your answers · not an official test"))
+        .accessibilityHint(mode == .info ? L10n("Shows your result again.") : L10n("Explains this test."))
     }
 
-    private var testList: some View {
-        ScrollViewReader { reader in
-            ScrollView {
-                VStack(spacing: 4) {
-                    ForEach(PersonalityTest.allCases) { test in
-                        testRow(test).id(test)
+    private var info: some View {
+        let legend = result.legend
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 12, alignment: .topLeading),
+                            count: legend.count > 4 ? 2 : 1)
+        return VStack(alignment: .leading, spacing: 12) {
+            Text(verbatim: result.test.about)
+                .font(.subheadline)
+                .foregroundStyle(OnboardingTheme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if !legend.isEmpty {
+                LazyVGrid(columns: columns, alignment: .leading, spacing: 6) {
+                    ForEach(legend, id: \.key) { line in
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text(verbatim: line.key)
+                                .font(.system(.caption, design: .rounded, weight: .bold))
+                                .foregroundStyle(OnboardingTheme.cyan)
+                            Text(verbatim: line.value)
+                                .font(.caption)
+                                .foregroundStyle(OnboardingTheme.primaryText.opacity(0.85))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                 }
             }
-            .frame(maxHeight: 380)
-            .scrollIndicators(.hidden)
-            .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.05),
-                                         .init(color: .black, location: 0.95), .init(color: .clear, location: 1)],
-                                 startPoint: .top, endPoint: .bottom))
-            .onAppear { reader.scrollTo(result.test, anchor: .center) }
+
+            if let note = result.test.codeNote {
+                Text(verbatim: note)
+                    .font(.caption)
+                    .foregroundStyle(OnboardingTheme.tertiaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Link(destination: result.test.infoURL) {
+                HStack(spacing: 4) {
+                    Text(L10n("More information"))
+                    Image(systemName: "arrow.up.right")
+                        .font(.caption.weight(.bold))
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(OnboardingTheme.cyan)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// All ten fit on most phones; a smaller screen scrolls.
+    private var testList: some View {
+        ViewThatFits(in: .vertical) {
+            testRows
+            ScrollViewReader { reader in
+                ScrollView { testRows }
+                    .scrollIndicators(.hidden)
+                    .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.05),
+                                                 .init(color: .black, location: 0.95), .init(color: .clear, location: 1)],
+                                         startPoint: .top, endPoint: .bottom))
+                    .onAppear { reader.scrollTo(result.test, anchor: .center) }
+            }
+        }
+    }
+
+    private var testRows: some View {
+        VStack(spacing: 2) {
+            ForEach(PersonalityTest.allCases) { test in
+                testRow(test).id(test)
+            }
         }
     }
 
@@ -160,10 +256,10 @@ struct PersonalityPanel: View {
         return Button {
             fold()
             guard test != result.test else { return }
-            // The list folds away first; the new result then arrives in a
-            // card that is no longer resizing, so nothing animates twice.
+            // The list folds away first; the new result then crosses in place
+            // in a card that already has its final height.
             Task { @MainActor in
-                if !reduceMotion { try? await Task.sleep(for: .milliseconds(240)) }
+                if !reduceMotion { try? await Task.sleep(for: .milliseconds(200)) }
                 onSelect(test)
             }
         } label: {
@@ -186,7 +282,7 @@ struct PersonalityPanel: View {
                 }
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 9)
+            .padding(.vertical, 8)
             .background {
                 if isSelected {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)

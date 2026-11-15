@@ -31,7 +31,7 @@ final class SignInViewModelTests: XCTestCase {
                                       code: ASWebAuthenticationSessionError.canceledLogin.rawValue))
         let model = SignInViewModel(authService: auth)
         let finished = expectation(description: "Cancelled")
-        let observation = model.$isSigningIn.dropFirst().filter { !$0 }.prefix(1).sink { _ in finished.fulfill() }
+        let observation = model.$activeProvider.dropFirst().filter { $0 == nil }.prefix(1).sink { _ in finished.fulfill() }
         model.signInWithGoogle { _ in XCTFail("Cancelled sign-in cannot authenticate") }
         await fulfillment(of: [finished], timeout: 2)
         XCTAssertNil(model.errorMessage)
@@ -44,7 +44,7 @@ final class SignInViewModelTests: XCTestCase {
         auth.result = .failure(NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Connection failed"]))
         let model = SignInViewModel(authService: auth)
         let failed = expectation(description: "Failed")
-        let observation = model.$isSigningIn.dropFirst().filter { !$0 }.prefix(1).sink { _ in failed.fulfill() }
+        let observation = model.$activeProvider.dropFirst().filter { $0 == nil }.prefix(1).sink { _ in failed.fulfill() }
         model.signInWithGoogle { _ in XCTFail("Failed sign-in cannot authenticate") }
         await fulfillment(of: [failed], timeout: 2)
         XCTAssertEqual(model.errorMessage, "Connection failed")

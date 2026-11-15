@@ -24,7 +24,9 @@ final class PrivacyFlowLayoutTests: XCTestCase {
         let model = ProfileCreationViewModel(store: InMemoryProfileCreationStore(), repository: nil)
         let card = UIHostingController(rootView: AutoMatchingCard(viewModel: model, onOpenSettings: {}))
         let primary = UIHostingController(rootView: Button(L10n("Adjust profile")) {}.buttonStyle(GlowButtonStyle()))
-        let account = UIHostingController(rootView: AccountCreationCard(onCreateAccount: {}))
+        let account = UIHostingController(rootView: AccountCreationCard(
+            phase: .closed, signIn: SignInViewModel(authService: MockAuthService()),
+            onToggle: {}, onAuthenticated: { _ in }))
         for width: CGFloat in [264, 337, 420] {
             let proposal = CGSize(width: width, height: 1_000)
             let cardHeight = card.sizeThatFits(in: proposal).height
@@ -50,7 +52,7 @@ final class PrivacyFlowLayoutTests: XCTestCase {
             await access.start()
             try await render(
                 WelcomeView(profileCreationStore: InMemoryProfileCreationStore(state: state),
-                            repository: nil, access: access, onSignIn: {}),
+                            repository: nil, access: access),
                 name: "completed-profile-\(understood ? "account" : "explanation")",
                 size: CGSize(width: 393, height: 852))
         }

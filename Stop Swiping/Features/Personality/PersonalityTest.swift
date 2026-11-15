@@ -48,6 +48,50 @@ enum PersonalityTest: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+extension PersonalityTest {
+    /// A short introduction, shown from the info button.
+    var about: String {
+        switch self {
+        case .mbti: L10n("The Myers-Briggs Type Indicator sorts preferences on four scales, building on Carl Jung’s types. Your four letters combine into one of 16 types.")
+        case .disc: L10n("DISC describes behaviour on two axes: fast-paced or steady, and task- or people-oriented. That gives four styles, and most people mix two of them.")
+        case .bigFive: L10n("The Big Five (OCEAN) is the most researched model in personality psychology. It scores five broad traits that everyone has to some degree.")
+        case .enneagram: L10n("The Enneagram describes nine types, each driven by its own core motivation and fear. The lines in the figure show how the types connect.")
+        case .sixteenPersonalities: L10n("16Personalities builds on the Myers-Briggs letters and adds a fifth scale: how self-assured you are under pressure.")
+        case .insights: L10n("Insights Discovery uses four colour energies based on Jung: Fiery Red, Sunshine Yellow, Earth Green and Cool Blue. Everyone has all four, in their own mix.")
+        case .hexaco: L10n("HEXACO extends the Big Five with a sixth dimension, Honesty-Humility, and is widely used in scientific research.")
+        case .belbin: L10n("Meredith Belbin found nine roles people take on in teams. Most people have two or three preferred roles; strong teams cover all nine.")
+        case .predictiveIndex: L10n("The Predictive Index measures four behavioural drives at work and matches the pattern to one of 17 reference profiles.")
+        case .tma: L10n("The Talent Motivation Analysis, developed in the Netherlands, maps drives and talents. These are eight drives, read from your answers.")
+        }
+    }
+
+    /// How to read a code that is more than a type name.
+    var codeNote: String? {
+        switch self {
+        case .bigFive, .hexaco: L10n("Capital letter: high score · small letter: low score.")
+        case .enneagram: L10n("4w5 means type 4 with wing 5: the neighbouring type that colours it most.")
+        default: nil
+        }
+    }
+
+    /// Where to read more, from the model's own publisher where it has one.
+    var infoURL: URL {
+        let address = switch self {
+        case .mbti: "https://www.myersbriggs.org"
+        case .disc: "https://en.wikipedia.org/wiki/DISC_assessment"
+        case .bigFive: "https://en.wikipedia.org/wiki/Big_Five_personality_traits"
+        case .enneagram: "https://www.enneagraminstitute.com/type-descriptions"
+        case .sixteenPersonalities: "https://www.16personalities.com"
+        case .insights: "https://www.insights.com/products/insights-discovery/"
+        case .hexaco: "https://hexaco.org"
+        case .belbin: "https://www.belbin.com/about/belbin-team-roles"
+        case .predictiveIndex: "https://www.predictiveindex.com/assessments/behavioral-assessment/"
+        case .tma: AppLanguageSettings.shared.language == .dutch ? "https://www.tma.nl" : "https://www.tma.nl/en"
+        }
+        return URL(string: address)!
+    }
+}
+
 /// One axis of a chart, labelled for the overlay and the panel.
 struct PersonalityDimension: Equatable {
     /// The left pole of a spectrum.
@@ -78,6 +122,11 @@ struct PersonalityTrait: Equatable {
     let value: Double
 
     var percent: Int { Int((min(max(value, 0), 1) * 100).rounded()) }
+
+    /// A number or capital abbreviation (O, IMP, 4) that needs spelling out.
+    var isAbbreviated: Bool {
+        Int(short) != nil || (short.count <= 3 && short == short.uppercased() && short != name)
+    }
 }
 
 /// How a result is drawn in the light.
@@ -118,4 +167,19 @@ struct PersonalityResult: Equatable {
     let chart: PersonalityChart
 
     var visual: WelcomeLightPersonality.Visual { chart.visual }
+
+    /// What each letter, number or abbreviation in the chart stands for.
+    /// Labels that already spell themselves out are left out.
+    var legend: [(key: String, value: String)] {
+        switch chart {
+        case .spectrum(let dimensions):
+            dimensions.map { dimension in
+                let key = dimension.low.letter == dimension.high.letter
+                    ? dimension.low.letter : "\(dimension.low.letter)/\(dimension.high.letter)"
+                return (key, "\(dimension.low.name) ↔ \(dimension.high.name)")
+            }
+        case .radar(let traits), .wheel(let traits, _, _), .enneagram(let traits, _, _):
+            traits.filter { $0.isAbbreviated }.map { ($0.short, $0.name) }
+        }
+    }
 }

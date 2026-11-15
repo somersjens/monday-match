@@ -4,6 +4,159 @@
     "" : {
 
     },
+    "Continue with Apple" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue with Apple"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doorgaan met Apple"
+          }
+        }
+      }
+    },
+    "Create a new profile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create a new profile"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak een nieuw profiel"
+          }
+        }
+      }
+    },
+    "Keep your profile safe and let your matches reach you." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep your profile safe and let your matches reach you."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewaar je profiel veilig en laat je matches je bereiken."
+          }
+        }
+      }
+    },
+    "No profile found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No profile found"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen profiel gevonden"
+          }
+        }
+      }
+    },
+    "Sign in to pick up where you left off." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to pick up where you left off."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meld je aan en ga verder waar je gebleven was."
+          }
+        }
+      }
+    },
+    "There’s no saved profile for this account. It may have been deleted, or you signed in another way before." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There’s no saved profile for this account. It may have been deleted, or you signed in another way before."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er is geen bewaard profiel voor dit account. Misschien is het verwijderd, of meldde je je eerder op een andere manier aan."
+          }
+        }
+      }
+    },
+    "Use another account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use another account"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ander account gebruiken"
+          }
+        }
+      }
+    },
+    "Welcome back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome back"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welkom terug"
+          }
+        }
+      }
+    },
+    "You’re signed in" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’re signed in"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent aangemeld"
+          }
+        }
+      }
+    },
     "–" : {
 
     },
@@ -12449,19 +12602,19 @@
         }
       }
     },
-    "This can’t be undone. Your profile, photos, matches and chats are removed from this iPhone and from auto matching. Purchases stay linked to your Apple ID." : {
+    "This can’t be undone. Your account, profile, photos, matches and chats are deleted from this iPhone and from our servers, so signing in again won’t bring them back. Purchases stay linked to your Apple ID." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This can’t be undone. Your profile, photos, matches and chats are removed from this iPhone and from auto matching. Purchases stay linked to your Apple ID."
+            "value" : "This can’t be undone. Your account, profile, photos, matches and chats are deleted from this iPhone and from our servers, so signing in again won’t bring them back. Purchases stay linked to your Apple ID."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dit kan niet ongedaan worden gemaakt. Je profiel, foto’s, matches en chats worden van deze iPhone en uit automatisch matchen verwijderd. Aankopen blijven gekoppeld aan je Apple ID."
+            "value" : "Dit kan niet ongedaan worden gemaakt. Je account, profiel, foto’s, matches en chats worden van deze iPhone en van onze servers verwijderd. Opnieuw aanmelden brengt ze dus niet terug. Aankopen blijven gekoppeld aan je Apple ID."
           }
         }
       }
@@ -18225,6 +18378,261 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geschat op basis van je antwoorden · geen officiële test"
+          }
+        }
+      }
+    },
+    "The Myers-Briggs Type Indicator sorts preferences on four scales, building on Carl Jung’s types. Your four letters combine into one of 16 types." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Myers-Briggs Type Indicator sorts preferences on four scales, building on Carl Jung’s types. Your four letters combine into one of 16 types."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Myers-Briggs Type Indicator deelt voorkeuren in op vier schalen, voortbouwend op de typen van Carl Jung. Je vier letters vormen samen een van de 16 types."
+          }
+        }
+      }
+    },
+    "DISC describes behaviour on two axes: fast-paced or steady, and task- or people-oriented. That gives four styles, and most people mix two of them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DISC describes behaviour on two axes: fast-paced or steady, and task- or people-oriented. That gives four styles, and most people mix two of them."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DISC beschrijft gedrag op twee assen: snel of bedachtzaam, en taak- of mensgericht. Dat geeft vier stijlen, en de meeste mensen combineren er twee."
+          }
+        }
+      }
+    },
+    "The Big Five (OCEAN) is the most researched model in personality psychology. It scores five broad traits that everyone has to some degree." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Big Five (OCEAN) is the most researched model in personality psychology. It scores five broad traits that everyone has to some degree."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Big Five (OCEAN) is het best onderzochte model in de persoonlijkheidspsychologie. Het meet vijf brede eigenschappen die iedereen in een bepaalde mate heeft."
+          }
+        }
+      }
+    },
+    "The Enneagram describes nine types, each driven by its own core motivation and fear. The lines in the figure show how the types connect." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Enneagram describes nine types, each driven by its own core motivation and fear. The lines in the figure show how the types connect."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het Enneagram beschrijft negen types, elk gedreven door een eigen kernmotivatie en angst. De lijnen in de figuur laten zien hoe de types met elkaar samenhangen."
+          }
+        }
+      }
+    },
+    "16Personalities builds on the Myers-Briggs letters and adds a fifth scale: how self-assured you are under pressure." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "16Personalities builds on the Myers-Briggs letters and adds a fifth scale: how self-assured you are under pressure."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "16Personalities bouwt voort op de Myers-Briggs-letters en voegt een vijfde schaal toe: hoe zelfverzekerd je bent onder druk."
+          }
+        }
+      }
+    },
+    "Insights Discovery uses four colour energies based on Jung: Fiery Red, Sunshine Yellow, Earth Green and Cool Blue. Everyone has all four, in their own mix." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insights Discovery uses four colour energies based on Jung: Fiery Red, Sunshine Yellow, Earth Green and Cool Blue. Everyone has all four, in their own mix."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insights Discovery werkt met vier kleurenergieën op basis van Jung: vurig rood, zonnig geel, aards groen en koel blauw. Iedereen heeft ze alle vier, in een eigen mix."
+          }
+        }
+      }
+    },
+    "HEXACO extends the Big Five with a sixth dimension, Honesty-Humility, and is widely used in scientific research." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HEXACO extends the Big Five with a sixth dimension, Honesty-Humility, and is widely used in scientific research."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HEXACO breidt de Big Five uit met een zesde dimensie, Eerlijkheid-Bescheidenheid, en wordt veel gebruikt in wetenschappelijk onderzoek."
+          }
+        }
+      }
+    },
+    "Meredith Belbin found nine roles people take on in teams. Most people have two or three preferred roles; strong teams cover all nine." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meredith Belbin found nine roles people take on in teams. Most people have two or three preferred roles; strong teams cover all nine."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meredith Belbin onderscheidde negen rollen die mensen in teams aannemen. De meeste mensen hebben twee of drie voorkeursrollen; sterke teams dekken alle negen."
+          }
+        }
+      }
+    },
+    "The Predictive Index measures four behavioural drives at work and matches the pattern to one of 17 reference profiles." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Predictive Index measures four behavioural drives at work and matches the pattern to one of 17 reference profiles."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Predictive Index meet vier gedragsdrijfveren op het werk en koppelt het patroon aan een van 17 referentieprofielen."
+          }
+        }
+      }
+    },
+    "The Talent Motivation Analysis, developed in the Netherlands, maps drives and talents. These are eight drives, read from your answers." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Talent Motivation Analysis, developed in the Netherlands, maps drives and talents. These are eight drives, read from your answers."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Talent Motivatie Analyse, ontwikkeld in Nederland, brengt drijfveren en talenten in kaart. Dit zijn acht drijfveren, afgeleid uit je antwoorden."
+          }
+        }
+      }
+    },
+    "Capital letter: high score · small letter: low score." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capital letter: high score · small letter: low score."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoofdletter: hoge score · kleine letter: lage score."
+          }
+        }
+      }
+    },
+    "4w5 means type 4 with wing 5: the neighbouring type that colours it most." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4w5 means type 4 with wing 5: the neighbouring type that colours it most."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4w5 betekent type 4 met vleugel 5: het naastgelegen type dat het meest meekleurt."
+          }
+        }
+      }
+    },
+    "More information" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More information"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meer informatie"
+          }
+        }
+      }
+    },
+    "Shows your result again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows your result again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toont je resultaat weer."
+          }
+        }
+      }
+    },
+    "Explains this test." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explains this test."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Legt deze test uit."
           }
         }
       }

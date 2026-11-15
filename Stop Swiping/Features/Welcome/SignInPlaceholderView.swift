@@ -1,8 +1,10 @@
-import AuthenticationServices
 import SwiftUI
 
+/// Sign-in as its own screen, for routes that can't open it in place on the
+/// welcome screen. It uses the same night palette and controls.
 struct SignInPlaceholderView: View {
     @StateObject private var viewModel: SignInViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let onAuthenticated: (RestoredSession) -> Void
 
@@ -19,89 +21,40 @@ struct SignInPlaceholderView: View {
     }
 
     var body: some View {
-        VStack(spacing: AppSpacing.large) {
-            Spacer()
+        VStack(spacing: 12) {
+            Spacer(minLength: 0)
 
-            Image(systemName: "person.crop.circle")
-                .font(.system(size: 56))
-                .foregroundStyle(OnboardingTheme.accentGradient)
-                .accessibilityHidden(true)
-
-            VStack(spacing: AppSpacing.small) {
+            VStack(spacing: 10) {
                 Text(L10n("Create your account"))
-                    .font(AppTypography.title)
+                    .font(.system(.title, weight: .semibold))
+                    .tracking(-0.4)
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .accessibilityAddTraits(.isHeader)
 
                 Text(L10n("Sign in securely with Apple or Google. Your profile is backed up with Supabase so you can restore it on another device."))
-                    .font(AppTypography.body)
-                    .foregroundStyle(AppColors.secondaryForeground)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .font(.body)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
             }
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
 
-            if viewModel.isSigningIn {
-                ProgressView(L10n("Signing in…"))
-            }
+            Spacer(minLength: 0)
 
-            if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(.red)
-                    .multilineTextAlignment(.center)
-            }
+            AccountSignInButtons(viewModel: viewModel, onAuthenticated: onAuthenticated)
 
-            Spacer()
-
-            VStack(spacing: 12) {
-                SignInWithAppleButton(
-                    .continue,
-                    onRequest: viewModel.configure,
-                    onCompletion: {
-                        viewModel.handle(
-                            result: $0,
-                            onAuthenticated: onAuthenticated
-                        )
-                    }
-                )
-                .signInWithAppleButtonStyle(.white)
-                .frame(height: 54)
-                .clipShape(
-                    RoundedRectangle(
-                        cornerRadius: 14,
-                        style: .continuous
-                    )
-                )
-                .disabled(viewModel.isSigningIn)
-
-                Button {
-                    viewModel.signInWithGoogle(onAuthenticated: onAuthenticated)
-                } label: {
-                    HStack(spacing: 12) {
-                        Image("GoogleSignInLogo")
-                            .resizable()
-                            .renderingMode(.original)
-                            .scaledToFit()
-                            .frame(width: 20, height: 20)
-                            .accessibilityHidden(true)
-                        Text(L10n("Continue with Google"))
-                            .font(.system(size: 17, weight: .medium))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .foregroundStyle(Color(red: 0.12, green: 0.12, blue: 0.12))
-                    .frame(maxWidth: .infinity, minHeight: 54)
-                    .background(.white, in: RoundedRectangle(cornerRadius: 14))
-                    .overlay { RoundedRectangle(cornerRadius: 14).strokeBorder(.gray.opacity(0.4), lineWidth: 1) }
-                }
-                .buttonStyle(.plain)
-                .disabled(viewModel.isSigningIn)
-                .opacity(viewModel.isSigningIn ? 0.5 : 1)
-                .accessibilityIdentifier("account.google")
+            if let message = viewModel.errorMessage {
+                AccountSignInError(message: message)
+                    .transition(.onboardingReveal(reduceMotion: reduceMotion))
             }
         }
-        .padding(AppSpacing.large)
-        .navigationTitle(L10n("Account"))
+        .frame(maxWidth: OnboardingTheme.controlWidth)
+        .padding(.horizontal, 28)
+        .padding(.bottom, 18)
+        .frame(maxWidth: .infinity)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.errorMessage)
         .navigationBarTitleDisplayMode(.inline)
         .background { OnboardingTheme.background.ignoresSafeArea() }
+        .preferredColorScheme(.dark)
     }
 }
 

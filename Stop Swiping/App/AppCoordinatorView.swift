@@ -9,26 +9,41 @@ struct AppCoordinatorView: View {
     /// Codes the app was opened with, for instance from the Camera app.
     @StateObject private var codeInbox = ProfileCodeInbox()
     @State private var showsWelcomeFromAccess = false
+    /// Starts the welcome screen over after a returning account signs in, so
+    /// it opens on the profile that came back with it.
+    @State private var welcomeGeneration = 0
+
+    private enum Screen {
+        case loading, welcome, onboarding, accessRequired
+    }
+
+    /// The welcome screen stays one screen whether or not an account is
+    /// signed in, so creating an account from it doesn't rebuild it.
+    private var screen: Screen {
+        switch appState.sessionState {
+        case .loading:
+            return .loading
+        case .signedOut:
+            return .welcome
+        case .onboarding, .signedIn:
+            guard access.hasAccess else { return showsWelcomeFromAccess ? .welcome : .accessRequired }
+            return dependencies.profileCreationStore.load()?.completedAt != nil ? .welcome : .onboarding
+        }
+    }
 
     var body: some View {
         Group {
-            switch appState.sessionState {
+            switch screen {
             case .loading:
                 LaunchView()
-
-            case .signedOut:
+            case .welcome:
                 welcomeFlow
-
-            case .onboarding, .signedIn:
-                if access.hasAccess {
-                    if dependencies.profileCreationStore.load()?.completedAt != nil {
-                        welcomeFlow
-                    } else {
-                        onboardingFlow
-                    }
-                } else {
-                    accessRequiredFlow
-                }
+            case .onboarding:
+                onboardingFlow
+            case .accessRequired:
+                EarlyAccessView(access: access, onContinue: {}, onBack: {
+                    showsWelcomeFromAccess = true
+                })
             }
         }
         .background(Color("WelcomeBackground").ignoresSafeArea())
@@ -78,17 +93,6 @@ struct AppCoordinatorView: View {
         )
     }
 
-    @ViewBuilder
-    private var accessRequiredFlow: some View {
-        if showsWelcomeFromAccess {
-            welcomeFlow
-        } else {
-            EarlyAccessView(access: access, onContinue: {}, onBack: {
-                showsWelcomeFromAccess = true
-            })
-        }
-    }
-
     private var welcomeFlow: some View {
         NavigationStack(path: $appState.navigationPath) {
             WelcomeView(
@@ -108,8 +112,9 @@ struct AppCoordinatorView: View {
                     appState.showWelcomeAfterProfileDeletion()
                 },
                 onAccountCreated: appState.showSignedInApp,
-                onSignIn: {
-                    appState.navigationPath.append(.signIn)
+                onSignedIn: { session in
+                    welcomeGeneration += 1
+                    handleAuthenticatedSession(session)
                 }
             )
             .navigationDestination(for: AppRoute.self) { route in
@@ -117,7 +122,7 @@ struct AppCoordinatorView: View {
             }
         }
         // A deleted profile leaves nothing of the old screens behind.
-        .id(appState.profileGeneration)
+        .id([appState.profileGeneration, welcomeGeneration])
     }
 
     private func deleteProfile() async throws {

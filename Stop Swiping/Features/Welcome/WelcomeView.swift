@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct WelcomeView: View {
-    let onSignIn: () -> Void
+    /// A returning account signed in from the landing controls.
+    private let onSignedIn: (RestoredSession) -> Void
     private let onAccountCreated: () -> Void
     private let authService: AuthServicing
     private let profileSync: ProfileCloudSyncing?
@@ -19,7 +20,14 @@ struct WelcomeView: View {
     @StateObject private var locationService = LocationService()
     @StateObject private var notifications = NotificationPermissionService()
     @State private var hasAccount: Bool
-    @State private var showsCreateAccount = false
+    /// The landing controls show Apple and Google sign-in instead of Get started.
+    @State private var showsSignIn = false
+    /// A returning sign-in found no saved profile: the account is new or its
+    /// profile was deleted, so the landing says so before anything else.
+    @State private var showsNoProfileFound = false
+    /// The home screen's account card: closed, opened into sign-in, or confirming it.
+    @State private var accountCard = AccountCreationCard.Phase.closed
+    @StateObject private var signIn: SignInViewModel
     @State private var hasLoadedNotifications = false
     @State private var profileSyncFailed = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -116,10 +124,11 @@ struct WelcomeView: View {
         onDeleteProfile: (() async throws -> Void)? = nil,
         onProfileDeleted: @escaping () -> Void = {},
         onAccountCreated: @escaping () -> Void = {},
-        onSignIn: @escaping () -> Void
+        onSignedIn: @escaping (RestoredSession) -> Void = { _ in }
     ) {
         self.codeInbox = codeInbox ?? ProfileCodeInbox()
-        self.onSignIn = onSignIn
+        self.onSignedIn = onSignedIn
+        _signIn = StateObject(wrappedValue: SignInViewModel(authService: authService))
         self.onAccountCreated = onAccountCreated
         self.onDeleteProfile = onDeleteProfile
         self.onProfileDeleted = onProfileDeleted
@@ -151,7 +160,8 @@ struct WelcomeView: View {
     private var isSharing: Bool {
         showsCode && stage == .complete && lightStage == .complete && activeMatch == nil
             && scenePhase == .active && profileCreation.state.canShareProfile
-            && !showsOverview && !showsAutoMatching && !showsSavedMatches && !showsAccess && !showsProfilePrivacy && !showsCreateAccount
+            && !showsOverview && !showsAutoMatching && !showsSavedMatches && !showsAccess && !showsProfilePrivacy
+            && accountCard == .closed
             && !showsScanner
     }
 
@@ -160,7 +170,8 @@ struct WelcomeView: View {
     private var canShowScannedMatch: Bool {
         stage == .complete && lightStage == .complete && activeMatch == nil && demoPhase == nil && !isTransitioning
             && scenePhase == .active && profileCreation.state.canShareProfile
-            && !showsOverview && !showsAutoMatching && !showsSavedMatches && !showsAccess && !showsProfilePrivacy && !showsCreateAccount
+            && !showsOverview && !showsAutoMatching && !showsSavedMatches && !showsAccess && !showsProfilePrivacy
+            && accountCard == .closed
             && !showsScanner
     }
 
@@ -228,7 +239,7 @@ struct WelcomeView: View {
                     // and opacity change, so the Metal surface is never resized.
                     WelcomeLightAnimation(form: lightForm, lockPulse: lockPulse,
                                           showsCode: showsCode, code: shareCode, skipsEntrance: skipsEntrance,
-                                          isPaused: showsOverview || showsAutoMatching || showsSavedMatches || showsProfilePrivacy || showsCreateAccount || showsScanner,
+                                          isPaused: showsOverview || showsAutoMatching || showsSavedMatches || showsProfilePrivacy || showsScanner,
                                           framesPerSecond: isOnboarding ? 30 : 60,
                                           helixEntryDistance: sideEntry / max(animationWidth * 0.42, 1)
                                             + WelcomeLightHelix.radius + 0.12,
@@ -345,8 +356,9 @@ struct WelcomeView: View {
                         // The explanation's phones show only their light.
                         Color.clear
                     } else if stage == .complete, let personalityResult {
-                        PersonalityPanel(result: personalityResult, onSelect: selectPersonalityTest,
-                                         onClose: closePersonality)
+                        PersonalityPanel(result: personalityResult,
+                                         results: PersonalityTest.allCases.compactMap { personalityResults[$0] },
+                                         onSelect: selectPersonalityTest, onClose: closePersonality)
                             .transition(reduceMotion
                                 ? .opacity
                                 : .opacity.combined(with: .scale(scale: 0.97, anchor: .bottom)))
@@ -419,6 +431,7 @@ struct WelcomeView: View {
         .sensoryFeedback(.error, trigger: showsUnderageNotice) { _, shown in shown }
         .sensoryFeedback(.success, trigger: demoStarts)
         .sensoryFeedback(.success, trigger: exchanges)
+        .sensoryFeedback(.success, trigger: accountCard) { _, phase in phase == .signedIn }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active {
                 profileCreation.persist()
@@ -464,26 +477,6 @@ struct WelcomeView: View {
         }
         .sheet(isPresented: $showsProfilePrivacy) {
             PrivacyConsentView(kind: .profile) { profileCreation.acceptPrivacy(.profile) }
-        }
-        .sheet(isPresented: $showsCreateAccount, onDismiss: {
-            if hasAccount { onAccountCreated() }
-        }) {
-            NavigationStack {
-                SignInPlaceholderView(authService: authService) { session in
-                    switch session {
-                    case .signedOut: break
-                    case .onboarding, .signedIn:
-                        hasAccount = true
-                        showsCreateAccount = false
-                    }
-                }
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(L10n("Close")) { showsCreateAccount = false }
-                    }
-                }
-            }
-            .preferredColorScheme(.dark)
         }
         .fullScreenCover(isPresented: $showsOverview) {
             profileOverview
@@ -553,25 +546,82 @@ struct WelcomeView: View {
             Spacer(minLength: 0)
 
             VStack(spacing: 12) {
-                if profileCreation.isUnderageLocked {
-                    Label(L10n("Minors not allowed."), systemImage: "lock.fill")
-                        .font(.system(.footnote, weight: .medium))
-                        .foregroundStyle(OnboardingTheme.secondaryText)
-                        .padding(.bottom, 4)
-                        .transition(.onboardingReveal(reduceMotion: reduceMotion))
+                if showsSignIn && showsNoProfileFound {
+                    VStack(spacing: 6) {
+                        Text(L10n("No profile found"))
+                            .font(.system(.title2, weight: .semibold))
+                            .tracking(-0.3)
+                            .foregroundStyle(OnboardingTheme.primaryText)
+                            .accessibilityAddTraits(.isHeader)
+                        Text(L10n("There’s no saved profile for this account. It may have been deleted, or you signed in another way before."))
+                            .font(.subheadline)
+                            .foregroundStyle(OnboardingTheme.secondaryText)
+                    }
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, 12)
+                    .transition(.landingSwap(index: 0, reduceMotion: reduceMotion))
+
+                    Button(L10n("Create a new profile")) { onSignedIn(.onboarding) }
+                        .buttonStyle(GlowButtonStyle())
+                        .transition(.landingSwap(index: 1, reduceMotion: reduceMotion))
+
+                    Button(L10n("Use another account"), action: useAnotherAccount)
+                        .buttonStyle(QuietButtonStyle())
+                        .transition(.landingSwap(index: 2, reduceMotion: reduceMotion))
+                } else if showsSignIn {
+                    VStack(spacing: 6) {
+                        Text(L10n("Welcome back"))
+                            .font(.system(.title2, weight: .semibold))
+                            .tracking(-0.3)
+                            .foregroundStyle(OnboardingTheme.primaryText)
+                            .accessibilityAddTraits(.isHeader)
+                        Text(L10n("Sign in to pick up where you left off."))
+                            .font(.subheadline)
+                            .foregroundStyle(OnboardingTheme.secondaryText)
+                    }
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, 12)
+                    .transition(.landingSwap(index: 0, reduceMotion: reduceMotion))
+
+                    AccountSignInButtons(viewModel: signIn,
+                                         arrival: { .landingSwap(index: $0 + 1, reduceMotion: reduceMotion) },
+                                         onAuthenticated: finishLandingSignIn)
+
+                    if let message = signIn.errorMessage {
+                        AccountSignInError(message: message)
+                            .transition(.onboardingReveal(reduceMotion: reduceMotion))
+                    }
+
+                    Button(L10n("Back"), action: closeSignIn)
+                        .buttonStyle(QuietButtonStyle())
+                        .disabled(signIn.isSigningIn)
+                        .transition(.landingSwap(index: 3, reduceMotion: reduceMotion))
+                } else {
+                    if profileCreation.isUnderageLocked {
+                        Label(L10n("Minors not allowed."), systemImage: "lock.fill")
+                            .font(.system(.footnote, weight: .medium))
+                            .foregroundStyle(OnboardingTheme.secondaryText)
+                            .padding(.bottom, 4)
+                            .transition(.onboardingReveal(reduceMotion: reduceMotion))
+                    }
+
+                    Button(L10n("Get started"), action: handleGetStarted)
+                        .buttonStyle(GlowButtonStyle())
+                        .transition(.landingSwap(index: 0, reduceMotion: reduceMotion))
+
+                    Button(L10n("I already have an account"), action: openSignIn)
+                        .buttonStyle(QuietButtonStyle())
+                        .transition(.landingSwap(index: 1, reduceMotion: reduceMotion))
                 }
-
-                Button(L10n("Get started"), action: handleGetStarted)
-                    .buttonStyle(GlowButtonStyle())
-
-                Button(L10n("I already have an account"), action: onSignIn)
-                    .buttonStyle(QuietButtonStyle())
             }
             .frame(maxWidth: OnboardingTheme.controlWidth)
             .padding(.horizontal, 28)
             .padding(.bottom, 18)
             .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion),
                        value: profileCreation.isUnderageLocked)
+            .animation(.easeInOut(duration: 0.2), value: signIn.errorMessage)
         }
     }
 
@@ -606,7 +656,9 @@ struct WelcomeView: View {
                     }
                 }
 
-                if profileCreation.state.nextAction == .matching {
+                if accountCard != .closed {
+                    // Signing in has the controls to itself.
+                } else if profileCreation.state.nextAction == .matching {
                     // The finished flow: the profile itself, and every match it made.
                     Button(L10n("Adjust profile"), action: adjustProfile)
                         .buttonStyle(GlowButtonStyle())
@@ -626,6 +678,7 @@ struct WelcomeView: View {
                        value: profileCreation.state.nextAction)
             .animation(.easeInOut(duration: 0.3), value: showsCode)
             .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: hasAccount)
+            .animation(Self.accountMotion(reduceMotion: reduceMotion), value: accountCard)
             .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: notifications.state)
         }
     }
@@ -652,11 +705,8 @@ struct WelcomeView: View {
         }
         switch AutoMatchingEntryStep.resolve(hasAccount: hasAccount, notificationState: hasLoadedNotifications ? notifications.state : nil) {
         case .account:
-            AccountCreationCard {
-                guard !isTransitioning else { return }
-                showsCode = false
-                showsCreateAccount = true
-            }
+            AccountCreationCard(phase: accountCard, signIn: signIn, onToggle: toggleAccountCard,
+                                onAuthenticated: finishAccountCreation)
         case .loading:
             ProgressView()
                 .frame(maxWidth: .infinity, minHeight: OnboardingTheme.buttonHeight)
@@ -669,6 +719,92 @@ struct WelcomeView: View {
                 guard !isTransitioning else { return }
                 showsAutoMatching = true
             }
+        }
+    }
+
+    // MARK: - Account
+
+    private static func accountMotion(reduceMotion: Bool) -> Animation {
+        reduceMotion ? .easeInOut(duration: 0.2) : .spring(duration: 0.6, bounce: 0.12)
+    }
+
+    private func openSignIn() {
+        guard !isTransitioning else { return }
+        signIn.clearError()
+        withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) { showsSignIn = true }
+    }
+
+    /// A returning account opens on its restored profile. Without one there
+    /// is nothing to return to, which the landing explains instead of quietly
+    /// starting a new profile.
+    private func finishLandingSignIn(_ session: RestoredSession) {
+        switch session {
+        case .signedOut:
+            break
+        case .signedIn:
+            onSignedIn(session)
+        case .onboarding:
+            AccessibilityNotification.Announcement(L10n("No profile found")).post()
+            withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) { showsNoProfileFound = true }
+        }
+    }
+
+    /// Signs the empty account out again and offers both providers anew.
+    private func useAnotherAccount() {
+        Task { try? await authService.signOut() }
+        withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) { showsNoProfileFound = false }
+    }
+
+    private func closeSignIn() {
+        guard !signIn.isSigningIn else { return }
+        withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) {
+            showsSignIn = false
+            signIn.clearError()
+        }
+    }
+
+    /// The account card's switch slides on and opens sign-in in place;
+    /// sliding it back closes it again.
+    private func toggleAccountCard() {
+        guard !isTransitioning, !signIn.isSigningIn, accountCard != .signedIn else { return }
+        showsCode = false
+        withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) {
+            signIn.clearError()
+            accountCard = accountCard == .closed ? .open : .closed
+        }
+    }
+
+    /// Folds an open account card away before the helix does something else.
+    /// False while signing in or confirming, when the card has to stay.
+    private func closeAccountCard() -> Bool {
+        switch accountCard {
+        case .closed:
+            return true
+        case .open:
+            guard !signIn.isSigningIn else { return false }
+            withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) {
+                signIn.clearError()
+                accountCard = .closed
+            }
+            return true
+        case .signedIn:
+            return false
+        }
+    }
+
+    /// The card confirms the account for a moment, then hands over to the
+    /// next step while the rest of the home controls return.
+    private func finishAccountCreation(_ session: RestoredSession) {
+        guard session != .signedOut else { return }
+        withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) { accountCard = .signedIn }
+        AccessibilityNotification.Announcement(L10n("You’re signed in")).post()
+        Task {
+            try? await Task.sleep(for: .seconds(reduceMotion ? 0.6 : 1.2))
+            withAnimation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion)) {
+                hasAccount = true
+                accountCard = .closed
+            }
+            onAccountCreated()
         }
     }
 
@@ -764,7 +900,7 @@ struct WelcomeView: View {
     /// The helix opens its personality estimates; the code and the charts
     /// turn back into the helix.
     private func tapHelix() {
-        guard !isTransitioning, activeMatch == nil else { return }
+        guard !isTransitioning, activeMatch == nil, closeAccountCard() else { return }
         if showsCode {
             toggleCode()
         } else if personalityTest != nil {
@@ -794,7 +930,7 @@ struct WelcomeView: View {
     }
 
     private func toggleCode() {
-        guard !isTransitioning, activeMatch == nil else { return }
+        guard !isTransitioning, activeMatch == nil, closeAccountCard() else { return }
         personalityTest = nil
         guard profileCreation.state.canShareProfile else {
             if profileCreation.hasDisplayName { showsProfilePrivacy = true }
@@ -1350,8 +1486,7 @@ struct ProfileCreationGateView: View {
         WelcomeView(
             profileCreationStore: InMemoryProfileCreationStore(),
             repository: InMemoryProfileRepository(),
-            access: LifetimeAccessStore(),
-            onSignIn: {}
+            access: LifetimeAccessStore()
         )
     }
 }

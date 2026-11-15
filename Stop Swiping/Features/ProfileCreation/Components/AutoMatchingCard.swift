@@ -57,27 +57,84 @@ struct AutoMatchingCard: View {
     }
 }
 
-/// The switch opens sign-up; it is only on once authentication succeeds.
+/// The account step of the home screen. Its switch slides on and the card
+/// opens in place into Apple and Google sign-in, so the helix stays on
+/// screen. Once signed in the card confirms it for a moment before the next
+/// step takes its place; sliding the switch back closes it again.
 struct AccountCreationCard: View {
-    let onCreateAccount: () -> Void
+    enum Phase: Equatable {
+        case closed
+        case open
+        case signedIn
+    }
+
+    let phase: Phase
+    @ObservedObject var signIn: SignInViewModel
+    let onToggle: () -> Void
+    let onAuthenticated: (RestoredSession) -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var isLocked: Bool { phase == .signedIn || signIn.isSigningIn }
 
     var body: some View {
-        HStack(spacing: 6) {
-            Button(action: onCreateAccount) {
-                Text(L10n("Create your account"))
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 6) {
+                Button(action: onToggle) {
+                    HStack(spacing: 8) {
+                        if phase == .signedIn {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(OnboardingTheme.accentGradient)
+                                .transition(.scale(scale: 0.4).combined(with: .opacity))
+                        }
+                        Text(phase == .signedIn ? L10n("You’re signed in") : L10n("Create your account"))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                            .contentTransition(.opacity)
+                            .id(phase == .signedIn)
+                            .transition(.onboardingReveal(reduceMotion: reduceMotion))
+                    }
                     .font(.system(.body, weight: .semibold))
                     .foregroundStyle(OnboardingTheme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            }
-            .buttonStyle(.plain)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHidden(true)
 
-            GlowToggle(isOn: false, label: L10n("Create your account"), action: onCreateAccount)
+                GlowToggle(isOn: phase != .closed, label: L10n("Create your account"), action: onToggle)
+            }
+            .padding(.horizontal, 16)
+            .frame(minHeight: OnboardingTheme.buttonHeight)
+            .disabled(isLocked)
+
+            if phase == .open {
+                VStack(spacing: 10) {
+                    Text(L10n("Keep your profile safe and let your matches reach you."))
+                        .font(.footnote)
+                        .foregroundStyle(OnboardingTheme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 6)
+                        .padding(.top, -8)
+                        .padding(.bottom, 4)
+
+                    AccountSignInButtons(viewModel: signIn, height: 52, cornerRadius: 12,
+                                         onAuthenticated: onAuthenticated)
+
+                    if let message = signIn.errorMessage {
+                        AccountSignInError(message: message)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 2)
+                            .transition(.onboardingReveal(reduceMotion: reduceMotion))
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.bottom, 10)
+                .transition(.onboardingReveal(reduceMotion: reduceMotion))
+            }
         }
-        .padding(.horizontal, 16)
-        .frame(minHeight: OnboardingTheme.buttonHeight)
-        .modifier(MatchingActionSurface(isOn: false))
+        .modifier(MatchingActionSurface(isOn: phase != .closed))
+        .animation(.easeInOut(duration: 0.2), value: signIn.errorMessage)
     }
 }
 
