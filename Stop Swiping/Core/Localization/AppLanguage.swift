@@ -6,9 +6,34 @@ nonisolated enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case dutch = "nl"
 
     var id: String { rawValue }
-    var name: String { self == .english ? "English" : "Nederlands" }
-    var flag: String { self == .english ? "🇬🇧" : "🇳🇱" }
     var locale: Locale { Locale(identifier: rawValue) }
+
+    /// Each language's own name, so it is recognizable whatever the app shows.
+    var name: String {
+        switch self {
+        case .english: "English"
+        case .dutch: "Nederlands"
+        }
+    }
+
+    var flag: String {
+        switch self {
+        case .english: "🇬🇧"
+        case .dutch: "🇳🇱"
+        }
+    }
+
+    /// The first device language the app supports, so a first launch matches
+    /// the iPhone (and its system permission prompts). English otherwise.
+    static func preferred(from identifiers: [String]) -> AppLanguage {
+        for identifier in identifiers {
+            if let code = Locale(identifier: identifier).language.languageCode?.identifier,
+               let language = AppLanguage(rawValue: code) {
+                return language
+            }
+        }
+        return .english
+    }
 }
 
 @Observable
@@ -37,9 +62,10 @@ nonisolated final class AppLanguageSettings: @unchecked Sendable {
         }
     }
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard, preferredLanguages: [String] = Locale.preferredLanguages) {
         self.defaults = defaults
-        storedLanguage = defaults.string(forKey: Self.storageKey).flatMap(AppLanguage.init(rawValue:)) ?? .english
+        storedLanguage = defaults.string(forKey: Self.storageKey).flatMap(AppLanguage.init(rawValue:))
+            ?? AppLanguage.preferred(from: preferredLanguages)
     }
 }
 

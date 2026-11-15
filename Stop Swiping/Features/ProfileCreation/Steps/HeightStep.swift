@@ -3,8 +3,6 @@ import SwiftUI
 struct HeightStep: View {
     @ObservedObject var viewModel: ProfileCreationViewModel
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     var body: some View {
         let centimeters = viewModel.state.heightCentimeters
 
@@ -33,29 +31,6 @@ struct HeightStep: View {
                 ),
                 range: HeightRules.range
             )
-
-            ZStack {
-                if viewModel.state.hasAdjustedHeight {
-                    HStack(spacing: 0) {
-                        Text(L10n("No lies"))
-                            .font(.system(.callout, weight: .semibold))
-                            .foregroundStyle(OnboardingTheme.primaryText.opacity(0.9))
-                        InfoPopoverButton(
-                            title: L10n("No lies"),
-                            message: L10n("Providing false information may result in account termination. Purchases may not be restored, including benefits associated with the free new-user offer.")
-                        )
-                    }
-                    .padding(.leading, 16)
-                    .background {
-                        Capsule(style: .continuous)
-                            .fill(.white.opacity(0.06))
-                            .overlay { Capsule(style: .continuous).strokeBorder(.white.opacity(0.1), lineWidth: 1) }
-                    }
-                    .transition(.onboardingReveal(reduceMotion: reduceMotion))
-                }
-            }
-            .frame(minHeight: 48)
-            .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: viewModel.state.hasAdjustedHeight)
         }
         .padding(.vertical, 28)
         .onboardingSurface()

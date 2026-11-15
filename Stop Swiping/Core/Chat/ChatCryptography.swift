@@ -5,12 +5,12 @@ nonisolated enum SecureChatError: LocalizedError {
     case invalidEnvelope, keyChanged, replaceDevice, noPeerDevice, unavailableKey, tooLong
     var errorDescription: String? {
         switch self {
-        case .invalidEnvelope: "This message could not be authenticated."
-        case .keyChanged: "Your match’s security key changed. Compare the security code before continuing."
-        case .replaceDevice: "Another device is registered for this chat. Confirm switching to this iPhone."
-        case .noPeerDevice: "Your match needs to open the chat on their phone first."
-        case .unavailableKey: "This message belongs to another device. Its private key is unavailable on this iPhone."
-        case .tooLong: "Keep your message under 8,000 characters."
+        case .invalidEnvelope: L10n("This message could not be authenticated.")
+        case .keyChanged: L10n("Your match’s security key changed. Compare the security code before continuing.")
+        case .replaceDevice: L10n("Another device is registered for this chat. Confirm switching to this iPhone.")
+        case .noPeerDevice: L10n("Your match needs to open the chat on their phone first.")
+        case .unavailableKey: L10n("This message belongs to another device. Its private key is unavailable on this iPhone.")
+        case .tooLong: L10n("Keep your message under 8,000 characters.")
         }
     }
 }

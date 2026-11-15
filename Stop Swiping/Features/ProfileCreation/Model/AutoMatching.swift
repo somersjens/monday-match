@@ -124,13 +124,6 @@ struct MatchDealbreakers: Equatable {
         case she
         case they
 
-        var word: String {
-            switch self {
-            case .he: "he"
-            case .she: "she"
-            case .they: "they"
-            }
-        }
     }
 
     struct Entry: Equatable {
@@ -148,15 +141,23 @@ struct MatchDealbreakers: Equatable {
     let entries: [Entry]
     var lines: [String] { entries.map(\.text) }
 
+    /// One full sentence per pronoun, so a translation never has to fit an
+    /// English pronoun into its own grammar.
     var heading: String {
-        L10n("Even if your potential partner matches 100% on personality, you will not be matched if \(pronoun.word):")
+        switch pronoun {
+        case .he: L10n("Even if your potential partner matches 100% on personality, you will not be matched if he:")
+        case .she: L10n("Even if your potential partner matches 100% on personality, you will not be matched if she:")
+        case .they: L10n("Even if your potential partner matches 100% on personality, you will not be matched if they:")
+        }
     }
 
     init(state: ProfileCreationState) {
         let genders = state.partnerGenders
         pronoun = genders == [.man] ? .he : (genders == [.woman] ? .she : .they)
+        // Every line is a complete localized sentence. Gluing translated verbs
+        // onto translated fragments breaks in languages with other word order.
         let singular = pronoun != .they
-        func verb(_ one: String, _ many: String) -> String { singular ? one : many }
+        func pick(_ one: String, _ many: String) -> String { singular ? one : many }
 
         var entries: [Entry] = []
         for step in ProfileCreationStep.allCases {
@@ -166,34 +167,43 @@ struct MatchDealbreakers: Equatable {
                 let accepted = state.religion.effectivePartnerReligions
                 if accepted.count < Religion.allCases.count {
                     let titles = Religion.allCases.filter { accepted.contains($0) }.map(\.title).joined(separator: ", ")
-                    append(L10n("\(verb(L10n("Has"), L10n("Have"))) a religion or worldview outside your preferences (\(titles))"))
+                    append(pick(L10n("Has a religion or worldview outside your preferences (\(titles))"),
+                                L10n("Have a religion or worldview outside your preferences (\(titles))")))
                 }
             case .partnerAgeRange:
                 guard let range = state.partnerAgeRange else { continue }
                 var parts: [String] = []
                 if range.minimum > PartnerAgeRules.lowerBound { parts.append(L10n("\(range.minimum - 1) or younger")) }
                 if range.maximum < PartnerAgeRules.upperBound { parts.append(L10n("\(range.maximum + 1) or older")) }
-                if !parts.isEmpty { append("\(verb(L10n("Is"), L10n("Are"))) \(parts.joined(separator: L10n(", or ")))") }
+                if !parts.isEmpty {
+                    let limits = parts.joined(separator: L10n(", or "))
+                    append(pick(L10n("Is \(limits)"), L10n("Are \(limits)")))
+                }
             case .partnerHeightRange:
                 let range = state.partnerHeightRange
                 var parts: [String] = []
                 if range.minimum > PartnerHeightRules.lowerBound { parts.append(L10n("\(range.minimum - 1) cm or shorter")) }
                 if range.maximum < PartnerHeightRules.upperBound { parts.append(L10n("\(range.maximum + 1) cm or taller")) }
-                if !parts.isEmpty { append("\(verb(L10n("Is"), L10n("Are"))) \(parts.joined(separator: L10n(", or ")))") }
+                if !parts.isEmpty {
+                    let limits = parts.joined(separator: L10n(", or "))
+                    append(pick(L10n("Is \(limits)"), L10n("Are \(limits)")))
+                }
             case .languages:
                 let names = state.languages.map { LanguageCatalog.option(for: $0).name }
                 if names.count == 1, let name = names.first {
                     append(singular ? L10n("Doesn’t speak \(name)") : L10n("Don’t speak \(name)"))
                 } else if !names.isEmpty {
-                    append(singular ? L10n("Speaks none of \(names.formatted(.list(type: .or).locale(AppLocale.current)))") : L10n("Speak none of \(names.formatted(.list(type: .or).locale(AppLocale.current)))"))
+                    let list = names.formatted(.list(type: .or).locale(AppLocale.current))
+                    append(pick(L10n("Speaks none of \(list)"), L10n("Speak none of \(list)")))
                 }
             case .location:
                 if state.location != nil {
-                    append(L10n("\(verb(L10n("Lives"), L10n("Live"))) more than \(state.searchRadiusKilometers) km away"))
+                    let radius = state.searchRadiusKilometers
+                    append(pick(L10n("Lives more than \(radius) km away"), L10n("Live more than \(radius) km away")))
                 }
             case .partnerHasChildren:
                 if state.lifestyle.openToPartnerWithChildren == false {
-                    append(L10n("\(verb(L10n("Has"), L10n("Have"))) kids"))
+                    append(pick(L10n("Has kids"), L10n("Have kids")))
                 }
             case .futureChildren:
                 switch state.lifestyle.futureChildren {
@@ -205,13 +215,16 @@ struct MatchDealbreakers: Equatable {
                 guard let substance = step.substance,
                       let limit = state.lifestyle[substance].partnerMaximumLevel,
                       limit + 1 < substance.levels.count else { continue }
-                let level = substance.levels[limit + 1].lowercased()
-                let action = switch substance {
-                case .alcohol: verb(L10n("Drinks alcohol"), L10n("Drink alcohol"))
-                case .smoking: verb(L10n("Smokes or vapes"), L10n("Smoke or vape"))
-                case .drugs: verb(L10n("Uses cannabis or other drugs"), L10n("Use cannabis or other drugs"))
+                let level = substance.levels[limit + 1].lowercased(with: AppLocale.current)
+                switch substance {
+                case .alcohol:
+                    append(pick(L10n("Drinks alcohol \(level) or more often"), L10n("Drink alcohol \(level) or more often")))
+                case .smoking:
+                    append(pick(L10n("Smokes or vapes \(level) or more often"), L10n("Smoke or vape \(level) or more often")))
+                case .drugs:
+                    append(pick(L10n("Uses cannabis or other drugs \(level) or more often"),
+                                L10n("Use cannabis or other drugs \(level) or more often")))
                 }
-                append(L10n("\(action) \(level) or more often"))
             default:
                 continue
             }

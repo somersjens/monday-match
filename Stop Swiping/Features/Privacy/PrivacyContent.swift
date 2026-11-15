@@ -1,12 +1,24 @@
 import Foundation
 
-/// Supplied NL/EN copy. Keep the approval summaries separate from the full policy.
-/// Placeholders in the supplied policy are intentionally retained for editorial review.
+/// NL/EN privacy copy. The approval screens show short points first; the
+/// sections hold the complete terms the user agrees to. Changing the meaning
+/// of any approval text requires bumping `PrivacyConsentKind.version`.
 enum PrivacyContent {
+    struct Point: Hashable {
+        let symbol: String
+        let title: String
+        let text: String
+    }
+
+    struct Section: Hashable {
+        let title: String
+        let body: String
+    }
+
     struct Approval {
         let title: String
-        let summary: String
-        let details: String
+        let points: [Point]
+        let sections: [Section]
         let acknowledgement: String
     }
 
@@ -24,225 +36,174 @@ enum PrivacyContent {
     }
 
     static func policy(language: AppLanguage) -> String {
-        language == .dutch ? policyNL : policyEN
+        switch language {
+        case .english: policyEN
+        case .dutch: policyNL
+        }
     }
 
+    // MARK: - Profile
+
     private static let profileEN = Approval(
-        title: #"""
-Your Profile, Your Privacy
-"""#,
-        summary: #"""
-- Your profile is stored on your iPhone.
-- You can optionally create an account and enable cloud backup to restore your profile if your device is lost or replaced.
-- Creating your profile or making a backup does not automatically make it visible to other users.
-- When you exchange profiles with someone, you both receive a complete snapshot of each other's profile, including all answers, importance ratings and dealbreakers.
-- Changes you make later do not update profiles you have already shared.
-- Messages in the app are end-to-end encrypted, so we cannot read their contents.
-- Automatic matching is a separate, optional service for which we will ask for your permission later.
-"""#,
-        details: #"""
-#### 1. Your profile on your device
-
-Your answers, importance ratings, preferences and dealbreakers are stored on your iPhone. You can create and edit your profile without enabling automatic matching. Depending on your iPhone settings, app data may also be included in an Apple device backup. Apple's settings and safeguards also apply to such backups.
-
-#### 2. Optional cloud backup
-
-You may choose to create an account and enable cloud backup. A copy of your profile is then stored through our cloud infrastructure, provided by Supabase, so you can restore it if your device is lost or replaced. The data is protected in transit and at rest, and access is restricted to the systems and authorized functions needed to provide the service.
-
-Cloud backup is not automatic matching. A backup does not make your profile visible to other users or enroll you in matching. You can manage your backup settings separately.
-
-#### 3. Exchanging complete profiles
-
-When you and another person choose to exchange profiles, each of you receives a complete snapshot of the other's profile at that moment. This includes all answers, importance ratings, preferences and dealbreakers, as well as the profile information included in the exchange. Individual answers cannot be hidden. Login credentials and private conversations are not included.
-
-A manual profile exchange takes place only after both people initiate or accept that exchange. Automatic matching has its own separate consent screen.
-
-#### 4. Information already shared
-
-Each exchange fixes the profile content shared at that time. Later edits do not change previously shared snapshots or existing match scores. Recipients may save information or take screenshots. We cannot guarantee the removal of copies saved outside the app. Requests concerning copies stored within our service are handled under our Privacy Policy.
-
-#### 5. Security and access
-
-We use secure connections, encrypted storage, restricted access and authorization checks. Our cloud provider and strictly authorized systems may process information to provide the functions you enable. We do not promise that cloud information is technically unreadable to every administrator. We do not sell profile information or use your questionnaire answers for targeted advertising.
-
-#### 6. Private conversations
-
-Chat messages are end-to-end encrypted. Their contents are encrypted on the sending device and decrypted on the recipient's device. Our servers cannot read the message contents. We may process limited data needed for delivery, such as participating account identifiers and send or delivery times. If you choose to attach messages to a report, the reported content may be reviewed.
-
-#### 7. Your choices and rights
-
-You can edit your profile, manage cloud backup, and request access, correction or deletion through the app or [PRIVACY_CONTACT]. Copies already received by other people may not be recoverable. Retention periods and your rights are explained in the Privacy Policy.
-
-#### 8. Automatic matching is separate
-
-You can create a profile without using automatic matching. Automatic matching involves processing your complete answers and importance ratings on our servers. We ask for separate, explicit consent, including permission to automatically share your full profile when a match is created.
-"""#,
-        acknowledgement: #"""
-I have read and understood how my profile is stored and what happens when I exchange my complete profile with another person.
-"""#
-    )
-
-    private static let matchingEN = Approval(
-        title: #"""
-Automatic Matching & Your Data
-"""#,
-        summary: #"""
-- Automatic matching is optional and is turned off by default.
-- If you enable it, your complete matching profile is securely stored and processed on our servers.
-- The system compares all your answers, importance ratings and dealbreakers with those of other participating users.
-- When a match is created, you both automatically receive each other's complete profile and a calculated compatibility score, without approving each match individually.
-- Compatibility scores and shared profile snapshots stay fixed; later changes are used only for future matches.
-- You can disable automatic matching at any time, but previously shared profiles cannot automatically be recalled.
-- Chat messages are end-to-end encrypted and cannot be read by us.
-- We do not sell your matching information or use your answers for targeted advertising.
-"""#,
-        details: #"""
-#### 1. What information do we use?
-
-When you enable automatic matching, we upload your complete matching profile to our cloud infrastructure provided by Supabase. This includes all questionnaire answers, importance ratings, preferences and dealbreakers, together with technical information required to compare profiles. The information may contain or reveal sensitive details, including information about health, religion or sexual orientation.
-
-#### 2. How does matching work?
-
-The system first checks dealbreakers and other mandatory criteria in both directions. It then compares answers and importance ratings to calculate a compatibility percentage. An automatic match is created only when the matching requirements are met. The score represents our calculation method, not a prediction or guarantee of relationship success.
-
-#### 3. What can a match see?
-
-When a match is created, both people gain access to a complete snapshot of the other's profile. It includes all matching answers, importance ratings, preferences and dealbreakers. Your profile name and photograph are also visible to that match if they form part of your profile. Individual answers cannot be hidden from matches.
-
-By enabling automatic matching, you agree in advance to this automatic sharing with future matches. We do not ask you to approve each individual match before your complete profile snapshot becomes visible.
-
-#### 4. Fixed scores and snapshots
-
-At match creation, we save the calculated score and complete exchanged profile snapshots. Edits to your current profile do not change existing scores or previously shared snapshots. As a result, an older score may not reflect your current answers. New matches use your latest synchronized profile information.
-
-#### 5. How is the information secured?
-
-Information is protected in transit and at rest. Where practical, we separate identifying account information from numerical matching data and restrict access through authentication, authorization and technical safeguards. The matching service must process your answers to calculate scores, so matching-profile processing is not end-to-end encrypted. Administrative and system access are restricted as far as practicable. Our Privacy Policy outlines our security approach.
-
-#### 6. What happens when you turn matching off?
-
-After you disable matching, your profile is no longer considered for new automatic matches. Active matching data is deleted or deactivated according to the retention periods in our Privacy Policy. Existing matches, shared snapshots and copies kept by other users do not automatically disappear. Separately enabled cloud backup remains controlled by your backup settings.
-
-#### 7. Messages and reports
-
-Chats between matches are end-to-end encrypted, so our servers cannot read their contents. We still process limited metadata for delivery, safety and support. If users voluntarily submit message content with a report, we may review that submitted content.
-
-#### 8. Service providers and your rights
-
-Supabase and any other service providers listed in our Privacy Policy help operate and secure the app. We do not sell your answers. You can withdraw your consent to automatic matching in Privacy Settings. This stops future processing based on that consent but does not reverse earlier lawful processing or recall copies already provided to another person. You can also exercise your legal privacy rights through [PRIVACY_CONTACT].
-"""#,
-        acknowledgement: #"""
-I explicitly consent to the storage and automated processing of my complete matching profile, including any sensitive personal data it contains, to find compatible people. I also consent to my complete profile being automatically shown to each user with whom a match is created. I understand that I will not approve each match individually and that I may withdraw consent later, without automatically recalling previously shared copies.
-"""#
+        title: "Please read!",
+        points: [
+            Point(symbol: "iphone",
+                  title: "Stored on your iPhone",
+                  text: "Nobody else can see your profile until you share it yourself."),
+            Point(symbol: "icloud",
+                  title: "Backup is optional",
+                  text: "With an account you can back up your profile to restore it later. A backup is never visible to other users."),
+            Point(symbol: "arrow.left.arrow.right",
+                  title: "Sharing means everything",
+                  text: "In an exchange you both receive each other's full profile: all answers, importance ratings and dealbreakers. You can't hide individual answers."),
+            Point(symbol: "clock.arrow.circlepath",
+                  title: "Shared stays shared",
+                  text: "The other person keeps the version from that moment. Later edits don't change it, and we can't recall saved copies or screenshots."),
+            Point(symbol: "sparkles",
+                  title: "Automatic matching is separate",
+                  text: "We'll ask for your permission for that separately.")
+        ],
+        sections: [
+            Section(title: "Storage on your device",
+                    body: "Your answers, importance ratings, preferences and dealbreakers are stored on your iPhone. Depending on your settings, they may also be included in your Apple device backup, which is governed by Apple's terms."),
+            Section(title: "Cloud backup",
+                    body: "Only if you create an account and turn on backup do we store a copy with our cloud provider, Supabase. It is protected in transit and at rest, and access is limited to what is needed to run the service. A backup does not make your profile visible or enroll you in matching."),
+            Section(title: "Profile exchange",
+                    body: "An exchange only happens when both of you start or accept it. You each receive a snapshot of the other's complete profile. Login details and chats are not included."),
+            Section(title: "Information already shared",
+                    body: "Later edits don't change snapshots or match scores that were already shared. Recipients can save information or take screenshots; we can't remove copies kept outside the app. Requests about copies within our service are handled under the Privacy Policy."),
+            Section(title: "Security",
+                    body: "We use secure connections, encrypted storage and restricted access. Cloud data is not technically unreadable to every administrator. We don't sell your information or use your answers for advertising."),
+            Section(title: "Chats",
+                    body: "Messages are encrypted on your device and only decrypted on the recipient's. We process only what delivery requires, such as account IDs and timestamps. If you attach messages to a report yourself, we can review that content."),
+            Section(title: "Your rights",
+                    body: "You can edit your profile, manage your backup, and request access, correction or deletion in the app or via [PRIVACY_CONTACT]. Retention periods and all your rights are set out in the Privacy Policy."),
+            Section(title: "Automatic matching",
+                    body: "Automatic matching processes your complete answers on our servers. We only do this with your separate, explicit consent.")
+        ],
+        acknowledgement: "I understand how my profile is stored and that an exchange shares my complete profile."
     )
 
     private static let profileNL = Approval(
-        title: #"""
-Jouw profiel, jouw privacy
-"""#,
-        summary: #"""
-- Je profiel wordt opgeslagen op je iPhone.
-- Je kunt vrijwillig een account aanmaken en cloudback-up inschakelen om je profiel te herstellen als je van toestel wisselt of je toestel verliest.
-- Je profiel wordt niet automatisch zichtbaar voor anderen wanneer je het invult of een back-up maakt.
-- Als je met iemand profielen uitwisselt, ontvangen jullie allebei een volledige momentopname van elkaars profiel, inclusief alle antwoorden, belangrijkheidswegingen en breekpunten.
-- Wijzigingen die je later aanbrengt, veranderen eerder gedeelde profielen niet.
-- Berichten in de app zijn end-to-end versleuteld, zodat wij de inhoud niet kunnen lezen.
-- Automatische matching is een afzonderlijke, vrijwillige dienst waarvoor wij later apart toestemming vragen.
-"""#,
-        details: #"""
-#### 1. Je profiel op je toestel
+        title: "Even lezen!",
+        points: [
+            Point(symbol: "iphone",
+                  title: "Opgeslagen op je iPhone",
+                  text: "Niemand ziet je profiel tot je het zelf deelt."),
+            Point(symbol: "icloud",
+                  title: "Back-up is optioneel",
+                  text: "Met een account kun je een back-up maken om je profiel later te herstellen. Een back-up is nooit zichtbaar voor andere gebruikers."),
+            Point(symbol: "arrow.left.arrow.right",
+                  title: "Delen is alles delen",
+                  text: "Bij een uitwisseling krijgen jullie allebei elkaars volledige profiel: alle antwoorden, wegingen en breekpunten. Losse antwoorden verbergen kan niet."),
+            Point(symbol: "clock.arrow.circlepath",
+                  title: "Gedeeld blijft gedeeld",
+                  text: "De ander houdt de versie van dat moment. Latere wijzigingen passen die niet aan, en opgeslagen kopieën of screenshots kunnen we niet terughalen."),
+            Point(symbol: "sparkles",
+                  title: "Automatisch matchen is apart",
+                  text: "Daarvoor vragen we later los toestemming.")
+        ],
+        sections: [
+            Section(title: "Opslag op je toestel",
+                    body: "Je antwoorden, wegingen, voorkeuren en breekpunten worden op je iPhone opgeslagen. Afhankelijk van je instellingen kunnen ze ook in je Apple-reservekopie terechtkomen; daarvoor gelden de voorwaarden van Apple."),
+            Section(title: "Cloudback-up",
+                    body: "Alleen als je een account aanmaakt en back-up aanzet, bewaren we een kopie bij onze cloudverwerker Supabase. Die is beveiligd tijdens verzending en opslag, en toegang is beperkt tot wat nodig is voor de dienst. Een back-up maakt je profiel niet zichtbaar en meldt je niet aan voor matching."),
+            Section(title: "Profieluitwisseling",
+                    body: "Een uitwisseling gebeurt alleen als jullie die allebei starten of accepteren. Jullie ontvangen dan een momentopname van elkaars volledige profiel. Inloggegevens en chats horen daar niet bij."),
+            Section(title: "Eerder gedeelde gegevens",
+                    body: "Latere wijzigingen veranderen eerder gedeelde momentopnamen en matchscores niet. Een ontvanger kan gegevens bewaren of screenshots maken; kopieën buiten de app kunnen wij niet verwijderen. Verzoeken over kopieën binnen onze dienst behandelen we volgens de Privacyverklaring."),
+            Section(title: "Beveiliging",
+                    body: "We gebruiken beveiligde verbindingen, versleutelde opslag en beperkte toegangsrechten. Cloudgegevens zijn niet voor iedere beheerder technisch onleesbaar. We verkopen je gegevens niet en gebruiken je antwoorden niet voor advertenties."),
+            Section(title: "Chats",
+                    body: "Berichten worden op jouw toestel versleuteld en pas bij de ontvanger ontsleuteld. We verwerken alleen wat nodig is voor aflevering, zoals account-ID's en tijdstippen. Voeg je zelf berichten toe aan een melding, dan kunnen wij die inhoud bekijken."),
+            Section(title: "Je rechten",
+                    body: "Je kunt je profiel aanpassen, je back-up beheren en in de app of via [PRIVACYCONTACT] inzage, correctie of verwijdering vragen. Bewaartermijnen en al je rechten staan in de Privacyverklaring."),
+            Section(title: "Automatisch matchen",
+                    body: "Bij automatisch matchen worden je volledige antwoorden op onze servers verwerkt. Dat doen we alleen met je aparte, uitdrukkelijke toestemming.")
+        ],
+        acknowledgement: "Ik begrijp hoe mijn profiel wordt opgeslagen en dat ik bij een uitwisseling mijn volledige profiel deel."
+    )
 
-Je antwoorden, belangrijkheidswegingen, voorkeuren en breekpunten worden op je iPhone opgeslagen. Je kunt je profiel opbouwen en aanpassen zonder automatische matching in te schakelen. Afhankelijk van je iPhone-instellingen kunnen appgegevens ook onderdeel zijn van een reservekopie van Apple. Voor de beveiliging en het beheer van die reservekopie gelden mede de instellingen van Apple.
+    // MARK: - Automatic matching
 
-#### 2. Vrijwillige cloudback-up
-
-Je kunt ervoor kiezen een account aan te maken en cloudback-up in te schakelen. Dan wordt een kopie van je profiel opgeslagen via onze cloudinfrastructuur van Supabase, zodat je je profiel kunt herstellen bij verlies of vervanging van je toestel. Deze gegevens worden beveiligd tijdens verzending en opslag. De toegang is beperkt tot de systemen en bevoegde functies die nodig zijn voor deze dienst.
-
-Cloudback-up is niet hetzelfde als automatische matching. Een back-up maakt je profiel niet zichtbaar voor andere gebruikers en schrijft je niet in voor automatische matching. Je kunt de instellingen voor je back-up afzonderlijk beheren.
-
-#### 3. Een volledig profiel uitwisselen
-
-Als jij en een andere persoon besluiten profielen uit te wisselen, krijgen jullie allebei een volledige momentopname van elkaars profiel zoals dat op dat moment is. Daarin staan alle antwoorden, belangrijkheidswegingen, voorkeuren en breekpunten, naast de profielgegevens die bij de uitwisseling horen. Je kunt niet per vraag bepalen wat je verbergt. Je inloggegevens en privégesprekken maken geen deel uit van de profieluitwisseling.
-
-Een profieluitwisseling vindt alleen plaats nadat de betreffende uitwisseling door beide personen is gestart of geaccepteerd. Bij automatische matching geldt het afzonderlijke toestemmingsscherm van die dienst.
-
-#### 4. Eerder gedeelde gegevens
-
-Elke uitwisseling legt de gedeelde profielinhoud op dat moment vast. Wanneer je later iets in je profiel wijzigt, verandert dat eerder gedeelde momentopnamen en bestaande matchscores niet. Een ontvanger kan gegevens bewaren of schermafbeeldingen maken. Wij kunnen niet garanderen dat kopieën die iemand buiten de app heeft opgeslagen worden verwijderd. Verwijderverzoeken voor kopieën die wij binnen de dienst beheren worden volgens onze Privacyverklaring behandeld.
-
-#### 5. Beveiliging en toegang
-
-We gebruiken beveiligde verbindingen, versleutelde opslag, beperkte toegangsrechten en controles op wie gegevens mag opvragen. De cloudverwerker en strikt bevoegde systemen kunnen gegevens verwerken voor de functies die je hebt ingeschakeld. Wij beloven niet dat cloudgegevens technisch voor iedere beheerder onleesbaar zijn. We verkopen je profielgegevens niet en gebruiken je vragenantwoorden niet voor gerichte advertenties.
-
-#### 6. Privégesprekken
-
-Chatberichten zijn end-to-end versleuteld. De inhoud wordt op het verzendende toestel versleuteld en op het toestel van de ontvanger ontsleuteld. Onze servers kunnen de berichtinhoud niet lezen. We kunnen wel beperkte gegevens verwerken die nodig zijn voor het afleveren van berichten, zoals betrokken account-ID’s en verzend- of aflevermomenten. Als je zelf een bericht bij een melding meestuurt, kan de gemelde inhoud worden beoordeeld.
-
-#### 7. Je keuzes en rechten
-
-Je kunt je profiel aanpassen, cloudback-up beheren en via de app of [PRIVACYCONTACT] verzoeken indienen voor inzage, correctie of verwijdering. Eerder ontvangen kopieën bij andere personen kunnen niet altijd worden teruggehaald. De precieze bewaartermijnen en je rechten staan in de Privacyverklaring.
-
-#### 8. Automatische matching is apart
-
-Je kunt een profiel maken zonder automatische matching. Voor automatische matching worden je volledige antwoorden en wegingen verwerkt op onze servers. Daarvoor vragen we op een afzonderlijk scherm uitdrukkelijk toestemming, inclusief toestemming voor automatische uitwisseling van je volledige profiel bij een match.
-"""#,
-        acknowledgement: #"""
-Ik heb gelezen en begrepen hoe mijn profiel wordt opgeslagen en wat er gebeurt wanneer ik mijn volledige profiel met iemand uitwissel.
-"""#
+    private static let matchingEN = Approval(
+        title: "Automatic matching",
+        points: [
+            Point(symbol: "server.rack",
+                  title: "Processed on our servers",
+                  text: "Your complete matching profile is stored and automatically compared with other participants. This includes sensitive answers about your religion, sexuality and use of alcohol, tobacco and drugs."),
+            Point(symbol: "person.2",
+                  title: "Shared when you match",
+                  text: "When you match, you both immediately see each other's full profile and a compatibility score. You don't approve each match first."),
+            Point(symbol: "pin",
+                  title: "Fixed at that moment",
+                  text: "The score and shared profile don't update. Your edits only count for new matches."),
+            Point(symbol: "arrow.uturn.backward",
+                  title: "Withdrawing consent",
+                  text: "Turn matching off and you won't get new matches. Anything already shared with a match stays with that person."),
+            Point(symbol: "lock",
+                  title: "Private stays private",
+                  text: "Chats are end-to-end encrypted. We don't sell your information or use it for advertising.")
+        ],
+        sections: [
+            Section(title: "What we use",
+                    body: "Your complete matching profile: all answers, importance ratings, preferences and dealbreakers, plus the technical data needed to compare profiles. It is stored with our cloud provider, Supabase. This includes special categories of personal data: your religion or worldview, your gender and the genders you are interested in (which reveal your sexual orientation), your preferences around sex and intimacy, and how often you use alcohol, tobacco and drugs."),
+            Section(title: "How matching works",
+                    body: "We first check dealbreakers and required criteria in both directions, then calculate a compatibility score from answers and importance ratings. A match is only created when the criteria are met. The score is the result of our calculation, not a prediction of relationship success."),
+            Section(title: "What a match sees",
+                    body: "A snapshot of your complete profile, including your name and photo if they are part of your profile. Individual answers can't be hidden. By turning on matching you agree to this in advance; we don't ask again for each match."),
+            Section(title: "Fixed scores",
+                    body: "When a match is created, we save the score and both profiles. Later edits don't change them, so an older score may differ from your current answers. New matches use your latest information."),
+            Section(title: "Security",
+                    body: "Data is protected in transit and at rest. Where possible we separate account details from matching data and restrict access. Because our servers must compare your answers, this processing is not end-to-end encrypted."),
+            Section(title: "Turning matching off",
+                    body: "You'll no longer be included in new matches, and your matching data is deleted or deactivated according to the retention periods in the Privacy Policy. Existing matches, shared snapshots and copies kept by others don't disappear automatically. Your cloud backup follows your backup settings."),
+            Section(title: "Chats and reports",
+                    body: "Chats are end-to-end encrypted. We process limited metadata for delivery, safety and support. If you add messages to a report yourself, we can review that content."),
+            Section(title: "Withdrawal and your rights",
+                    body: "You can withdraw your consent at any time by turning off automatic matching. This stops further processing but does not make earlier processing unlawful. You can exercise your privacy rights via [PRIVACY_CONTACT]. The service providers we use are listed in the Privacy Policy.")
+        ],
+        acknowledgement: "I explicitly consent to my complete matching profile, including sensitive answers about my religion, sexuality and substance use, being stored and automatically processed to find matches, and automatically shared with each match. I can withdraw this consent at any time; anything already shared stays with the recipient."
     )
 
     private static let matchingNL = Approval(
-        title: #"""
-Automatische matching en jouw gegevens
-"""#,
-        summary: #"""
-- Automatische matching is vrijwillig en staat standaard uit.
-- Als je deze dienst inschakelt, wordt je volledige matchingprofiel veilig opgeslagen en verwerkt op onze servers.
-- Het systeem vergelijkt alle antwoorden, wegingen en breekpunten met die van andere deelnemende gebruikers.
-- Wanneer een match ontstaat, krijgen jullie automatisch elkaars volledige profiel en een berekend matchpercentage te zien, zonder dat je elke match vooraf afzonderlijk goedkeurt.
-- Het matchpercentage en de uitgewisselde profielmomentopnamen blijven vaststaan; latere wijzigingen worden alleen gebruikt voor toekomstige matches.
-- Je kunt automatische matching op elk moment uitschakelen; eerder gedeelde profielen zijn daarmee niet automatisch teruggehaald.
-- Chatberichten zijn end-to-end versleuteld en kunnen niet door ons worden gelezen.
-- We verkopen je matchinggegevens niet en gebruiken je antwoorden niet voor gerichte advertenties.
-"""#,
-        details: #"""
-#### 1. Welke gegevens gebruiken we?
-
-Wanneer je automatische matching inschakelt, sturen we je volledige matchingprofiel naar onze cloudinfrastructuur van Supabase. Dat omvat alle vragenantwoorden, belangrijkheidswegingen, voorkeuren en breekpunten en de noodzakelijke technische gegevens om profielen te vergelijken. Ook gegevens die gevoelig zijn of iets kunnen onthullen over bijvoorbeeld gezondheid, geloof of seksuele voorkeuren kunnen hierin voorkomen.
-
-#### 2. Hoe werkt matching?
-
-Het systeem controleert eerst de ingestelde breekpunten en andere noodzakelijke voorwaarden in beide richtingen. Daarna vergelijkt het de antwoorden en wegingen om een compatibiliteitspercentage te berekenen. Alleen als aan de ingestelde voorwaarden wordt voldaan, ontstaat een automatische match. De score is een uitkomst van onze rekenmethode, geen voorspelling of garantie dat een relatie zal slagen.
-
-#### 3. Wat ziet een match?
-
-Op het moment dat een match ontstaat, krijgen beide personen toegang tot een volledige momentopname van het profiel van de ander. Daarin zitten alle matchingantwoorden, belangrijkheidswegingen, voorkeuren en breekpunten. Ook je profielnaam en profielfoto worden zichtbaar voor die match, als deze onderdeel zijn van je profiel. Er is geen mogelijkheid om afzonderlijke antwoorden voor matches te verbergen.
-
-Door automatische matching in te schakelen, geef je vooraf toestemming voor dit automatisch delen met toekomstige matches. We vragen je niet bij elke afzonderlijke match opnieuw om toestemming voordat de volledige profielmomentopname zichtbaar wordt.
-
-#### 4. Vastgezette scores en momentopnamen
-
-Bij het aanmaken van een match slaan we de berekende score en de volledige uitgewisselde profielmomentopnamen vast op. Veranderingen aan je actuele profiel wijzigen bestaande scores en eerder gedeelde momentopnamen niet. Daardoor kan een oude matchscore afwijken van je huidige antwoorden. Voor nieuwe matches gebruiken we de nieuwste gesynchroniseerde profielgegevens.
-
-#### 5. Hoe worden gegevens beveiligd?
-
-De informatie wordt beveiligd tijdens verzending en opslag. We scheiden identificerende accountinformatie waar mogelijk van numerieke matchinggegevens en beperken toegang met authenticatie, autorisatie en technische controles. De matchingservice moet je gegevens wel kunnen verwerken om scores te berekenen; daarom is dit geen end-to-end versleutelde verwerking van de profielantwoorden. Beheerders- en systeemrechten worden zoveel mogelijk beperkt. Onze volledige beveiligingsaanpak staat op hoofdlijnen in de Privacyverklaring.
-
-#### 6. Wat gebeurt er als je matching uitschakelt?
-
-Na uitschakeling word je niet meer meegenomen in nieuwe automatische matches en worden je actieve matchinggegevens verwijderd of buiten gebruik gesteld volgens de bewaartermijnen in onze Privacyverklaring. Eerder ontstane matches, gedeelde profielmomentopnamen en opgeslagen kopieën bij andere gebruikers verdwijnen niet automatisch. Een apart ingeschakelde cloudback-up blijft onder je eigen back-upinstellingen vallen.
-
-#### 7. Berichten en meldingen
-
-Chats tussen matches zijn end-to-end versleuteld, zodat onze servers de inhoud niet kunnen lezen. We verwerken wel beperkte metadata voor aflevering, veiligheid en ondersteuning. Als gebruikers zelf inhoud toevoegen aan een melding, kan die inhoud door ons worden beoordeeld.
-
-#### 8. Derden en je rechten
-
-Supabase en eventueel andere in de Privacyverklaring genoemde dienstverleners ondersteunen de werking en beveiliging van de app. We verkopen je antwoorden niet. Je kunt je toestemming voor automatische matching intrekken in Privacyinstellingen. Dit stopt toekomstige verwerking op basis van die toestemming, maar draait eerdere rechtmatige verwerking of de verstrekking van kopieën aan andere personen niet terug. Je kunt ook je wettelijke privacyrechten uitoefenen via [PRIVACYCONTACT].
-"""#,
-        acknowledgement: #"""
-Ik geef uitdrukkelijk toestemming voor het opslaan en automatisch verwerken van mijn volledige matchingprofiel, inclusief eventuele gevoelige persoonsgegevens, om compatibele personen te vinden. Ik geef ook toestemming om mijn volledige profiel automatisch zichtbaar te maken aan iedere gebruiker met wie een match ontstaat. Ik begrijp dat ik niet iedere match vooraf afzonderlijk goedkeur en dat ik mijn toestemming later kan intrekken, zonder eerder gedeelde kopieën automatisch terug te halen.
-"""#
+        title: "Automatisch matchen",
+        points: [
+            Point(symbol: "server.rack",
+                  title: "Verwerkt op onze servers",
+                  text: "Je volledige matchingprofiel wordt opgeslagen en automatisch vergeleken met andere deelnemers. Daarin staan ook gevoelige antwoorden over je geloof, seksualiteit en gebruik van alcohol, tabak en drugs."),
+            Point(symbol: "person.2",
+                  title: "Gedeeld bij een match",
+                  text: "Bij een match zien jullie direct elkaars volledige profiel en een matchpercentage. Je keurt niet elke match vooraf goed."),
+            Point(symbol: "pin",
+                  title: "Vastgelegd op dat moment",
+                  text: "Score en gedeeld profiel veranderen niet mee. Je wijzigingen tellen alleen voor nieuwe matches."),
+            Point(symbol: "arrow.uturn.backward",
+                  title: "Toestemming intrekken",
+                  text: "Zet matching uit en je krijgt geen nieuwe matches meer. Wat al met een match is gedeeld, blijft bij die persoon."),
+            Point(symbol: "lock",
+                  title: "Privé blijft privé",
+                  text: "Chats zijn end-to-end versleuteld. We verkopen je gegevens niet en gebruiken ze niet voor advertenties.")
+        ],
+        sections: [
+            Section(title: "Welke gegevens",
+                    body: "Je volledige matchingprofiel: alle antwoorden, wegingen, voorkeuren en breekpunten, plus de technische gegevens die nodig zijn om te vergelijken. We bewaren dit bij onze cloudverwerker Supabase. Daaronder vallen bijzondere persoonsgegevens: je geloof of levensovertuiging, je gender en de genders waarin je geïnteresseerd bent (waaruit je seksuele voorkeur blijkt), je wensen rond seks en intimiteit, en hoe vaak je alcohol, tabak en drugs gebruikt."),
+            Section(title: "Hoe matching werkt",
+                    body: "Eerst controleren we breekpunten en harde voorwaarden, in beide richtingen. Daarna berekenen we een matchpercentage op basis van antwoorden en wegingen. Alleen als aan de voorwaarden is voldaan, ontstaat een match. Het percentage is een rekenuitkomst, geen voorspelling van een geslaagde relatie."),
+            Section(title: "Wat een match ziet",
+                    body: "Een momentopname van je volledige profiel, inclusief naam en foto als die in je profiel staan. Losse antwoorden verbergen kan niet. Door matching aan te zetten geef je hier vooraf toestemming voor; we vragen het niet per match opnieuw."),
+            Section(title: "Vaste scores",
+                    body: "Bij een match leggen we de score en beide profielen vast. Latere wijzigingen passen die niet aan, dus een oude score kan afwijken van je huidige antwoorden. Nieuwe matches gebruiken je nieuwste gegevens."),
+            Section(title: "Beveiliging",
+                    body: "Gegevens zijn beveiligd tijdens verzending en opslag. Waar mogelijk scheiden we accountgegevens van matchinggegevens en beperken we toegang. Omdat onze servers je antwoorden moeten kunnen vergelijken, is deze verwerking niet end-to-end versleuteld."),
+            Section(title: "Matching uitzetten",
+                    body: "Je doet dan niet meer mee aan nieuwe matches en we verwijderen of deactiveren je matchinggegevens volgens de bewaartermijnen in de Privacyverklaring. Bestaande matches, gedeelde momentopnamen en kopieën bij anderen verdwijnen niet automatisch. Je cloudback-up volgt je eigen back-upinstellingen."),
+            Section(title: "Chats en meldingen",
+                    body: "Chats zijn end-to-end versleuteld. We verwerken beperkte metadata voor aflevering, veiligheid en ondersteuning. Voeg je zelf berichten toe aan een melding, dan kunnen wij die inhoud bekijken."),
+            Section(title: "Intrekken en je rechten",
+                    body: "Je kunt je toestemming altijd intrekken door automatisch matchen uit te zetten. Dat stopt verdere verwerking, maar maakt eerdere verwerking niet onrechtmatig. Je privacyrechten oefen je uit via [PRIVACYCONTACT]. Welke dienstverleners we gebruiken, staat in de Privacyverklaring.")
+        ],
+        acknowledgement: "Ik geef uitdrukkelijk toestemming om mijn volledige matchingprofiel, inclusief gevoelige antwoorden over mijn geloof, seksualiteit en middelengebruik, op te slaan en automatisch te verwerken om matches te vinden, en het automatisch te delen met iedere match. Ik kan deze toestemming altijd intrekken; wat al gedeeld is, blijft bij de ontvanger."
     )
 
     private static let policyEN = #"""

@@ -5,7 +5,6 @@ struct PrivacyConsentView: View {
     let onAccept: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var acknowledged = false
-    @State private var showsDetails = false
     @State private var showsPolicy = false
 
     var body: some View {
@@ -13,41 +12,183 @@ struct PrivacyConsentView: View {
         VStack(spacing: 0) {
             PrivacyPageHeader(title: copy.title) { dismiss() }
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    PrivacyDocumentBody(markdown: copy.summary)
-                    DisclosureGroup(L10n("Read more"), isExpanded: $showsDetails) {
-                        PrivacyDocumentBody(markdown: copy.details).padding(.top, 16)
+                VStack(alignment: .leading, spacing: 36) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(copy.points, id: \.self) { PrivacyPointCard(point: $0) }
                     }
-                    .tint(OnboardingTheme.cyan)
-                    Button(L10n("Read the full Privacy Policy")) { showsPolicy = true }
-                        .foregroundStyle(OnboardingTheme.cyan)
-                        .frame(minHeight: 44)
-                    Toggle(isOn: $acknowledged) {
-                        Text(copy.acknowledgement)
-                            .font(.subheadline)
-                            .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 12)
+
+                    PrivacyDetailsList(sections: copy.sections) { showsPolicy = true }
+
+                    VStack(spacing: 14) {
+                        PrivacyCheckbox(text: copy.acknowledgement, isOn: $acknowledged)
+                        Button(L10n("Accept")) {
+                            onAccept()
+                            dismiss()
+                        }
+                        .buttonStyle(GlowButtonStyle())
+                        .disabled(!acknowledged)
+                        .accessibilityIdentifier("acceptPrivacy")
+                        Button(L10n("Not now")) { dismiss() }
+                            .buttonStyle(QuietButtonStyle())
                     }
-                    .tint(OnboardingTheme.violet)
-                    .accessibilityIdentifier("privacyAcknowledgement")
-                    Button(L10n("Accept")) {
-                        onAccept()
-                        dismiss()
-                    }
-                    .buttonStyle(GlowButtonStyle())
-                    .disabled(!acknowledged)
-                    .accessibilityIdentifier("acceptPrivacy")
-                    Button(L10n("Not now")) { dismiss() }
-                        .buttonStyle(QuietButtonStyle())
                 }
                 .foregroundStyle(OnboardingTheme.primaryText)
                 .frame(maxWidth: OnboardingTheme.contentWidth)
-                .padding(24)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
                 .frame(maxWidth: .infinity)
             }
         }
         .background(OnboardingTheme.background.ignoresSafeArea())
         .sheet(isPresented: $showsPolicy) { PrivacyPolicyView() }
         .preferredColorScheme(.dark)
+    }
+}
+
+/// One plain-language promise as its own card: icon, heading, short text.
+private struct PrivacyPointCard: View {
+    let point: PrivacyContent.Point
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            // Sized like the heading so the icon reads as part of that line.
+            Image(systemName: point.symbol)
+                .font(.title3.weight(.regular))
+                .imageScale(.medium)
+                .foregroundStyle(OnboardingTheme.accentGradient)
+                .frame(width: 28)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(point.title)
+                    .font(.title3.weight(.semibold))
+                Text(point.text)
+                    .font(.body)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+                    .lineSpacing(2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .onboardingSurface(cornerRadius: 22)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// The complete terms, one tappable row per topic.
+private struct PrivacyDetailsList: View {
+    let sections: [PrivacyContent.Section]
+    let onOpenPolicy: () -> Void
+    @State private var expanded: Set<Int> = []
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(spacing: 0) {
+                ForEach(Array(sections.enumerated()), id: \.offset) { index, section in
+                    if index > 0 {
+                        Rectangle().fill(OnboardingTheme.hairline).frame(height: 0.5)
+                            .padding(.leading, 16)
+                    }
+                    row(section, isOpen: expanded.contains(index)) {
+                        withAnimation(.snappy(duration: 0.25)) {
+                            if expanded.contains(index) { expanded.remove(index) } else { expanded.insert(index) }
+                        }
+                    }
+                }
+                Rectangle().fill(OnboardingTheme.hairline).frame(height: 0.5)
+                    .padding(.leading, 16)
+                Button(action: onOpenPolicy) {
+                    HStack(spacing: 12) {
+                        Text(L10n("Full Privacy Policy"))
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(OnboardingTheme.cyan)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(OnboardingTheme.tertiaryText)
+                    }
+                    .padding(.horizontal, 16)
+                    .frame(minHeight: 52)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .onboardingSurface(cornerRadius: 20)
+        }
+    }
+
+    private func row(_ section: PrivacyContent.Section, isOpen: Bool, toggle: @escaping () -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button(action: toggle) {
+                HStack(spacing: 12) {
+                    Text(section.title)
+                        .font(.body)
+                        .foregroundStyle(OnboardingTheme.primaryText)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Image(systemName: "chevron.down")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(OnboardingTheme.tertiaryText)
+                        .rotationEffect(.degrees(isOpen ? 180 : 0))
+                }
+                .padding(.horizontal, 16)
+                .frame(minHeight: 52)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityValue(isOpen ? L10n("Expanded") : L10n("Collapsed"))
+            if isOpen {
+                Text(section.body)
+                    .font(.callout)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
+                    .transition(.opacity)
+            }
+        }
+        .clipped()
+    }
+}
+
+/// A full-width checkbox: the whole card is the hit target.
+private struct PrivacyCheckbox: View {
+    let text: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Button { isOn.toggle() } label: {
+            HStack(alignment: .top, spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .strokeBorder(.white.opacity(isOn ? 0 : 0.35), lineWidth: 1.5)
+                    if isOn {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(OnboardingTheme.buttonGradient)
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .frame(width: 26, height: 26)
+                .animation(.snappy(duration: 0.18), value: isOn)
+                Text(text)
+                    .font(.callout)
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .lineSpacing(2)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(16)
+            .contentShape(Rectangle())
+            .onboardingSurface(cornerRadius: 20)
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isOn ? [.isSelected] : [])
+        .accessibilityIdentifier("privacyAcknowledgement")
     }
 }
 
@@ -122,25 +263,45 @@ private struct PrivacyDocumentBody: View {
     }
 
     var body: some View {
-        LazyVStack(alignment: .leading, spacing: 16) {
+        LazyVStack(alignment: .leading, spacing: 18) {
             ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
                 if block.hasPrefix("#") {
                     Text(block.drop(while: { $0 == "#" || $0 == " " }))
-                        .font(.headline)
+                        .font(block.hasPrefix("## ") ? .title3.weight(.semibold) : .headline)
+                        .padding(.top, block.hasPrefix("## ") ? 14 : 4)
                         .accessibilityAddTraits(.isHeader)
                 } else if block.hasPrefix("| ") {
                     table(block)
                 } else {
-                    Text(.init(block.replacingOccurrences(of: "\n- ", with: "\n\n• ")
-                        .replacingOccurrences(of: "^- ", with: "• ", options: .regularExpression)))
-                        .font(.subheadline)
-                        .lineSpacing(4)
+                    paragraph(block)
                 }
             }
         }
         .foregroundStyle(OnboardingTheme.primaryText)
         .frame(maxWidth: .infinity, alignment: .leading)
         .textSelection(.enabled)
+    }
+
+    /// Bullets get a hanging indent so wrapped lines stay aligned.
+    private func paragraph(_ block: String) -> some View {
+        let lines = block.components(separatedBy: "\n")
+        return VStack(alignment: .leading, spacing: 10) {
+            ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                if line.hasPrefix("- ") {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Circle().fill(OnboardingTheme.accentGradient).frame(width: 5, height: 5)
+                            .alignmentGuide(.firstTextBaseline) { $0.height + 4 }
+                        Text(.init(String(line.dropFirst(2))))
+                    }
+                } else {
+                    Text(.init(line))
+                }
+            }
+        }
+        .font(.callout)
+        .foregroundStyle(OnboardingTheme.primaryText.opacity(0.86))
+        .lineSpacing(4)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private func table(_ markdown: String) -> some View {
@@ -152,7 +313,8 @@ private struct PrivacyDocumentBody: View {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(Array(row.enumerated()), id: \.offset) { index, cell in
                         Text(.init(cell))
-                            .font(index == 0 ? .subheadline.weight(.semibold) : .subheadline)
+                            .font(index == 0 ? .callout.weight(.semibold) : .callout)
+                            .foregroundStyle(index == 0 ? OnboardingTheme.primaryText : OnboardingTheme.secondaryText)
                     }
                 }
             }

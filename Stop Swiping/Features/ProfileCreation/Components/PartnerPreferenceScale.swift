@@ -33,6 +33,10 @@ struct PartnerPreferenceScale: View {
 
     private var limitLabel: String { subject == .appearance ? L10n("Min") : L10n("Max") }
 
+    /// The appearance scale has more levels, so its rows are 10% shorter to
+    /// fit on small phones.
+    private var rowScale: CGFloat { subject == .appearance ? 0.9 : 1 }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 6) {
@@ -131,8 +135,8 @@ struct PartnerPreferenceScale: View {
                     .hidden()
             }
             .padding(.horizontal, 18)
-            .padding(.vertical, 12)
-            .frame(minHeight: 52)
+            .padding(.vertical, 12 * rowScale)
+            .frame(minHeight: 52 * rowScale)
             .background(alignment: .trailing) {
                 LimitBadge(title: limitLabel)
                     .hidden()

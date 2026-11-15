@@ -232,8 +232,8 @@ final class PrivacyFlowTests: XCTestCase {
             for kind in [PrivacyConsentKind.profile, .matching] {
                 let copy = PrivacyContent.approval(kind, language: language)
                 XCTAssertFalse(copy.title.isEmpty)
-                XCTAssertTrue(copy.summary.contains("- "))
-                XCTAssertTrue(copy.details.contains("#### 8."))
+                XCTAssertEqual(copy.points.count, 5)
+                XCTAssertEqual(copy.sections.count, 8)
                 XCTAssertFalse(copy.acknowledgement.isEmpty)
             }
             let policy = PrivacyContent.policy(language: language)

@@ -56,6 +56,13 @@ final class LifetimeAccessStore: ObservableObject {
         return hasEarlyEntitlement && ledger.permitsAccess(at: clock, profileCompletedAt: profileCompletedAt)
     }
 
+    /// The early-adopter deadline the questionnaire counts down to. Nil with
+    /// lifetime access, without an early-adopter window or once it has passed.
+    var questionnaireDeadline: Date? {
+        guard !hasPaidAccess, let deadline = ledger.deadline, clock < deadline else { return nil }
+        return deadline
+    }
+
     func product(_ id: LifetimeProductID) -> LifetimeStoreProduct? { products.first { $0.id == id } }
 
     func start() async {

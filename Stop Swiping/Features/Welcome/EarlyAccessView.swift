@@ -1,10 +1,19 @@
 import SwiftUI
 
 struct EarlyAccessView: View {
+    /// The select circle and the benefit checkmarks share one column.
+    private static let selectorWidth: CGFloat = 22
+    /// The outline of the chosen plan, in the Continue button's blue-to-violet.
+    private static let selectedOutline = LinearGradient(
+        colors: [Color(red: 0.30, green: 0.52, blue: 1), OnboardingTheme.violet],
+        startPoint: .topLeading, endPoint: .bottomTrailing)
+
     @ObservedObject var access: LifetimeAccessStore
     let onContinue: () -> Void
     var onBack: (() -> Void)?
     var usesSharedLight = false
+    /// An unfinished questionnaire's progress, shown above the plans.
+    var questionnaireProgress: Double?
 
     @State private var selection = LifetimeProductID.lifetime
     @State private var hasAppeared = false
@@ -25,18 +34,23 @@ struct EarlyAccessView: View {
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
+                    if let questionnaireProgress {
+                        OnboardingProgressCard(progress: questionnaireProgress)
+                            .padding(.bottom, 6)
+                            .accessArrival(visible: hasAppeared, delay: 0.12)
+                    }
                     lifetimeCard
-                        .accessArrival(visible: hasAppeared, delay: 0.16)
+                        .accessArrival(visible: hasAppeared, delay: 0.22)
                     if access.canOfferEarlyAccess {
                         planCard(.earlyAdopter)
-                            .accessArrival(visible: hasAppeared, delay: 0.28)
+                            .accessArrival(visible: hasAppeared, delay: 0.34)
                             .transition(.opacity.combined(with: .offset(y: 16)))
                     } else {
                         Text(L10n("Your early-adopter deadline has passed. Continue with lifetime access to finish your profile."))
                             .font(.footnote)
                             .foregroundStyle(OnboardingTheme.secondaryText)
                             .fixedSize(horizontal: false, vertical: true)
-                            .accessArrival(visible: hasAppeared, delay: 0.28)
+                            .accessArrival(visible: hasAppeared, delay: 0.34)
                     }
                     if access.products.isEmpty {
                         VStack(spacing: 8) {
@@ -65,7 +79,7 @@ struct EarlyAccessView: View {
         }
         .safeAreaInset(edge: .top, spacing: 0) { lightNavigation }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            footer.accessArrival(visible: hasAppeared, delay: 0.40)
+            footer.accessArrival(visible: hasAppeared, delay: 0.46)
         }
         .preferredColorScheme(.dark)
         .interactiveDismissDisabled()
@@ -137,6 +151,7 @@ struct EarlyAccessView: View {
                     Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                         .font(.system(size: 21, weight: .light))
                         .foregroundStyle(selected ? OnboardingTheme.cyan : OnboardingTheme.tertiaryText)
+                        .frame(width: Self.selectorWidth)
                         .accessibilityHidden(true)
                     Text(early ? L10n("Early Adopter Benefits") : L10n("Lifetime Access"))
                         .font(.system(size: 17, weight: .semibold))
@@ -163,8 +178,8 @@ struct EarlyAccessView: View {
                         benefit(L10n("Ad-free forever:"), detail: L10n("Enjoy the app without ads"))
                     } else {
                         benefit(L10n("One-time payment:"), detail: L10n("No subscription, ever"))
-                        benefit(L10n("All features included:"), detail: L10n("Full access to current and future features"))
-                        benefit(L10n("Support our development:"), detail: L10n("Help us keep improving the app"))
+                        benefit(L10n("All features included:"), detail: L10n("Now and in the future"))
+                        benefit(L10n("Support us:"), detail: L10n("Help improve the app"))
                     }
                 }
                 if early {
@@ -186,9 +201,14 @@ struct EarlyAccessView: View {
                 RoundedRectangle(cornerRadius: 22)
                     .fill(selected ? OnboardingTheme.blue.opacity(0.10) : OnboardingTheme.surface)
                     .overlay {
-                        RoundedRectangle(cornerRadius: 22)
-                            .strokeBorder(selected ? OnboardingTheme.cyan.opacity(0.65) : OnboardingTheme.hairline,
-                                          lineWidth: selected ? 1.4 : 1)
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 22)
+                                .strokeBorder(OnboardingTheme.hairline, lineWidth: 1)
+                                .opacity(selected ? 0 : 1)
+                            RoundedRectangle(cornerRadius: 22)
+                                .strokeBorder(Self.selectedOutline, lineWidth: 1.5)
+                                .opacity(selected ? 1 : 0)
+                        }
                     }
             }
             .contentShape(RoundedRectangle(cornerRadius: 22))
@@ -200,10 +220,13 @@ struct EarlyAccessView: View {
     }
 
     private func benefit(_ title: String, detail: String? = nil) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+        // Same column and spacing as the select circle, so each checkmark sits
+        // under it and the text lines up with the plan's title.
+        HStack(alignment: .top, spacing: 10) {
             Image(systemName: "checkmark")
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(OnboardingTheme.cyan)
+                .frame(width: Self.selectorWidth)
                 .padding(.top, 4)
                 .accessibilityHidden(true)
             Text("\(Text(title).fontWeight(.semibold))\(detail.map { " \($0)" } ?? "")")
@@ -216,19 +239,11 @@ struct EarlyAccessView: View {
     private var footer: some View {
         VStack(spacing: 6) {
             if selection == .earlyAdopter && access.canOfferEarlyAccess {
-                HStack(spacing: 16) {
-                    Text(L10n("Send reminder 1 day before deadline"))
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(OnboardingTheme.secondaryText)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 0)
-                    GlowToggle(isOn: access.ledger.reminderEnabled,
-                               label: L10n("Send reminder 1 day before deadline")) {
-                        Task { await access.setReminderEnabled(!access.ledger.reminderEnabled) }
-                    }
-                    .disabled(access.isRequestingReminder || access.isBusy)
-                    .accessibilityIdentifier("access.reminder")
+                ReminderRow(isOn: access.ledger.reminderEnabled,
+                            isDisabled: access.isRequestingReminder || access.isBusy) {
+                    Task { await access.setReminderEnabled(!access.ledger.reminderEnabled) }
                 }
+                .transition(.reminderReveal(reduceMotion: reduceMotion))
             }
             Button {
                 Task {
@@ -260,12 +275,99 @@ struct EarlyAccessView: View {
         .padding(.bottom, 4)
         .frame(maxWidth: .infinity)
         .background(Color("WelcomeBackground"))
-        .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion), value: selection)
+        .animation(OnboardingMotion.resolved(.spring(duration: 0.55, bounce: 0.14), reduceMotion: reduceMotion),
+                   value: selection)
+    }
+
+    /// Progress is worth showing once the questionnaire has begun: after a
+    /// first answer, or once an early-adopter window was started.
+    static func questionnaireProgress(_ progress: Double, hasStartedEarlyAccess: Bool) -> Double? {
+        return progress > 0 || hasStartedEarlyAccess ? progress : nil
     }
 
     private func keepSelectionAvailable() {
         if selection == .earlyAdopter && !access.canOfferEarlyAccess {
             selection = .lifetime
         }
+    }
+}
+
+/// The reminder switch under the early-adopter card. The row resolves out of
+/// a soft blur while the switch follows a beat later with a small spring.
+private struct ReminderRow: View {
+    let isOn: Bool
+    let isDisabled: Bool
+    let action: () -> Void
+
+    @State private var switchVisible = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(L10n("Send reminder 1 day before deadline"))
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(isOn ? OnboardingTheme.primaryText : OnboardingTheme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: isOn)
+            Spacer(minLength: 0)
+            GlowToggle(isOn: isOn, label: L10n("Send reminder 1 day before deadline"), action: action)
+                .disabled(isDisabled)
+                .accessibilityIdentifier("access.reminder")
+                .opacity(switchVisible ? 1 : 0)
+                .scaleEffect(switchVisible || reduceMotion ? 1 : 0.7)
+                .offset(x: switchVisible || reduceMotion ? 0 : 10)
+        }
+        .padding(.leading, 18)
+        .padding(.trailing, 8)
+        // The same height and corners as the Continue button below it.
+        .frame(minHeight: OnboardingTheme.buttonHeight)
+        .background {
+            RoundedRectangle(cornerRadius: 20)
+                .fill(isOn ? OnboardingTheme.blue.opacity(0.10) : OnboardingTheme.surface)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 20)
+                        .strokeBorder(isOn ? OnboardingTheme.cyan.opacity(0.35) : OnboardingTheme.hairline,
+                                      lineWidth: 1)
+                }
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: isOn)
+        }
+        .padding(.bottom, 4)
+        .onAppear {
+            withAnimation(reduceMotion ? .easeOut(duration: 0.18)
+                          : .spring(duration: 0.5, bounce: 0.32).delay(0.12)) {
+                switchVisible = true
+            }
+        }
+    }
+}
+
+private struct ReminderRevealEffect: ViewModifier {
+    let offset: CGFloat
+    let blur: CGFloat
+    let scale: CGFloat
+    let opacity: Double
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(scale, anchor: .bottom)
+            .offset(y: offset)
+            .blur(radius: blur)
+            .opacity(opacity)
+    }
+}
+
+private extension AnyTransition {
+    static func reminderReveal(reduceMotion: Bool) -> AnyTransition {
+        guard !reduceMotion else { return .opacity }
+        return .asymmetric(
+            insertion: .modifier(
+                active: ReminderRevealEffect(offset: 14, blur: 8, scale: 0.94, opacity: 0),
+                identity: ReminderRevealEffect(offset: 0, blur: 0, scale: 1, opacity: 1)
+            ),
+            removal: .modifier(
+                active: ReminderRevealEffect(offset: 8, blur: 6, scale: 0.97, opacity: 0),
+                identity: ReminderRevealEffect(offset: 0, blur: 0, scale: 1, opacity: 1)
+            ).animation(.easeOut(duration: 0.2))
+        )
     }
 }

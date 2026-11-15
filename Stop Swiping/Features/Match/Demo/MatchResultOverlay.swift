@@ -52,6 +52,7 @@ struct MatchResultOverlay: View {
     /// Holding Save match opens a made-up conversation, before launch.
     var onStartDemoChat: () -> Void = {}
     var onViewProfile: () -> Void = {}
+    var onShowPersonality: () -> Void = {}
     var onBreakMatch: () -> Void = {}
     var onReport: (ReportReason, String, Bool) -> Void = { _, _, _ in }
 
@@ -298,7 +299,8 @@ struct MatchResultOverlay: View {
 
             Spacer(minLength: 0)
 
-            MatchSettingsMenu(name: match.name, onViewProfile: onViewProfile, onShowScores: onShowScores,
+            MatchSettingsMenu(name: match.name, onViewProfile: onViewProfile,
+                              onShowPersonality: onShowPersonality, onShowScores: onShowScores,
                               onReport: { reportReason = $0 }, onBreak: { confirmsBreak = true },
                               canBreak: !match.isBroken)
 

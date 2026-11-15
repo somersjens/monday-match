@@ -33,7 +33,7 @@ struct ChatConversation: Identifiable, Codable, Equatable {
             messages: [
                 ChatMessage(
                     sender: .system,
-                    text: "You matched. Be kind, curious and respectful.",
+                    text: L10n("You matched. Be kind, curious and respectful."),
                     sentAt: Date().addingTimeInterval(-3_600)
                 ),
                 ChatMessage(

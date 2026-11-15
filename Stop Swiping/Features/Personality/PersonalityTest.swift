@@ -86,7 +86,11 @@ extension PersonalityTest {
         case .hexaco: "https://hexaco.org"
         case .belbin: "https://www.belbin.com/about/belbin-team-roles"
         case .predictiveIndex: "https://www.predictiveindex.com/assessments/behavioral-assessment/"
-        case .tma: AppLanguageSettings.shared.language == .dutch ? "https://www.tma.nl" : "https://www.tma.nl/en"
+        case .tma:
+            switch AppLanguageSettings.shared.language {
+            case .dutch: "https://www.tma.nl"
+            case .english: "https://www.tma.nl/en"
+            }
         }
         return URL(string: address)!
     }

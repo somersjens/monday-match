@@ -7,6 +7,8 @@ struct ProfileCreationFlowView: View {
     @ObservedObject var locationService: LocationService
     /// The first step can return to the landing page when one is behind it.
     let canExitFromFirstStep: Bool
+    /// The early-adopter deadline shown beside the progress; nil hides it.
+    let countdownDeadline: Date?
     let onExit: () -> Void
     let onUnderage: () -> Void
     let onComplete: () -> Void
@@ -17,12 +19,24 @@ struct ProfileCreationFlowView: View {
     @State private var isNavigating = false
     @State private var navigationToken = 0
     @State private var hasEntered = false
+    /// Changing one answer of a finished profile shows the step dots; filling
+    /// in the questionnaire shows the progress card.
+    @State private var isEditingSession: Bool
+    /// The last question was answered and the closing moment is playing.
+    @State private var finish = FinishPhase.none
+    /// Holding Continue on the birthday fills in every question at random.
+    @State private var randomFills = 0
+    /// Set when the hold fired, so the release that ends it is no Continue.
+    @State private var ignoresNextContinue = false
+    /// A Continue on the untouched height step brought up the honesty notice.
+    @State private var hasRevealedHeightNotice = false
     @AccessibilityFocusState private var isTitleFocused: Bool
 
     init(
         viewModel: ProfileCreationViewModel,
         locationService: LocationService,
         canExitFromFirstStep: Bool,
+        countdownDeadline: Date? = nil,
         onExit: @escaping () -> Void,
         onUnderage: @escaping () -> Void,
         onComplete: @escaping () -> Void
@@ -30,10 +44,22 @@ struct ProfileCreationFlowView: View {
         self.viewModel = viewModel
         self.locationService = locationService
         self.canExitFromFirstStep = canExitFromFirstStep
+        self.countdownDeadline = countdownDeadline
         self.onExit = onExit
         self.onUnderage = onUnderage
         self.onComplete = onComplete
         _displayedStep = State(initialValue: viewModel.currentStep)
+        _isEditingSession = State(initialValue: viewModel.editingStep != nil)
+    }
+
+    private enum FinishPhase: Comparable {
+        case none
+        /// The bar fills to 100% while the question gives way.
+        case filled
+        /// The card glows and the countdown gives way to a checkmark.
+        case sealed
+        /// Everything softens away into the finished profile.
+        case leaving
     }
 
     private var isEditing: Bool { viewModel.editingStep != nil }
@@ -53,15 +79,16 @@ struct ProfileCreationFlowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            OnboardingProgressDots(current: displayedStep.number, total: ProfileCreationStep.allCases.count)
-                .padding(.top, 2)
-                .opacity(hasEntered ? 1 : 0)
+            progressHeader
 
             ZStack(alignment: .top) {
                 stepPage(displayedStep)
                     .allowsHitTesting(!isNavigating)
                     .id(displayedStep)
                     .transition(.onboardingStep(direction, reduceMotion: reduceMotion))
+                    .opacity(finish == .none ? 1 : 0)
+                    .blur(radius: finish == .none || reduceMotion ? 0 : 14)
+                    .scaleEffect(finish == .none || reduceMotion ? 1 : 0.96, anchor: .top)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .opacity(hasEntered ? 1 : 0)
@@ -69,7 +96,12 @@ struct ProfileCreationFlowView: View {
             .blur(radius: hasEntered || reduceMotion ? 0 : 10)
 
             bottomBar
+                .opacity(finish == .none ? 1 : 0)
+                .blur(radius: finish == .none || reduceMotion ? 0 : 8)
+                .allowsHitTesting(finish == .none)
         }
+        .opacity(finish == .leaving ? 0 : 1)
+        .blur(radius: finish == .leaving && !reduceMotion ? 12 : 0)
         .onAppear {
             withAnimation(OnboardingMotion.resolved(OnboardingMotion.stage, reduceMotion: reduceMotion).delay(reduceMotion ? 0 : 0.12)) {
                 hasEntered = true
@@ -88,6 +120,53 @@ struct ProfileCreationFlowView: View {
         }
         .sensoryFeedback(.warning, trigger: viewModel.rejectionCount)
         .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: displayedStep)
+        .sensoryFeedback(.success, trigger: finish) { _, phase in phase == .filled }
+        .sensoryFeedback(.success, trigger: randomFills)
+    }
+
+    // MARK: - Progress
+
+    @ViewBuilder
+    private var progressHeader: some View {
+        if isEditingSession {
+            OnboardingProgressDots(current: displayedStep.number, total: ProfileCreationStep.allCases.count)
+                .padding(.top, 2)
+                .opacity(hasEntered ? 1 : 0)
+        } else {
+            OnboardingProgressCard(progress: finish == .none ? viewModel.state.progress : 1,
+                                   deadline: countdownDeadline,
+                                   isFinished: finish >= .sealed)
+                .padding(.horizontal, 24)
+                .padding(.top, 6)
+                .padding(.bottom, 14)
+                .frame(maxWidth: OnboardingTheme.contentWidth)
+                .frame(maxWidth: .infinity)
+                .scaleEffect(finish == .leaving && !reduceMotion ? 1.04 : 1)
+                .opacity(hasEntered ? 1 : 0)
+                .offset(y: hasEntered || reduceMotion ? 0 : -12)
+        }
+    }
+
+    /// The bar fills, the card seals with a checkmark, and the screen softens
+    /// into the finished profile before handing over.
+    private func playFinish() {
+        let timing: (seal: Double, leave: Double, hand: Double) = reduceMotion
+            ? (0.15, 0.8, 0.2) : (0.55, 1.2, 0.35)
+        withAnimation(OnboardingMotion.resolved(.spring(duration: 0.6, bounce: 0.1), reduceMotion: reduceMotion)) {
+            finish = .filled
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(timing.seal))
+            withAnimation(OnboardingMotion.resolved(.spring(duration: 0.55, bounce: 0.2), reduceMotion: reduceMotion)) {
+                finish = .sealed
+            }
+            try? await Task.sleep(for: .seconds(timing.leave))
+            withAnimation(.easeInOut(duration: reduceMotion ? 0.2 : 0.45)) {
+                finish = .leaving
+            }
+            try? await Task.sleep(for: .seconds(timing.hand))
+            onComplete()
+        }
     }
 
     // MARK: - Steps
@@ -177,12 +256,18 @@ struct ProfileCreationFlowView: View {
                     .transition(.onboardingReveal(reduceMotion: reduceMotion))
             }
 
+            if showsHeightHonestyNotice {
+                heightHonestyNotice
+                    .transition(.onboardingReveal(reduceMotion: reduceMotion))
+            }
+
             Button(action: handleContinue) {
                 Text(primaryTitle)
                     .contentTransition(.opacity)
             }
             .buttonStyle(GlowButtonStyle())
             .disabled(!viewModel.canContinue)
+            .simultaneousGesture(randomFillHold)
 
             HStack(spacing: 12) {
                 Button(isEditing || (displayedStep == .religion && viewModel.state.religionPhase == .partner) ? L10n("Cancel") : L10n("Back"), action: handleBack)
@@ -196,12 +281,77 @@ struct ProfileCreationFlowView: View {
         .padding(.horizontal, 28)
         .padding(.bottom, 18)
         .opacity(hasEntered ? 1 : 0)
+        .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: showsHeightHonestyNotice)
+    }
+
+    /// Appears once a height has been chosen, or after a first Continue on
+    /// the untouched default, so nobody skips past it unseen.
+    private var showsHeightHonestyNotice: Bool {
+        displayedStep == .height && (viewModel.state.hasAdjustedHeight || hasRevealedHeightNotice)
+    }
+
+    private var heightHonestyNotice: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Image(systemName: "exclamationmark.shield")
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(OnboardingTheme.cyan)
+            Text(L10n("False information can lead to account termination. Purchases and the free new-user offer may not be restored."))
+                .foregroundStyle(OnboardingTheme.primaryText.opacity(0.85))
+                .multilineTextAlignment(.leading)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .font(.footnote)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .background {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(.white.opacity(0.06))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(.white.opacity(0.1), lineWidth: 1)
+                }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    // MARK: - Testing shortcut
+
+    /// Three seconds on Continue at the birthday answers every question at
+    /// random and opens the last one. Deliberately in every build, for testing.
+    private var randomFillHold: some Gesture {
+        LongPressGesture(minimumDuration: 3)
+            .onEnded { _ in fillRandomly() }
+            .simultaneously(with: DragGesture(minimumDistance: 0).onEnded { _ in
+                // The button's own action runs on this same release first.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { ignoresNextContinue = false }
+            })
+    }
+
+    private func fillRandomly() {
+        guard displayedStep == .dateOfBirth, !isEditingSession, !isNavigating, finish == .none else { return }
+        ignoresNextContinue = true
+        randomFills += 1
+        viewModel.fillRandomAnswersForTesting()
     }
 
     // MARK: - Navigation
 
     private func handleContinue() {
+        if ignoresNextContinue {
+            ignoresNextContinue = false
+            return
+        }
         guard !isNavigating else { return }
+        // The first Continue on an untouched height only reveals the notice;
+        // the next one moves on.
+        if displayedStep == .height, !showsHeightHonestyNotice {
+            hasRevealedHeightNotice = true
+            AccessibilityNotification.Announcement(L10n("False information can lead to account termination. Purchases and the free new-user offer may not be restored.")).post()
+            return
+        }
         handleSubmission(viewModel.submitCurrentStep())
     }
 
@@ -216,7 +366,7 @@ struct ProfileCreationFlowView: View {
             onUnderage()
         case .completed:
             isNavigating = true
-            onComplete()
+            if isEditingSession { onComplete() } else { playFinish() }
         }
     }
 

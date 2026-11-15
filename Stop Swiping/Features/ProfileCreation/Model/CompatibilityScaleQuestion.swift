@@ -29,20 +29,21 @@ struct CompatibilityScaleQuestion: Hashable, Identifiable {
         }
     }
 
-    private static let english = Catalog(language: .english)
-    private static let dutch = Catalog(language: .dutch)
+    private static let catalogs: [AppLanguage: Catalog] = Dictionary(
+        uniqueKeysWithValues: AppLanguage.allCases.map { ($0, Catalog(language: $0)) }
+    )
 
     private static var catalog: Catalog {
         // Read the observable setting even on a cache hit so visible text
         // still refreshes immediately when the app language changes.
-        AppLanguageSettings.shared.language == .english ? english : dutch
+        catalogs[AppLanguageSettings.shared.language]!
     }
 
     static var aloneTime: Self { catalog.byStep[.aloneTime]! }
     static var all: [Self] { catalog.questions }
     static var sections: [Section] { catalog.sections }
     /// Navigation order is independent of the current display language.
-    static let orderedSteps: [ProfileCreationStep] = english.questions.map(\.step)
+    static let orderedSteps: [ProfileCreationStep] = catalogs[.english]!.questions.map(\.step)
 
     static func question(for step: ProfileCreationStep) -> Self? {
         catalog.byStep[step]

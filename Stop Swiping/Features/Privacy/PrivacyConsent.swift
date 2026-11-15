@@ -4,7 +4,7 @@ enum PrivacyConsentKind: String, Identifiable {
     case profile
     case matching
     var id: String { rawValue }
-    var version: String { "2026-11-14.v1" }
+    var version: String { "2026-11-15.v2" }
 }
 
 /// A receipt records the specific copy and language that was accepted.

@@ -71,8 +71,9 @@ final class MatchChatTests: XCTestCase {
         XCTAssertEqual(Chat.progress(elapsed: Chat.morphDuration), 1)
         XCTAssertEqual(Chat.orbitAngle(elapsed: Chat.orbitStart), 0)
         // Speed eases in: the first moments turn far less than full speed would.
-        let early = Chat.orbitAngle(elapsed: Chat.orbitStart + 0.2)
-        XCTAssertLessThan(early, 0.2 * 2 * .pi / Chat.orbitPeriod * 0.1)
+        let earlyDuration = Chat.orbitRamp * 0.2
+        let early = Chat.orbitAngle(elapsed: Chat.orbitStart + earlyDuration)
+        XCTAssertLessThan(early, earlyDuration * 2 * .pi / Chat.orbitPeriod * 0.1)
         // Afterwards one period is one full turn.
         let later = Chat.orbitStart + Chat.orbitRamp + 1
         XCTAssertEqual(Chat.orbitAngle(elapsed: later + Chat.orbitPeriod) - Chat.orbitAngle(elapsed: later),

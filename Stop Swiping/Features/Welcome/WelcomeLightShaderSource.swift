@@ -1141,6 +1141,23 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
     return out;
 }
 
+// While the line flies in, every filament gathers into one fine point at
+// the head and fans back out into the woven ribbon behind it. The fan has a
+// linear start, so the head reads as a sharp tip rather than a rounded bulb.
+// It relaxes before closure, so the finished heart is exactly the loop's.
+float entrancePinch(float travel, constant WelcomeUniforms &p) {
+    float head = p.entrance.x;
+    if (head >= 1.0) return 0;
+    float behind = clamp((head - travel)/0.16, 0.0, 1.0);
+    float fan = 1 - (1 - behind)*(1 - behind);
+    return 0.94*(1 - fan)*(1 - smoothstep(0.72, 1.0, head));
+}
+
+// The middle of the woven ribbon: halfway across the centre sheet.
+float2 ribbonCenter(float u, constant WelcomeUniforms &p, device const float2 *controls) {
+    return 0.5*(lockedRibbonPoint(u, 20, p, controls).xy + lockedRibbonPoint(u, 39, p, controls).xy);
+}
+
 vertex RibbonVertex welcomeRibbonVertex(uint vertexID [[vertex_id]], uint instance [[instance_id]],
                                         constant WelcomeUniforms &p [[buffer(0)]],
                                         device const float2 *controls [[buffer(1)]],
@@ -1151,7 +1168,15 @@ vertex RibbonVertex welcomeRibbonVertex(uint vertexID [[vertex_id]], uint instan
     float3 point = lockedRibbonPoint(u, instance, p, controls);
     float2 previous = lockedRibbonPoint(u - 0.5/float(samples), instance, p, controls).xy;
     float2 next = lockedRibbonPoint(u + 0.5/float(samples), instance, p, controls).xy;
-    return lightVertex(u, point, previous, next, edge, instance, travel[vertexID/2], p);
+    float pinch = entrancePinch(travel[vertexID/2], p);
+    if (pinch > 0) {
+        point.xy = mix(point.xy, ribbonCenter(u, p, controls), pinch);
+        previous = mix(previous, ribbonCenter(u - 0.5/float(samples), p, controls), pinch);
+        next = mix(next, ribbonCenter(u + 0.5/float(samples), p, controls), pinch);
+    }
+    RibbonVertex out = lightVertex(u, point, previous, next, edge, instance, travel[vertexID/2], p);
+    out.intensity *= 1 - 0.55*pinch;
+    return out;
 }
 
 float2 entrancePoint(float t, float2 tip, float2 direction, uint instance, float transport) {
@@ -1173,6 +1198,13 @@ float2 entrancePoint(float t, float2 tip, float2 direction, uint instance, float
          + veil*(normal*cross+tangent*along);
 }
 
+float2 entranceCenter(float t, float2 tip, float2 direction) {
+    float2 start = float2(-1.65,1.95), c1 = float2(-0.95,1.45);
+    float2 c2 = tip-direction*0.65;
+    float v = 1-t;
+    return v*v*v*start+3*v*v*t*c1+3*v*t*t*c2+t*t*t*tip;
+}
+
 vertex RibbonVertex welcomeEntranceVertex(uint vertexID [[vertex_id]], uint instance [[instance_id]],
                                           constant WelcomeUniforms &p [[buffer(0)]],
                                           device const float2 *controls [[buffer(1)]],
@@ -1186,10 +1218,21 @@ vertex RibbonVertex welcomeEntranceVertex(uint vertexID [[vertex_id]], uint inst
     float2 previous = entrancePoint(t-0.5/128.0,tip.xy,direction,instance,p.stream.x);
     float2 next = entrancePoint(t+0.5/128.0,tip.xy,direction,instance,p.stream.x);
     float travel = distance[samples+1+vertexID/2];
+    // Gather toward the inlet's own centre line, which meets the heart's
+    // centre at the join: the pointed head crosses it without a jump.
+    float pinch = entrancePinch(travel, p);
+    if (pinch > 0) {
+        float2 centerTip = ribbonCenter(p.stream.w, p, controls);
+        float2 centerDirection = normalize(ribbonCenter(p.stream.w+0.001,p,controls)
+                                         - ribbonCenter(p.stream.w-0.001,p,controls));
+        point = mix(point, entranceCenter(t,centerTip,centerDirection), pinch);
+        previous = mix(previous, entranceCenter(t-0.5/128.0,centerTip,centerDirection), pinch);
+        next = mix(next, entranceCenter(t+0.5/128.0,centerTip,centerDirection), pinch);
+    }
     RibbonVertex out = lightVertex(p.stream.w+travel,float3(point,tip.z),previous,next,edge,instance,travel,p);
     // A finite thread is pulled in from its back end as the head advances.
     float tail = smoothstep(-0.012,0.012,travel-p.stream.z);
-    out.intensity *= p.entrance.y*tail;
+    out.intensity *= p.entrance.y*tail*(1 - 0.55*pinch);
     out.code = 0;
     return out;
 }
@@ -1295,12 +1338,16 @@ fragment float4 welcomeCompositeFragment(CompositeVertex in [[stage_in]],
     float3 radiance = 1 - exp(-light*1.8);
     float2 centered = (in.uv - 0.5)*p.viewport.xy / (min(p.viewport.x,p.viewport.y)*0.5);
     float haze = pow(max(0.0, 1-length(centered)), 1.7);
-    float3 background = float3(0.008,0.012,0.035) + float3(0.005,0.012,0.125)*haze;
+    // The base colour comes from the view behind; only the haze is drawn,
+    // additively (premultiplied with zero alpha).
+    float3 hazeGlow = float3(0.005,0.012,0.125)*haze;
     // Keep the loop's edge treatment; let the entrance cross the screen edge.
     float2 screen = in.uv*p.viewport.xy;
     float border = min(min(screen.x,p.viewport.x-screen.x),min(screen.y,p.viewport.y-screen.y));
     float edgeFade = mix(smoothstep(0.0,p.viewport.w*10,border),1.0,p.entrance.y);
-    return float4(background + radiance*edgeFade, 1);
+    float3 glow = radiance*edgeFade;
+    float coverage = saturate(max(glow.r, max(glow.g, glow.b)));
+    return float4(hazeGlow + glow, coverage);
 }
 
 """#

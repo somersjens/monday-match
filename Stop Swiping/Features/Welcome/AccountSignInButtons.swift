@@ -156,4 +156,20 @@ extension AnyTransition {
                 .animation(.easeIn(duration: 0.2).delay(Double(index) * 0.04))
         )
     }
+
+    /// The personality card and the buttons it covers take turns: the
+    /// leaving one sinks out of focus first, the arriving one rises after it,
+    /// so the two never blend into each other.
+    static func personalitySwap(reduceMotion: Bool) -> AnyTransition {
+        guard !reduceMotion else { return .opacity.animation(.easeInOut(duration: 0.2)) }
+        let identity = LandingSwapEffect(offset: 0, blur: 0, scale: 1, opacity: 1)
+        return .asymmetric(
+            insertion: .modifier(active: LandingSwapEffect(offset: 24, blur: 10, scale: 0.97, opacity: 0),
+                                 identity: identity)
+                .animation(.spring(duration: 0.6, bounce: 0.12).delay(0.2)),
+            removal: .modifier(active: LandingSwapEffect(offset: 18, blur: 8, scale: 0.96, opacity: 0),
+                               identity: identity)
+                .animation(.easeIn(duration: 0.22))
+        )
+    }
 }

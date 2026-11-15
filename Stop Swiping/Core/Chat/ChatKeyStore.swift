@@ -68,6 +68,6 @@ nonisolated final class ChatKeyStore {
     }
     struct KeychainError: LocalizedError {
         let status: OSStatus
-        var errorDescription: String? { "The iPhone’s secure key storage is unavailable (\(status))." }
+        var errorDescription: String? { L10n("The iPhone’s secure key storage is unavailable (\(status)).") }
     }
 }

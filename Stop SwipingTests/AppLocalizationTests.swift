@@ -17,18 +17,24 @@ final class AppLocalizationTests: XCTestCase {
         super.tearDown()
     }
 
-    func testEnglishIsDefaultAndTheChosenLanguagePersists() throws {
+    func testDeviceLanguageIsDefaultAndTheChosenLanguagePersists() throws {
         let suite = "AppLocalizationTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        XCTAssertEqual(AppLanguageSettings(defaults: defaults).language, .english)
-        let settings = AppLanguageSettings(defaults: defaults)
+        XCTAssertEqual(AppLanguageSettings(defaults: defaults, preferredLanguages: ["nl-NL", "en-GB"]).language, .dutch)
+        XCTAssertEqual(AppLanguageSettings(defaults: defaults, preferredLanguages: ["nl-BE"]).language, .dutch)
+        XCTAssertEqual(AppLanguageSettings(defaults: defaults, preferredLanguages: ["de-DE", "en-US"]).language, .english)
+        XCTAssertEqual(AppLanguageSettings(defaults: defaults, preferredLanguages: ["fr-FR"]).language, .english)
+        let settings = AppLanguageSettings(defaults: defaults, preferredLanguages: ["en-US"])
         settings.language = .dutch
         XCTAssertEqual(AppLanguageSettings(defaults: defaults).language, .dutch)
         settings.language = .english
         XCTAssertEqual(AppLanguageSettings(defaults: defaults).language, .english)
+        settings.language = .dutch
+        XCTAssertEqual(AppLanguageSettings(defaults: defaults, preferredLanguages: ["en-US"]).language, .dutch,
+                       "A chosen language wins over the device language.")
         defaults.set("unsupported", forKey: AppLanguageSettings.storageKey)
-        XCTAssertEqual(AppLanguageSettings(defaults: defaults).language, .english)
+        XCTAssertEqual(AppLanguageSettings(defaults: defaults, preferredLanguages: ["en-US"]).language, .english)
         XCTAssertEqual(AppLanguage.allCases, [.english, .dutch])
     }
 
@@ -67,7 +73,7 @@ final class AppLocalizationTests: XCTestCase {
         XCTAssertEqual(LanguageCatalog.option(for: "en").name, "English")
         AppLanguageSettings.shared.language = .dutch
         XCTAssertEqual(Religion.atheist.title, "Atheïstisch")
-        XCTAssertEqual(ReligionAnswers().ownSummary, "Anders/Overslaan")
+        XCTAssertEqual(ReligionAnswers().ownSummary, "Anders/overgeslagen")
         XCTAssertEqual(ReligionAnswers().partnerSummary, "Open voor alles")
         XCTAssertEqual(ProfileCreationStep.dateOfBirth.title, "Wanneer ben je geboren?")
         XCTAssertEqual(RelationshipPreferenceQuestion.sexualArrangement.options.first?.title, "Alleen met mijn partner")

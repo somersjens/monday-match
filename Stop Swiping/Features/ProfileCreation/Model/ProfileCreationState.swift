@@ -95,6 +95,10 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
 
     static func < (lhs: Self, rhs: Self) -> Bool { lhs.number < rhs.number }
 
+    /// The share of the questionnaire answered before this screen. Each screen
+    /// counts equally, including questions with several parts.
+    var progressBefore: Double { Double(number - 1) / Double(Self.allCases.count) }
+
     var title: String {
         switch self {
         case .dateOfBirth: L10n("When were you born?")
@@ -216,6 +220,19 @@ struct SelectedLocation: Codable, Equatable {
 /// Everything the profile-creation onboarding collects, plus its flow state.
 struct ProfileCreationState: Codable, Equatable {
     var currentStep: ProfileCreationStep = .dateOfBirth
+
+    /// The furthest question reached. Progress follows it, so going back to
+    /// an earlier question never lowers it. Optional in storage so states
+    /// saved before it existed still decode.
+    private var storedFurthestStep: ProfileCreationStep?
+    var furthestStep: ProfileCreationStep {
+        get { max(storedFurthestStep ?? currentStep, currentStep) }
+        set { storedFurthestStep = newValue }
+    }
+
+    /// The questionnaire's share answered: every screen before the furthest
+    /// one reached counts, each equally.
+    var progress: Double { furthestStep.progressBefore }
 
     /// The date the picker started on, used to tell which fields were changed.
     var birthDateBaseline: CalendarDate

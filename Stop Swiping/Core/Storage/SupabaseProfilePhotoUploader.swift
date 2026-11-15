@@ -39,7 +39,7 @@ struct SupabaseProfilePhotoUploader: ProfilePhotoUploading {
 
     enum PhotoUploadError: LocalizedError {
         case changedIdentity
-        var errorDescription: String? { "This photo changed on another device. Select it again to upload a new photo." }
+        var errorDescription: String? { L10n("This photo changed on another device. Select it again to upload a new photo.") }
     }
     func downloadPhoto(id: UUID, order: Int, userID: String) async throws -> ProfilePhoto {
         let data = try await client.storage.from(Self.bucket)

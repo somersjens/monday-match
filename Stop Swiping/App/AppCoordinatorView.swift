@@ -43,7 +43,7 @@ struct AppCoordinatorView: View {
             case .accessRequired:
                 EarlyAccessView(access: access, onContinue: {}, onBack: {
                     showsWelcomeFromAccess = true
-                })
+                }, questionnaireProgress: savedQuestionnaireProgress)
             }
         }
         .background(Color("WelcomeBackground").ignoresSafeArea())
@@ -79,6 +79,7 @@ struct AppCoordinatorView: View {
         ProfileCreationGateView(
             store: dependencies.profileCreationStore,
             repository: dependencies.profileRepository,
+            access: access,
             onComplete: {
                 access.updateCompletion(savedCompletionDate)
                 appState.showSignedInApp()
@@ -161,6 +162,14 @@ struct AppCoordinatorView: View {
             onboardingFlow
 
         }
+    }
+
+    /// Where an unfinished questionnaire stopped, for the access screen.
+    private var savedQuestionnaireProgress: Double? {
+        guard let state = dependencies.profileCreationStore.load(),
+              state.completedAt == nil, !state.isUnderageLocked else { return nil }
+        return EarlyAccessView.questionnaireProgress(state.progress,
+                                                     hasStartedEarlyAccess: access.ledger.effectiveStartedAt != nil)
     }
 
     private var savedCompletionDate: Date? {

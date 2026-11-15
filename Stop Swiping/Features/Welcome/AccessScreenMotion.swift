@@ -3,11 +3,11 @@ import SwiftUI
 /// Shared geometry keeps the live welcome renderer and its invisible return
 /// target aligned. The renderer itself stays mounted throughout the transition.
 enum AccessScreenMotion {
-    static let headerHeight: CGFloat = 112
-    static let lightCenterY: CGFloat = 52
+    static let headerHeight: CGFloat = 126
+    static let lightCenterY: CGFloat = 60
 
     static func lightScale(for width: CGFloat) -> CGFloat {
-        min(0.25, 94 / max(width, 1))
+        min(0.32, 120 / max(width, 1))
     }
 
     static func travel(reduceMotion: Bool) -> Animation {

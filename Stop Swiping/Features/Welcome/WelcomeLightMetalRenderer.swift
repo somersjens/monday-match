@@ -28,9 +28,13 @@ struct WelcomeLightMetalView: UIViewRepresentable {
     func makeUIView(context: Context) -> MTKView {
         let view = MTKView(frame: .zero, device: WelcomeLightMetalRenderer.resources?.device)
         view.colorPixelFormat = .bgra8Unorm
-        view.clearColor = MTLClearColorMake(0.008, 0.012, 0.035, 1)
-        view.isOpaque = true
-        view.backgroundColor = UIColor(named: "WelcomeBackground")
+        // Transparent, so the scaled-down light on the access screen never
+        // carries a dark rectangle over the cards. Over the welcome
+        // background the premultiplied output composites identically.
+        view.clearColor = MTLClearColorMake(0, 0, 0, 0)
+        view.isOpaque = false
+        view.layer.isOpaque = false
+        view.backgroundColor = .clear
         view.framebufferOnly = true
         view.preferredFramesPerSecond = framesPerSecond
         view.delegate = context.coordinator

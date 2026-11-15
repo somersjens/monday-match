@@ -71,16 +71,19 @@ struct WelcomeLightAnimation: View {
         }
         .background {
             // The atmosphere is static and independent of the animation clock.
-            GeometryReader { proxy in
-                RadialGradient(
-                    stops: [
-                        .init(color: Color(red: 0.018, green: 0.035, blue: 0.32).opacity(0.85), location: 0),
-                        .init(color: Color(red: 0.012, green: 0.025, blue: 0.24).opacity(0.65), location: 0.5),
-                        .init(color: .clear, location: 1)
-                    ],
-                    center: .center, startRadius: 0,
-                    endRadius: min(proxy.size.width, proxy.size.height) / 2
-                )
+            // The Metal renderer draws its own haze over a transparent surface.
+            if !WelcomeLightMetalView.isAvailable {
+                GeometryReader { proxy in
+                    RadialGradient(
+                        stops: [
+                            .init(color: Color(red: 0.018, green: 0.035, blue: 0.32).opacity(0.85), location: 0),
+                            .init(color: Color(red: 0.012, green: 0.025, blue: 0.24).opacity(0.65), location: 0.5),
+                            .init(color: .clear, location: 1)
+                        ],
+                        center: .center, startRadius: 0,
+                        endRadius: min(proxy.size.width, proxy.size.height) / 2
+                    )
+                }
             }
         }
         .onAppear {
@@ -99,7 +102,9 @@ struct WelcomeLightAnimation: View {
         .accessibilityHidden(true)
     }
 
-    private var isRunning: Bool { scenePhase == .active && !isPaused }
+    /// Keeps moving while a system sheet (such as the App Store payment
+    /// sheet) makes the scene inactive; only the background stops it.
+    private var isRunning: Bool { scenePhase != .background && !isPaused }
 
     private struct FormInput: Equatable {
         let form: WelcomeLightForm

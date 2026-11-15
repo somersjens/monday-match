@@ -115,13 +115,15 @@ enum WelcomeLightMatch {
     }
 
     /// Heart to rings for the conversation. The tip rises first, the strand
-    /// that ran under the scores is drawn up into the rings, and once they
-    /// are closed the welcome screen's forward rotation eases into motion.
+    /// that ran under the scores is drawn up into the rings. The welcome
+    /// screen's forward rotation picks up gently as the lobes close.
     enum Chat {
         static let morphDuration = 2.6
-        /// When the turning starts, and how long it takes to reach full speed.
-        static let orbitStart = 1.8
-        static let orbitRamp = 2.6
+        /// Begin the gentle turn while the heart is closing: the circular
+        /// silhouette settles before the morph clock formally ends. A broad
+        /// ramp removes that apparent hold and avoids a fast initial lurch.
+        static let orbitStart = morphDuration * 0.5
+        static let orbitRamp = 1.6
         /// Use the welcome animation's complete forward turn and speed curve.
         static let orbitPeriod = WelcomeLightGeometry.duration
         static let circle = WelcomeLightGeometry.Frame(elapsed: WelcomeLightGeometry.circleTime)
@@ -139,7 +141,9 @@ enum WelcomeLightMatch {
             let t = max(0, elapsed - orbitStart)
             if t < orbitRamp {
                 let x = t / orbitRamp
-                return orbitRamp * (x*x*x - x*x*x*x / 2)
+                // Integral of quintic smootherstep. Speed, acceleration and
+                // jerk meet the stationary and steady phases continuously.
+                return orbitRamp * x*x*x*x * (2.5 - 3*x + x*x)
             }
             return t - orbitRamp / 2
         }

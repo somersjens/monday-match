@@ -36,9 +36,9 @@ nonisolated enum AWSPhotoVerificationError: LocalizedError {
     case unavailable, expired, notVerified
     var errorDescription: String? {
         switch self {
-        case .unavailable: "Server photo verification is not available yet. Please try again later."
-        case .expired: "This verification expired. Please start a new check."
-        case .notVerified: "The server could not verify this photo. Try a clear photo of yourself and repeat the scan."
+        case .unavailable: L10n("Server photo verification is not available yet. Please try again later.")
+        case .expired: L10n("This verification expired. Please start a new check.")
+        case .notVerified: L10n("The server could not verify this photo. Try a clear photo of yourself and repeat the scan.")
         }
     }
 }

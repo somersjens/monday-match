@@ -10,6 +10,7 @@ struct LocationStep: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var camera: MapCameraPosition
     @State private var displayedRadius: Double
+    @State private var isScrubbingRadius = false
     @State private var visibleCenter: CLLocationCoordinate2D?
     @State private var locationMessage: String?
     @State private var showsSettingsLink = false
@@ -49,9 +50,10 @@ struct LocationStep: View {
         .task { await showUsersCountryIfNeeded() }
         .task(id: location) { await resolvePlaceName() }
         .onChange(of: viewModel.state.searchRadiusKilometers) { old, new in
-            // Slider drags arrive in small steps and are applied directly;
-            // larger jumps (taps, keyboard, VoiceOver) glide.
-            let animation: Animation? = reduceMotion || abs(new - old) <= 3 ? nil : .smooth(duration: 0.55)
+            // While scrubbing, circle and camera follow the thumb directly:
+            // restarting a camera animation on every step stalls the map
+            // until the drag ends. Discrete jumps (taps, keyboard, VoiceOver) glide.
+            let animation: Animation? = reduceMotion || isScrubbingRadius || abs(new - old) <= 3 ? nil : .smooth(duration: 0.55)
             withAnimation(animation) {
                 displayedRadius = Double(new)
                 if let location {
@@ -177,7 +179,8 @@ struct LocationStep: View {
                 ),
                 scale: SliderScale(bounds: SearchRadiusRules.range, exponent: 1.8),
                 label: L10n("Search radius"),
-                valueDescription: { L10n("\($0) kilometers") }
+                valueDescription: { L10n("\($0) kilometers") },
+                onScrubbingChanged: { isScrubbingRadius = $0 }
             )
         }
         .padding(.horizontal, 18)

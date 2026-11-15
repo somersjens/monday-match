@@ -2,7 +2,7 @@ import PhotosUI
 import SwiftUI
 import UIKit
 
-/// Two-step setup: matching preferences, then an optional verified photo.
+/// Three-step setup: matching preferences, appearance, then an optional verified photo.
 struct AutoMatchingSetupView: View {
     @ObservedObject var viewModel: ProfileCreationViewModel
     @ObservedObject var locationService: LocationService
@@ -20,7 +20,14 @@ struct AutoMatchingSetupView: View {
 
     @State private var path: [Route] = []
 
+    private enum Stage: Hashable {
+        case preferences
+        case appearance
+        case photo
+    }
+
     private enum Route: Hashable {
+        case appearance
         case photo
         case exclusions
         case edit(ProfileCreationStep)
@@ -38,11 +45,13 @@ struct AutoMatchingSetupView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            setupPage(isFinalStep: false)
+            setupPage(.preferences)
                 .navigationDestination(for: Route.self) { route in
                     switch route {
+                    case .appearance:
+                        setupPage(.appearance)
                     case .photo:
-                        setupPage(isFinalStep: true)
+                        setupPage(.photo)
                     case .exclusions:
                         exclusionsPage
                     case .edit(let step):
@@ -62,19 +71,26 @@ struct AutoMatchingSetupView: View {
 
     // MARK: - Pages
 
-    private func setupPage(isFinalStep: Bool) -> some View {
+    private func subtitle(for stage: Stage) -> String {
+        switch stage {
+        case .preferences: L10n("Set your preferences. We propose matches for you.")
+        case .appearance: L10n("Rate your own appearance and set the minimum score you’re looking for in a partner.")
+        case .photo: L10n("Add and verify a photo, or join without one.")
+        }
+    }
+
+    private func setupPage(_ stage: Stage) -> some View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     header(
                         title: L10n("Auto matching"),
-                        subtitle: isFinalStep
-                            ? L10n("Add and verify a photo, or join without one.")
-                            : L10n("Set your preferences. We propose matches for you."),
-                        backLabel: isFinalStep ? L10n("Back") : L10n("Back to home"),
-                        onBack: { if isFinalStep { path.removeLast() } else { onFinish() } }
+                        subtitle: subtitle(for: stage),
+                        backLabel: stage == .preferences ? L10n("Back to home") : L10n("Back"),
+                        onBack: { if stage == .preferences { onFinish() } else { path.removeLast() } }
                     )
-                    if isFinalStep {
+                    switch stage {
+                    case .photo:
                         photoCard
                         if settings.photoID != nil {
                             Group {
@@ -105,10 +121,11 @@ struct AutoMatchingSetupView: View {
                                           isAccepted: viewModel.state.hasAcceptedMatchingPrivacy) {
                             showsPrivacy = true
                         }
-                    } else {
+                    case .appearance:
+                        appearanceScale
+                    case .preferences:
                         minimumMatchCard
                         dealbreakersCard
-                        appearanceScale
                     }
                 }
                 .frame(maxWidth: OnboardingTheme.contentWidth)
@@ -120,7 +137,7 @@ struct AutoMatchingSetupView: View {
             .scrollIndicators(.hidden)
             .scrollBounceBehavior(.basedOnSize)
 
-            bottomBar(isFinalStep: isFinalStep)
+            bottomBar(stage)
         }
         .background { OnboardingTheme.background.ignoresSafeArea() }
         .toolbar(.hidden, for: .navigationBar)
@@ -134,6 +151,8 @@ struct AutoMatchingSetupView: View {
                 Text(title)
                     .font(.system(size: 34, weight: .semibold, design: .rounded))
                     .foregroundStyle(OnboardingTheme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
                 Text(subtitle)
                     .font(.subheadline)
                     .foregroundStyle(OnboardingTheme.secondaryText)
@@ -220,27 +239,15 @@ struct AutoMatchingSetupView: View {
     }
 
     private var appearanceScale: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(L10n("Appearance"))
-                .font(.system(.subheadline, weight: .semibold))
-                .foregroundStyle(OnboardingTheme.primaryText)
-                .accessibilityAddTraits(.isHeader)
-
-            Text(L10n("Rate your own appearance and set the minimum score you’re looking for in a partner."))
-                .font(.footnote)
-                .foregroundStyle(OnboardingTheme.secondaryText)
-                .fixedSize(horizontal: false, vertical: true)
-
-            PartnerPreferenceScale(
-                levels: AppearanceRating.descendingScores.map { "\($0) · \(AppearanceRating.description(for: $0))" },
-                ownIndex: settings.ownAttractiveness.map { AppearanceRating.range.upperBound - $0 },
-                partnerLimitIndex: settings.partnerMinimumAttractiveness.map { AppearanceRating.range.upperBound - $0 },
-                mode: $appearanceMode,
-                onSelectOwn: { viewModel.setOwnAttractiveness(AppearanceRating.range.upperBound - $0) },
-                onSelectPartnerLimit: { viewModel.setPartnerMinimumAttractiveness(AppearanceRating.range.upperBound - $0) },
-                subject: .appearance
-            )
-        }
+        PartnerPreferenceScale(
+            levels: AppearanceRating.descendingScores.map { "\($0) · \(AppearanceRating.description(for: $0))" },
+            ownIndex: settings.ownAttractiveness.map { AppearanceRating.range.upperBound - $0 },
+            partnerLimitIndex: settings.partnerMinimumAttractiveness.map { AppearanceRating.range.upperBound - $0 },
+            mode: $appearanceMode,
+            onSelectOwn: { viewModel.setOwnAttractiveness(AppearanceRating.range.upperBound - $0) },
+            onSelectPartnerLimit: { viewModel.setPartnerMinimumAttractiveness(AppearanceRating.range.upperBound - $0) },
+            subject: .appearance
+        )
     }
 
     private var minimumMatchCard: some View {
@@ -412,13 +419,14 @@ struct AutoMatchingSetupView: View {
         .onboardingSurface(cornerRadius: 24)
     }
 
-    private func bottomBar(isFinalStep: Bool) -> some View {
-        VStack(spacing: 8) {
+    private func bottomBar(_ stage: Stage) -> some View {
+        let isFinalStep = stage == .photo
+        return VStack(spacing: 8) {
             if saveFailed {
                 Text(L10n("Auto matching couldn’t be saved. Try again."))
                     .font(.system(.footnote, weight: .medium))
                     .foregroundStyle(OnboardingTheme.pink)
-            } else if !settings.isReady {
+            } else if stage != .preferences && !settings.isReady {
                 Text(L10n("Set both appearance scores to continue."))
                     .font(.footnote)
                     .foregroundStyle(OnboardingTheme.tertiaryText)
@@ -441,27 +449,52 @@ struct AutoMatchingSetupView: View {
                     .padding(.bottom, 4)
             }
 
-            Button(isFinalStep ? L10n("Join auto matching") : L10n("Final step")) {
+            Button(primaryTitle(for: stage)) {
                 saveFailed = false
-                if !isFinalStep, let missingAppearanceSide {
-                    appearanceMode = missingAppearanceSide
-                    return
-                }
-                if isFinalStep {
+                switch stage {
+                case .preferences:
+                    path.append(.appearance)
+                case .appearance:
+                    if let missingAppearanceSide {
+                        appearanceMode = missingAppearanceSide
+                    } else {
+                        path.append(.photo)
+                    }
+                case .photo:
                     saveFailed = !viewModel.joinAutoMatching()
                     if !saveFailed { onFinish() }
-                } else {
-                    path.append(.photo)
                 }
             }
             .buttonStyle(GlowButtonStyle())
-            .disabled((isFinalStep && !viewModel.state.hasAcceptedMatchingPrivacy) || (!settings.isReady && (isFinalStep || missingAppearanceSide == nil)) || isLoadingPhoto || (isFinalStep && settings.photoID != nil && !viewModel.hasVerifiedAutoMatchingPhoto))
+            .disabled(isPrimaryDisabled(for: stage))
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)
         .padding(.top, 10)
         .padding(.bottom, 12)
         .frame(maxWidth: .infinity)
+    }
+
+    private func primaryTitle(for stage: Stage) -> String {
+        switch stage {
+        case .preferences: L10n("Continue")
+        case .appearance: L10n("Final step")
+        case .photo: L10n("Join auto matching")
+        }
+    }
+
+    private func isPrimaryDisabled(for stage: Stage) -> Bool {
+        switch stage {
+        case .preferences:
+            return false
+        case .appearance:
+            return !settings.isReady && missingAppearanceSide == nil
+        case .photo:
+            return !viewModel.state.hasAcceptedMatchingPrivacy
+                || !settings.isReady
+                || isLoadingPhoto
+                || (settings.photoID != nil && !viewModel.hasVerifiedAutoMatchingPhoto)
+        }
     }
 
     private func card<Content: View>(

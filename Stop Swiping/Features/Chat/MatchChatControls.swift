@@ -1,11 +1,12 @@
 import SwiftUI
 
-/// The single gear in the chat's top right: your own profile, both scores,
-/// and the two ways out of a match. Drawn as its own panel so every option
-/// fits on one line.
+/// The single gear in the chat's top right: your own profile and personality
+/// tests, both scores, and the two ways out of a match. Drawn as its own
+/// panel so every option fits on one line.
 struct MatchSettingsMenu: View {
     let name: String
     let onViewProfile: () -> Void
+    let onShowPersonality: () -> Void
     let onShowScores: (MatchReport.Perspective) -> Void
     let onReport: (ReportReason) -> Void
     let onBreak: () -> Void
@@ -35,6 +36,7 @@ struct MatchSettingsMenu: View {
                     try? await Task.sleep(for: .milliseconds(380))
                     switch choice {
                     case .profile: onViewProfile()
+                    case .personality: onShowPersonality()
                     case .scores(let perspective): onShowScores(perspective)
                     case .report(let reason): onReport(reason)
                     case .breakMatch: onBreak()
@@ -51,6 +53,7 @@ struct MatchSettingsMenu: View {
 private struct MatchSettingsPanel: View {
     enum Choice {
         case profile
+        case personality
         case scores(MatchReport.Perspective)
         case report(ReportReason)
         case breakMatch
@@ -81,6 +84,7 @@ private struct MatchSettingsPanel: View {
     private var options: some View {
         VStack(spacing: 0) {
             row(L10n("View your profile"), symbol: "person.crop.circle") { onChoose(.profile) }
+            row(L10n("Your personality tests"), symbol: "brain.head.profile") { onChoose(.personality) }
             divider
             row(L10n("Your match with \(name)"), symbol: "arrow.right.circle") { onChoose(.scores(.yours)) }
             row(L10n("\(name)’s match with you"), symbol: "arrow.left.circle") { onChoose(.scores(.theirs)) }

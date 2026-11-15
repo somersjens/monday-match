@@ -174,8 +174,12 @@ struct GlowSlider: View {
     let scale: SliderScale
     let label: String
     let valueDescription: (Int) -> String
+    /// Reports when the thumb is being scrubbed (as opposed to a single tap),
+    /// so callers can follow the value live instead of animating each step.
+    var onScrubbingChanged: (Bool) -> Void = { _ in }
 
     @State private var isDragging = false
+    @State private var isScrubbing = false
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -197,9 +201,19 @@ struct GlowSlider: View {
                 DragGesture(minimumDistance: 0)
                     .onChanged { drag in
                         isDragging = true
+                        if !isScrubbing, abs(drag.translation.width) > 2 {
+                            isScrubbing = true
+                            onScrubbingChanged(true)
+                        }
                         update(scale.value(for: (drag.location.x - SliderMetrics.thumb / 2) / usable))
                     }
-                    .onEnded { _ in isDragging = false }
+                    .onEnded { _ in
+                        isDragging = false
+                        if isScrubbing {
+                            isScrubbing = false
+                            onScrubbingChanged(false)
+                        }
+                    }
             )
         }
         .frame(height: SliderMetrics.height)

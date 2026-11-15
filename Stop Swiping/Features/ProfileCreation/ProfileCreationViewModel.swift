@@ -221,6 +221,7 @@ final class ProfileCreationViewModel: ObservableObject {
     private func move(to step: ProfileCreationStep) {
         feedback = nil
         if step == .religion { state.religionPhase = .own }
+        state.furthestStep = max(state.furthestStep, step)
         state.currentStep = step
         substanceMode = missingSubstanceSide ?? .own
         persist()
@@ -519,6 +520,81 @@ final class ProfileCreationViewModel: ObservableObject {
 
     func setAloneTimeImportance(_ value: Int) {
         setCompatibilityImportance(value, for: .aloneTime)
+    }
+
+    // MARK: - Testing shortcut
+
+    /// Gives every question a random valid answer and opens the last one, so
+    /// the whole questionnaire can be tested quickly. Deliberately available
+    /// in every build; nothing is completed until the last Continue.
+    func fillRandomAnswersForTesting() {
+        guard editingStep == nil, !state.isUnderageLocked,
+              let last = ProfileCreationStep.allCases.last else { return }
+        let today = today
+
+        let birth = CalendarDate(year: today.year - Int.random(in: 20...55),
+                                 month: Int.random(in: 1...12), day: Int.random(in: 1...28))
+        let age = BirthDateRules.age(of: birth, on: today)
+        state.dateOfBirth = birth
+        state.birthDateSelection = birth
+        let ages = PartnerAgeRules.clamped(minimum: age - Int.random(in: 0...10),
+                                           maximum: age + Int.random(in: 0...12))
+        state.partnerAgeRange = PartnerAgeRange(minimum: ages.minimum, maximum: ages.maximum, isCustomized: true)
+
+        let gender = GenderIdentity.onboardingOptions.randomElement() ?? .man
+        state.gender = gender
+        state.heightCentimeters = switch gender {
+        case .man: Int.random(in: 168...200)
+        case .woman: Int.random(in: 155...185)
+        default: Int.random(in: 158...192)
+        }
+        state.hasAdjustedHeight = true
+        state.partnerHeightRange = Bool.random() ? .any
+            : PartnerHeightRules.clamped(minimum: Int.random(in: 150...175), maximum: Int.random(in: 176...205))
+        var partners = Set(GenderIdentity.onboardingOptions.filter { _ in Bool.random() })
+        if partners.isEmpty, let any = GenderIdentity.onboardingOptions.randomElement() { partners.insert(any) }
+        state.partnerGenders = partners
+
+        let arrangement = RelationshipPreferenceQuestion.sexualArrangement
+        if let option = arrangement.options.randomElement() {
+            state.relationshipPreferences.select(option.id, in: arrangement)
+        }
+
+        let own = Bool.random() ? Religion.allCases.randomElement() : nil
+        state.religion.own = own
+        var accepted = Set(Religion.allCases.filter { _ in Bool.random() })
+        if let own { accepted.insert(own) }
+        state.religion.acceptedPartnerReligions = accepted.isEmpty ? Set(Religion.allCases) : accepted
+        state.religionPhase = .own
+
+        if state.languages.isEmpty { state.languages = [AppLocale.languageCode] }
+        if Bool.random(), let extra = ["en", "nl", "de", "fr", "es"].filter({ !state.languages.contains($0) }).randomElement() {
+            state.languages.append(extra)
+        }
+
+        // Somewhere in the Netherlands.
+        let coordinate = CLLocationCoordinate2D(latitude: .random(in: 51.5...53.2), longitude: .random(in: 4.3...6.8))
+        state.location = SelectedLocation(coordinate: coordinate, source: .map)
+        state.searchRadiusKilometers = SearchRadiusRules.clamped(Int.random(in: 10...80))
+
+        state.lifestyle.hasChildren = Bool.random()
+        state.lifestyle.openToPartnerWithChildren = Bool.random()
+        state.lifestyle.futureChildren = FutureChildrenWish.allCases.randomElement()
+        for substance in Substance.allCases {
+            let levels = substance.levels.indices
+            let ownLevel = Int.random(in: levels)
+            state.lifestyle[substance] = SubstanceAnswer(
+                ownLevel: ownLevel, partnerMaximumLevel: Int.random(in: ownLevel...levels.upperBound - 1))
+        }
+        for question in ProfileCreationStep.allCases.compactMap(\.compatibilityQuestion) {
+            let range = CompatibilityScaleAnswer.range
+            let own = Int.random(in: range)
+            let partner = Int.random(in: range)
+            state.lifestyle[question] = CompatibilityScaleAnswer(
+                own: own, partner: partner, isPartnerCustomized: partner != own, importance: Int.random(in: range))
+        }
+
+        move(to: last)
     }
 
     // MARK: - Completion

@@ -56,6 +56,12 @@ struct WelcomeView: View {
     /// Every model's estimate, worked out once when the charts open and again
     /// only when the answers change, never during a frame.
     @State private var personalityResults: [PersonalityTest: PersonalityResult] = [:]
+    /// The buttons come back from under the personality card, so they wait
+    /// for it to leave instead of fading in through it.
+    @State private var returnsFromPersonality = false
+    /// The personality estimates opened from a match's settings, drawn over
+    /// the conversation by a light of their own; nil while the chat shows.
+    @State private var matchPersonalityTest: PersonalityTest?
     /// A profile read by the in-app scanner, waiting for its match to be shown.
     @State private var scannedProfile: ProfileCreationState?
 
@@ -241,7 +247,8 @@ struct WelcomeView: View {
                     // and opacity change, so the Metal surface is never resized.
                     WelcomeLightAnimation(form: lightForm, lockPulse: lockPulse,
                                           showsCode: showsCode, code: shareCode, skipsEntrance: skipsEntrance,
-                                          isPaused: showsOverview || showsAutoMatching || showsSavedMatches || showsProfilePrivacy || showsScanner,
+                                          isPaused: showsOverview || showsAutoMatching || showsSavedMatches || showsProfilePrivacy || showsScanner
+                                            || matchPersonalityTest != nil,
                                           framesPerSecond: isOnboarding ? 30 : 60,
                                           helixEntryDistance: sideEntry / max(animationWidth * 0.42, 1)
                                             + WelcomeLightHelix.radius + 0.12,
@@ -303,7 +310,8 @@ struct WelcomeView: View {
 
                     if showsAccess {
                         EarlyAccessView(access: access, onContinue: continueFromAccess,
-                                        onBack: closeAccess, usesSharedLight: true)
+                                        onBack: closeAccess, usesSharedLight: true,
+                                        questionnaireProgress: accessProgress)
                             .transition(.asymmetric(insertion: .identity,
                                                     removal: .opacity.animation(.easeOut(duration: 0.2))))
                             .zIndex(2)
@@ -312,6 +320,7 @@ struct WelcomeView: View {
                             viewModel: profileCreation,
                             locationService: locationService,
                             canExitFromFirstStep: true,
+                            countdownDeadline: access.questionnaireDeadline,
                             onExit: returnToLanding,
                             onUnderage: showUnderageNotice,
                             onComplete: showCompletion
@@ -351,6 +360,7 @@ struct WelcomeView: View {
                             onSendMessage: startChat,
                             onStartDemoChat: { startDemoChat(activeMatch.snapshot) },
                             onViewProfile: { showsOverview = true },
+                            onShowPersonality: openMatchPersonality,
                             onBreakMatch: breakMatch,
                             onReport: reportMatch
                         )
@@ -362,19 +372,32 @@ struct WelcomeView: View {
                         PersonalityPanel(result: personalityResult,
                                          results: PersonalityTest.allCases.compactMap { personalityResults[$0] },
                                          onSelect: selectPersonalityTest, onClose: closePersonality)
-                            .transition(reduceMotion
-                                ? .opacity
-                                : .opacity.combined(with: .scale(scale: 0.97, anchor: .bottom)))
+                            .transition(.personalitySwap(reduceMotion: reduceMotion))
                     } else if stage == .complete {
                         completionControls
-                            .transition(reduceMotion
-                                ? .opacity
-                                : .opacity.combined(with: .scale(scale: 0.97, anchor: .bottom)))
+                            .transition(.asymmetric(
+                                insertion: returnsFromPersonality
+                                    ? .personalitySwap(reduceMotion: reduceMotion)
+                                    : reduceMotion
+                                        ? .opacity
+                                        : .opacity.combined(with: .scale(scale: 0.97, anchor: .bottom)),
+                                removal: reduceMotion
+                                    ? .opacity
+                                    : .opacity.combined(with: .scale(scale: 0.97, anchor: .bottom))))
                     } else {
                         landingControls
                             .transition(reduceMotion
                                 ? .opacity
                                 : .opacity.combined(with: .scale(scale: 0.97, anchor: .bottom)))
+                    }
+
+                    if stage == .complete, activeMatch != nil, let matchPersonalityTest,
+                       let result = personalityResults[matchPersonalityTest] {
+                        matchPersonality(result, center: CGPoint(x: proxy.size.width / 2, y: animationHeight / 2),
+                                         lightSize: CGSize(width: animationWidth, height: drawingHeight),
+                                         unit: animationWidth * 0.42)
+                            .transition(.opacity)
+                            .zIndex(3)
                     }
 
                     if showsUnderageNotice {
@@ -457,6 +480,10 @@ struct WelcomeView: View {
             guard hasAccount, scenePhase == .active, chatRepository != nil else { return }
             await liveMatches.run { [profileCreation] in profileCreation.state }
         }
+        .onChange(of: activeMatch == nil) { _, isGone in
+            // Leaving the match leaves its personality view too, so the main light runs again.
+            if isGone { matchPersonalityTest = nil }
+        }
         .onChange(of: liveMatches.match?.id) { old, new in
             // The other person broke the match while it was on screen.
             guard let old, new != old, activeMatch?.snapshot.id == old else { return }
@@ -470,7 +497,7 @@ struct WelcomeView: View {
             await syncProfile()
         }
         .onChange(of: profileCreation.state) { _, _ in
-            if personalityTest != nil { refreshPersonalityResults() }
+            if personalityTest != nil || matchPersonalityTest != nil { refreshPersonalityResults() }
         }
         .onChange(of: profileCreation.hasDisplayName) { _, hasName in
             if !hasName { showsCode = false }
@@ -850,6 +877,14 @@ struct WelcomeView: View {
 
     // MARK: - Stage changes
 
+    /// The questionnaire's progress, shown above the plans once it has
+    /// started, for instance when the early-adopter time ran out halfway.
+    private var accessProgress: Double? {
+        guard !profileCreation.isCompleted, !profileCreation.isUnderageLocked else { return nil }
+        return EarlyAccessView.questionnaireProgress(profileCreation.state.progress,
+                                                     hasStartedEarlyAccess: access.ledger.effectiveStartedAt != nil)
+    }
+
     private func openAccess() {
         guard !showsAccess else { return }
         showsCode = false
@@ -947,6 +982,7 @@ struct WelcomeView: View {
             closePersonality()
         } else {
             refreshPersonalityResults()
+            returnsFromPersonality = false
             withAnimation(.easeInOut(duration: 0.3)) { personalityTest = lastPersonalityTest }
         }
     }
@@ -966,7 +1002,51 @@ struct WelcomeView: View {
     }
 
     private func closePersonality() {
+        returnsFromPersonality = true
         withAnimation(.easeInOut(duration: 0.3)) { personalityTest = nil }
+    }
+
+    /// The same estimates as from the helix, laid over the conversation. There
+    /// is no code to share here, so the corner stays empty; closing returns to
+    /// the chat.
+    private func matchPersonality(_ result: PersonalityResult, center: CGPoint,
+                                  lightSize: CGSize, unit: CGFloat) -> some View {
+        ZStack {
+            Color("WelcomeBackground")
+                .ignoresSafeArea()
+
+            WelcomeLightAnimation(form: .helix, skipsEntrance: true,
+                                  isPaused: showsOverview || showsScanner,
+                                  personality: result.visual)
+                .frame(width: lightSize.width, height: lightSize.height)
+                .position(center)
+
+            PersonalityChartLabels(result: result, center: center, unit: unit)
+                .id(result.test)
+                .transition(.asymmetric(
+                    insertion: .opacity.animation(.easeInOut(duration: 0.45)
+                        .delay(reduceMotion ? 0 : WelcomeLightPersonality.crossDuration * 0.75)),
+                    removal: .opacity.animation(.easeOut(duration: 0.2))))
+
+            PersonalityPanel(result: result,
+                             results: PersonalityTest.allCases.compactMap { personalityResults[$0] },
+                             onSelect: selectMatchPersonalityTest, onClose: closeMatchPersonality)
+        }
+    }
+
+    private func openMatchPersonality() {
+        guard activeMatch != nil else { return }
+        refreshPersonalityResults()
+        withAnimation(.easeInOut(duration: 0.3)) { matchPersonalityTest = lastPersonalityTest }
+    }
+
+    private func selectMatchPersonalityTest(_ test: PersonalityTest) {
+        lastPersonalityTest = test
+        withAnimation(.easeInOut(duration: 0.3)) { matchPersonalityTest = test }
+    }
+
+    private func closeMatchPersonality() {
+        withAnimation(.easeInOut(duration: 0.3)) { matchPersonalityTest = nil }
     }
 
     private func toggleCode() {
@@ -1033,6 +1113,7 @@ struct WelcomeView: View {
         showsMatchProfile = false
         showsCode = false
         personalityTest = nil
+        returnsFromPersonality = false
         guard !reduceMotion, WelcomeLightMetalView.isAvailable else {
             demoStarts += 1
             present(snapshot)
@@ -1124,6 +1205,8 @@ struct WelcomeView: View {
         let report = snapshot.report
         showsCode = false
         personalityTest = nil
+        matchPersonalityTest = nil
+        returnsFromPersonality = false
         matchStartedAt = Date()
         if chatting {
             // Back into an open conversation: the helix flows straight into
@@ -1466,6 +1549,7 @@ private struct CodeScanButton: View {
 /// Profile creation for accounts that reach onboarding without it, shown on
 /// the same ambient light as the landing page.
 struct ProfileCreationGateView: View {
+    @ObservedObject var access: LifetimeAccessStore
     let onComplete: () -> Void
     let onUnderage: () -> Void
 
@@ -1477,9 +1561,11 @@ struct ProfileCreationGateView: View {
     init(
         store: ProfileCreationStateStoring,
         repository: ProfileRepository?,
+        access: LifetimeAccessStore,
         onComplete: @escaping () -> Void,
         onUnderage: @escaping () -> Void
     ) {
+        self.access = access
         self.onComplete = onComplete
         self.onUnderage = onUnderage
         _viewModel = StateObject(wrappedValue: ProfileCreationViewModel(store: store, repository: repository))
@@ -1501,6 +1587,7 @@ struct ProfileCreationGateView: View {
                     viewModel: viewModel,
                     locationService: locationService,
                     canExitFromFirstStep: false,
+                    countdownDeadline: access.questionnaireDeadline,
                     onExit: {},
                     onUnderage: handleUnderage,
                     onComplete: onComplete

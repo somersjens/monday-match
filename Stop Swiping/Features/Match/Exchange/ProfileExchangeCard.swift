@@ -9,26 +9,18 @@ struct ProfileExchangeCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top, spacing: 14) {
-                icon
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(L10n("Let someone else scan your code"))
-                        .font(.system(.body, weight: .semibold))
-                        .foregroundStyle(OnboardingTheme.primaryText)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(session.people.isEmpty
-                         ? L10n("Then see on their phone whether you’re a match. They scan with the camera button at the top right, or with their iPhone’s camera.")
-                         : L10n("Then see on their phone whether you’re a match. Or hold your phones together, top to top."))
-                        .font(.footnote)
-                        .foregroundStyle(OnboardingTheme.secondaryText)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .contentTransition(.opacity)
-                }
-                .accessibilityElement(children: .combine)
-
-                Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(L10n("Let someone else scan your code"))
+                    .font(.system(.body, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(L10n("Then see on their phone whether you’re a match."))
+                    .font(.footnote)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .combine)
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
 
@@ -125,27 +117,6 @@ struct ProfileExchangeCard: View {
             .padding(.leading, 16)
     }
 
-    private var icon: some View {
-        Image(systemName: session.people.isEmpty ? "qrcode.viewfinder" : "dot.radiowaves.left.and.right")
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(LinearGradient(
-                colors: [OnboardingTheme.cyan, OnboardingTheme.violet],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ))
-            .contentTransition(.symbolEffect(.replace))
-            .symbolEffect(.variableColor.iterative, options: .repeating, isActive: session.isActive && !session.people.isEmpty)
-            .frame(width: 36, height: 36)
-            .background {
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .fill(.white.opacity(0.12))
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .strokeBorder(.white.opacity(0.08), lineWidth: 0.5)
-            }
-            .accessibilityHidden(true)
-    }
 }
 
 private struct ExchangeChipStyle: ButtonStyle {

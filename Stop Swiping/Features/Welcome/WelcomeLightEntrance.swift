@@ -4,9 +4,9 @@ import CoreGraphics
 /// One presentation clock feeds the entrance and then the existing periodic loop.
 /// The loop's shape, light and particle clocks never reset at the handoff.
 enum WelcomeLightEntrance {
-    private static let launchDuration = 0.65
-    // Heart-perimeter units per second: preserve the established visible pace.
-    private static let headSpeed = 0.3634
+    private static let launchDuration = 0.55
+    // Heart-perimeter units per second.
+    private static let headSpeed = 0.46
     private static let offscreenAdvance = 0.40
     private static let approachDuration = 0.18
     static let traceDuration = (1+inletLength)/headSpeed+launchDuration*0.5-offscreenAdvance
