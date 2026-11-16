@@ -73,11 +73,14 @@ struct SavedMatchesView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .headerTitle, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n("My matches"))
                     .font(.system(size: 34, weight: .semibold, design: .rounded))
                     .foregroundStyle(OnboardingTheme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .headerTitleGuide()
                 Text(L10n("Scores are kept as they were on the day you matched."))
                     .font(.subheadline)
                     .foregroundStyle(OnboardingTheme.secondaryText)
@@ -119,7 +122,7 @@ struct SavedMatchesView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(report.average)%")
+                    Text(report.average, format: .percent)
                         .font(.system(.body, design: .rounded, weight: .semibold))
                         .monospacedDigit()
                         .foregroundStyle(OnboardingTheme.cyan)
@@ -173,7 +176,7 @@ extension SavedMatchesView {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(match.average)%")
+                    Text(match.average, format: .percent)
                         .font(.system(.body, design: .rounded, weight: .semibold))
                         .monospacedDigit()
                         .foregroundStyle(OnboardingTheme.cyan.opacity(0.55))

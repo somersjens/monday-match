@@ -31,6 +31,10 @@ struct MatchSettingsMenu: View {
         .popover(isPresented: $isOpen, attachmentAnchor: .point(.bottom), arrowEdge: .top) {
             MatchSettingsPanel(name: name, canBreak: canBreak) { choice in
                 isOpen = false
+                if case .personality = choice {
+                    // The tests cover the conversation; the keyboard has nothing left to type into.
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
                 Task {
                     // Let the panel close before a sheet or alert takes over.
                     try? await Task.sleep(for: .milliseconds(380))
@@ -44,7 +48,8 @@ struct MatchSettingsMenu: View {
                 }
             }
             .presentationCompactAdaptation(.popover)
-            .presentationBackground(.ultraThinMaterial)
+            // The system's own glass: a custom material here covered the body
+            // but not the arrow, so the corner by the gear looked different.
             .preferredColorScheme(.dark)
         }
     }
@@ -350,7 +355,7 @@ struct LiveMatchCard: View {
                             Text(match.partnerName)
                                 .font(.system(.body, weight: .semibold))
                                 .foregroundStyle(OnboardingTheme.primaryText)
-                            Text("\(match.average)%")
+                            Text(match.average, format: .percent)
                                 .font(.system(.footnote, design: .rounded, weight: .semibold))
                                 .monospacedDigit()
                                 .foregroundStyle(OnboardingTheme.cyan)

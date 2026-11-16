@@ -17,7 +17,7 @@ struct AutoMatchingCard: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.6)
                         if settings.isEnabled {
-                            Text(verbatim: "· \(settings.minimumMatchPercent)%")
+                            Text(verbatim: "· \(L10nPercent(settings.minimumMatchPercent))")
                                 .foregroundStyle(OnboardingTheme.secondaryText)
                                 .fixedSize()
                                 .layoutPriority(1)

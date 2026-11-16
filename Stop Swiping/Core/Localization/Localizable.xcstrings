@@ -1118,9 +1118,6 @@
         }
       }
     },
-    "%lld%%" : {
-
-    },
     "1–3 times a month" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12376,7 +12373,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Meld je match"
+            "value" : "Rapporteer je match"
           }
         }
       }

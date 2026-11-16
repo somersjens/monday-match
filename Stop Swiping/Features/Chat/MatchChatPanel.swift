@@ -228,57 +228,7 @@ struct MatchChatPanel: View {
     // MARK: - Composer
 
     private var composer: some View {
-        HStack(alignment: .bottom, spacing: 10) {
-            TextField(L10n("Message"), text: $chat.draftMessage, axis: .vertical)
-                .font(.body)
-                .lineLimit(1...5)
-                .foregroundStyle(OnboardingTheme.primaryText)
-                .tint(OnboardingTheme.cyan)
-                .focused($composerFocused)
-                .submitLabel(.return)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 11)
-                .background {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(.white.opacity(0.08))
-                }
-                .overlay {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .strokeBorder(composerFocused ? OnboardingTheme.cyan.opacity(0.35) : OnboardingTheme.hairline,
-                                      lineWidth: composerFocused ? 1 : 0.5)
-                }
-                .accessibilityIdentifier("chat.composer")
-                .onChange(of: chat.draftMessage) { _, text in
-                    if text.utf8.count > 8000 { chat.draftMessage = String(text.prefix(4000)) }
-                }
-
-            Button(action: chat.sendMessage) {
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundStyle(chat.canSend ? Color.white : OnboardingTheme.tertiaryText)
-                    .frame(width: 44, height: 44)
-                    .background {
-                        Circle().fill(chat.canSend
-                            ? AnyShapeStyle(OnboardingTheme.buttonGradient)
-                            : AnyShapeStyle(Color.white.opacity(0.08)))
-                    }
-                    .shadow(color: OnboardingTheme.blue.opacity(chat.canSend ? 0.6 : 0), radius: 10)
-                    .contentShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .disabled(!chat.canSend)
-            .animation(.easeInOut(duration: 0.18), value: chat.canSend)
-            .accessibilityLabel(L10n("Send"))
-            .accessibilityIdentifier("chat.send")
-        }
-        .padding(.horizontal, 12)
-        .padding(.top, 8)
-        .padding(.bottom, 10)
-        .background {
-            LinearGradient(colors: [OnboardingTheme.background.opacity(0), OnboardingTheme.background.opacity(0.92)],
-                           startPoint: .top, endPoint: .center)
-                .ignoresSafeArea(edges: .bottom)
-        }
+        MatchChatComposer(chat: chat, draft: chat.draft, isFocused: $composerFocused)
     }
 
     // MARK: - Security code
@@ -314,6 +264,69 @@ struct MatchChatPanel: View {
         .presentationDetents([.medium, .large])
         .presentationBackground(OnboardingTheme.background)
         .preferredColorScheme(.dark)
+    }
+}
+
+/// The text field and send button. It alone watches the draft, so typing
+/// redraws this row and nothing else on the screen.
+private struct MatchChatComposer: View {
+    @ObservedObject var chat: ChatViewModel
+    @ObservedObject var draft: ChatDraft
+    var isFocused: FocusState<Bool>.Binding
+
+    var body: some View {
+        let canSend = chat.canSend
+        HStack(alignment: .bottom, spacing: 10) {
+            TextField(L10n("Message"), text: $draft.text, axis: .vertical)
+                .font(.body)
+                .lineLimit(1...5)
+                .foregroundStyle(OnboardingTheme.primaryText)
+                .tint(OnboardingTheme.cyan)
+                .focused(isFocused)
+                .submitLabel(.return)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 11)
+                .background {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(.white.opacity(0.08))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .strokeBorder(isFocused.wrappedValue ? OnboardingTheme.cyan.opacity(0.35) : OnboardingTheme.hairline,
+                                      lineWidth: isFocused.wrappedValue ? 1 : 0.5)
+                }
+                .accessibilityIdentifier("chat.composer")
+                .onChange(of: draft.text) { _, text in
+                    if text.utf8.count > 8000 { draft.text = String(text.prefix(4000)) }
+                }
+
+            Button(action: chat.sendMessage) {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(canSend ? Color.white : OnboardingTheme.tertiaryText)
+                    .frame(width: 44, height: 44)
+                    .background {
+                        Circle().fill(canSend
+                            ? AnyShapeStyle(OnboardingTheme.buttonGradient)
+                            : AnyShapeStyle(Color.white.opacity(0.08)))
+                    }
+                    .shadow(color: OnboardingTheme.blue.opacity(canSend ? 0.6 : 0), radius: 10)
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!canSend)
+            .animation(.easeInOut(duration: 0.18), value: canSend)
+            .accessibilityLabel(L10n("Send"))
+            .accessibilityIdentifier("chat.send")
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+        .padding(.bottom, 10)
+        .background {
+            LinearGradient(colors: [OnboardingTheme.background.opacity(0), OnboardingTheme.background.opacity(0.92)],
+                           startPoint: .top, endPoint: .center)
+                .ignoresSafeArea(edges: .bottom)
+        }
     }
 }
 

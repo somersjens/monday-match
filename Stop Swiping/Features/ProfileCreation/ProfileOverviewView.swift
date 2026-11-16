@@ -148,11 +148,14 @@ struct ProfileOverviewView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .headerTitle, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n("Your profile"))
                     .font(.system(size: 34, weight: .semibold, design: .rounded))
                     .foregroundStyle(OnboardingTheme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .headerTitleGuide()
                 Text(L10n("Tap an answer to change it."))
                     .font(.subheadline)
                     .foregroundStyle(OnboardingTheme.secondaryText)

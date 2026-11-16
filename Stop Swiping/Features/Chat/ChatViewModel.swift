@@ -8,7 +8,13 @@ final class ChatViewModel: ObservableObject {
     }
     /// Keeps a demo conversation on the phone, so the app reopens in it.
     var onConversationChange: ((ChatConversation) -> Void)?
-    @Published var draftMessage = ""
+    /// What is being typed. Kept apart so a keystroke only redraws the
+    /// composer, not every view that watches the conversation.
+    let draft = ChatDraft()
+    var draftMessage: String {
+        get { draft.text }
+        set { draft.text = newValue }
+    }
     @Published var showsBlockConfirmation = false
     @Published var showsEndConfirmation = false
     @Published var showsReportSheet = false
@@ -73,6 +79,16 @@ final class ChatViewModel: ObservableObject {
     /// Whether the server has the message; pending ones show a clock.
     func isDelivered(_ message: ChatMessage) -> Bool { !pendingIDs.contains(message.id) }
     @Published private var pendingIDs: Set<UUID> = []
+
+    /// Fires when what the home screen shows changes: messages, read state
+    /// and unsent ones. Typing, typing dots and errors stay out of it.
+    var summaryChanges: AnyPublisher<Void, Never> {
+        Publishers.Merge3(
+            $conversation.removeDuplicates().dropFirst().map { _ in () },
+            $lastReadAt.removeDuplicates().dropFirst().map { _ in () },
+            $pendingIDs.removeDuplicates().dropFirst().map { _ in () })
+            .eraseToAnyPublisher()
+    }
 
     func markAllRead() {
         guard let newest=conversation.messages.last(where: { $0.sender == .match })?.sentAt, newest > lastReadAt else {
@@ -187,4 +203,10 @@ final class ChatViewModel: ObservableObject {
             }
         } else { lastReport=report; showsReportSheet=false }
     }
+}
+
+/// The composer's text, observed only by the composer.
+@MainActor
+final class ChatDraft: ObservableObject {
+    @Published var text = ""
 }

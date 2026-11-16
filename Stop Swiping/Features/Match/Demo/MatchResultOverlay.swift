@@ -329,7 +329,7 @@ struct MatchResultOverlay: View {
 
     private var average: some View {
         VStack(spacing: 6 * layout.scale) {
-            Text("\(report.average)%")
+            Text(report.average, format: .percent)
                 .font(.system(size: frame.unit * 0.46 * layout.scale, weight: .light, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(.white)
@@ -366,7 +366,7 @@ struct MatchResultOverlay: View {
         let line = frame.point(x, layout.lineY)
         return Button { onShowScores(perspective) } label: {
             VStack(spacing: 0) {
-                Text("\(report.score(perspective))%")
+                Text(report.score(perspective), format: .percent)
                     .font(.system(size: frame.unit * 0.25, weight: .light, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(.white)

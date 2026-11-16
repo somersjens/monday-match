@@ -128,3 +128,9 @@ nonisolated enum AppLocalization {
 nonisolated func L10n(_ message: AppLocalizedMessage) -> String {
     AppLocalization.string(message, language: AppLanguageSettings.shared.language)
 }
+
+/// A whole-number percentage ("42" → "42%") in the app's language, for
+/// strings; in a `Text`, use `Text(value, format: .percent)` instead.
+nonisolated func L10nPercent(_ value: Int) -> String {
+    value.formatted(.percent.locale(AppLanguageSettings.shared.language.locale))
+}

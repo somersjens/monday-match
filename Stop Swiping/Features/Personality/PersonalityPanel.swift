@@ -339,9 +339,9 @@ struct PersonalityChartLabels: View {
     private var accessibilityText: String {
         switch result.chart {
         case .spectrum(let dimensions):
-            dimensions.map { "\($0.dominant.name) \($0.percent)%" }.joined(separator: ", ")
+            dimensions.map { "\($0.dominant.name) \(L10nPercent($0.percent))" }.joined(separator: ", ")
         case .radar(let traits), .wheel(let traits, _, _):
-            traits.map { "\($0.name) \($0.percent)%" }.joined(separator: ", ")
+            traits.map { "\($0.name) \(L10nPercent($0.percent))" }.joined(separator: ", ")
         case .enneagram(let traits, let type, let wing):
             "\(type) \(traits[type - 1].name), " + L10n("wing \(wing)")
         }
@@ -362,7 +362,7 @@ struct PersonalityChartLabels: View {
             .frame(width: barWidth + 24)
             .position(x: center.x, y: y - 0.17 * unit)
 
-            Text(verbatim: "\(dimension.percent)%")
+            Text(dimension.percent, format: .percent)
                 .font(.caption2.weight(.semibold).monospacedDigit())
                 .foregroundStyle(OnboardingTheme.cyan.opacity(0.9))
                 .position(x: center.x + WelcomeLightPersonality.Spectrum.markerX(value: dimension.value) * unit,
@@ -399,7 +399,7 @@ struct PersonalityChartLabels: View {
                 Text(verbatim: trait.short)
                     .font(.system(traits.count > 6 ? .caption : .subheadline, design: .rounded, weight: .bold))
                     .foregroundStyle(isStrongest ? OnboardingTheme.cyan : OnboardingTheme.primaryText)
-                Text(verbatim: "\(trait.percent)%")
+                Text(trait.percent, format: .percent)
                     .font(.caption2.weight(.semibold).monospacedDigit())
                     .foregroundStyle(OnboardingTheme.secondaryText)
             }
@@ -437,7 +437,7 @@ struct PersonalityChartLabels: View {
                 Text(verbatim: quarter.short)
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
                     .foregroundStyle(index == strongest ? Self.wheelColors[index] : OnboardingTheme.primaryText)
-                Text(verbatim: "\(Int((quarter.value / max(total, 1e-6) * 100).rounded()))%")
+                Text(Int((quarter.value / max(total, 1e-6) * 100).rounded()), format: .percent)
                     .font(.caption2.weight(.semibold).monospacedDigit())
                     .foregroundStyle(OnboardingTheme.secondaryText)
             }

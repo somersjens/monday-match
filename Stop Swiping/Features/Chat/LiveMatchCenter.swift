@@ -80,7 +80,9 @@ final class LiveMatchCenter: ObservableObject {
                                                    participantName: current.partnerName, messages: []),
                     secureSession: SecureChatSession(match: current, repository: repository))
                 // The home card shows the newest message and the unread badge.
-                chatChanges = chat?.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
+                // Only what the card shows: forwarding every keystroke would redraw
+                // the whole home screen, light and all, while typing.
+                chatChanges = chat?.summaryChanges.sink { [weak self] in self?.objectWillChange.send() }
             }
             match = current
             rememberPartnerCard(current)

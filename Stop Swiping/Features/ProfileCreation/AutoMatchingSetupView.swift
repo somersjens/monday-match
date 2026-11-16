@@ -147,13 +147,14 @@ struct AutoMatchingSetupView: View {
     }
 
     private func header(title: String, subtitle: String, backLabel: String, onBack: @escaping () -> Void) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .headerTitle, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
                     .font(.system(size: 34, weight: .semibold, design: .rounded))
                     .foregroundStyle(OnboardingTheme.primaryText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
+                    .headerTitleGuide()
                 Text(subtitle)
                     .font(.subheadline)
                     .foregroundStyle(OnboardingTheme.secondaryText)
@@ -252,7 +253,7 @@ struct AutoMatchingSetupView: View {
     }
 
     private var minimumMatchCard: some View {
-        card(title: L10n("Minimum match"), value: "\(settings.minimumMatchPercent)%") {
+        card(title: L10n("Minimum match"), value: L10nPercent(settings.minimumMatchPercent)) {
             GlowSlider(
                 value: Binding(
                     get: { viewModel.state.autoMatching.minimumMatchPercent },

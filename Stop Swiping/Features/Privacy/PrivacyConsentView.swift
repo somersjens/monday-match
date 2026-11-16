@@ -13,10 +13,8 @@ struct PrivacyConsentView: View {
             PrivacyPageHeader(title: copy.title) { dismiss() }
             ScrollView {
                 VStack(alignment: .leading, spacing: 36) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        ForEach(copy.points, id: \.self) { PrivacyPointCard(point: $0) }
-                    }
-                    .padding(.top, 12)
+                    PrivacyPointsCard(points: copy.points)
+                        .padding(.top, 12)
 
                     PrivacyDetailsList(sections: copy.sections) { showsPolicy = true }
 
@@ -46,32 +44,45 @@ struct PrivacyConsentView: View {
     }
 }
 
-/// One plain-language promise as its own card: icon, heading, short text.
-private struct PrivacyPointCard: View {
-    let point: PrivacyContent.Point
+/// All plain-language promises in one card, separated by hairlines.
+private struct PrivacyPointsCard: View {
+    let points: [PrivacyContent.Point]
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 14) {
-            // Sized like the heading so the icon reads as part of that line.
-            Image(systemName: point.symbol)
-                .font(.title3.weight(.regular))
-                .imageScale(.medium)
-                .foregroundStyle(OnboardingTheme.accentGradient)
-                .frame(width: 28)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(points.enumerated()), id: \.offset) { index, point in
+                if index > 0 {
+                    Rectangle().fill(OnboardingTheme.hairline).frame(height: 0.5)
+                        .padding(.leading, 16)
+                }
+                row(point)
+            }
+        }
+        .onboardingSurface(cornerRadius: 22)
+    }
+
+    /// Heading and text start at the leading edge; the icon follows the
+    /// heading directly. Sizes match the details list below.
+    private func row(_ point: PrivacyContent.Point) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(point.title)
-                    .font(.title3.weight(.semibold))
-                Text(point.text)
-                    .font(.body)
-                    .foregroundStyle(OnboardingTheme.secondaryText)
-                    .lineSpacing(2)
+                    .font(.body.weight(.semibold))
+                Image(systemName: point.symbol)
+                    .font(.body.weight(.regular))
+                    .imageScale(.medium)
+                    .foregroundStyle(OnboardingTheme.accentGradient)
+                    .accessibilityHidden(true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .fixedSize(horizontal: false, vertical: true)
+            Text(point.text)
+                .font(.callout)
+                .foregroundStyle(OnboardingTheme.secondaryText)
+                .lineSpacing(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .fixedSize(horizontal: false, vertical: true)
         .padding(16)
-        .onboardingSurface(cornerRadius: 22)
         .accessibilityElement(children: .combine)
     }
 }
@@ -222,12 +233,14 @@ private struct PrivacyPageHeader: View {
     let onClose: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .headerTitle, spacing: 16) {
             Text(title)
                 .font(.system(size: 30, weight: .semibold, design: .rounded))
                 .foregroundStyle(OnboardingTheme.primaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .headerTitleGuide()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             Button(action: onClose) {
                 Image(systemName: "xmark")

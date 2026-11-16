@@ -93,7 +93,7 @@ struct MatchScoreDetailView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
-            Text("\(report.score(perspective))%")
+            Text(report.score(perspective), format: .percent)
                 .font(.system(size: 30, weight: .light, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(OnboardingTheme.cyan)

@@ -1,3 +1,4 @@
+import Combine
 import CoreLocation
 import XCTest
 @testable import Stop_Swiping
@@ -25,6 +26,28 @@ final class MatchChatTests: XCTestCase {
         XCTAssertEqual(chat.conversation.messages.map(\.text), ["Hi", "Hey Mila", "Hi"])
         XCTAssertFalse(chat.isPartnerTyping)
         XCTAssertTrue(chat.isReadByPartner(sent), "A reply means the message was read")
+    }
+
+    /// Typing redraws only the composer. A change on the chat itself reaches
+    /// the home screen, which would redraw the light on every keystroke.
+    func testTypingDoesNotRedrawTheConversationOrTheHomeScreen() {
+        let chat = ChatViewModel.demo(matchID: UUID(), name: "Mila")
+        var chatUpdates = 0, summaryUpdates = 0, draftUpdates = 0
+        let subscriptions = [
+            chat.objectWillChange.sink { chatUpdates += 1 },
+            chat.summaryChanges.sink { summaryUpdates += 1 },
+            chat.draft.objectWillChange.sink { draftUpdates += 1 },
+        ]
+
+        for text in ["H", "He", "Hey"] { chat.draftMessage = text }
+        XCTAssertEqual(chatUpdates, 0)
+        XCTAssertEqual(summaryUpdates, 0)
+        XCTAssertEqual(draftUpdates, 3)
+        XCTAssertTrue(chat.canSend)
+
+        chat.sendMessage()
+        XCTAssertGreaterThan(summaryUpdates, 0, "A sent message updates the home card")
+        withExtendedLifetime(subscriptions) {}
     }
 
     func testBreakingThroughAReportClosesTheDemoConversation() {

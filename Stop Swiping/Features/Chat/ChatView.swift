@@ -4,9 +4,15 @@ struct ChatView: View {
     // Observed, not owned: the view model is created and kept alive by
     // SignedInRootViewModel so messages survive leaving and reopening the chat.
     @ObservedObject var viewModel: ChatViewModel
+    @ObservedObject private var draft: ChatDraft
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSecurityCode = false
     @State private var showsDeviceReplacement = false
+
+    init(viewModel: ChatViewModel) {
+        self.viewModel = viewModel
+        _draft = ObservedObject(wrappedValue: viewModel.draft)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -178,7 +184,7 @@ struct ChatView: View {
         HStack(alignment: .bottom, spacing: AppSpacing.small) {
             TextField(
                 L10n("Message"),
-                text: $viewModel.draftMessage,
+                text: $draft.text,
                 axis: .vertical
             )
             .lineLimit(1...5)
