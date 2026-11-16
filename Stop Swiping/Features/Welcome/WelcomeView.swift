@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 struct WelcomeView: View {
@@ -19,6 +20,8 @@ struct WelcomeView: View {
     @StateObject private var profileCreation: ProfileCreationViewModel
     @StateObject private var locationService = LocationService()
     @StateObject private var notifications = NotificationPermissionService()
+    /// Plans reminders and routes notification taps; nil in previews and tests.
+    @Environment(\.notificationEngine) private var notificationEngine
     @State private var hasAccount: Bool
     /// The landing controls show Apple and Google sign-in instead of Get started.
     @State private var showsSignIn = false
@@ -526,7 +529,9 @@ struct WelcomeView: View {
         }
         .onChange(of: profileCreation.state) { _, _ in
             if personalityTest != nil || matchPersonalityTest != nil { refreshPersonalityResults() }
+            notificationEngine?.profileChanged()
         }
+        .modifier(NotificationWiring(view: self))
         .onChange(of: profileCreation.hasDisplayName) { _, hasName in
             if !hasName { showsCode = false }
         }
@@ -598,6 +603,7 @@ struct WelcomeView: View {
         .onChange(of: exchange.result) { _, result in
             guard let result, stage == .complete, activeMatch == nil else { return }
             profileCreation.markProfileExchangeUsed()
+            notificationEngine?.recordCompatibilityCheck()
             exchanges += 1
             present(MatchSnapshot(id: result.id, matchedAt: Date(), you: result.you, them: result.them))
         }
@@ -818,6 +824,87 @@ struct WelcomeView: View {
                 guard !isTransitioning else { return }
                 showsAutoMatching = true
             }
+        }
+    }
+
+    /// What the notification engine needs from this screen: the live match
+    /// and its conversation, whether the chat is open, the permission, and
+    /// the screens notification taps ask for.
+    private struct NotificationWiring: ViewModifier {
+        let view: WelcomeView
+
+        func body(content: Content) -> some View {
+            content
+                .onChange(of: view.liveMatchSignal, initial: true) { _, _ in view.reportLiveMatch() }
+                .onChange(of: view.isChatting, initial: true) { _, chatting in view.notificationEngine?.isChatOpen = chatting }
+                .onChange(of: view.notifications.state) { _, _ in
+                    Task { await view.notificationEngine?.refreshPermission(); await view.notificationEngine?.sync() }
+                }
+                .onReceive(view.notificationEngine?.$pendingDestination.eraseToAnyPublisher()
+                           ?? Empty().eraseToAnyPublisher()) { destination in
+                    guard let destination else { return }
+                    view.open(destination)
+                }
+        }
+    }
+
+    /// Changes whenever anything the engine plans conversation reminders from does.
+    fileprivate struct LiveMatchSignal: Equatable {
+        let matchID: UUID?
+        let messageIDs: [UUID]
+        let lastReadAt: Date?
+        let unsent: [UUID]
+        let history: [UUID]
+        let suspended: Bool
+    }
+
+    fileprivate var liveMatchSignal: LiveMatchSignal {
+        let chat = liveMatches.chat
+        let messages = chat?.conversation.messages ?? []
+        return LiveMatchSignal(matchID: liveMatches.match?.id, messageIDs: messages.map(\.id),
+                               lastReadAt: chat?.lastReadAt,
+                               unsent: messages.filter { chat?.isDelivered($0) == false }.map(\.id),
+                               history: liveMatches.pastMatches.map(\.id), suspended: isSuspendedFromMatching)
+    }
+
+    private var isSuspendedFromMatching: Bool {
+        guard let moderation = liveMatches.moderation else { return false }
+        return moderation.banned || moderation.isSuspended()
+    }
+
+    fileprivate func reportLiveMatch() {
+        guard let notificationEngine, hasAccount else { return }
+        let match = liveMatches.match
+        let chat = liveMatches.chat
+        let messages = chat?.conversation.messages ?? []
+        notificationEngine.updateLiveMatch(
+            match, messages: messages, lastReadAt: chat?.lastReadAt,
+            unsentIDs: messages.filter { chat?.isDelivered($0) == false }.map(\.id),
+            isConversationLoaded: chat != nil && (match?.lastMessageAt == nil || !messages.isEmpty),
+            history: liveMatches.pastMatches, isSuspended: isSuspendedFromMatching)
+    }
+
+    /// A tapped notification's screen. Matches and chats open on their own
+    /// once nothing covers the home screen; the questionnaire reopens at its
+    /// step by itself.
+    fileprivate func open(_ destination: NotificationDestination) {
+        notificationEngine?.pendingDestination = nil
+        guard stage == .complete else { return }
+        switch destination {
+        case .match, .chat, .profile, .onboarding:
+            showsOverview = false
+            showsAutoMatching = false
+            showsSavedMatches = false
+        case .myMatches:
+            openSavedMatches()
+        case .privacy(.profile):
+            if profileCreation.hasDisplayName { showsProfilePrivacy = true }
+        case .privacy(.matching), .autoMatching:
+            if hasAccount { showsAutoMatching = true }
+        case .share:
+            if !showsCode { toggleCode() }
+        case .notificationSettings:
+            showsOverview = true
         }
     }
 
@@ -1186,6 +1273,7 @@ struct WelcomeView: View {
         guard canShowScannedMatch, let them = scannedProfile ?? codeInbox.take() else { return }
         scannedProfile = nil
         profileCreation.markProfileExchangeUsed()
+        notificationEngine?.recordCompatibilityCheck()
         exchanges += 1
         present(MatchSnapshot(matchedAt: Date(), you: profileCreation.state.sharedCopy(today: .today()), them: them))
     }

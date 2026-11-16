@@ -3,6 +3,7 @@ import SwiftUI
 struct AppCoordinatorView: View {
     @ObservedObject var appState: AppState
     @ObservedObject var access: LifetimeAccessStore
+    @ObservedObject var notifications: NotificationEngine
     @Environment(\.scenePhase) private var scenePhase
     let dependencies: DependencyContainer
 
@@ -58,8 +59,23 @@ struct AppCoordinatorView: View {
         .overlay(alignment: .top) {
             ProfileCodeNoticeBanner(inbox: codeInbox)
         }
+        .overlay(alignment: .top) {
+            NotificationNoticeBanner(engine: notifications)
+        }
+        .environment(\.notificationEngine, notifications)
         .onOpenURL { url in
+            if let destination = NotificationDestination(url: url) {
+                notifications.pendingDestination = destination
+                return
+            }
             codeInbox.open(url, isProfileReady: dependencies.profileCreationStore.load()?.canShareProfile == true)
+        }
+        .task {
+            appState.willSignOut = { [notifications] in await notifications.accountSignedOut() }
+        }
+        .task(id: notificationAccountState) {
+            notifications.update(hasAccount: notificationAccountState.hasAccount,
+                                 earlyAccessReminderAt: notificationAccountState.earlyAccessReminderAt)
         }
         .task {
             guard appState.sessionState == .loading else { return }
@@ -84,6 +100,14 @@ struct AppCoordinatorView: View {
             if allowed { showsWelcomeFromAccess = false }
         }
         .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .active:
+                Task { await notifications.appBecameActive() }
+            case .background:
+                Task { await notifications.appWillResignActive() }
+            default:
+                break
+            }
             guard phase == .active else { return }
             Task {
                 access.updateCompletion(savedCompletionDate)
@@ -181,6 +205,20 @@ struct AppCoordinatorView: View {
             onboardingFlow
 
         }
+    }
+
+    private struct NotificationAccountState: Equatable {
+        let hasAccount: Bool
+        let earlyAccessReminderAt: Date?
+    }
+
+    /// What the notification engine needs to know about the account.
+    private var notificationAccountState: NotificationAccountState {
+        let ledger = access.ledger
+        let reminder = ledger.reminderEnabled && !access.hasPaidAccess ? ledger.reminderDate : nil
+        return NotificationAccountState(
+            hasAccount: appState.sessionState == .signedIn || appState.sessionState == .onboarding,
+            earlyAccessReminderAt: reminder)
     }
 
     /// Where an unfinished questionnaire stopped, for the access screen.

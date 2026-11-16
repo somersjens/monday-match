@@ -11,6 +11,7 @@ struct ProfileOverviewView: View {
     var onDeleteProfile: (() async throws -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.notificationEngine) private var notificationEngine
     @State private var path: [Route] = []
     @State private var showsLanguagePicker = false
     @State private var playsSounds = SoundPlayer.shared.isEnabled
@@ -127,6 +128,10 @@ struct ProfileOverviewView: View {
                 }
 
                 soundsRow
+
+                if let notificationEngine {
+                    NotificationSettingsSection(engine: notificationEngine)
+                }
 
                 if onDeleteProfile != nil {
                     deleteRow

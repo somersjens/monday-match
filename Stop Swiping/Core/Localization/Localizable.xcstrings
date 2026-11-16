@@ -18415,6 +18415,261 @@
           }
         }
       }
+    },
+    "Notifications" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldingen"
+          }
+        }
+      }
+    },
+    "Turn on notifications" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on notifications"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldingen aanzetten"
+          }
+        }
+      }
+    },
+    "Hear about matches and messages when the app is closed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hear about matches and messages when the app is closed."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoor over matches en berichten als de app dicht is."
+          }
+        }
+      }
+    },
+    "Turn on" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aanzetten"
+          }
+        }
+      }
+    },
+    "Notifications are off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are off"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldingen staan uit"
+          }
+        }
+      }
+    },
+    "Allow them in Settings to hear about matches and messages." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow them in Settings to hear about matches and messages."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sta ze toe in Instellingen om over matches en berichten te horen."
+          }
+        }
+      }
+    },
+    "Matches & messages" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matches & messages"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matches & berichten"
+          }
+        }
+      }
+    },
+    "Message previews" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message previews"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichtvoorbeelden"
+          }
+        }
+      }
+    },
+    "Show who wrote to you on the lock screen." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show who wrote to you on the lock screen."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon op het toegangsscherm wie je schreef."
+          }
+        }
+      }
+    },
+    "Match ended alerts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match ended alerts"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melding als een match stopt"
+          }
+        }
+      }
+    },
+    "Otherwise you’ll see it the next time you open the app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otherwise you’ll see it the next time you open the app."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anders zie je het de volgende keer dat je de app opent."
+          }
+        }
+      }
+    },
+    "Tips & nudges" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tips & nudges"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tips & duwtjes"
+          }
+        }
+      }
+    },
+    "At most two a week. Never pushy, occasionally sassy." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "At most two a week. Never pushy, occasionally sassy."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hooguit twee per week. Nooit opdringerig, soms brutaal."
+          }
+        }
+      }
+    },
+    "Quiet hours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quiet hours"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stille uren"
+          }
+        }
+      }
+    },
+    "Between {0} and {1}, anything that can wait, waits." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Between {0} and {1}, anything that can wait, waits."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tussen {0} en {1} wacht alles wat kan wachten."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

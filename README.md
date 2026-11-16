@@ -103,6 +103,16 @@ Reference: [Supabase SwiftUI setup](https://supabase.com/docs/guides/getting-sta
 [Google sign-in](https://supabase.com/docs/guides/auth/social-sign-in/auth-google),
 [Storage access control](https://supabase.com/docs/guides/storage/security/access-control).
 
+## Notifications
+
+One planner (`Core/Notifications/NotificationPlanner.swift`) decides every
+local reminder: consent, onboarding, conversations, matchmaking nudges. It
+respects quiet hours in the user's time zone, a budget of two nudges a week,
+dedupe keys and per-kind cooldowns, and cancels whatever stopped being true.
+New matches and messages arrive as pushes from Supabase, batched per
+conversation and without message content. Copy, matrix, flow and the
+remaining deployment steps are in [notifications](docs/notifications.md).
+
 ## Profile exchange and match scores
 
 Two people who both tap **Share profile** and hold their phones together

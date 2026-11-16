@@ -9,6 +9,8 @@ struct DependencyContainer {
     var profileSync: ProfileCloudSyncing?
     var chatRepository: SecureChatRepository?
     var photoVerification: AWSPhotoVerificationService?
+    /// Registers this phone for pushes about matches and messages.
+    var pushRegistration: PushDeviceRegistering?
 
     @MainActor
     var profileDeletion: ProfileDeletionService {
@@ -37,6 +39,7 @@ struct DependencyContainer {
         return DependencyContainer(authService: SupabaseAuthService(client: client, profileSync: sync),
                                    profileRepository: repository, profileCreationStore: store, profileSync: sync,
                                    chatRepository: SupabaseChatRepository(client: client, projectURL: configuration.url),
-                                   photoVerification: AWSPhotoVerificationService(client: client, profileSync: sync))
+                                   photoVerification: AWSPhotoVerificationService(client: client, profileSync: sync),
+                                   pushRegistration: SupabasePushDeviceRegistration(client: client))
     }
 }

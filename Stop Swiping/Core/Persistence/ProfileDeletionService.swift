@@ -36,6 +36,7 @@ struct ProfileDeletionService {
         profileCreationStore.clear()
         SavedMatchStore.clear(defaults: defaults)
         OpenDemoChat.clear(defaults: defaults)
+        NotificationEngine.clearLocalData(defaults: defaults)
         try ChatKeyStore.removeAll()
         try profileRepository.deleteProfile()
     }

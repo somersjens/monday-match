@@ -185,8 +185,10 @@ The real profile home polls the current server match while foregrounded and open
 its live conversation. There is no preloaded mock match in the signed-in root.
 Chat sends/receives encrypted messages, retries pending envelopes after network
 failure, and synchronizes ending/blocking and reports to the backend. Polling is
-foreground-only (3 seconds for chat, 5 for match discovery); push/background
-notifications are not implemented.
+foreground-only (3 seconds for chat, 5 for match discovery). Pushes for new
+matches, messages and ended matches are queued by
+`202611160002_push_notifications.sql` and sent by the `push-dispatch` function;
+see [notifications](notifications.md). They carry no message content.
 
 `ChatCryptography` uses Apple's RFC 9180 authenticated HPKE with X25519,
 HKDF-SHA256 and ChaCha20-Poly1305. Each message creates fresh HPKE encapsulations

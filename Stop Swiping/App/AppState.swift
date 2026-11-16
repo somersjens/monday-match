@@ -97,8 +97,13 @@ final class AppState: ObservableObject {
         profileGeneration += 1
     }
 
+    /// Runs while the session still exists, so the server can forget this
+    /// phone's push registration before the account is gone from it.
+    var willSignOut: (() async -> Void)?
+
     func signOut() async {
         transitions += 1
+        await willSignOut?()
         do {
             try await authService.signOut()
         } catch {
