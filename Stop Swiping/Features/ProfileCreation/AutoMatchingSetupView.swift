@@ -139,6 +139,7 @@ struct AutoMatchingSetupView: View {
 
             bottomBar(stage)
         }
+        .adaptiveStageHeight()
         .background { OnboardingTheme.background.ignoresSafeArea() }
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()

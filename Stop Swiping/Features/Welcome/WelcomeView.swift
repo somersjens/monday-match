@@ -99,6 +99,9 @@ struct WelcomeView: View {
     /// The tallest layout seen at this width. The keyboard shrinks the
     /// layout, but the light stays where it is.
     @State private var lightLayoutSize = CGSize.zero
+    /// The personality card's height; on short screens the chart rises
+    /// above it instead of running underneath.
+    @State private var personalityCardHeight: CGFloat = 0
 
     private struct ActiveMatch: Equatable {
         let snapshot: MatchSnapshot
@@ -223,18 +226,23 @@ struct WelcomeView: View {
         GeometryReader { proxy in
             let layoutHeight = lightLayoutSize.width == proxy.size.width
                 ? max(lightLayoutSize.height, proxy.size.height) : proxy.size.height
-            let animationHeight = max(0, layoutHeight - 160)
-            let animationWidth = min(proxy.size.width, 620)
-            let lightHeight = min(proxy.size.width * 1.12, animationHeight * 0.94)
-            // Extend the drawable past the incoming tail while keeping the
-            // light's scale, centre and stage transitions in the same place.
-            let drawingHeight = max(animationWidth * 2.1, lightHeight)
+            // The light keeps the layout of the tallest size seen at this
+            // width, so the keyboard never moves it; the controls follow the
+            // space that is actually left.
+            let layout = WelcomeStageLayout(size: CGSize(width: proxy.size.width, height: layoutHeight))
+            let controlsInset = AdaptiveLayout.stageInset(forHeight: proxy.size.height)
+            let animationWidth = layout.animationWidth
+            let lightCenter = layout.lightCenter
+            let lightHeight = layout.lightHeight
+            let drawingHeight = layout.drawingHeight
             // Far enough that each waiting backbone starts just past its side
             // of the light's frame.
             let sideEntry = animationWidth / 2 + 24
             let insets = proxy.safeAreaInsets
             let demoStage = ExchangeDemoStage(size: proxy.size, insets: insets,
-                                              helixCenter: animationHeight / 2, helixUnit: animationWidth * 0.42)
+                                              helixCenter: lightCenter.y, helixUnit: layout.unit)
+            let chartLift = personalityLift(layout: layout, height: proxy.size.height, controlsInset: controlsInset)
+            let lift = personalityResult == nil ? 0 : chartLift
 
             ZStack {
                 Color("WelcomeBackground")
@@ -259,20 +267,20 @@ struct WelcomeView: View {
                                      : (isOnboarding ? 0.62 : 1))
                         .opacity(showsAccess ? 1 : (isLightHidden ? 0 : (isOnboarding ? (showsUnderageNotice ? 0.55 : 0.3) : 1)))
                         .position(
-                            x: proxy.size.width / 2,
-                            y: showsAccess ? AccessScreenMotion.lightCenterY
-                                : (isOnboarding ? min(36, animationHeight / 2)
-                                   : animationHeight / 2)
+                            x: lightCenter.x,
+                            y: showsAccess ? controlsInset + AccessScreenMotion.lightCenterY
+                                : (isOnboarding ? controlsInset + min(36, layout.animationHeight / 2)
+                                   : lightCenter.y - lift)
                         )
 
                     if !showsAccess && stage == .complete && lightStage == .complete && canShowCode && activeMatch == nil {
                         Button(action: tapHelix) {
                             Color.clear
-                                .frame(width: min(proxy.size.width, 620) * 0.6, height: lightHeight * 0.85)
+                                .frame(width: animationWidth * 0.6, height: lightHeight * 0.85)
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .position(x: proxy.size.width / 2, y: animationHeight / 2)
+                        .position(x: lightCenter.x, y: lightCenter.y - lift)
                         .disabled(isTransitioning)
                         .accessibilityLabel(showsCode ? L10n("QR code") : L10n("Your profile DNA"))
                         .accessibilityHint(showsCode || personalityTest != nil
@@ -281,8 +289,8 @@ struct WelcomeView: View {
 
                         if let personalityResult {
                             PersonalityChartLabels(result: personalityResult,
-                                                   center: CGPoint(x: proxy.size.width / 2, y: animationHeight / 2),
-                                                   unit: animationWidth * 0.42)
+                                                   center: CGPoint(x: lightCenter.x, y: lightCenter.y - lift),
+                                                   unit: layout.unit)
                                 .id(personalityResult.test)
                                 .transition(.asymmetric(
                                     insertion: .opacity.animation(.easeInOut(duration: 0.45)
@@ -333,10 +341,7 @@ struct WelcomeView: View {
                         MatchResultOverlay(
                             match: activeMatch.snapshot,
                             report: activeMatch.report,
-                            frame: MatchStageFrame(
-                                center: CGPoint(x: proxy.size.width / 2, y: animationHeight / 2),
-                                unit: animationWidth * 0.42
-                            ),
+                            frame: MatchStageFrame(center: lightCenter, unit: layout.unit),
                             reveal: matchReveal,
                             isSaved: savedMatches.contains(activeMatch.snapshot.id),
                             lightTransition: lightMatch?.transition ?? .newMatch,
@@ -355,8 +360,9 @@ struct WelcomeView: View {
                             onUnderstandDemo: understandDemoAction,
                             chat: activeChat,
                             isChatting: isChatting,
-                            chatRingsBottom: MatchChatLayout.ringsBottom(unit: animationWidth * 0.42,
-                                                                       lightCenterY: animationHeight / 2),
+                            chatRingsBottom: MatchChatLayout.ringsBottom(unit: layout.unit,
+                                                                       lightCenterY: lightCenter.y),
+                            controlsBottomInset: controlsInset,
                             onSendMessage: startChat,
                             onStartDemoChat: { startDemoChat(activeMatch.snapshot) },
                             onViewProfile: { showsOverview = true },
@@ -371,10 +377,13 @@ struct WelcomeView: View {
                     } else if stage == .complete, let personalityResult {
                         PersonalityPanel(result: personalityResult,
                                          results: PersonalityTest.allCases.compactMap { personalityResults[$0] },
-                                         onSelect: selectPersonalityTest, onClose: closePersonality)
+                                         onSelect: selectPersonalityTest, onClose: closePersonality,
+                                         onCardHeightChange: updatePersonalityCardHeight)
+                            .padding(.bottom, controlsInset)
                             .transition(.personalitySwap(reduceMotion: reduceMotion))
                     } else if stage == .complete {
                         completionControls
+                            .padding(.bottom, controlsInset)
                             .transition(.asymmetric(
                                 insertion: returnsFromPersonality
                                     ? .personalitySwap(reduceMotion: reduceMotion)
@@ -386,6 +395,7 @@ struct WelcomeView: View {
                                     : .opacity.combined(with: .scale(scale: 0.97, anchor: .bottom))))
                     } else {
                         landingControls
+                            .padding(.bottom, controlsInset)
                             .transition(reduceMotion
                                 ? .opacity
                                 : .opacity.combined(with: .scale(scale: 0.97, anchor: .bottom)))
@@ -393,9 +403,9 @@ struct WelcomeView: View {
 
                     if stage == .complete, activeMatch != nil, let matchPersonalityTest,
                        let result = personalityResults[matchPersonalityTest] {
-                        matchPersonality(result, center: CGPoint(x: proxy.size.width / 2, y: animationHeight / 2),
+                        matchPersonality(result, center: CGPoint(x: lightCenter.x, y: lightCenter.y - chartLift),
                                          lightSize: CGSize(width: animationWidth, height: drawingHeight),
-                                         unit: animationWidth * 0.42)
+                                         unit: layout.unit, controlsInset: controlsInset)
                             .transition(.opacity)
                             .zIndex(3)
                     }
@@ -415,8 +425,8 @@ struct WelcomeView: View {
                     ExchangeDemoPeerPhone(
                         stage: demoStage,
                         lightSize: CGSize(width: animationWidth, height: drawingHeight),
-                        lightCenter: CGPoint(x: insets.leading + proxy.size.width / 2,
-                                             y: insets.top + animationHeight / 2),
+                        lightCenter: CGPoint(x: insets.leading + lightCenter.x,
+                                             y: insets.top + lightCenter.y),
                         match: demoPhase >= .exchange ? lightMatch : nil,
                         pose: demoPeerPose
                     )
@@ -1010,7 +1020,7 @@ struct WelcomeView: View {
     /// is no code to share here, so the corner stays empty; closing returns to
     /// the chat.
     private func matchPersonality(_ result: PersonalityResult, center: CGPoint,
-                                  lightSize: CGSize, unit: CGFloat) -> some View {
+                                  lightSize: CGSize, unit: CGFloat, controlsInset: CGFloat) -> some View {
         ZStack {
             Color("WelcomeBackground")
                 .ignoresSafeArea()
@@ -1030,8 +1040,26 @@ struct WelcomeView: View {
 
             PersonalityPanel(result: result,
                              results: PersonalityTest.allCases.compactMap { personalityResults[$0] },
-                             onSelect: selectMatchPersonalityTest, onClose: closeMatchPersonality)
+                             onSelect: selectMatchPersonalityTest, onClose: closeMatchPersonality,
+                             onCardHeightChange: updatePersonalityCardHeight)
+                .padding(.bottom, controlsInset)
         }
+    }
+
+    /// How far the chart rises so its lowest labels stay above the card,
+    /// never further than the corner buttons allow. Zero on most screens.
+    private func personalityLift(layout: WelcomeStageLayout, height: CGFloat, controlsInset: CGFloat) -> CGFloat {
+        guard personalityCardHeight > 0 else { return 0 }
+        let cardTop = height - controlsInset - 18 - personalityCardHeight
+        let chartBottom = layout.lightCenter.y + 0.95 * layout.unit
+        let chartTop = layout.lightCenter.y - layout.unit
+        let room = max(0, chartTop - (8 + HelixCodeButton.size + 8))
+        return min(room, max(0, chartBottom + 12 - cardTop))
+    }
+
+    private func updatePersonalityCardHeight(_ height: CGFloat) {
+        guard abs(height - personalityCardHeight) > 0.5 else { return }
+        withAnimation(.easeInOut(duration: 0.3)) { personalityCardHeight = height }
     }
 
     private func openMatchPersonality() {
@@ -1573,15 +1601,17 @@ struct ProfileCreationGateView: View {
 
     var body: some View {
         GeometryReader { proxy in
+            // The same faded light as the questionnaire on the welcome screen.
+            let layout = WelcomeStageLayout(size: proxy.size)
             ZStack {
                 OnboardingTheme.background
                     .ignoresSafeArea()
 
                 WelcomeLightAnimation()
-                    .frame(width: min(proxy.size.width, 620), height: min(proxy.size.width * 1.12, max(0, proxy.size.height - 160) * 0.94))
+                    .frame(width: layout.animationWidth, height: layout.drawingHeight)
                     .scaleEffect(0.62)
                     .opacity(0.3)
-                    .position(x: proxy.size.width / 2, y: 36)
+                    .position(x: proxy.size.width / 2, y: layout.stageTop + min(36, layout.animationHeight / 2))
 
                 ProfileCreationFlowView(
                     viewModel: viewModel,

@@ -28,6 +28,7 @@ struct HowItWorksView: View {
                 )
             }
             .padding(AppSpacing.large)
+            .readableColumn(OnboardingTheme.contentWidth)
         }
         .background(AppColors.background)
         .navigationTitle(L10n("How it works"))

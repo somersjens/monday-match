@@ -76,10 +76,12 @@ struct EarlyAccessView: View {
                 .padding(.bottom, 12)
                 .frame(maxWidth: .infinity)
             }
-        }
-        .safeAreaInset(edge: .top, spacing: 0) { lightNavigation }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            footer.accessArrival(visible: hasAppeared, delay: 0.46)
+            .safeAreaInset(edge: .top, spacing: 0) { lightNavigation }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                footer.accessArrival(visible: hasAppeared, delay: 0.46)
+            }
+            // The welcome screen moves its light by the same inset.
+            .adaptiveStageHeight()
         }
         .preferredColorScheme(.dark)
         .interactiveDismissDisabled()

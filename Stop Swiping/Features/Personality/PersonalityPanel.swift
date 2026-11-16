@@ -10,6 +10,9 @@ struct PersonalityPanel: View {
     let results: [PersonalityResult]
     let onSelect: (PersonalityTest) -> Void
     let onClose: () -> Void
+    /// The card's height while it shows a result, so the chart above can
+    /// make room for it on short screens.
+    var onCardHeightChange: (CGFloat) -> Void = { _ in }
 
     private enum Mode { case result, choosing, info }
 
@@ -67,6 +70,11 @@ struct PersonalityPanel: View {
                     .opacity(0.8)
             )
             .shadow(color: OnboardingTheme.blue.opacity(0.28), radius: 18)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                // The list of models covers the chart on purpose; only the
+                // result's height decides where the chart has to make room.
+                if mode != .choosing { onCardHeightChange(height) }
+            }
             .frame(maxWidth: OnboardingTheme.controlWidth)
             .padding(.horizontal, 20)
             .padding(.bottom, 18)

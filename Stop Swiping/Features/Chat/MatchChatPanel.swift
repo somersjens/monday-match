@@ -44,6 +44,9 @@ struct MatchChatPanel: View {
                 composer
             }
         }
+        // On iPad and iPhone Duo open, messages keep a readable line length
+        // instead of running from edge to edge.
+        .readableColumn()
         .task(id: scenePhase == .active) {
             guard chat.isLive, scenePhase == .active else { return }
             while !Task.isCancelled {

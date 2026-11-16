@@ -48,6 +48,8 @@ struct MatchResultOverlay: View {
     var isChatting = false
     /// From the top of this view to the bottom of the rings while chatting.
     var chatRingsBottom: CGFloat = 0
+    /// Lifts the buttons into the centred band on tall screens (iPad).
+    var controlsBottomInset: CGFloat = 0
     var onSendMessage: () -> Void = {}
     /// Holding Save match opens a made-up conversation, before launch.
     var onStartDemoChat: () -> Void = {}
@@ -154,6 +156,7 @@ struct MatchResultOverlay: View {
                             .allowsHitTesting(reveal >= .controls)
                     }
                 }
+                .padding(.bottom, controlsBottomInset)
                 .frame(width: proxy.size.width, height: proxy.size.height)
                 .opacity(isChatting ? 0 : 1)
                 .offset(y: isChatting && !reduceMotion ? 30 : 0)

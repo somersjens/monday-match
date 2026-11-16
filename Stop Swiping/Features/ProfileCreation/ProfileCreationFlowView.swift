@@ -100,6 +100,9 @@ struct ProfileCreationFlowView: View {
                 .blur(radius: finish == .none || reduceMotion ? 0 : 8)
                 .allowsHitTesting(finish == .none)
         }
+        // On iPad the questionnaire stays one composition, its buttons near
+        // the question, at the height the landing controls use.
+        .adaptiveStageHeight()
         .opacity(finish == .leaving ? 0 : 1)
         .blur(radius: finish == .leaving && !reduceMotion ? 12 : 0)
         .onAppear {
