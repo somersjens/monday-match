@@ -1,13 +1,14 @@
 import Foundation
 
-/// Every line the app says in a notification. English only, by design: the
-/// voice is part of the product. Sassy for nudges, plain for anything that
-/// asks the user to act on their privacy or account.
+/// Every line the app says in a notification, in English and Dutch. The
+/// Dutch is written, not translated: the voice is part of the product, so
+/// each language gets its own jokes. Sassy for nudges, plain for anything
+/// that asks the user to act on their privacy or account.
 ///
 /// Rules the copy keeps:
 /// * Names appear only in message notifications with previews on.
-/// * Nothing claims someone "likes" the user: a match means mutual
-///   compatibility, nothing more.
+/// * Nothing claims someone liked, chose or wants the user: a match means
+///   both meet each other's requirements and minimum scores, nothing more.
 /// * No scores, reasons, coworkers or who-ended-what on the lock screen.
 enum NotificationCopy {
     struct Template: Equatable, Codable {
@@ -49,13 +50,25 @@ enum NotificationCopy {
         var key: String { flavor.map { "\(kind.rawValue).\($0)" } ?? kind.rawValue }
     }
 
-    static func templates(for slot: Slot) -> [Template] { catalog[slot.key] ?? [] }
+    static func catalog(for language: AppLanguage) -> [String: [Template]] {
+        switch language {
+        case .english: english
+        case .dutch: dutch
+        }
+    }
+
+    /// The English catalog, the reference for the others.
+    static var catalog: [String: [Template]] { english }
+
+    static func templates(for slot: Slot, language: AppLanguage = .english) -> [Template] {
+        catalog(for: language)[slot.key] ?? english[slot.key] ?? []
+    }
 
     /// The A/B bucket picks the first variant an install sees; each later
     /// send moves one along, so nobody gets the same line twice in a row.
-    static func variant(for slot: Slot, installID: String, sendIndex: Int,
-                        values: [String: String] = [:]) -> (template: Template, title: String, body: String)? {
-        let usable = templates(for: slot).compactMap { template in
+    static func variant(for slot: Slot, installID: String, sendIndex: Int, values: [String: String] = [:],
+                        language: AppLanguage = .english) -> (template: Template, title: String, body: String)? {
+        let usable = templates(for: slot, language: language).compactMap { template in
             template.rendered(values).map { (template, $0.title, $0.body) }
         }
         guard !usable.isEmpty else { return nil }
@@ -74,10 +87,10 @@ enum NotificationCopy {
         Template(id: id, title: title, body: body)
     }
 
-    /// Keyed by `Slot.key`. The server-sent slots (match_new, first_match,
-    /// message_new.*, match_ended) are mirrored in
-    /// `supabase/functions/push-dispatch/copy.json`; a test keeps them equal.
-    static let catalog: [String: [Template]] = [
+    /// Keyed by `Slot.key`; the same keys in every language. The server-sent
+    /// slots (match_new, first_match, message_new.*, match_ended) are mirrored
+    /// in `supabase/functions/push-dispatch/copy.json`; a test keeps them equal.
+    static let english: [String: [Template]] = [
         // 1. New auto-match. A match means both people meet each other's requirements and
         // minimum scores. Nobody has seen, liked or picked anyone, so the copy never says so.
         "match_new": [
@@ -247,6 +260,187 @@ enum NotificationCopy {
             t("welcome_back.a", "Look who's back.", "Your profile is right where you left it."),
             t("welcome_back.b", "Oh, hi.", "It's been a while. Everything's where you left it."),
             t("welcome_back.c", "You're back.", "We'd say we missed you, but we're an app. Your profile's all set."),
+        ],
+    ]
+
+    /// Written in Dutch, not translated: its own jokes, the app's own terms
+    /// ("Automatisch matchen", "Mijn matches") and informal "je".
+    static let dutch: [String: [Template]] = [
+        "match_new": [
+            t("match_new.nl.a", "Kijk eens aan…", "Je hebt een match. Zeg hoi voordat je het kapotdenkt."),
+            t("match_new.nl.b", "Het is raak", "Het algoritme deed het zware werk. Die eerste 'hoi' is voor jou."),
+            t("match_new.nl.c", "Breaking news: een match", "Jullie antwoorden passen bij elkaar. Kijk snel met wie."),
+            t("match_new.nl.d", "Nul keer geswipet, één match",
+              "Al die vragen hebben zich terugbetaald. Kijk wie het is."),
+            t("match_new.nl.e", "Het klikt. Van twee kanten.",
+              "Jij voldoet aan hun eisen, zij aan die van jou. De rest is aan jullie."),
+            t("match_new.nl.f", "De cijfers zijn binnen",
+              "Op papier zit het goed. Tijd om te kijken of dat in het echt ook zo is."),
+            t("match_new.nl.g", "Match gevonden, zonder swipen", "Jouw antwoorden hebben het woord gedaan. Nu jij."),
+            t("match_new.nl.h", "Raad eens", "Je hebt een nieuwe match. Open de app om te zien met wie."),
+        ],
+        "first_match": [
+            t("first_match.nl.a", "Je eerste match. Eindelijk.", "Het wachten was het waard. Kijk wie het is."),
+            t("first_match.nl.b", "Eerste match: check",
+              "Zet de datum maar in je agenda. Nu nog een mooi verhaal ervan maken."),
+            t("first_match.nl.c", "Daar is 'ie dan", "Je allereerste match. Al die vragen waren niet voor niets."),
+            t("first_match.nl.d", "Dag één van iets moois?", "Je eerste match. Geen druk hoor. Oké, een béétje druk."),
+        ],
+        "message_new.preview": [
+            t("message_new.preview.nl.a", "{match_name}", "{match_name} heeft je een bericht gestuurd."),
+            t("message_new.preview.nl.b", "{match_name}", "{match_name} heeft je iets te vertellen."),
+            t("message_new.preview.nl.c", "{match_name}", "Nieuw bericht van {match_name}. Jouw beurt."),
+            t("message_new.preview.nl.d", "{match_name}", "{match_name} stuurde je net iets. Doe niet té cool."),
+        ],
+        "message_new.preview_batch": [
+            t("message_new.preview_batch.nl.a", "{match_name}",
+              "{match_name} stuurde {count} berichten. Lekker spraakzaam."),
+            t("message_new.preview_batch.nl.b", "{match_name}", "{count} nieuwe berichten van {match_name}."),
+            t("message_new.preview_batch.nl.c", "{match_name}",
+              "{count} berichten van {match_name}. Het gesprek is los."),
+            t("message_new.preview_batch.nl.d", "{match_name}",
+              "{match_name} is goed op dreef: {count} nieuwe berichten."),
+        ],
+        "message_new.private": [
+            t("message_new.private.nl.a", "Nieuw bericht", "Open de app om het te lezen."),
+            t("message_new.private.nl.b", "Nieuw bericht", "Je match heeft geschreven. Lees het in de app."),
+            t("message_new.private.nl.c", "Er is post", "Het ligt in de app voor je klaar. Alleen voor jouw ogen."),
+        ],
+        "message_new.private_batch": [
+            t("message_new.private_batch.nl.a", "Nieuwe berichten",
+              "Er liggen {count} nieuwe berichten voor je klaar."),
+            t("message_new.private_batch.nl.b", "Nieuwe berichten",
+              "{count} berichten van je match. Open de app om ze te lezen."),
+            t("message_new.private_batch.nl.c", "Het is druk in je chat",
+              "{count} nieuwe berichten, alleen voor jouw ogen."),
+        ],
+        "match_ended": [
+            t("match_ended.nl.a", "Nou, dat was een kort hoofdstuk.",
+              "Deze match is voorbij. Jullie gesprek blijft leesbaar in Mijn matches."),
+            t("match_ended.nl.b", "Doek.", "Deze match is voorbij. Geen drama, gewoon een frisse start."),
+            t("match_ended.nl.c", "Door naar het volgende.",
+              "Je match is beëindigd. Er komen nog genoeg hoofdstukken."),
+            t("match_ended.nl.d", "Dat was 'm",
+              "Deze match is voorbij. Jullie chat kun je nog teruglezen in Mijn matches."),
+            t("match_ended.nl.e", "Niet elke match is de ware",
+              "Deze is voorbij. Staat automatisch matchen aan, dan zoeken we gewoon verder."),
+        ],
+        "conversation_quiet": [
+            t("conversation_quiet.nl.a", "Dit gesprek moet gereanimeerd worden", "Eén berichtje en het leeft weer."),
+            t("conversation_quiet.nl.b", "Ongemakkelijke stilte gedetecteerd",
+              "Iemand moet 'm doorbreken. Waarom jij niet?"),
+            t("conversation_quiet.nl.c", "Laat het niet doodbloeden", "Goede gesprekken typen zichzelf niet."),
+            t("conversation_quiet.nl.d", "Je chat staat stof te vangen",
+              "Een vraag stellen is de makkelijkste weg terug."),
+            t("conversation_quiet.nl.e", "Radiostilte",
+              "Het is al dagen stil. Een goede vraag wint het van de perfecte openingszin."),
+        ],
+        "message_unanswered": [
+            t("message_unanswered.nl.a", "Moeilijk aan het doen?",
+              "Of gewoon vergeten? Er staat een bericht voor je klaar."),
+            t("message_unanswered.nl.b", "Nog ongelezen",
+              "Onbeleefd, maar nog te redden. Je match heeft je geschreven."),
+            t("message_unanswered.nl.c", "Lekker laat",
+              "Nog even en het is gewoon onbeleefd. Je hebt een ongelezen bericht."),
+            t("message_unanswered.nl.d", "Je match heeft je geschreven",
+              "Alweer bijna een dag geleden. We zeggen het maar even."),
+            t("message_unanswered.nl.e", "Ghosten is zó vorig seizoen",
+              "Er ligt een ongelezen bericht met jouw naam erop."),
+        ],
+        "match_no_conversation": [
+            t("match_no_conversation.nl.a", "Cupido heeft zijn werk gedaan",
+              "Nu jij. Een simpel 'hoi' werkt al eeuwen."),
+            t("match_no_conversation.nl.b", "Iemand moet de eerste zijn", "Wees dapper en zeg hoi tegen je match."),
+            t("match_no_conversation.nl.c", "Stilte is niet mysterieus",
+              "Het is gewoon stilte. Zeg hoi tegen je match."),
+            t("match_no_conversation.nl.d", "Nog steeds geen hoi?",
+              "Jullie hebben nog geen woord gewisseld. Tijd om daar iets aan te doen."),
+            t("match_no_conversation.nl.e", "Openingszinnen zijn overrated",
+              "'Hoi' werkt prima. Eén berichtje en jullie zitten in een gesprek."),
+        ],
+        "message_not_sent": [
+            t("message_not_sent.nl.a", "Je bericht is niet aangekomen",
+              "Open de app om het te versturen. Het staat versleuteld klaar."),
+            t("message_not_sent.nl.b", "Nog niet verstuurd",
+              "Een bericht hangt nog in de wachtrij. Open de app om het opnieuw te proberen."),
+        ],
+        "privacy_required": [
+            t("privacy_required.nl.a", "Zelfs Cupido vraagt om toestemming",
+              "Accepteer de privacyvoorwaarden om je profiel te delen en te matchen. Tot dan wordt er niets gedeeld."),
+            t("privacy_required.nl.b", "Nog één handtekening",
+              "Voor profiel delen en matchen is eerst je privacytoestemming nodig. Lees het rustig en beslis dan."),
+        ],
+        "privacy_updated.profile": [
+            t("privacy_updated.profile.nl.a", "We hebben onze privacyvoorwaarden aangepast",
+              "Bekijk ze even. Profiel delen en matchen staan op pauze tot je akkoord gaat."),
+            t("privacy_updated.profile.nl.b", "Plotwending: nieuwe privacyvoorwaarden",
+              "Bekijk wat er veranderd is. Delen en matchen gaan verder zodra je akkoord gaat."),
+        ],
+        "privacy_updated.matching": [
+            t("privacy_updated.matching.nl.a", "We hebben onze privacyvoorwaarden aangepast",
+              "Bekijk ze even. Automatisch matchen staat op pauze tot je akkoord gaat."),
+            t("privacy_updated.matching.nl.b", "Plotwending: nieuwe privacyvoorwaarden",
+              "Bekijk wat er veranderd is. Automatisch matchen gaat verder zodra je akkoord gaat."),
+        ],
+        "first_matchmaking": [
+            t("first_matchmaking.nl.a", "Die collega checkt zichzelf echt niet",
+              "Houd jullie telefoons tegen elkaar en zie of jullie bij elkaar passen. Duurt maar even."),
+            t("first_matchmaking.nl.b", "Benieuwd naar iemand?",
+              "Telefoons tegen elkaar en binnen een paar seconden weet je het. Zonder ongemakkelijke vragen."),
+            t("first_matchmaking.nl.c", "Helemaal opgedoft",
+              "Je profiel staat klaar, maar gaat nergens heen. Check je compatibiliteit met iemand."),
+            t("first_matchmaking.nl.d", "Twee telefoons, één antwoord",
+              "Houd ze tegen elkaar of laat iemand je code scannen. Dan weet je het."),
+        ],
+        "lower_standards": [
+            t("lower_standards.nl.a", "Je eisen zijn nogal… onbereikbaar",
+              "Een maand zonder match. Misschien ligt de lat net iets te hoog."),
+            t("lower_standards.nl.b", "Hoge eisen, weinig resultaat", "Toeval? Kijk eens naar je matchvoorkeuren."),
+            t("lower_standards.nl.c", "Kieskeurig is ook een strategie",
+              "Tot nu toe wel een eenzame. Bekijk je minimale matchscore."),
+            t("lower_standards.nl.d", "Niemand is zó perfect",
+              "Jij ook niet. Een iets lagere minimale match kan veel uitmaken."),
+        ],
+        "compatibility_monthly": [
+            t("compatibility_monthly.nl.a", "Je liefdesleven belde",
+              "Het verveelt zich. Check je compatibiliteit met iemand nieuws."),
+            t("compatibility_monthly.nl.b", "Weer een maand, weer een kans gemist",
+              "Houd je telefoon tegen die van iemand anders. Duurt een paar seconden."),
+            t("compatibility_monthly.nl.c", "Het is alweer een maand",
+              "Je profiel mist het om vergeleken te worden. Zoek iemand en check het."),
+            t("compatibility_monthly.nl.d", "Nieuwsgierig zijn kost niks",
+              "Je compatibiliteit checken ook niet. Telefoons tegen elkaar en je weet het."),
+            t("compatibility_monthly.nl.e", "Twijfel je over iemand?",
+              "Stop met twijfelen. Laat diegene je code scannen en je weet het."),
+        ],
+        "auto_matching_idle": [
+            t("auto_matching_idle.nl.a", "Cupido draait overuren. En jij?",
+              "Automatisch matchen is nog steeds aan het werk. Kom eens langs."),
+            t("auto_matching_idle.nl.b", "We zoeken nog",
+              "Automatisch matchen zoekt door terwijl jij weg bent. Je hoort het als er een match is."),
+            t("auto_matching_idle.nl.c", "Wij blijven zoeken",
+              "Automatisch matchen neemt nooit vrij. Jij mag dat wel, maar niet voor altijd."),
+            t("auto_matching_idle.nl.d", "Lang niet gezien",
+              "Automatisch matchen zoekt nog steeds voor je. Kom eens hoi zeggen."),
+        ],
+        "onboarding_incomplete": [
+            t("onboarding_incomplete.nl.a", "Je laat ons op gelezen staan. Nu al?",
+              "Je profiel is voor {percent}% af. Ga verder waar je gebleven was."),
+            t("onboarding_incomplete.nl.b", "Halverwege is nergens", "Nog een paar vragen en je bent binnen."),
+            t("onboarding_incomplete.nl.c", "Je profiel ghost ons", "Maak het af en laat het matchen beginnen."),
+            t("onboarding_incomplete.nl.d", "Zo dichtbij", "Nog maar een paar antwoorden tussen jou en matchen."),
+        ],
+        "matching_setup_incomplete": [
+            t("matching_setup_incomplete.nl.a", "Automatisch matchen heeft pauze",
+              "Er ontbreken een paar voorkeuren. Vul ze in om verder te gaan."),
+            t("matching_setup_incomplete.nl.b", "Je voorkeuren zijn niet compleet",
+              "Automatisch matchen staat op pauze tot ze compleet zijn. Twee tikken en klaar."),
+        ],
+        "welcome_back": [
+            t("welcome_back.nl.a", "Kijk eens wie we daar hebben.", "Je profiel staat nog precies waar je het liet."),
+            t("welcome_back.nl.b", "Hé, hoi.", "Dat is een tijdje geleden. Alles staat nog voor je klaar."),
+            t("welcome_back.nl.c", "Je bent terug.",
+              "We zouden zeggen dat we je gemist hebben, maar we zijn een app. Je profiel staat klaar."),
         ],
     ]
 }

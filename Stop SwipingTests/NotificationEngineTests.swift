@@ -37,8 +37,11 @@ final class NotificationEngineTests: XCTestCase {
     private final class FakeRegistrar: PushDeviceRegistering {
         var registrations = 0
         var unregistrations = 0
-        func register(deviceID: UUID, token: String, timeZone: String, preferences: NotificationPreferences) async throws {
+        var languages: [AppLanguage] = []
+        func register(deviceID: UUID, token: String, timeZone: String, language: AppLanguage,
+                      preferences: NotificationPreferences) async throws {
             registrations += 1
+            languages.append(language)
         }
         func unregister(deviceID: UUID) async throws { unregistrations += 1 }
     }
@@ -49,6 +52,7 @@ final class NotificationEngineTests: XCTestCase {
     private var center: FakeCenter!
     private var clock = Date()
     private var profile: ProfileCreationState?
+    private var language = AppLanguage.english
 
     override func setUp() {
         super.setUp()
@@ -82,7 +86,8 @@ final class NotificationEngineTests: XCTestCase {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "Europe/Brussels")!
         let engine = NotificationEngine(center: center, loadProfile: { [unowned self] in profile }, defaults: defaults,
-                                        registrar: registrar, calendar: calendar, now: { [unowned self] in clock })
+                                        registrar: registrar, calendar: calendar,
+                                        language: { [unowned self] in language }, now: { [unowned self] in clock })
         engine.update(hasAccount: true, earlyAccessReminderAt: nil)
         return engine
     }
@@ -354,6 +359,48 @@ final class NotificationEngineTests: XCTestCase {
         engine.setPreferences(preferences)
         await engine.sync()
         XCTAssertEqual(registrar.registrations, 2)
+    }
+
+    // MARK: - Language
+
+    func testADutchAppGetsDutchNotificationsAndSwitchingRewritesThem() async throws {
+        language = .dutch
+        let engine = makeEngine()
+        await ready(engine)
+        let dutch = try XCTUnwrap(center.pending.values.first { $0.kind == .firstMatchmaking })
+        XCTAssertTrue(dutch.variantID.contains(".nl."))
+        XCTAssertTrue(NotificationCopy.dutch["first_matchmaking"]!.contains { $0.title == dutch.title })
+
+        language = .english
+        await engine.sync()
+        let english = try XCTUnwrap(center.pending[dutch.identifier])
+        XCTAssertFalse(english.variantID.contains(".nl."))
+        XCTAssertTrue(NotificationCopy.english["first_matchmaking"]!.contains { $0.title == english.title })
+        XCTAssertEqual(english.fireDate, dutch.fireDate, "Only the words change, not the timing.")
+    }
+
+    func testInAppNoticesSpeakTheAppsLanguage() async {
+        language = .dutch
+        let engine = makeEngine()
+        let id = UUID()
+        engine.updateLiveMatch(match(id: id), messages: [], lastReadAt: nil, unsentIDs: [], isConversationLoaded: true,
+                               history: [], isSuspended: false)
+        engine.updateLiveMatch(nil, messages: [], lastReadAt: nil, unsentIDs: [], isConversationLoaded: false,
+                               history: [match(id: id, endedAt: clock)], isSuspended: false)
+        let title = engine.notice?.title ?? ""
+        XCTAssertTrue(NotificationCopy.dutch["match_ended"]!.contains { $0.title == title })
+    }
+
+    func testThePushRegistrationCarriesTheLanguageAndUpdatesWithIt() async {
+        let registrar = FakeRegistrar()
+        language = .dutch
+        let engine = makeEngine(registrar: registrar)
+        await ready(engine)
+        engine.didRegister(deviceToken: Data(repeating: 0xab, count: 32))
+        await engine.sync()
+        language = .english
+        await engine.sync()
+        XCTAssertEqual(registrar.languages, [.dutch, .english])
     }
 
     func testWelcomeBackAfterAMonthAway() async {

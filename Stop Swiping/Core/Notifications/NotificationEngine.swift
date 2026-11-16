@@ -50,6 +50,8 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
     private let signalStore: NotificationSignalStore
     private let registrar: PushDeviceRegistering?
     private let now: () -> Date
+    /// Read at every use, so switching the app's language rewrites what is pending.
+    private let language: () -> AppLanguage
     private let calendar: Calendar
     private let policy: NotificationPolicy
 
@@ -75,7 +77,9 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
          registrar: PushDeviceRegistering? = nil,
          policy: NotificationPolicy? = nil,
          calendar: Calendar = .autoupdatingCurrent,
+         language: (() -> AppLanguage)? = nil,
          now: @escaping () -> Date = Date.init) {
+        self.language = language ?? { AppLanguageSettings.shared.language }
         self.center = center ?? SystemNotificationCenter()
         self.loadProfile = loadProfile
         preferencesStore = NotificationPreferencesStore(defaults: defaults)
@@ -103,7 +107,8 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
         let time = now()
         if let last = signals.lastActiveAt, time.timeIntervalSince(last) >= policy.welcomeBackAfter,
            let copy = NotificationCopy.variant(for: .init(.welcomeBack), installID: signals.installID,
-                                               sendIndex: ledger.records.filter { $0.kind == .welcomeBack }.count) {
+                                               sendIndex: ledger.records.filter { $0.kind == .welcomeBack }.count,
+                                               language: language()) {
             show(InAppNotice(kind: .welcomeBack, title: copy.title, body: copy.body),
                  dedupeKey: "welcome_back.\(Int(time.timeIntervalSince1970))", variantID: copy.template.id)
         }
@@ -212,7 +217,8 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
         let key = "match_ended.\(match.id.uuidString.lowercased())"
         guard !ledger.hasDelivered(key),
               let copy = NotificationCopy.variant(for: .init(.matchEnded), installID: signals.installID,
-                                                  sendIndex: ledger.records.filter { $0.kind == .matchEnded }.count)
+                                                  sendIndex: ledger.records.filter { $0.kind == .matchEnded }.count,
+                                                  language: language())
         else { return }
         show(InAppNotice(kind: .matchEnded, title: copy.title, body: copy.body, destination: .myMatches),
              dedupeKey: key, variantID: copy.template.id)
@@ -283,13 +289,13 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
     private func syncPushDevice() async {
         guard let registrar, let pushToken, hasAccount, permission == .authorized else { return }
         let zone = calendar.timeZone.identifier
-        let fingerprint = "\(pushToken)|\(zone)|\(String(describing: preferences))"
+        let fingerprint = "\(pushToken)|\(zone)|\(language().rawValue)|\(String(describing: preferences))"
         guard fingerprint != registeredFingerprint else { return }
         // Claimed before the call, so overlapping syncs register only once.
         registeredFingerprint = fingerprint
         do {
             try await registrar.register(deviceID: signals.deviceID, token: pushToken, timeZone: zone,
-                                         preferences: preferences)
+                                         language: language(), preferences: preferences)
         } catch {
             // Tried again at the next sync.
             if registeredFingerprint == fingerprint { registeredFingerprint = nil }
@@ -334,7 +340,8 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
         recordServerDeliveries(delivered, at: time)
         ledger.settle(pendingIdentifiers: pending, deliveredIdentifiers: Set(delivered.map(\.identifier)), now: time)
 
-        let plan = NotificationPlanner(policy: policy, calendar: calendar, installID: signals.installID)
+        let plan = NotificationPlanner(policy: policy, calendar: calendar, installID: signals.installID,
+                                       language: language())
             .plan(context: context(now: time), ledger: ledger, preferences: preferences, now: time)
         let planned = Dictionary(plan.map { ($0.identifier, $0) }, uniquingKeysWith: { first, _ in first })
 

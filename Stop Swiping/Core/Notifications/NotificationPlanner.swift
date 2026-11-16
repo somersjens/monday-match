@@ -32,6 +32,8 @@ struct NotificationPlanner {
     /// Carries the user's time zone.
     var calendar: Calendar = .autoupdatingCurrent
     var installID: String
+    /// The app's language: notifications speak it too.
+    var language: AppLanguage = .english
 
     private struct Candidate {
         let kind: NotificationKind
@@ -89,7 +91,7 @@ struct NotificationPlanner {
             let slot = NotificationCopy.Slot(candidate.kind, candidate.flavor)
             guard let copy = NotificationCopy.variant(for: slot, installID: installID,
                                                       sendIndex: ledger.deliveryCount(of: candidate.kind),
-                                                      values: candidate.values) else { return nil }
+                                                      values: candidate.values, language: language) else { return nil }
             let passive = candidate.kind.category == .transactional
                 && quietHours?.contains(candidate.trigger, calendar: calendar) == true
             return PlannedNotification(identifier: PlannedNotification.identifier(for: candidate.dedupeKey),

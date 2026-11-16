@@ -93,10 +93,18 @@ select pg_temp.as_admin();
 select pg_temp.ok((select user_id from public.push_devices where device_id = pg_temp.id(101)) = pg_temp.id(1),
     'A device registers for its own account');
 select pg_temp.as_user(1);
-select public.register_push_device(pg_temp.id(101), repeat('ab', 32), 'sandbox', 'Not/AZone', true, false, false);
+select public.register_push_device(pg_temp.id(101), repeat('ab', 32), 'sandbox', 'Not/AZone', true, false, false,
+    null, null, 'nl');
 select pg_temp.as_admin();
-select pg_temp.ok((select time_zone = 'UTC' and not previews and quiet_start is null from public.push_devices
-    where device_id = pg_temp.id(101)), 'Re-registering updates preferences; an unknown zone falls back to UTC');
+select pg_temp.ok((select time_zone = 'UTC' and not previews and quiet_start is null and language = 'nl'
+    from public.push_devices where device_id = pg_temp.id(101)),
+    'Re-registering updates preferences and language; an unknown zone falls back to UTC');
+select pg_temp.as_user(1);
+select public.register_push_device(pg_temp.id(101), repeat('ab', 32), 'sandbox', 'UTC', true, false, false,
+    null, null, 'xx');
+select pg_temp.as_admin();
+select pg_temp.ok((select language from public.push_devices where device_id = pg_temp.id(101)) = 'en',
+    'An unsupported language falls back to English');
 
 -- The same phone signs in to another account: the token moves with it.
 select pg_temp.as_user(4);
@@ -108,7 +116,7 @@ select pg_temp.ok((select count(*) from public.push_devices where token = repeat
 
 select pg_temp.as_user(1);
 select public.register_push_device(pg_temp.id(101), repeat('cd', 32), 'sandbox', 'UTC', true, true, false,
-    extract(hour from now() at time zone 'UTC')::integer, ((extract(hour from now() at time zone 'UTC')::integer + 1) % 24));
+    extract(hour from now() at time zone 'UTC')::integer, ((extract(hour from now() at time zone 'UTC')::integer + 1) % 24), 'nl');
 select pg_temp.as_admin();
 
 -- ===== Dispatch ===========================================================
@@ -118,6 +126,8 @@ select pg_temp.ok(exists (select 1 from push_claimed where entry->>'kind' = 'mes
     and entry->>'token' = repeat('cd', 32) and (entry->>'count')::integer = 1), 'A due message push is claimed with its unread count');
 select pg_temp.ok((select entry->>'partner_name' from push_claimed where entry->>'kind' = 'message_new') = 'Alex',
     'With previews on, the sender''s name is included');
+select pg_temp.ok((select entry->>'language' from push_claimed where entry->>'kind' = 'message_new') = 'nl',
+    'The claim carries the device''s language');
 select pg_temp.ok((select (entry->>'quiet')::boolean from push_claimed where entry->>'kind' = 'message_new'),
     'Quiet hours are computed in the device''s time zone');
 select pg_temp.ok(not exists (select 1 from push_claimed where entry::text like '%ciphertext%' or entry::text like '%opaque%'),
@@ -154,9 +164,9 @@ select pg_temp.ok(not has_function_privilege('authenticated', 'public.push_claim
     and not has_function_privilege('authenticated', 'public.push_revoke_token(text)', 'execute'),
     'Only the service role dispatches');
 select pg_temp.ok(has_function_privilege('authenticated',
-    'public.register_push_device(uuid,text,text,text,boolean,boolean,boolean,integer,integer)', 'execute')
+    'public.register_push_device(uuid,text,text,text,boolean,boolean,boolean,integer,integer,text)', 'execute')
     and not has_function_privilege('anon',
-    'public.register_push_device(uuid,text,text,text,boolean,boolean,boolean,integer,integer)', 'execute'),
+    'public.register_push_device(uuid,text,text,text,boolean,boolean,boolean,integer,integer,text)', 'execute'),
     'Signed-in users register their own phone');
 select pg_temp.ok(not has_table_privilege('authenticated', 'public.push_devices', 'select')
     and not has_table_privilege('anon', 'public.push_devices', 'select'), 'Nobody reads device tokens directly');

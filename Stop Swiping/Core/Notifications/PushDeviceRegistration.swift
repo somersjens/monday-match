@@ -6,7 +6,9 @@ import UIKit
 /// allows. The server applies the same switches, previews and quiet hours.
 @MainActor
 protocol PushDeviceRegistering {
-    func register(deviceID: UUID, token: String, timeZone: String, preferences: NotificationPreferences) async throws
+    /// `language` picks the copy the server sends: the app's own language.
+    func register(deviceID: UUID, token: String, timeZone: String, language: AppLanguage,
+                  preferences: NotificationPreferences) async throws
     func unregister(deviceID: UUID) async throws
 }
 
@@ -25,7 +27,8 @@ final class SupabasePushDeviceRegistration: PushDeviceRegistering {
         #endif
     }
 
-    func register(deviceID: UUID, token: String, timeZone: String, preferences: NotificationPreferences) async throws {
+    func register(deviceID: UUID, token: String, timeZone: String, language: AppLanguage,
+                  preferences: NotificationPreferences) async throws {
         struct Params: Encodable {
             let p_device_id: UUID
             let p_token: String
@@ -36,13 +39,14 @@ final class SupabasePushDeviceRegistration: PushDeviceRegistering {
             let p_match_ended_alerts: Bool
             let p_quiet_start: Int?
             let p_quiet_end: Int?
+            let p_language: String
         }
         let quiet = QuietHours(preferences)
         try await client.rpc("register_push_device", params: Params(
             p_device_id: deviceID, p_token: token, p_environment: Self.environment, p_time_zone: timeZone,
             p_transactional: preferences.matchesAndMessages, p_previews: preferences.messagePreviews,
             p_match_ended_alerts: preferences.matchEndedAlerts,
-            p_quiet_start: quiet?.start, p_quiet_end: quiet?.end)).execute()
+            p_quiet_start: quiet?.start, p_quiet_end: quiet?.end, p_language: language.rawValue)).execute()
     }
 
     func unregister(deviceID: UUID) async throws {

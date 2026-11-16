@@ -73,6 +73,10 @@ struct AppCoordinatorView: View {
         .task {
             appState.willSignOut = { [notifications] in await notifications.accountSignedOut() }
         }
+        .onChange(of: AppLanguageSettings.shared.language) { _, _ in
+            // Pending notifications and the server's copy follow the app's language.
+            Task { await notifications.sync() }
+        }
         .task(id: notificationAccountState) {
             notifications.update(hasAccount: notificationAccountState.hasAccount,
                                  earlyAccessReminderAt: notificationAccountState.earlyAccessReminderAt)

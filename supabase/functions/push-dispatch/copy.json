@@ -1,171 +1,344 @@
 {
-  "match_new": [
-    {
-      "id": "match_new.a",
-      "title": "Well, well, well…",
-      "body": "Someone's a match. Go say hi before you overthink it."
-    },
-    {
-      "id": "match_new.b",
-      "title": "It's a match",
-      "body": "The algorithm did the hard part. The hello is on you."
-    },
-    {
-      "id": "match_new.c",
-      "title": "Plot twist: a match",
-      "body": "Your compatibility checks out with someone. Go see who."
-    },
-    {
-      "id": "match_new.d",
-      "title": "Zero swipes, one match",
-      "body": "All those questions paid off. Go see who it is."
-    },
-    {
-      "id": "match_new.e",
-      "title": "Compatible. Both ways.",
-      "body": "You tick their boxes, they tick yours. The rest is up to you two."
-    },
-    {
-      "id": "match_new.f",
-      "title": "The numbers are in",
-      "body": "Someone matches you on paper. Time to find out off paper."
-    },
-    {
-      "id": "match_new.g",
-      "title": "Match found. No swiping involved.",
-      "body": "Your answers did the talking. Now it's your turn."
-    },
-    {
-      "id": "match_new.h",
-      "title": "New match, who dis?",
-      "body": "Open the app to see where your answers led you."
-    }
-  ],
-  "first_match": [
-    {
-      "id": "first_match.a",
-      "title": "Your first match. Finally.",
-      "body": "Worth the wait. Go see who it is."
-    },
-    {
-      "id": "first_match.b",
-      "title": "First match unlocked",
-      "body": "Mark the date. Now go make it a story."
-    },
-    {
-      "id": "first_match.c",
-      "title": "Your first match is in",
-      "body": "All those questions finally paid off. Go take a look."
-    },
-    {
-      "id": "first_match.d",
-      "title": "Day one of something?",
-      "body": "Your very first match. No pressure. Okay, a little pressure."
-    }
-  ],
-  "message_new.preview": [
-    {
-      "id": "message_new.preview.a",
-      "title": "{match_name}",
-      "body": "{match_name} sent you a message."
-    },
-    {
-      "id": "message_new.preview.b",
-      "title": "{match_name}",
-      "body": "{match_name} has something to say."
-    },
-    {
-      "id": "message_new.preview.c",
-      "title": "{match_name}",
-      "body": "New message from {match_name}. Your move."
-    },
-    {
-      "id": "message_new.preview.d",
-      "title": "{match_name}",
-      "body": "{match_name} just wrote. Don't play it too cool."
-    }
-  ],
-  "message_new.preview_batch": [
-    {
-      "id": "message_new.preview_batch.a",
-      "title": "{match_name}",
-      "body": "{match_name} sent {count} messages. Somebody's chatty."
-    },
-    {
-      "id": "message_new.preview_batch.b",
-      "title": "{match_name}",
-      "body": "{count} new messages from {match_name}."
-    },
-    {
-      "id": "message_new.preview_batch.c",
-      "title": "{match_name}",
-      "body": "{count} messages from {match_name}. The conversation is on."
-    },
-    {
-      "id": "message_new.preview_batch.d",
-      "title": "{match_name}",
-      "body": "{match_name} is on a roll: {count} new messages."
-    }
-  ],
-  "message_new.private": [
-    {
-      "id": "message_new.private.a",
-      "title": "New message",
-      "body": "Open the app to read it."
-    },
-    {
-      "id": "message_new.private.b",
-      "title": "New message",
-      "body": "Your match wrote. Open the app to read it."
-    },
-    {
-      "id": "message_new.private.c",
-      "title": "You've got a message",
-      "body": "It's waiting in the app, for your eyes only."
-    }
-  ],
-  "message_new.private_batch": [
-    {
-      "id": "message_new.private_batch.a",
-      "title": "New messages",
-      "body": "{count} new messages are waiting."
-    },
-    {
-      "id": "message_new.private_batch.b",
-      "title": "New messages",
-      "body": "{count} messages from your match. Open the app to read them."
-    },
-    {
-      "id": "message_new.private_batch.c",
-      "title": "Your chat is busy",
-      "body": "{count} new messages, for your eyes only."
-    }
-  ],
-  "match_ended": [
-    {
-      "id": "match_ended.a",
-      "title": "Well, that chapter was short.",
-      "body": "This match has ended. The conversation stays readable in My matches."
-    },
-    {
-      "id": "match_ended.b",
-      "title": "And… scene.",
-      "body": "This match is over. No drama, just a fresh start."
-    },
-    {
-      "id": "match_ended.c",
-      "title": "Onward.",
-      "body": "Your match has ended. Plenty of plot left."
-    },
-    {
-      "id": "match_ended.d",
-      "title": "That's a wrap",
-      "body": "This match has ended. Your chat is still there to reread in My matches."
-    },
-    {
-      "id": "match_ended.e",
-      "title": "Not every match is the one",
-      "body": "This one has ended. With auto-matching on, the search starts again."
-    }
-  ]
+  "en": {
+    "match_new": [
+      {
+        "id": "match_new.a",
+        "title": "Well, well, well…",
+        "body": "Someone's a match. Go say hi before you overthink it."
+      },
+      {
+        "id": "match_new.b",
+        "title": "It's a match",
+        "body": "The algorithm did the hard part. The hello is on you."
+      },
+      {
+        "id": "match_new.c",
+        "title": "Plot twist: a match",
+        "body": "Your compatibility checks out with someone. Go see who."
+      },
+      {
+        "id": "match_new.d",
+        "title": "Zero swipes, one match",
+        "body": "All those questions paid off. Go see who it is."
+      },
+      {
+        "id": "match_new.e",
+        "title": "Compatible. Both ways.",
+        "body": "You tick their boxes, they tick yours. The rest is up to you two."
+      },
+      {
+        "id": "match_new.f",
+        "title": "The numbers are in",
+        "body": "Someone matches you on paper. Time to find out off paper."
+      },
+      {
+        "id": "match_new.g",
+        "title": "Match found. No swiping involved.",
+        "body": "Your answers did the talking. Now it's your turn."
+      },
+      {
+        "id": "match_new.h",
+        "title": "New match, who dis?",
+        "body": "Open the app to see where your answers led you."
+      }
+    ],
+    "first_match": [
+      {
+        "id": "first_match.a",
+        "title": "Your first match. Finally.",
+        "body": "Worth the wait. Go see who it is."
+      },
+      {
+        "id": "first_match.b",
+        "title": "First match unlocked",
+        "body": "Mark the date. Now go make it a story."
+      },
+      {
+        "id": "first_match.c",
+        "title": "Your first match is in",
+        "body": "All those questions finally paid off. Go take a look."
+      },
+      {
+        "id": "first_match.d",
+        "title": "Day one of something?",
+        "body": "Your very first match. No pressure. Okay, a little pressure."
+      }
+    ],
+    "message_new.preview": [
+      {
+        "id": "message_new.preview.a",
+        "title": "{match_name}",
+        "body": "{match_name} sent you a message."
+      },
+      {
+        "id": "message_new.preview.b",
+        "title": "{match_name}",
+        "body": "{match_name} has something to say."
+      },
+      {
+        "id": "message_new.preview.c",
+        "title": "{match_name}",
+        "body": "New message from {match_name}. Your move."
+      },
+      {
+        "id": "message_new.preview.d",
+        "title": "{match_name}",
+        "body": "{match_name} just wrote. Don't play it too cool."
+      }
+    ],
+    "message_new.preview_batch": [
+      {
+        "id": "message_new.preview_batch.a",
+        "title": "{match_name}",
+        "body": "{match_name} sent {count} messages. Somebody's chatty."
+      },
+      {
+        "id": "message_new.preview_batch.b",
+        "title": "{match_name}",
+        "body": "{count} new messages from {match_name}."
+      },
+      {
+        "id": "message_new.preview_batch.c",
+        "title": "{match_name}",
+        "body": "{count} messages from {match_name}. The conversation is on."
+      },
+      {
+        "id": "message_new.preview_batch.d",
+        "title": "{match_name}",
+        "body": "{match_name} is on a roll: {count} new messages."
+      }
+    ],
+    "message_new.private": [
+      {
+        "id": "message_new.private.a",
+        "title": "New message",
+        "body": "Open the app to read it."
+      },
+      {
+        "id": "message_new.private.b",
+        "title": "New message",
+        "body": "Your match wrote. Open the app to read it."
+      },
+      {
+        "id": "message_new.private.c",
+        "title": "You've got a message",
+        "body": "It's waiting in the app, for your eyes only."
+      }
+    ],
+    "message_new.private_batch": [
+      {
+        "id": "message_new.private_batch.a",
+        "title": "New messages",
+        "body": "{count} new messages are waiting."
+      },
+      {
+        "id": "message_new.private_batch.b",
+        "title": "New messages",
+        "body": "{count} messages from your match. Open the app to read them."
+      },
+      {
+        "id": "message_new.private_batch.c",
+        "title": "Your chat is busy",
+        "body": "{count} new messages, for your eyes only."
+      }
+    ],
+    "match_ended": [
+      {
+        "id": "match_ended.a",
+        "title": "Well, that chapter was short.",
+        "body": "This match has ended. The conversation stays readable in My matches."
+      },
+      {
+        "id": "match_ended.b",
+        "title": "And… scene.",
+        "body": "This match is over. No drama, just a fresh start."
+      },
+      {
+        "id": "match_ended.c",
+        "title": "Onward.",
+        "body": "Your match has ended. Plenty of plot left."
+      },
+      {
+        "id": "match_ended.d",
+        "title": "That's a wrap",
+        "body": "This match has ended. Your chat is still there to reread in My matches."
+      },
+      {
+        "id": "match_ended.e",
+        "title": "Not every match is the one",
+        "body": "This one has ended. With auto-matching on, the search starts again."
+      }
+    ]
+  },
+  "nl": {
+    "match_new": [
+      {
+        "id": "match_new.nl.a",
+        "title": "Kijk eens aan…",
+        "body": "Je hebt een match. Zeg hoi voordat je het kapotdenkt."
+      },
+      {
+        "id": "match_new.nl.b",
+        "title": "Het is raak",
+        "body": "Het algoritme deed het zware werk. Die eerste 'hoi' is voor jou."
+      },
+      {
+        "id": "match_new.nl.c",
+        "title": "Breaking news: een match",
+        "body": "Jullie antwoorden passen bij elkaar. Kijk snel met wie."
+      },
+      {
+        "id": "match_new.nl.d",
+        "title": "Nul keer geswipet, één match",
+        "body": "Al die vragen hebben zich terugbetaald. Kijk wie het is."
+      },
+      {
+        "id": "match_new.nl.e",
+        "title": "Het klikt. Van twee kanten.",
+        "body": "Jij voldoet aan hun eisen, zij aan die van jou. De rest is aan jullie."
+      },
+      {
+        "id": "match_new.nl.f",
+        "title": "De cijfers zijn binnen",
+        "body": "Op papier zit het goed. Tijd om te kijken of dat in het echt ook zo is."
+      },
+      {
+        "id": "match_new.nl.g",
+        "title": "Match gevonden, zonder swipen",
+        "body": "Jouw antwoorden hebben het woord gedaan. Nu jij."
+      },
+      {
+        "id": "match_new.nl.h",
+        "title": "Raad eens",
+        "body": "Je hebt een nieuwe match. Open de app om te zien met wie."
+      }
+    ],
+    "first_match": [
+      {
+        "id": "first_match.nl.a",
+        "title": "Je eerste match. Eindelijk.",
+        "body": "Het wachten was het waard. Kijk wie het is."
+      },
+      {
+        "id": "first_match.nl.b",
+        "title": "Eerste match: check",
+        "body": "Zet de datum maar in je agenda. Nu nog een mooi verhaal ervan maken."
+      },
+      {
+        "id": "first_match.nl.c",
+        "title": "Daar is 'ie dan",
+        "body": "Je allereerste match. Al die vragen waren niet voor niets."
+      },
+      {
+        "id": "first_match.nl.d",
+        "title": "Dag één van iets moois?",
+        "body": "Je eerste match. Geen druk hoor. Oké, een béétje druk."
+      }
+    ],
+    "message_new.preview": [
+      {
+        "id": "message_new.preview.nl.a",
+        "title": "{match_name}",
+        "body": "{match_name} heeft je een bericht gestuurd."
+      },
+      {
+        "id": "message_new.preview.nl.b",
+        "title": "{match_name}",
+        "body": "{match_name} heeft je iets te vertellen."
+      },
+      {
+        "id": "message_new.preview.nl.c",
+        "title": "{match_name}",
+        "body": "Nieuw bericht van {match_name}. Jouw beurt."
+      },
+      {
+        "id": "message_new.preview.nl.d",
+        "title": "{match_name}",
+        "body": "{match_name} stuurde je net iets. Doe niet té cool."
+      }
+    ],
+    "message_new.preview_batch": [
+      {
+        "id": "message_new.preview_batch.nl.a",
+        "title": "{match_name}",
+        "body": "{match_name} stuurde {count} berichten. Lekker spraakzaam."
+      },
+      {
+        "id": "message_new.preview_batch.nl.b",
+        "title": "{match_name}",
+        "body": "{count} nieuwe berichten van {match_name}."
+      },
+      {
+        "id": "message_new.preview_batch.nl.c",
+        "title": "{match_name}",
+        "body": "{count} berichten van {match_name}. Het gesprek is los."
+      },
+      {
+        "id": "message_new.preview_batch.nl.d",
+        "title": "{match_name}",
+        "body": "{match_name} is goed op dreef: {count} nieuwe berichten."
+      }
+    ],
+    "message_new.private": [
+      {
+        "id": "message_new.private.nl.a",
+        "title": "Nieuw bericht",
+        "body": "Open de app om het te lezen."
+      },
+      {
+        "id": "message_new.private.nl.b",
+        "title": "Nieuw bericht",
+        "body": "Je match heeft geschreven. Lees het in de app."
+      },
+      {
+        "id": "message_new.private.nl.c",
+        "title": "Er is post",
+        "body": "Het ligt in de app voor je klaar. Alleen voor jouw ogen."
+      }
+    ],
+    "message_new.private_batch": [
+      {
+        "id": "message_new.private_batch.nl.a",
+        "title": "Nieuwe berichten",
+        "body": "Er liggen {count} nieuwe berichten voor je klaar."
+      },
+      {
+        "id": "message_new.private_batch.nl.b",
+        "title": "Nieuwe berichten",
+        "body": "{count} berichten van je match. Open de app om ze te lezen."
+      },
+      {
+        "id": "message_new.private_batch.nl.c",
+        "title": "Het is druk in je chat",
+        "body": "{count} nieuwe berichten, alleen voor jouw ogen."
+      }
+    ],
+    "match_ended": [
+      {
+        "id": "match_ended.nl.a",
+        "title": "Nou, dat was een kort hoofdstuk.",
+        "body": "Deze match is voorbij. Jullie gesprek blijft leesbaar in Mijn matches."
+      },
+      {
+        "id": "match_ended.nl.b",
+        "title": "Doek.",
+        "body": "Deze match is voorbij. Geen drama, gewoon een frisse start."
+      },
+      {
+        "id": "match_ended.nl.c",
+        "title": "Door naar het volgende.",
+        "body": "Je match is beëindigd. Er komen nog genoeg hoofdstukken."
+      },
+      {
+        "id": "match_ended.nl.d",
+        "title": "Dat was 'm",
+        "body": "Deze match is voorbij. Jullie chat kun je nog teruglezen in Mijn matches."
+      },
+      {
+        "id": "match_ended.nl.e",
+        "title": "Niet elke match is de ware",
+        "body": "Deze is voorbij. Staat automatisch matchen aan, dan zoeken we gewoon verder."
+      }
+    ]
+  }
 }

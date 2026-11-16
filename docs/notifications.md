@@ -63,6 +63,15 @@ together or a scanned code. So copy talks about answers, compatibility, phones
 and codes, and never claims that someone liked, chose, wants or is waiting
 for the user. `NotificationCopyTests` rejects any line that does.
 
+**Two languages, written separately.** Every notification exists in English
+and Dutch, in the app's current language. The Dutch lines are not
+translations: they use informal "je", the app's own terms ("Automatisch
+matchen", "Mijn matches") and Dutch jokes ("Nul keer geswipet, één match",
+"Ghosten is zó vorig seizoen", "Dit gesprek moet gereanimeerd worden"). The
+matrix below shows English; the Dutch set has the same slots and the same
+number of lines. Switching the app's language rewrites what is pending, and
+the phone tells the server its language for pushes.
+
 **Variety follows frequency.** The table shows a few lines per notification;
 the full catalog is in `NotificationCopy.swift`: 8 lines for a new match,
 4 per message flavour, 5 for match ended, quiet and unanswered conversations,

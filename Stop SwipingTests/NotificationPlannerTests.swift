@@ -248,6 +248,22 @@ final class NotificationPlannerTests: XCTestCase {
         XCTAssertEqual(matching.destination, .privacy(.matching))
     }
 
+    func testDutchPlansUseDutchCopyWithTheAppsTerms() throws {
+        var context = context()
+        context.matchingConfigured = true
+        context.matchingConsent = .outdated
+        var dutchPlanner = planner()
+        dutchPlanner.language = .dutch
+        let notice = try XCTUnwrap(dutchPlanner.plan(context: context, ledger: NotificationLedger(),
+                                                     preferences: .standard, now: now).first { $0.kind == .privacyUpdated })
+        XCTAssertTrue(notice.body.contains("Automatisch matchen"))
+        XCTAssertTrue(notice.variantID.contains(".nl."))
+        // Same rules, same moment: only the words differ.
+        let english = try XCTUnwrap(plan(context).first { $0.kind == .privacyUpdated })
+        XCTAssertEqual(notice.fireDate, english.fireDate)
+        XCTAssertEqual(notice.identifier, english.identifier)
+    }
+
     func testAcceptingConsentReplacesTheReminderWithMatchingNudges() {
         var context = context()
         context.profileConsent = .missing

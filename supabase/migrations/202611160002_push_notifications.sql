@@ -27,6 +27,8 @@ create table public.push_devices (
     token text not null check (token ~ '^[0-9a-f]{64,200}$'),
     environment text not null check (environment in ('sandbox', 'production')),
     time_zone text not null default 'UTC' check (octet_length(time_zone) between 1 and 64),
+    -- The app's language; the copy is written for each, not translated.
+    language text not null default 'en' check (language in ('en', 'nl')),
     -- The app's "Matches & messages" switch.
     transactional boolean not null default true,
     -- The app's "Message previews" switch: the sender's name on the lock screen.
@@ -49,7 +51,7 @@ comment on table public.push_devices is
 
 create function public.register_push_device(p_device_id uuid, p_token text, p_environment text,
     p_time_zone text, p_transactional boolean, p_previews boolean, p_match_ended_alerts boolean,
-    p_quiet_start integer default null, p_quiet_end integer default null) returns void
+    p_quiet_start integer default null, p_quiet_end integer default null, p_language text default 'en') returns void
 language plpgsql security definer set search_path = '' as $$
 declare uid uuid := auth.uid(); zone text;
 begin
@@ -58,12 +60,13 @@ begin
         then p_time_zone else 'UTC' end;
     -- The same token under another device ID or account belongs to this phone now.
     delete from public.push_devices where token = lower(p_token) and device_id <> p_device_id;
-    insert into public.push_devices(device_id, user_id, token, environment, time_zone, transactional,
+    insert into public.push_devices(device_id, user_id, token, environment, time_zone, language, transactional,
         previews, match_ended_alerts, quiet_start, quiet_end)
-    values (p_device_id, uid, lower(p_token), p_environment, zone, coalesce(p_transactional, true),
+    values (p_device_id, uid, lower(p_token), p_environment, zone,
+        case when p_language in ('en', 'nl') then p_language else 'en' end, coalesce(p_transactional, true),
         coalesce(p_previews, true), coalesce(p_match_ended_alerts, false), p_quiet_start, p_quiet_end)
     on conflict (device_id) do update set user_id = excluded.user_id, token = excluded.token,
-        environment = excluded.environment, time_zone = excluded.time_zone,
+        environment = excluded.environment, time_zone = excluded.time_zone, language = excluded.language,
         transactional = excluded.transactional, previews = excluded.previews,
         match_ended_alerts = excluded.match_ended_alerts, quiet_start = excluded.quiet_start,
         quiet_end = excluded.quiet_end, updated_at = now(), revoked_at = null;
@@ -239,6 +242,7 @@ begin
                 'count', greatest(unread, 1),
                 'token', d.token,
                 'environment', d.environment,
+                'language', d.language,
                 -- Names reach the lock screen only with previews on.
                 'partner_name', case when d.previews then nullif(partner_name, '') end,
                 'visible', case when item.kind = 'match_ended' then d.match_ended_alerts and d.transactional
@@ -289,9 +293,9 @@ language sql security definer set search_path = '' as $$
     delete from notification_private.outbox where sent_at < now() - interval '14 days';
 $$;
 
-revoke all on function public.register_push_device(uuid, text, text, text, boolean, boolean, boolean, integer, integer) from public, anon;
+revoke all on function public.register_push_device(uuid, text, text, text, boolean, boolean, boolean, integer, integer, text) from public, anon;
 revoke all on function public.unregister_push_device(uuid) from public, anon;
-grant execute on function public.register_push_device(uuid, text, text, text, boolean, boolean, boolean, integer, integer) to authenticated;
+grant execute on function public.register_push_device(uuid, text, text, text, boolean, boolean, boolean, integer, integer, text) to authenticated;
 grant execute on function public.unregister_push_device(uuid) to authenticated;
 revoke all on function public.push_claim_due(integer) from public, anon, authenticated;
 revoke all on function public.push_complete(bigint, text, boolean) from public, anon, authenticated;

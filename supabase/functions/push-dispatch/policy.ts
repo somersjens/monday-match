@@ -14,13 +14,15 @@ export type Entry = {
   count: number;
   token: string;
   environment: "sandbox" | "production";
+  // The app's language. Each has its own copy, written rather than translated.
+  language?: "en" | "nl";
   partner_name: string | null;
   visible: boolean;
   quiet: boolean;
 };
 
 type Template = { id: string; title: string; body: string };
-const catalog = copy as Record<string, Template[]>;
+const catalogs = copy as Record<string, Record<string, Template[]>>;
 
 export function slot(entry: Entry): string {
   if (entry.kind !== "message_new") return entry.kind;
@@ -34,7 +36,7 @@ export function render(text: string, values: Record<string, string>): string {
 
 // Variants rotate by outbox row, which spreads them evenly for A/B results.
 export function pickTemplate(entry: Entry): Template {
-  const templates = catalog[slot(entry)];
+  const templates = (catalogs[entry.language ?? "en"] ?? catalogs.en)[slot(entry)] ?? catalogs.en[slot(entry)];
   if (!templates?.length) throw new Error(`No copy for ${slot(entry)}`);
   return templates[Math.abs(entry.outbox_id) % templates.length];
 }

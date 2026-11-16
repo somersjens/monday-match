@@ -15,6 +15,14 @@ Deno.test("previews decide whether a name reaches the lock screen", () => {
   assert(hidden.aps.alert.title === "New message");
 });
 
+Deno.test("Dutch devices get the Dutch copy, others fall back to English", () => {
+  const dutch = JSON.parse(compose({ ...base, language: "nl", partner_name: null }).body);
+  assert(dutch.aps.alert.title === "Nieuw bericht" || dutch.aps.alert.title === "Er is post");
+  assert(dutch.variant.includes(".nl."));
+  const unknown = JSON.parse(compose({ ...base, language: "fr" as "nl", partner_name: null }).body);
+  assert(unknown.aps.alert.title === "New message" || unknown.aps.alert.title === "You've got a message");
+});
+
 Deno.test("a burst becomes one push that counts and replaces the previous one", () => {
   assert(slot({ ...base, count: 3 }) === "message_new.preview_batch");
   const { headers, body } = compose({ ...base, count: 3 });
