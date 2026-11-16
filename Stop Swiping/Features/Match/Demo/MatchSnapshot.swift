@@ -267,6 +267,29 @@ enum MatchWeighting {
 // MARK: - Saved matches
 
 @MainActor
+/// The demo match whose conversation is open. Like a live match with a
+/// started chat, the app reopens straight into it.
+struct OpenDemoChat: Codable, Equatable {
+    let match: MatchSnapshot
+    var conversation: ChatConversation
+
+    nonisolated static let storageKey = "openDemoChat.v1"
+
+    static func load(defaults: UserDefaults = .standard) -> OpenDemoChat? {
+        guard let data = defaults.data(forKey: storageKey) else { return nil }
+        return try? JSONDecoder().decode(OpenDemoChat.self, from: data)
+    }
+
+    func save(defaults: UserDefaults = .standard) {
+        guard let data = try? JSONEncoder().encode(self) else { return }
+        defaults.set(data, forKey: Self.storageKey)
+    }
+
+    static func clear(defaults: UserDefaults = .standard) {
+        defaults.removeObject(forKey: storageKey)
+    }
+}
+
 final class SavedMatchStore: ObservableObject {
     /// Newest first.
     @Published private(set) var matches: [MatchSnapshot] = []

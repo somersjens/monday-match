@@ -655,8 +655,8 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertEqual(dealbreakers.heading,
                        "Even if your potential partner matches 100% on personality, you will not be matched if she:")
         XCTAssertEqual(dealbreakers.lines, [
-            "Is 24 or younger, or 41 or older",
-            "Is 172 cm or shorter, or 208 cm or taller",
+            "Is younger than 25 or older than 40",
+            "Is shorter than 173 cm or taller than 207 cm",
             "Doesn’t speak \(language)",
             "Lives more than 60 km away",
             "Doesn’t want kids",
@@ -683,7 +683,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
 
         let lines = viewModel.dealbreakers.lines
         XCTAssertEqual(viewModel.dealbreakers.pronoun, .they)
-        XCTAssertEqual(lines.first, "Are 31 or older", "No lower age is set at 18.")
+        XCTAssertEqual(lines.first, "Are older than 30", "No lower age is set at 18.")
         XCTAssertFalse(lines.contains { $0.contains("cm") }, "Any height rules no one out.")
         XCTAssertTrue(lines.contains("Have kids"))
         XCTAssertFalse(lines.contains { $0.contains("alcohol") }, "The most frequent level allowed rules no one out.")
@@ -877,7 +877,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         viewModel.updatePartnerAgeRange(minimum: 28, maximum: 35)
         XCTAssertEqual(viewModel.submitCurrentStep(), .completed)
         XCTAssertNotEqual(viewModel.dealbreakers, original)
-        XCTAssertTrue(viewModel.dealbreakers.entries.contains { $0.step == .partnerAgeRange && $0.text.contains("36") })
+        XCTAssertTrue(viewModel.dealbreakers.entries.contains { $0.step == .partnerAgeRange && $0.text.contains("35") })
     }
 
     func testAppearanceScoresAcceptOneThroughTenAndRejectValuesOutsideTheScale() {
@@ -1003,7 +1003,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
 
     func testReligionSkippingOwnOnlyAdvancesToPartnerAndPartnerSkipResetsAllChoices() {
         let viewModel = religionViewModel()
-        viewModel.toggleOwnReligion(.atheist)
+        viewModel.toggleOwnReligion(.spiritual)
         XCTAssertEqual(viewModel.skipReligionPhase(), .advanced)
         XCTAssertEqual(viewModel.currentStep, .religion)
         XCTAssertEqual(viewModel.state.religionPhase, .partner)
@@ -1039,14 +1039,14 @@ final class ProfileCreationViewModelTests: XCTestCase {
         let viewModel = religionViewModel()
         viewModel.toggleOwnReligion(.hindu)
         viewModel.submitCurrentStep()
-        viewModel.togglePartnerReligion(.atheist)
+        viewModel.togglePartnerReligion(.spiritual)
         viewModel.persist()
         let decoded = try JSONDecoder().decode(ProfileCreationState.self, from: JSONEncoder().encode(viewModel.state))
         let resumed = makeViewModel(store: InMemoryProfileCreationStore(state: decoded))
         XCTAssertEqual(resumed.currentStep, .religion)
         XCTAssertEqual(resumed.state.religionPhase, .partner)
         XCTAssertEqual(resumed.state.religion.own, .hindu)
-        XCTAssertFalse(resumed.state.religion.acceptedPartnerReligions.contains(.atheist))
+        XCTAssertFalse(resumed.state.religion.acceptedPartnerReligions.contains(.spiritual))
         XCTAssertEqual(resumed.submitCurrentStep(), .advanced)
         XCTAssertEqual(resumed.currentStep, .languages)
     }
@@ -1060,7 +1060,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         viewModel.toggleOwnReligion(.buddhist)
         XCTAssertEqual(viewModel.submitCurrentStep(), .advanced, "The first part must never finish an edit.")
         XCTAssertEqual(viewModel.editingStep, .religion)
-        viewModel.togglePartnerReligion(.agnostic)
+        viewModel.togglePartnerReligion(.jewish)
         viewModel.persist()
         XCTAssertNil(store.load()?.religion.own, "An edit remains unsaved until Save on the second part.")
         XCTAssertEqual(viewModel.submitCurrentStep(), .completed)
@@ -1068,11 +1068,11 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertEqual(store.load()?.religion.own, .buddhist)
         let draft = try XCTUnwrap(repository.loadProfile())
         XCTAssertEqual(draft.religion, viewModel.state.religion)
-        XCTAssertFalse(draft.religion.acceptedPartnerReligions.contains(.agnostic))
+        XCTAssertFalse(draft.religion.acceptedPartnerReligions.contains(.jewish))
 
         viewModel.beginEditing(.religion)
         viewModel.skipReligionPhase()
-        viewModel.togglePartnerReligion(.agnostic)
+        viewModel.togglePartnerReligion(.jewish)
         viewModel.cancelEditing()
         XCTAssertEqual(viewModel.state.religion, draft.religion)
     }
@@ -1092,8 +1092,8 @@ final class ProfileCreationViewModelTests: XCTestCase {
         }
         let skipped = ReligionAnswers()
         XCTAssertTrue(skipped.isMutuallyCompatible(with: ReligionAnswers(own: .christian, acceptedPartnerReligions: [.other])))
-        XCTAssertFalse(skipped.isMutuallyCompatible(with: ReligionAnswers(own: .christian, acceptedPartnerReligions: [.atheist])))
-        XCTAssertTrue(skipped.isMutuallyCompatible(with: ReligionAnswers(own: .atheist, acceptedPartnerReligions: [])))
+        XCTAssertFalse(skipped.isMutuallyCompatible(with: ReligionAnswers(own: .christian, acceptedPartnerReligions: [.spiritual])))
+        XCTAssertTrue(skipped.isMutuallyCompatible(with: ReligionAnswers(own: .spiritual, acceptedPartnerReligions: [])))
         XCTAssertNotEqual(ReligionAnswers(own: Religion.none).matchingReligion, skipped.matchingReligion)
     }
 
@@ -1130,13 +1130,23 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertTrue(legacyCloud.isReligionCompatible(with: partnerCloud))
     }
 
+    func testRemovedAtheistAndAgnosticAnswersLoadAsNoReligion() throws {
+        let json = Data(#"{"own":"atheist","acceptedPartnerReligions":["agnostic","christian"]}"#.utf8)
+        let answers = try JSONDecoder().decode(ReligionAnswers.self, from: json)
+        XCTAssertEqual(answers.own, Religion.none)
+        XCTAssertEqual(answers.acceptedPartnerReligions, [Religion.none, .christian])
+        XCTAssertThrowsError(try JSONDecoder().decode(Religion.self, from: Data(#""pastafarian""#.utf8)))
+    }
+
     func testReligionRestrictionsAppearInDealbreakers() {
         let viewModel = religionViewModel()
         let originalLines = viewModel.dealbreakers.lines
         for religion in Religion.allCases where religion != .christian { viewModel.togglePartnerReligion(religion) }
         XCTAssertEqual(viewModel.dealbreakers.lines.count, originalLines.count + 1)
         XCTAssertTrue(viewModel.dealbreakers.lines.contains { $0.contains("Christian") })
-        XCTAssertEqual(Religion.allCases.filter { $0.explanation != nil }, [.atheist, .agnostic])
+        XCTAssertEqual(Religion.allCases.last, .preferNotToShare)
+        XCTAssertFalse(Religion.allCases.map(\.rawValue).contains("atheist"))
+        XCTAssertFalse(Religion.allCases.map(\.rawValue).contains("agnostic"))
     }
 
     func testContinueFocusesTheMissingScaleAnswerWithoutAdvancingOrFillingItIn() {

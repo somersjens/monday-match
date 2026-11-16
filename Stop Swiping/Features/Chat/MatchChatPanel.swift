@@ -56,7 +56,10 @@ struct MatchChatPanel: View {
                 do { try await Task.sleep(for: .seconds(3)) } catch { return }
             }
         }
-        .onChange(of: chat.conversation.messages.count) { _, _ in chat.markAllRead() }
+        .onChange(of: chat.conversation.messages.count) { old, new in
+            chat.markAllRead()
+            playMessageSound(from: old, to: new)
+        }
         .sheet(isPresented: $showsSecurityCode) { securitySheet }
         .confirmationDialog(L10n("Use this iPhone for this chat?"), isPresented: $showsDeviceReplacement, titleVisibility: .visible) {
             Button(L10n("Switch to this iPhone")) { Task { await chat.replaceDevice() } }
@@ -130,6 +133,13 @@ struct MatchChatPanel: View {
                 }
             }
         }
+    }
+
+    /// A message just sent or just arrived. A history loading in stays quiet.
+    private func playMessageSound(from old: Int, to new: Int) {
+        guard new > old, let message = chat.conversation.messages.last,
+              Date().timeIntervalSince(message.sentAt) < 30 else { return }
+        SoundPlayer.shared.play(message.sender == .currentUser ? .messageSent : .messageReceived)
     }
 
     private func scrollToBottom(_ proxy: ScrollViewProxy) {

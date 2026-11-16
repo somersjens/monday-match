@@ -10,10 +10,29 @@ and bundle identifiers are unchanged so the app keeps its existing identity.
 - `Stop SwipingUITests/`: UI tests.
 - `supabase/`: database and private Storage migration.
 - `exports/`: reference artwork.
+- `tools/sounds/`: the generator for the app's sound palette.
 - `2 circle.mp4`: animation reference, kept locally and not played by the app.
 
 The project includes profile creation, the heart/lock/helix/QR animations, and
 the latest welcome entrance and dark startup fixes.
+
+## Sounds
+
+Every animation and transition has a quiet sound, all synthesised by
+`tools/sounds/generate_sounds.py` (numpy + `afconvert`), so they are original
+and licence-free. They share one key (D major pentatonic with a Lydian colour)
+and one glass-bell voice: the welcome light's entrance, a note per
+questionnaire step that climbs the scale, the heart blooming for a match or
+gently letting go for no match, the phones exchanging, the rings of the chat,
+messages, and soft breaths of air for panels opening and closing.
+
+`AppSound` lists the cues and `SoundPlayer` plays them in the ambient audio
+category, so they follow the silent switch and mix with other audio. They can
+be turned off under Sounds in the profile overview. The notification chime
+(`notification-chime.caf`, 16-bit PCM as iOS requires) is the app's signature
+and is used for local notifications; a future push payload can use it with
+`"sound": "notification-chime.caf"`. Run the generator again after changing a
+cue; it rewrites `Stop Swiping/Resources/Sounds`.
 
 ## Supabase integration
 
@@ -43,7 +62,7 @@ Firebase is no longer an app dependency.
   initial profile backup unlock the notification step and automatic matching.
 
 Database and bucket setup is recorded in
-`supabase/migrations/202611140001_profiles.sql`. Apple native sign-in uses the
+`supabase/migrations/202611160001_baseline.sql`. Apple native sign-in uses the
 bundle ID `Hakketjak.monday-match`; enable that client ID in the project's Apple
 provider and the Sign in with Apple capability for the Apple App ID. Native
 ID-token sign-in does not require a web OAuth secret.
@@ -133,6 +152,8 @@ limit.
 
 ## Photo verification
 
-Local front-camera photo verification and upload guidelines are integrated into
-both photo inputs. See [face verification](docs/face-verification.md) for model
-provenance, configuration, privacy behavior and device-validation requirements.
+Photos are verified on the server with AWS Face Liveness; see
+[AWS activation](docs/aws-photo-verification.md). The earlier on-device scan
+(Vision plus the 37 MB SFace Core ML model) was removed on 16 November 2026:
+the app always used the server check, so the model only added download size.
+It is in the Git history if it is ever needed again.

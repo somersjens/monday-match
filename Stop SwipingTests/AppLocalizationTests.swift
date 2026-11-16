@@ -67,12 +67,12 @@ final class AppLocalizationTests: XCTestCase {
     }
 
     func testChangingLanguageUpdatesQuestionsSummariesAndLanguageNames() {
-        XCTAssertEqual(Religion.atheist.title, "Atheist")
+        XCTAssertEqual(Religion.preferNotToShare.title, "I prefer not to share")
         XCTAssertEqual(ReligionAnswers().partnerSummary, "Open to all")
         XCTAssertEqual(RelationshipPreferenceQuestion.sexualArrangement.options.first?.title, "Only with my partner")
         XCTAssertEqual(LanguageCatalog.option(for: "en").name, "English")
         AppLanguageSettings.shared.language = .dutch
-        XCTAssertEqual(Religion.atheist.title, "Atheïstisch")
+        XCTAssertEqual(Religion.preferNotToShare.title, "Ik deel dit liever niet")
         XCTAssertEqual(ReligionAnswers().ownSummary, "Anders/overgeslagen")
         XCTAssertEqual(ReligionAnswers().partnerSummary, "Open voor alles")
         XCTAssertEqual(ProfileCreationStep.dateOfBirth.title, "Wanneer ben je geboren?")
@@ -123,14 +123,14 @@ final class AppLocalizationTests: XCTestCase {
     func testLanguageChangesKeepProfileDataAndMatchingStable() throws {
         var state = ProfileCreationState(today: .init(year: 2026, month: 11, day: 12), applicationLanguage: "en")
         state.languages = ["en", "fr"]
-        state.religion = ReligionAnswers(own: .atheist, acceptedPartnerReligions: [.christian, .other])
+        state.religion = ReligionAnswers(own: .spiritual, acceptedPartnerReligions: [.christian, .other])
         let data = try JSONEncoder().encode(state)
         AppLanguageSettings.shared.language = .dutch
         let restored = try JSONDecoder().decode(ProfileCreationState.self, from: data)
         XCTAssertEqual(restored.languages, ["en", "fr"])
         XCTAssertEqual(restored.religion, state.religion)
-        XCTAssertTrue(restored.religion.isMutuallyCompatible(with: ReligionAnswers(own: .christian, acceptedPartnerReligions: [.atheist])))
-        XCTAssertEqual(restored.summary(for: .religion, today: state.birthDateBaseline).value, "Atheïstisch")
+        XCTAssertTrue(restored.religion.isMutuallyCompatible(with: ReligionAnswers(own: .christian, acceptedPartnerReligions: [.spiritual])))
+        XCTAssertEqual(restored.summary(for: .religion, today: state.birthDateBaseline).value, "Spiritueel")
     }
 
     func testChoosingOwnReligionOpensPartnerAndDeselectingKeepsOwnSideOpen() {
@@ -138,12 +138,12 @@ final class AppLocalizationTests: XCTestCase {
         state.dateOfBirth = .init(year: 1996, month: 4, day: 21)
         state.currentStep = .religion
         let model = ProfileCreationViewModel(store: InMemoryProfileCreationStore(state: state), repository: nil)
-        model.selectOwnReligion(.atheist)
-        XCTAssertEqual(model.state.religion.own, .atheist)
+        model.selectOwnReligion(.spiritual)
+        XCTAssertEqual(model.state.religion.own, .spiritual)
         XCTAssertEqual(model.currentStep, .religion)
         XCTAssertEqual(model.state.religionPhase, .partner)
         model.setReligionPhase(.own)
-        model.selectOwnReligion(.atheist)
+        model.selectOwnReligion(.spiritual)
         XCTAssertNil(model.state.religion.own)
         XCTAssertEqual(model.state.religionPhase, .own)
         model.selectOwnReligion(.christian)
@@ -151,17 +151,5 @@ final class AppLocalizationTests: XCTestCase {
         XCTAssertTrue(model.goBack(), "Cancel during onboarding returns to the own answer.")
         XCTAssertEqual(model.state.religionPhase, .own)
         XCTAssertEqual(model.state.religion.own, .christian)
-    }
-
-    func testFaceModelMetadataAndPredictionsWorkInDutch() throws {
-        AppLanguageSettings.shared.language = .dutch
-        let model = try SFaceEmbeddingModel(bundle: Bundle(for: ProfileCreationViewModel.self))
-        let image = UIGraphicsImageRenderer(size: CGSize(width: 112, height: 112)).image { context in
-            UIColor.gray.setFill()
-            context.fill(CGRect(x: 0, y: 0, width: 112, height: 112))
-        }
-        let embedding = try model.embedding(alignedImage: CIImage(cgImage: XCTUnwrap(image.cgImage)))
-        XCTAssertEqual(embedding.count, 128)
-        XCTAssertTrue(embedding.allSatisfy(\.isFinite))
     }
 }

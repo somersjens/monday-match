@@ -42,6 +42,8 @@ struct SelectionOption: View {
         .buttonStyle(SelectionPressStyle())
         .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion), value: isSelected)
         .sensoryFeedback(.selection, trigger: isSelected)
+        // Switching a single choice deselects the old one too; one tick is enough.
+        .soundFeedback(.select, trigger: isSelected) { _, selected in selected || style == .multiple }
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityHint(style == .multiple ? L10n("Multiple options can be selected.") : "")
     }

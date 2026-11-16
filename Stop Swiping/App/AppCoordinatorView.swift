@@ -12,6 +12,11 @@ struct AppCoordinatorView: View {
     /// Starts the welcome screen over after a returning account signs in, so
     /// it opens on the profile that came back with it.
     @State private var welcomeGeneration = 0
+    /// The welcome light's shaders, compiled in the background during launch.
+    @State private var isLightReady = false
+    /// StoreKit's local entitlements normally answer within moments; never
+    /// hold the launch screen longer than this for them.
+    @State private var stopsWaitingForAccess = false
 
     private enum Screen {
         case loading, welcome, onboarding, accessRequired
@@ -20,12 +25,15 @@ struct AppCoordinatorView: View {
     /// The welcome screen stays one screen whether or not an account is
     /// signed in, so creating an account from it doesn't rebuild it.
     private var screen: Screen {
+        guard isLightReady else { return .loading }
         switch appState.sessionState {
         case .loading:
             return .loading
         case .signedOut:
             return .welcome
         case .onboarding, .signedIn:
+            // Without its entitlements an account would flash the access screen.
+            guard access.isReady || stopsWaitingForAccess else { return .loading }
             guard access.hasAccess else { return showsWelcomeFromAccess ? .welcome : .accessRequired }
             return dependencies.profileCreationStore.load()?.completedAt != nil ? .welcome : .onboarding
         }
@@ -56,10 +64,21 @@ struct AppCoordinatorView: View {
         .task {
             guard appState.sessionState == .loading else { return }
             access.updateCompletion(savedCompletionDate)
+            // Shaders, StoreKit and the stored session load side by side.
+            async let lights: Void = WelcomeLightMetalRenderer.prepare()
+            async let entitlements: Void = access.start()
             await appState.start()
+            await lights
+            isLightReady = true
+            try? await Task.sleep(for: .seconds(1.5))
+            stopsWaitingForAccess = true
+            // The entrance loads its own sound; the rest wait until launch is done.
+            SoundPlayer.shared.prepare()
+            await entitlements
+        }
+        .onChange(of: appState.sessionState) { _, _ in
             // Session restoration can restore a profile from Supabase too.
             access.updateCompletion(savedCompletionDate)
-            await access.start()
         }
         .onChange(of: access.hasAccess) { _, allowed in
             if allowed { showsWelcomeFromAccess = false }

@@ -13,12 +13,19 @@ struct AppleAuthorizationPayload {
 }
 
 protocol AuthServicing {
+    /// The session stored on this phone, without waiting for the network.
+    /// Nil when only `restoreSession()` can tell.
+    func localSession() -> RestoredSession?
     func restoreSession() async throws -> RestoredSession
     func signInWithApple(
         payload: AppleAuthorizationPayload
     ) async throws -> RestoredSession
     func signInWithGoogle() async throws -> RestoredSession
     func signOut() async throws
+}
+
+extension AuthServicing {
+    func localSession() -> RestoredSession? { nil }
 }
 
 struct MockAuthService: AuthServicing {

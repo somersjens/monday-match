@@ -85,8 +85,7 @@ Supabase supplies `SUPABASE_URL`, `SUPABASE_ANON_KEY` and
 or the Supabase service-role key belongs in `Info.plist`, Swift source, an app
 bundle, or a public environment file.
 
-Apply `202611140006_aws_photo_verification.sql` once after migrations 001–005,
-then deploy `supabase/functions/aws-face-verification`. The database migration
+The tables and functions are part of `202611160001_baseline.sql`. Deploy `supabase/functions/aws-face-verification`. The database migration
 and function are installed in the live project, and the required AWS secret names
 are present. The remaining end-to-end check is a consenting user's verification
 on a physical iPhone. `supabase/config.toml`

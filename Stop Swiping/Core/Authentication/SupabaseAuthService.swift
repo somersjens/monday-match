@@ -14,11 +14,22 @@ struct SupabaseAuthService: AuthServicing {
         self.oauthFlow = oauthFlow
     }
 
+    /// The Keychain's session, possibly expired. Reading it needs no network,
+    /// so the app can open on it at once while `restoreSession()` refreshes.
+    func localSession() -> RestoredSession? {
+        guard client.auth.currentSession != nil else { return .signedOut }
+        return profileSync.hasCompletedProfile ? .signedIn : .onboarding
+    }
+
     func restoreSession() async throws -> RestoredSession {
         do {
             _ = try await client.auth.session
         } catch AuthError.sessionMissing {
             return .signedOut
+        } catch let error as URLError where error.code != .cancelled {
+            // Offline, an expired token can't be refreshed yet; the stored
+            // session stays valid until the server says otherwise.
+            return localSession() ?? .signedOut
         }
         // A cloud outage must not destroy an otherwise valid local session.
         try? await profileSync.restoreIfNeeded()

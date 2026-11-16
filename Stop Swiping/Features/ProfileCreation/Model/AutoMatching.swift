@@ -161,7 +161,11 @@ struct MatchDealbreakers: Equatable {
 
         var entries: [Entry] = []
         for step in ProfileCreationStep.allCases {
-            func append(_ text: String) { entries.append(Entry(step: step, text: text)) }
+            // A sentence may start with a lowercased frequency ("dagelijks of vaker rookt").
+            func append(_ text: String) {
+                let capitalized = text.prefix(1).uppercased(with: AppLocale.current) + text.dropFirst()
+                entries.append(Entry(step: step, text: capitalized))
+            }
             switch step {
             case .religion:
                 let accepted = state.religion.effectivePartnerReligions
@@ -171,27 +175,36 @@ struct MatchDealbreakers: Equatable {
                                 L10n("Have a religion or worldview outside your preferences (\(titles))")))
                 }
             case .partnerAgeRange:
+                // One sentence per combination of limits, so languages that put
+                // the verb last (Dutch: "jonger is dan 25") read naturally.
                 guard let range = state.partnerAgeRange else { continue }
-                var parts: [String] = []
-                if range.minimum > PartnerAgeRules.lowerBound { parts.append(L10n("\(range.minimum - 1) or younger")) }
-                if range.maximum < PartnerAgeRules.upperBound { parts.append(L10n("\(range.maximum + 1) or older")) }
-                if !parts.isEmpty {
-                    let limits = parts.joined(separator: L10n(", or "))
-                    append(pick(L10n("Is \(limits)"), L10n("Are \(limits)")))
+                let low = range.minimum, high = range.maximum
+                switch (low > PartnerAgeRules.lowerBound, high < PartnerAgeRules.upperBound) {
+                case (true, true):
+                    append(pick(L10n("Is younger than \(low) or older than \(high)"),
+                                L10n("Are younger than \(low) or older than \(high)")))
+                case (true, false): append(pick(L10n("Is younger than \(low)"), L10n("Are younger than \(low)")))
+                case (false, true): append(pick(L10n("Is older than \(high)"), L10n("Are older than \(high)")))
+                case (false, false): break
                 }
             case .partnerHeightRange:
                 let range = state.partnerHeightRange
-                var parts: [String] = []
-                if range.minimum > PartnerHeightRules.lowerBound { parts.append(L10n("\(range.minimum - 1) cm or shorter")) }
-                if range.maximum < PartnerHeightRules.upperBound { parts.append(L10n("\(range.maximum + 1) cm or taller")) }
-                if !parts.isEmpty {
-                    let limits = parts.joined(separator: L10n(", or "))
-                    append(pick(L10n("Is \(limits)"), L10n("Are \(limits)")))
+                let low = range.minimum, high = range.maximum
+                switch (low > PartnerHeightRules.lowerBound, high < PartnerHeightRules.upperBound) {
+                case (true, true):
+                    append(pick(L10n("Is shorter than \(low) cm or taller than \(high) cm"),
+                                L10n("Are shorter than \(low) cm or taller than \(high) cm")))
+                case (true, false): append(pick(L10n("Is shorter than \(low) cm"), L10n("Are shorter than \(low) cm")))
+                case (false, true): append(pick(L10n("Is taller than \(high) cm"), L10n("Are taller than \(high) cm")))
+                case (false, false): break
                 }
             case .languages:
                 let names = state.languages.map { LanguageCatalog.option(for: $0).name }
                 if names.count == 1, let name = names.first {
                     append(singular ? L10n("Doesn’t speak \(name)") : L10n("Don’t speak \(name)"))
+                } else if names.count == 2 {
+                    append(pick(L10n("Speaks neither \(names[0]) nor \(names[1])"),
+                                L10n("Speak neither \(names[0]) nor \(names[1])")))
                 } else if !names.isEmpty {
                     let list = names.formatted(.list(type: .or).locale(AppLocale.current))
                     append(pick(L10n("Speaks none of \(list)"), L10n("Speak none of \(list)")))
@@ -216,14 +229,22 @@ struct MatchDealbreakers: Equatable {
                       let limit = state.lifestyle[substance].partnerMaximumLevel,
                       limit + 1 < substance.levels.count else { continue }
                 let level = substance.levels[limit + 1].lowercased(with: AppLocale.current)
-                switch substance {
-                case .alcohol:
+                // "Or more often" is redundant when only the top level is ruled out.
+                let isTopLevel = limit + 2 == substance.levels.count
+                switch (substance, isTopLevel) {
+                case (.alcohol, false):
                     append(pick(L10n("Drinks alcohol \(level) or more often"), L10n("Drink alcohol \(level) or more often")))
-                case .smoking:
+                case (.alcohol, true):
+                    append(pick(L10n("Drinks alcohol \(level)"), L10n("Drink alcohol \(level)")))
+                case (.smoking, false):
                     append(pick(L10n("Smokes or vapes \(level) or more often"), L10n("Smoke or vape \(level) or more often")))
-                case .drugs:
+                case (.smoking, true):
+                    append(pick(L10n("Smokes or vapes \(level)"), L10n("Smoke or vape \(level)")))
+                case (.drugs, false):
                     append(pick(L10n("Uses cannabis or other drugs \(level) or more often"),
                                 L10n("Use cannabis or other drugs \(level) or more often")))
+                case (.drugs, true):
+                    append(pick(L10n("Uses cannabis or other drugs \(level)"), L10n("Use cannabis or other drugs \(level)")))
                 }
             default:
                 continue

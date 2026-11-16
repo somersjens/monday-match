@@ -1,4 +1,4 @@
--- End-to-end walk through matching v3 (migration 010). Run as postgres in the
+-- End-to-end walk through matching v3. Run as postgres in the
 -- Supabase SQL Editor ("Run without RLS" is fine): everything rolls back.
 -- Covers: admission to the pool, skipping unchanged saves, automatic matching,
 -- E2EE message storage, breaking, readable history after a break, account

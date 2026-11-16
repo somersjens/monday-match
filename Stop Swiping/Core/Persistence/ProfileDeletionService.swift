@@ -35,6 +35,7 @@ struct ProfileDeletionService {
     private func wipeLocalData() throws {
         profileCreationStore.clear()
         SavedMatchStore.clear(defaults: defaults)
+        OpenDemoChat.clear(defaults: defaults)
         try ChatKeyStore.removeAll()
         try profileRepository.deleteProfile()
     }

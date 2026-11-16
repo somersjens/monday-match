@@ -43,6 +43,7 @@ struct ScaleSelector: View {
             }
         }
         .sensoryFeedback(.selection, trigger: value)
+        .soundFeedback(.select, trigger: value)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
         .accessibilityValue(value.map(valueDescription) ?? L10n("Not answered"))

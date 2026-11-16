@@ -122,10 +122,6 @@ struct ReligionStep: View {
                 .accessibilityIdentifier("religion.own.\(religion.rawValue)")
             }
 
-            if let explanation = religion.explanation {
-                InfoPopoverButton(title: religion.title, message: explanation, isSuperscript: true)
-            }
-
             Button { viewModel.togglePartnerReligion(religion) } label: {
                 HStack(spacing: 0) {
                     Spacer(minLength: 14)

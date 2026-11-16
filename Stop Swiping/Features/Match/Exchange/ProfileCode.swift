@@ -12,7 +12,7 @@ import Foundation
 /// in a fixed order; every table below is part of the format and is only
 /// ever appended to.
 enum ProfileCode {
-    static let formatVersion = 1
+    static let formatVersion = 2
     /// Matches the associated domain in the entitlements, and the site's
     /// `apple-app-site-association`.
     static let webHost = "www.hakketjak.com"
@@ -71,7 +71,7 @@ enum ProfileCode {
 
     private static let genders: [GenderIdentity] = [.woman, .man, .nonBinary, .selfDescribed]
     private static let religions: [Religion] = [
-        .none, .atheist, .agnostic, .spiritual, .christian, .muslim, .jewish, .hindu, .buddhist, .other
+        .none, .spiritual, .christian, .muslim, .jewish, .hindu, .buddhist, .other, .preferNotToShare
     ]
     private static let arrangements = ["partnerOnly", "togetherWithOthers", "separatelyFromPartner", "noSex"]
     private static let futureChildren: [FutureChildrenWish] = [.yes, .no, .notSure]
@@ -107,7 +107,7 @@ enum ProfileCode {
         let arrangement = profile.relationshipPreferences.selectedOptionIDs(for: .sexualArrangement)
         bits.write(mask(arrangements) { arrangement.contains($0) }, bits: 4)
         bits.write(profile.religion.own.flatMap { religions.firstIndex(of: $0) }.map { $0 + 1 } ?? 0, bits: 4)
-        bits.write(mask(religions) { profile.religion.acceptedPartnerReligions.contains($0) }, bits: 10)
+        bits.write(mask(religions) { profile.religion.acceptedPartnerReligions.contains($0) }, bits: 9)
 
         bits.write(optional: profile.lifestyle.hasChildren)
         bits.write(optional: profile.lifestyle.openToPartnerWithChildren)
@@ -170,7 +170,7 @@ enum ProfileCode {
         profile.partnerHeightRange = PartnerHeightRange(minimum: lower, maximum: max(lower, HeightRules.clamped(tallest)))
 
         guard let gender = bits.read(3), let partnerGenders = bits.read(4), let arrangement = bits.read(4),
-              let religion = bits.read(4), let partnerReligions = bits.read(10) else { return nil }
+              let religion = bits.read(4), let partnerReligions = bits.read(9) else { return nil }
         profile.gender = gender > 0 && gender <= genders.count ? genders[gender - 1] : nil
         profile.partnerGenders = Set(selected(genders, in: partnerGenders))
         for option in selected(arrangements, in: arrangement) {

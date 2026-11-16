@@ -3,7 +3,11 @@ import Foundation
 
 @MainActor
 final class ChatViewModel: ObservableObject {
-    @Published private(set) var conversation: ChatConversation
+    @Published private(set) var conversation: ChatConversation {
+        didSet { if conversation != oldValue { onConversationChange?(conversation) } }
+    }
+    /// Keeps a demo conversation on the phone, so the app reopens in it.
+    var onConversationChange: ((ChatConversation) -> Void)?
     @Published var draftMessage = ""
     @Published var showsBlockConfirmation = false
     @Published var showsEndConfirmation = false
@@ -45,6 +49,11 @@ final class ChatViewModel: ObservableObject {
             conversation: ChatConversation(matchID: matchID, participantName: name,
                 messages: [ChatMessage(sender: .match, text: "Hi", sentAt: Date().addingTimeInterval(-90))]),
             autoReply: "Hi")
+    }
+
+    /// A demo conversation from an earlier launch, carrying on where it was.
+    static func demo(resuming conversation: ChatConversation) -> ChatViewModel {
+        ChatViewModel(conversation: conversation, autoReply: "Hi")
     }
 
     private static func readKey(_ matchID: UUID) -> String { "chat.lastRead.\(matchID.uuidString.lowercased())" }

@@ -125,6 +125,11 @@ struct ProfileCreationFlowView: View {
         .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: displayedStep)
         .sensoryFeedback(.success, trigger: finish) { _, phase in phase == .filled }
         .sensoryFeedback(.success, trigger: randomFills)
+        .soundFeedback(.rejection, trigger: viewModel.rejectionCount)
+        // Each step a note higher, so the questionnaire climbs like a melody.
+        .soundFeedback(trigger: displayedStep) { _, step in .step(step.number) }
+        .soundFeedback(.seal, trigger: finish) { _, phase in phase == .sealed }
+        .soundFeedback(.success, trigger: randomFills)
     }
 
     // MARK: - Progress

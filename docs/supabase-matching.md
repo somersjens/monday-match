@@ -1,25 +1,18 @@
 # Supabase matching backend
 
-Migrations `202611140002_matching.sql` through `202611150010_matching_v3_moderation_history.sql`
-extend the private profile backup. Apply them once, in order, after
-`202611140001_profiles.sql`. Migrations 002–009 were applied on 14 November 2026
-and 010 on 15 November 2026, manually through the SQL Editor of the Stop
-Swiping project. Do not replay them against that project. Manual SQL Editor
-application does not register versions in the Supabase CLI migration history;
-reconcile that history before adopting CLI deployment for this project.
+The whole database (profiles, photos, matching, chat, moderation and photo
+verification) is one migration: `supabase/migrations/202611160001_baseline.sql`.
+Apply it once to an empty Supabase project through the SQL Editor.
 
-Migration 010 renamed the pieces whose names no longer said what they do:
-
-| Before | Now |
-| --- | --- |
-| `matching_private.active_members` | `matching_private.matched_users` |
-| `matching_private.reconcile(uuid)` | `matching_private.try_match(uuid, force)` |
-| `matching_private.verified_photo(uuid, jsonb)` | `matching_private.has_verified_photo(uuid, photo_id)` |
-| `current_chat_match()` | `current_match()` |
-| `end_match(id, 'closed' \| 'blocked')` | `break_match(id)` |
-| `report_match(..., p_end_match)` | `report_partner(..., p_break_match)` |
-| `publish_match_key_bundle` | folded into `register_chat_device` |
-| `end_reason` `closed` / `blocked` | `broken` / `reported`, plus `profile_deleted`, `moderation` |
+It replaces the ten migrations from 14–15 November 2026, merged before launch
+on 16 November 2026. The live Stop Swiping project already has this schema
+(it was built by those ten): **do not run the baseline against it**. Before
+the merge the baseline was compared with the live database: all 37 function
+bodies (36 byte-for-byte; `set_profile_updated_at` only differs in line
+breaks), every table, column, default, constraint, index, policy, trigger,
+comment, privilege and the admin view match. Manual SQL Editor application
+does not register versions in the Supabase CLI migration history; reconcile
+that history before adopting CLI deployment for this project.
 
 ## Admission and lifecycle
 
@@ -118,7 +111,7 @@ are additional automatic-matching checks beyond the local exchange report.
 The 50 question IDs match `CompatibilityScaleQuestion`. Scores use the local
 `MatchReport` formula: weights 0/1/2/4/8 for importance 1–5, linear closeness
 over the four-step personality scale. Alcohol, smoking and drugs are hard
-limits only and do not influence the percentage (migration 008). Each direction must meet that user's own
+limits only and do not influence the percentage. Each direction must meet that user's own
 minimum percentage; an average cannot conceal one failing direction. Both
 scores and the algorithm version are frozen in the match row.
 
@@ -255,7 +248,7 @@ authorization checks, asserts, and rolls back:
   history, account deletion, recreated accounts, and warning → block → ban,
   dismissal and ban evasion.
 
-On 15 November 2026, after migration 010, both passed against the live project:
+On 15 November 2026 both passed against the live project:
 **85** and **72** assertions, with zero fixture accounts, profiles, matches,
 reports or pool entries left afterwards.
 

@@ -50,7 +50,7 @@ final class ReligionLayoutTests: XCTestCase {
         state.dateOfBirth = .init(year: 1996, month: 4, day: 21)
         state.currentStep = .religion
         state.religionPhase = phase
-        if phase == .partner { state.religion.own = .atheist }
+        if phase == .partner { state.religion.own = .spiritual }
         return ProfileCreationViewModel(store: InMemoryProfileCreationStore(state: state), repository: nil)
     }
 

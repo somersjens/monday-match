@@ -1,12 +1,12 @@
 import SwiftUI
 
-/// Shared by both existing photo inputs; uses the selected upload as reference.
+/// The photo guidelines, shown in place of the server check while no photo
+/// is available to verify. Verification itself runs on the server
+/// (`AWSPhotoVerificationSection`).
 struct PhotoVerificationSection: View {
     let photo: ProfilePhoto?
     let receipt: PhotoVerificationReceipt?
     let onComplete: (PhotoVerificationReceipt) -> Void
-
-    @State private var presentedPhoto: ProfilePhoto?
 
     private var outcome: FaceVerificationOutcome? {
         guard let photo, let receipt,
@@ -38,19 +38,14 @@ struct PhotoVerificationSection: View {
                     .foregroundStyle(outcome == .match ? Color.green : Color.orange)
                 Text(outcome.message).font(.footnote)
             }
-            Button(outcome == .match ? L10n("Verify again") : L10n("Verify this photo")) {
-                presentedPhoto = photo
-            }
-            .buttonStyle(.bordered)
-            .disabled(photo == nil)
+            Button(outcome == .match ? L10n("Verify again") : L10n("Verify this photo")) {}
+                .buttonStyle(.bordered)
+                .disabled(true)
             Text(L10n("Camera images and face features are processed locally and discarded after the scan. Your chosen profile photo is saved as before."))
                 .font(.caption)
         }
         .foregroundStyle(.primary)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .fullScreenCover(item: $presentedPhoto) { reference in
-            FaceVerificationView(referencePhoto: reference, onComplete: onComplete)
-        }
     }
 
     private func guideline(_ text: String) -> some View {

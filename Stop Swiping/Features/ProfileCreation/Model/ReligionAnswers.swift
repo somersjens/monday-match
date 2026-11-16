@@ -1,13 +1,11 @@
 import Foundation
 
 enum Religion: String, Codable, CaseIterable, Hashable {
-    case none, atheist, agnostic, spiritual, christian, muslim, jewish, hindu, buddhist, other
+    case none, spiritual, christian, muslim, jewish, hindu, buddhist, other, preferNotToShare
 
     var title: String {
         switch self {
         case .none: L10n("No religion")
-        case .atheist: L10n("Atheist")
-        case .agnostic: L10n("Agnostic")
         case .spiritual: L10n("Spiritual")
         case .christian: L10n("Christian")
         case .muslim: L10n("Muslim")
@@ -15,14 +13,22 @@ enum Religion: String, Codable, CaseIterable, Hashable {
         case .hindu: L10n("Hindu")
         case .buddhist: L10n("Buddhist")
         case .other: L10n("Other")
+        case .preferNotToShare: L10n("I prefer not to share")
         }
     }
 
-    var explanation: String? {
-        switch self {
-        case .atheist: L10n("An atheist is someone who does not believe in a god or gods.")
-        case .agnostic: L10n("An agnostic is someone who is unsure whether a god or gods exist, or believes this cannot be known for certain.")
-        default: nil
+    /// Atheist and Agnostic were merged into No religion; saved drafts and
+    /// uploaded profiles may still carry them.
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "atheist", "agnostic": self = .none
+        default:
+            guard let religion = Religion(rawValue: raw) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath,
+                                                        debugDescription: "Unknown religion \(raw)"))
+            }
+            self = religion
         }
     }
 }

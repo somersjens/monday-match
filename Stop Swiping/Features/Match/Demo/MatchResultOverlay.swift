@@ -42,6 +42,9 @@ struct MatchResultOverlay: View {
     let onDelete: () -> Void
     var onRestartDemo: (() -> Void)? = nil
     var onUnderstandDemo: (() -> Void)? = nil
+    /// The demo's buttons are drawn by the screen instead, so they stay put
+    /// while it plays again.
+    var pinsDemoControls = false
     /// The conversation behind a match the server made, or the demo's.
     var chat: ChatViewModel? = nil
     /// The heart has become the rings and the conversation is open.
@@ -139,17 +142,13 @@ struct MatchResultOverlay: View {
                     }
                     Spacer(minLength: 12)
                     if let onRestartDemo, let onUnderstandDemo {
-                        VStack(spacing: 12) {
-                            Button(L10n("Play from the beginning"), action: onRestartDemo)
-                                .buttonStyle(GlowButtonStyle())
-                            Button(L10n("I fully understand"), action: onUnderstandDemo)
-                                .buttonStyle(QuietButtonStyle())
-                        }
-                        .frame(maxWidth: OnboardingTheme.controlWidth)
-                        .padding(.horizontal, 28)
-                        .padding(.bottom, 18)
-                        .opacity(reveal >= .controls ? 1 : 0)
-                        .allowsHitTesting(reveal >= .controls)
+                        // While the demo plays again its buttons stay on the
+                        // screen itself; here they only keep their room.
+                        let isShown = reveal >= .controls && !pinsDemoControls
+                        DemoMatchControls(onRestart: onRestartDemo, onUnderstand: onUnderstandDemo)
+                            .opacity(isShown ? 1 : 0)
+                            .allowsHitTesting(isShown)
+                            .accessibilityHidden(!isShown)
                     } else {
                         controls
                             .opacity(reveal >= .controls ? 1 : 0)
@@ -493,6 +492,24 @@ struct MatchResultOverlay: View {
         .padding(.horizontal, 28)
         .padding(.bottom, 18)
         .animation(.easeInOut(duration: 0.25), value: isSaved)
+    }
+}
+
+/// Under the demo match: watch it again, or move on.
+struct DemoMatchControls: View {
+    let onRestart: () -> Void
+    let onUnderstand: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Button(L10n("Play from the beginning"), action: onRestart)
+                .buttonStyle(GlowButtonStyle())
+            Button(L10n("I fully understand"), action: onUnderstand)
+                .buttonStyle(QuietButtonStyle())
+        }
+        .frame(maxWidth: OnboardingTheme.controlWidth)
+        .padding(.horizontal, 28)
+        .padding(.bottom, 18)
     }
 }
 

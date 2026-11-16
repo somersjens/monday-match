@@ -21,29 +21,69 @@ final class AppState: ObservableObject {
         self.authService = authService
     }
 
-    func start() async {
-        do {
-            let session = try await authService.restoreSession()
+    /// Counts the transitions people make themselves, so a session check
+    /// that finishes late never undoes one.
+    private var transitions = 0
+    /// How long a reinstalled phone may restore its profile from the account
+    /// before the questionnaire shows instead.
+    var restoreGracePeriod: Duration = .seconds(3)
 
-            switch session {
-            case .signedOut:
-                sessionState = .signedOut
-            case .onboarding:
-                sessionState = .onboarding
-            case .signedIn:
-                sessionState = .signedIn
+    /// Opens on the session stored on this phone straight away. The network
+    /// check (refreshing the token, restoring a profile) keeps running after
+    /// this returns and only changes the screen when it learns something new.
+    func start() async {
+        let startedAt = transitions
+        let verification = Task { await verifiedState() }
+        switch authService.localSession() {
+        case .signedOut?:
+            sessionState = .signedOut
+        case .signedIn?:
+            sessionState = .signedIn
+        case .onboarding?:
+            // Usually a reinstall: the account still has its profile. Give it
+            // a moment to come back before showing the questionnaire.
+            let restored = await withTaskGroup(of: SessionState?.self) { group in
+                group.addTask { await verification.value }
+                group.addTask { [restoreGracePeriod] in
+                    try? await Task.sleep(for: restoreGracePeriod)
+                    return nil
+                }
+                let first = await group.next() ?? nil
+                group.cancelAll()
+                return first
+            }
+            sessionState = restored ?? .onboarding
+        case nil:
+            sessionState = await verification.value
+            return
+        }
+        Task {
+            let verified = await verification.value
+            guard transitions == startedAt, verified != sessionState else { return }
+            sessionState = verified
+        }
+    }
+
+    private func verifiedState() async -> SessionState {
+        do {
+            switch try await authService.restoreSession() {
+            case .signedOut: return .signedOut
+            case .onboarding: return .onboarding
+            case .signedIn: return .signedIn
             }
         } catch {
-            sessionState = .signedOut
+            return .signedOut
         }
     }
 
     func showOnboarding() {
+        transitions += 1
         sessionState = .onboarding
         navigationPath.removeAll()
     }
 
     func showSignedInApp() {
+        transitions += 1
         sessionState = .signedIn
         navigationPath.removeAll()
     }
@@ -51,12 +91,14 @@ final class AppState: ObservableObject {
     /// The profile is gone from the phone and the server: back to the first
     /// welcome screen, as on a fresh install.
     func showWelcomeAfterProfileDeletion() {
+        transitions += 1
         sessionState = .signedOut
         navigationPath.removeAll()
         profileGeneration += 1
     }
 
     func signOut() async {
+        transitions += 1
         do {
             try await authService.signOut()
         } catch {

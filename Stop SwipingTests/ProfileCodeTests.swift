@@ -320,7 +320,7 @@ final class ProfileCodeTests: XCTestCase {
         state.lifestyle[.smoking] = SubstanceAnswer(ownLevel: 0, partnerMaximumLevel: 2)
         var religion = ReligionAnswers()
         religion.own = .christian
-        religion.acceptedPartnerReligions = [.christian, .agnostic, .other]
+        religion.acceptedPartnerReligions = [.christian, .preferNotToShare, .other]
         state.religion = religion
         for (index, question) in CompatibilityScaleQuestion.all.enumerated() {
             state.lifestyle[question] = CompatibilityScaleAnswer(own: index % 5 + 1, partner: (index * 3) % 5 + 1,

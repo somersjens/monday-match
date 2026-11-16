@@ -1,3 +1,4 @@
+import CoreLocation
 import Foundation
 import XCTest
 @testable import Stop_Swiping
@@ -70,11 +71,50 @@ final class LocalizationCatalogTests: XCTestCase {
         XCTAssertEqual(dealbreakers.pronoun, .they)
         XCTAssertEqual(dealbreakers.heading,
                        "Zelfs bij een persoonlijkheidsmatch van 100% krijg je geen match als je mogelijke partner:")
-        XCTAssertTrue(dealbreakers.lines.contains("Heeft kinderen"))
-        XCTAssertTrue(dealbreakers.lines.contains("Wil geen kinderen"))
+        XCTAssertTrue(dealbreakers.lines.contains("Al kinderen heeft"))
+        XCTAssertTrue(dealbreakers.lines.contains("Geen kinderen wil"))
         for plural in ["Hebben", "Willen", "Zijn ", "Wonen", "Drinken", "Roken", "Gebruiken", "Spreken"] {
             XCTAssertFalse(dealbreakers.lines.contains { $0.hasPrefix(plural) }, plural)
         }
+    }
+
+    /// The heading ends in "als je mogelijke partner:", so every line must
+    /// complete that subordinate clause with the verb last.
+    func testDutchDealbreakersCompleteTheHeadingWithTheVerbLast() {
+        var state = ProfileCreationState(today: .init(year: 2026, month: 11, day: 12), applicationLanguage: "nl")
+        state.partnerGenders = [.woman]
+        state.partnerAgeRange = PartnerAgeRange(minimum: 27, maximum: 36)
+        state.partnerHeightRange = PartnerHeightRange(minimum: 160, maximum: 203)
+        state.languages = ["en", "es"]
+        state.location = SelectedLocation(coordinate: CLLocationCoordinate2D(latitude: 51.05, longitude: 3.72), source: .map)
+        state.searchRadiusKilometers = 77
+        state.lifestyle.openToPartnerWithChildren = false
+        state.lifestyle.futureChildren = .yes
+        state.lifestyle[.alcohol].partnerMaximumLevel = Substance.alcohol.levels.count - 2
+        state.lifestyle[.smoking].partnerMaximumLevel = 3
+        AppLanguageSettings.shared.language = .dutch
+
+        let english = LanguageCatalog.option(for: "en").name
+        let spanish = LanguageCatalog.option(for: "es").name
+        let lines = MatchDealbreakers(state: state).lines
+        XCTAssertTrue(lines.contains("Jonger is dan 27 of ouder dan 36 jaar"), "\(lines)")
+        XCTAssertTrue(lines.contains("Korter is dan 160 cm of langer dan 203 cm"), "\(lines)")
+        XCTAssertTrue(lines.contains("Noch \(english) noch \(spanish) spreekt"), "\(lines)")
+        XCTAssertTrue(lines.contains("Meer dan 77 km van je vandaan woont"), "\(lines)")
+        XCTAssertTrue(lines.contains("Al kinderen heeft"), "\(lines)")
+        XCTAssertTrue(lines.contains("Geen kinderen wil"), "\(lines)")
+        XCTAssertTrue(lines.contains("4+ dagen per week alcohol drinkt"), "\(lines)")
+        XCTAssertTrue(lines.contains("Dagelijks of vaker rookt of vapet"), "\(lines)")
+
+        state.partnerAgeRange = PartnerAgeRange(minimum: 27, maximum: PartnerAgeRules.upperBound)
+        state.partnerHeightRange = PartnerHeightRange(minimum: PartnerHeightRules.lowerBound, maximum: 190)
+        state.languages = ["en"]
+        state.lifestyle.futureChildren = .no
+        let narrowed = MatchDealbreakers(state: state).lines
+        XCTAssertTrue(narrowed.contains("Jonger is dan 27 jaar"), "\(narrowed)")
+        XCTAssertTrue(narrowed.contains("Langer is dan 190 cm"), "\(narrowed)")
+        XCTAssertTrue(narrowed.contains("Geen \(english) spreekt"), "\(narrowed)")
+        XCTAssertTrue(narrowed.contains("Wel kinderen wil"), "\(narrowed)")
     }
 
     /// Keys of `L10n("…")` calls, with each interpolation turned into `{n}`

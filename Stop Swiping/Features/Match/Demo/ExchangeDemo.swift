@@ -302,11 +302,6 @@ struct ExchangeDemoCaption: View {
                         .font(.system(.title2, design: .rounded, weight: .semibold))
                         .foregroundStyle(OnboardingTheme.primaryText)
                         .shadow(color: OnboardingTheme.blue.opacity(0.7), radius: 14)
-                    if step == 1 {
-                        Text(L10n("Top to top, and your profiles are exchanged."))
-                            .font(.subheadline)
-                            .foregroundStyle(OnboardingTheme.secondaryText)
-                    }
                 }
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)

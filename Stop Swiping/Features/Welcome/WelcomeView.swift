@@ -37,6 +37,8 @@ struct WelcomeView: View {
     @State private var showsUnderageNotice = false
     @State private var isTransitioning = false
     @State private var lockPulse = 0
+    /// The welcome light's entrance sounds once per screen, like the light.
+    @State private var hasPlayedEntrance = false
     @State private var resetTapCount = 0
     @State private var lastResetTap: Date?
     @State private var showsOverview = false
@@ -92,6 +94,9 @@ struct WelcomeView: View {
     @State private var nextFakeMatchSucceeds = true
     @State private var showsProfilePrivacy = false
     @State private var isDemoPlaying = false
+    /// Playing the demo again keeps its buttons on the screen itself, not on
+    /// the phone that shrinks away.
+    @State private var pinsDemoControls = false
     /// The two phones that explain an exchange; nil while this screen is
     /// simply the screen.
     @State private var demoPhase: ExchangeDemo.Phase?
@@ -358,6 +363,7 @@ struct WelcomeView: View {
                             onDelete: { deleteMatch(activeMatch.snapshot) },
                             onRestartDemo: restartDemoAction,
                             onUnderstandDemo: understandDemoAction,
+                            pinsDemoControls: pinsDemoControls,
                             chat: activeChat,
                             isChatting: isChatting,
                             chatRingsBottom: MatchChatLayout.ringsBottom(unit: layout.unit,
@@ -445,6 +451,17 @@ struct WelcomeView: View {
                     .frame(width: proxy.size.width, height: proxy.size.height)
                     .transition(.opacity)
                 }
+
+                if stage == .complete, pinsDemoControls, isDemoPlaying, !isChatting {
+                    // Exactly where the match screen keeps their room.
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 0)
+                        DemoMatchControls(onRestart: startDemoMatch, onUnderstand: understandDemo)
+                    }
+                    .padding(.bottom, controlsInset)
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .transition(.opacity)
+                }
             }
         }
     }
@@ -468,6 +485,7 @@ struct WelcomeView: View {
         .sensoryFeedback(.success, trigger: demoStarts)
         .sensoryFeedback(.success, trigger: exchanges)
         .sensoryFeedback(.success, trigger: accountCard) { _, phase in phase == .signedIn }
+        .modifier(SoundCues(view: self))
         .onChange(of: scenePhase) { _, phase in
             if phase != .active {
                 profileCreation.persist()
@@ -542,6 +560,10 @@ struct WelcomeView: View {
         // opens on it, and straight into the conversation once it has started.
         .onChange(of: canShowScannedMatch && hasAccount && liveMatches.match != nil, initial: true) { _, ready in
             if ready { openLiveMatch() }
+        }
+        // A demo conversation left open reopens the same way.
+        .onChange(of: canShowScannedMatch && !(hasAccount && liveMatches.match != nil), initial: true) { _, ready in
+            if ready { resumeDemoChat() }
         }
         .onChange(of: showsOverview) { _, shown in
             // The code holds the answers themselves, so edits change it.
@@ -799,6 +821,39 @@ struct WelcomeView: View {
         }
     }
 
+    /// The sounds that follow the screen's state, kept apart from `body`
+    /// so the compiler checks them on their own.
+    private struct SoundCues: ViewModifier {
+        let view: WelcomeView
+
+        func body(content: Content) -> some View {
+            content
+                .soundFeedback(.lock, trigger: view.lockPulse)
+                .soundFeedback(.rejection, trigger: view.showsUnderageNotice) { _, shown in shown }
+                .soundFeedback(.success, trigger: view.accountCard) { _, phase in phase == .signedIn }
+                .soundFeedback(.exchange, trigger: view.exchanges)
+                // The two phones in the explanation turn toward each other.
+                .soundFeedback(.exchange, trigger: view.demoPhase) { _, phase in phase == .together }
+                .onAppear(perform: view.playEntrance)
+                // A message that arrives while the conversation isn't open.
+                // Older unread messages loading at launch stay quiet.
+                .onChange(of: view.liveMatches.unreadMessages.last?.id) { _, id in
+                    guard id != nil, !view.isChatting, let message = view.liveMatches.unreadMessages.last,
+                          Date().timeIntervalSince(message.sentAt) < 30 else { return }
+                    SoundPlayer.shared.play(.notification)
+                }
+        }
+    }
+
+    /// The light threads in once when the welcome screen first appears.
+    /// With reduced motion the light doesn't travel, so neither does the sound.
+    private func playEntrance() {
+        guard !hasPlayedEntrance else { return }
+        hasPlayedEntrance = true
+        guard !skipsEntrance, !reduceMotion else { return }
+        SoundPlayer.shared.play(.entrance)
+    }
+
     // MARK: - Account
 
     private static func accountMotion(reduceMotion: Bool) -> Animation {
@@ -808,6 +863,7 @@ struct WelcomeView: View {
     private func openSignIn() {
         guard !isTransitioning else { return }
         signIn.clearError()
+        SoundPlayer.shared.play(.open)
         withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) { showsSignIn = true }
     }
 
@@ -834,6 +890,7 @@ struct WelcomeView: View {
 
     private func closeSignIn() {
         guard !signIn.isSigningIn else { return }
+        SoundPlayer.shared.play(.close)
         withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) {
             showsSignIn = false
             signIn.clearError()
@@ -845,6 +902,7 @@ struct WelcomeView: View {
     private func toggleAccountCard() {
         guard !isTransitioning, !signIn.isSigningIn, accountCard != .signedIn else { return }
         showsCode = false
+        SoundPlayer.shared.play(accountCard == .closed ? .open : .close)
         withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) {
             signIn.clearError()
             accountCard = accountCard == .closed ? .open : .closed
@@ -859,6 +917,7 @@ struct WelcomeView: View {
             return true
         case .open:
             guard !signIn.isSigningIn else { return false }
+            SoundPlayer.shared.play(.close)
             withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) {
                 signIn.clearError()
                 accountCard = .closed
@@ -898,6 +957,7 @@ struct WelcomeView: View {
     private func openAccess() {
         guard !showsAccess else { return }
         showsCode = false
+        SoundPlayer.shared.play(.open)
         withAnimation(AccessScreenMotion.travel(reduceMotion: reduceMotion)) {
             showsAccess = true
         }
@@ -905,6 +965,7 @@ struct WelcomeView: View {
 
     private func closeAccess() {
         guard !access.isBusy else { return }
+        SoundPlayer.shared.play(.close)
         withAnimation(AccessScreenMotion.travel(reduceMotion: reduceMotion)) {
             showsAccess = false
             stage = .landing
@@ -913,6 +974,8 @@ struct WelcomeView: View {
     }
 
     private func continueFromAccess() {
+        // Onboarding sounds its own opening.
+        if profileCreation.isCompleted { SoundPlayer.shared.play(.close) }
         withAnimation(AccessScreenMotion.travel(reduceMotion: reduceMotion)) {
             showsAccess = false
             if profileCreation.isCompleted {
@@ -956,6 +1019,7 @@ struct WelcomeView: View {
         isTransitioning = true
         Task {
             if delay > 0 { try? await Task.sleep(for: .seconds(delay)) }
+            SoundPlayer.shared.play(.open)
             withAnimation(OnboardingMotion.resolved(OnboardingMotion.stage, reduceMotion: reduceMotion)) {
                 stage = .onboarding
                 lightStage = .onboarding
@@ -993,6 +1057,7 @@ struct WelcomeView: View {
         } else {
             refreshPersonalityResults()
             returnsFromPersonality = false
+            SoundPlayer.shared.play(.open)
             withAnimation(.easeInOut(duration: 0.3)) { personalityTest = lastPersonalityTest }
         }
     }
@@ -1013,6 +1078,7 @@ struct WelcomeView: View {
 
     private func closePersonality() {
         returnsFromPersonality = true
+        SoundPlayer.shared.play(.close)
         withAnimation(.easeInOut(duration: 0.3)) { personalityTest = nil }
     }
 
@@ -1065,6 +1131,7 @@ struct WelcomeView: View {
     private func openMatchPersonality() {
         guard activeMatch != nil else { return }
         refreshPersonalityResults()
+        SoundPlayer.shared.play(.open)
         withAnimation(.easeInOut(duration: 0.3)) { matchPersonalityTest = lastPersonalityTest }
     }
 
@@ -1074,6 +1141,7 @@ struct WelcomeView: View {
     }
 
     private func closeMatchPersonality() {
+        SoundPlayer.shared.play(.close)
         withAnimation(.easeInOut(duration: 0.3)) { matchPersonalityTest = nil }
     }
 
@@ -1085,6 +1153,7 @@ struct WelcomeView: View {
             return
         }
         guard showsCode || refreshShareCode() else { return }
+        SoundPlayer.shared.play(showsCode ? .close : .open)
         withAnimation(.easeInOut(duration: 0.25)) { showsCode.toggle() }
     }
 
@@ -1137,6 +1206,7 @@ struct WelcomeView: View {
             snapshot = DemoMatchGenerator.makeExample(for: profileCreation.state, using: &generator)
         }
         isDemoPlaying = true
+        if replaces { pinsDemoControls = true }
         scoreDetail = nil
         showsMatchProfile = false
         showsCode = false
@@ -1222,6 +1292,7 @@ struct WelcomeView: View {
         }
         if activeMatch == nil {
             isDemoPlaying = false
+            pinsDemoControls = false
             isTransitioning = false
         }
     }
@@ -1242,6 +1313,7 @@ struct WelcomeView: View {
             matchTask?.cancel()
             matchReveal = .controls
             isChatting = true
+            SoundPlayer.shared.play(.chatOpen)
             activeMatch = ActiveMatch(snapshot: snapshot, report: report)
             lightMatch = WelcomeLightMatch.Request(id: snapshot.id, isMatch: report.isMatch,
                                                    transition: transition, isChatting: true)
@@ -1250,6 +1322,7 @@ struct WelcomeView: View {
         }
         isTransitioning = true
         matchReveal = .hidden
+        SoundPlayer.shared.play(transition == .savedMatch ? .unfold : (report.isMatch ? .match : .noMatch))
         withAnimation(.easeOut(duration: 0.35)) {
             activeMatch = ActiveMatch(snapshot: snapshot, report: report)
         }
@@ -1281,7 +1354,12 @@ struct WelcomeView: View {
     }
 
     private func understandDemo() {
+        guard isDemoPlaying else { return }
         profileCreation.acknowledgeExplanation()
+        if demoPhase != nil {
+            // Understood while it plays again: the phones give way at once.
+            cancelDemo()
+        }
         closeMatch()
     }
 
@@ -1306,13 +1384,17 @@ struct WelcomeView: View {
     /// The heart fades where it is, and the helix ropes back in from the sides.
     private func closeMatch() {
         guard activeMatch != nil else { return }
+        OpenDemoChat.clear()
         matchTask?.cancel()
         isDemoPlaying = false
         isTransitioning = true
         scoreDetail = nil
         showsMatchProfile = false
+        SoundPlayer.shared.fadeOut(.match, .noMatch, .unfold, .chatOpen)
+        SoundPlayer.shared.play(.close)
         Task {
             withAnimation(.easeOut(duration: 0.3)) {
+                pinsDemoControls = false
                 activeMatch = nil
                 activeChat = nil
                 isChatting = false
@@ -1355,6 +1437,7 @@ struct WelcomeView: View {
         scoreDetail = nil
         lightMatch = WelcomeLightMatch.Request(id: activeMatch.snapshot.id, isMatch: activeMatch.report.isMatch,
                                                transition: lightMatch?.transition ?? .newMatch, isChatting: true)
+        SoundPlayer.shared.play(.chatOpen)
         withAnimation(reduceMotion ? .easeInOut(duration: 0.3) : .smooth(duration: 1.6)) {
             isChatting = true
         }
@@ -1368,8 +1451,29 @@ struct WelcomeView: View {
         // Only a heart can become the rings; a broken one has nothing to say.
         guard !isChatting, snapshot.report.isMatch,
               activeChat == nil || !(activeChat?.isLive ?? false) else { return }
-        activeChat = .demo(matchID: snapshot.id, name: snapshot.name)
+        let chat = ChatViewModel.demo(matchID: snapshot.id, name: snapshot.name)
+        keepDemoChat(chat, for: snapshot)
+        activeChat = chat
         startChat()
+    }
+
+    /// Saves the demo conversation as it grows, until the match closes.
+    private func keepDemoChat(_ chat: ChatViewModel, for snapshot: MatchSnapshot) {
+        var open = OpenDemoChat(match: snapshot, conversation: chat.conversation)
+        open.save()
+        chat.onConversationChange = { conversation in
+            open.conversation = conversation
+            open.save()
+        }
+    }
+
+    /// Back into the demo conversation the app was closed on.
+    private func resumeDemoChat() {
+        guard activeMatch == nil, let open = OpenDemoChat.load() else { return }
+        let chat = ChatViewModel.demo(resuming: open.conversation)
+        keepDemoChat(chat, for: open.match)
+        activeChat = chat
+        present(open.match, transition: .savedMatch, chatting: true)
     }
 
     /// Ends the match for both people; a demo simply closes.
@@ -1444,6 +1548,7 @@ struct WelcomeView: View {
             return
         }
         isTransitioning = true
+        SoundPlayer.shared.play(.complete)
         AccessibilityNotification.Announcement(L10n("Your profile is complete.")).post()
         Task {
             guard !reduceMotion else {
@@ -1481,6 +1586,7 @@ struct WelcomeView: View {
     private func returnToLanding() {
         isTransitioning = true
         profileCreation.persist()
+        SoundPlayer.shared.play(.close)
         Task {
             withAnimation(OnboardingMotion.resolved(OnboardingMotion.stage, reduceMotion: reduceMotion)) {
                 stage = .landing
@@ -1633,6 +1739,7 @@ struct ProfileCreationGateView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .soundFeedback(.rejection, trigger: showsUnderageNotice) { _, shown in shown }
         .onAppear {
             // A device that is already locked goes straight to the locked landing.
             if viewModel.isUnderageLocked { onUnderage() }

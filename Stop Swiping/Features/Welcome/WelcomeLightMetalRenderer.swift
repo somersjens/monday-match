@@ -156,10 +156,47 @@ struct WelcomeLightUniforms {
     }
 }
 
+/// The shader library and pipeline states: the slow part of setting up the
+/// light. Compiled away from the main actor while the app launches.
+nonisolated struct WelcomeLightCompiledShaders: @unchecked Sendable {
+    let device: MTLDevice
+    let ribbons: MTLRenderPipelineState
+    let particles: MTLRenderPipelineState
+    let compositor: MTLRenderPipelineState
+    let inlet: MTLRenderPipelineState
+
+    static func compile(source: String) throws -> Self {
+        guard let device = MTLCreateSystemDefaultDevice() else { throw WelcomeLightMetalResources.RendererError.unavailable }
+        let library = try device.makeLibrary(source: source, options: WelcomeLightMetalResources.compileOptions())
+        return try Self(device: device, library: library)
+    }
+
+    init(device: MTLDevice, library: MTLLibrary) throws {
+        self.device = device
+        func pipeline(vertex: String, fragment: String, composite: Bool = false) throws -> MTLRenderPipelineState {
+            let descriptor = MTLRenderPipelineDescriptor()
+            descriptor.vertexFunction = library.makeFunction(name: vertex)
+            descriptor.fragmentFunction = library.makeFunction(name: fragment)
+            let color = descriptor.colorAttachments[0]!
+            color.pixelFormat = composite ? .bgra8Unorm : .rgba16Float
+            color.isBlendingEnabled = !composite
+            color.sourceRGBBlendFactor = .one
+            color.destinationRGBBlendFactor = .one
+            color.sourceAlphaBlendFactor = .one
+            color.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+            return try device.makeRenderPipelineState(descriptor: descriptor)
+        }
+        ribbons = try pipeline(vertex: "welcomeRibbonVertex", fragment: "welcomeRibbonFragment")
+        inlet = try pipeline(vertex: "welcomeEntranceVertex", fragment: "welcomeRibbonFragment")
+        particles = try pipeline(vertex: "welcomeDustVertex", fragment: "welcomeDustFragment")
+        compositor = try pipeline(vertex: "welcomeCompositeVertex", fragment: "welcomeCompositeFragment", composite: true)
+    }
+}
+
 final class WelcomeLightMetalResources {
     /// Keep simulator previews and physical-device shader compilation on the
     /// same floating-point contract, including exact path-boundary decisions.
-    static func compileOptions() -> MTLCompileOptions {
+    nonisolated static func compileOptions() -> MTLCompileOptions {
         let options = MTLCompileOptions()
         options.mathMode = .safe
         options.mathFloatingPointFunctions = .precise
@@ -177,7 +214,12 @@ final class WelcomeLightMetalResources {
     /// Bound while no code is shown; the shader always expects modules.
     private let noCode: MTLBuffer
 
-    init(device: MTLDevice, library: MTLLibrary) throws {
+    convenience init(device: MTLDevice, library: MTLLibrary) throws {
+        try self.init(shaders: WelcomeLightCompiledShaders(device: device, library: library))
+    }
+
+    init(shaders: WelcomeLightCompiledShaders) throws {
+        let device = shaders.device
         self.device = device
         guard let queue = device.makeCommandQueue(),
               let controls = device.makeBuffer(
@@ -196,23 +238,10 @@ final class WelcomeLightMetalResources {
         self.noCode = noCode
         self.controls = controls
         self.travel = travel
-        func pipeline(vertex: String, fragment: String, composite: Bool = false) throws -> MTLRenderPipelineState {
-            let descriptor = MTLRenderPipelineDescriptor()
-            descriptor.vertexFunction = library.makeFunction(name: vertex)
-            descriptor.fragmentFunction = library.makeFunction(name: fragment)
-            let color = descriptor.colorAttachments[0]!
-            color.pixelFormat = composite ? .bgra8Unorm : .rgba16Float
-            color.isBlendingEnabled = !composite
-            color.sourceRGBBlendFactor = .one
-            color.destinationRGBBlendFactor = .one
-            color.sourceAlphaBlendFactor = .one
-            color.destinationAlphaBlendFactor = .oneMinusSourceAlpha
-            return try device.makeRenderPipelineState(descriptor: descriptor)
-        }
-        ribbons = try pipeline(vertex: "welcomeRibbonVertex", fragment: "welcomeRibbonFragment")
-        inlet = try pipeline(vertex: "welcomeEntranceVertex", fragment: "welcomeRibbonFragment")
-        particles = try pipeline(vertex: "welcomeDustVertex", fragment: "welcomeDustFragment")
-        compositor = try pipeline(vertex: "welcomeCompositeVertex", fragment: "welcomeCompositeFragment", composite: true)
+        ribbons = shaders.ribbons
+        inlet = shaders.inlet
+        particles = shaders.particles
+        compositor = shaders.compositor
     }
 
     /// The modules of a code, for `render`. Set `uniforms.code.y` to its size.
@@ -271,16 +300,19 @@ final class WelcomeLightMetalResources {
         finalEncoder.endEncoding()
     }
 
-    enum RendererError: Error { case unavailable }
+    nonisolated enum RendererError: Error { case unavailable }
 }
 
 final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
+    /// Shaders compiled by `prepare()`, ready before the first light is drawn.
+    private static var preparedShaders: Result<WelcomeLightCompiledShaders, Error>?
+
     static let resources: WelcomeLightMetalResources? = {
-        guard let device = MTLCreateSystemDefaultDevice() else { return nil }
         do {
-            let library = try device.makeLibrary(source: WelcomeLightShaderSource.code,
-                                                options: WelcomeLightMetalResources.compileOptions())
-            return try WelcomeLightMetalResources(device: device, library: library)
+            // Without `prepare()` (previews, tests) compile here instead.
+            let shaders = try preparedShaders?.get() ?? WelcomeLightCompiledShaders.compile(source: WelcomeLightShaderSource.code)
+            preparedShaders = nil
+            return try WelcomeLightMetalResources(shaders: shaders)
         } catch {
             #if DEBUG
             print("Welcome light renderer could not initialize: \(error)")
@@ -288,6 +320,23 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
             return nil
         }
     }()
+
+    /// Compiles the shaders on a background thread. Compiling them on first
+    /// use blocked the main thread, and with it the first frame, for as long
+    /// as the Metal compiler took: noticeable on a cold start or after an update.
+    static func prepare() async {
+        guard !isPrepared else { return }
+        isPrepared = true
+        let source = WelcomeLightShaderSource.code
+        let result = await Task.detached(priority: .userInitiated) {
+            Result { try WelcomeLightCompiledShaders.compile(source: source) }
+        }.value
+        preparedShaders = result
+        _ = resources
+        // Already built synchronously if something drew the light first.
+        preparedShaders = nil
+    }
+    private static var isPrepared = false
 
     private var reduceMotion = false
     private var emission: MTLTexture?

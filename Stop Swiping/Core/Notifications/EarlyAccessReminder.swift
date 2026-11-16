@@ -28,7 +28,7 @@ final class EarlyAccessReminder: NSObject, EarlyAccessReminderScheduling, UNUser
         let content = UNMutableNotificationContent()
         content.title = L10n("Your forever starts here ✨")
         content.body = L10n("One day left! Finish your profile to keep free, ad-free access forever. Your next connection is waiting 💙")
-        content.sound = .default
+        content.sound = AppSound.notificationSound
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: date.timeIntervalSince(now), repeats: false)
         try await center.add(UNNotificationRequest(identifier: Self.identifier, content: content, trigger: trigger))
     }

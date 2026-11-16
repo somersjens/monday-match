@@ -15,9 +15,16 @@ struct UserDefaultsProfileCreationStore: ProfileCreationStateStoring {
         self.key = key
     }
 
+    /// Screens read the state on every update. Decoding the same bytes again
+    /// gives the same state, so the last decode is kept.
+    private static var lastDecoded: (data: Data, state: ProfileCreationState)?
+
     func load() -> ProfileCreationState? {
         guard let data = defaults.data(forKey: key) else { return nil }
-        return try? JSONDecoder().decode(ProfileCreationState.self, from: data)
+        if let last = Self.lastDecoded, last.data == data { return last.state }
+        guard let state = try? JSONDecoder().decode(ProfileCreationState.self, from: data) else { return nil }
+        Self.lastDecoded = (data, state)
+        return state
     }
 
     func save(_ state: ProfileCreationState) {

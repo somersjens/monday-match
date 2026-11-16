@@ -89,8 +89,8 @@ final class LifetimeAccessStore: ObservableObject {
 
     func refresh() async {
         clock = now()
-        do { products = try await purchasing.products() }
-        catch { products = []; errorMessage = error.localizedDescription }
+        // Entitlements are on the device; prices come from the App Store. Access
+        // is known, and the app can open, before the prices arrive.
         let snapshot = await purchasing.snapshot()
         hasPaidAccess = snapshot.entitlements.contains { $0.productID == .lifetime }
         hasEarlyEntitlement = snapshot.entitlements.contains { $0.productID == .earlyAdopter }
@@ -101,6 +101,8 @@ final class LifetimeAccessStore: ObservableObject {
         }
         isReady = true
         updateCompletion(profileCompletedAt)
+        do { products = try await purchasing.products() }
+        catch { products = []; errorMessage = error.localizedDescription }
         await updateReminder()
         scheduleDeadlineCheck()
     }
