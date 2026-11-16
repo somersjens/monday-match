@@ -76,8 +76,9 @@ final class SoundPlayer {
     static let enabledKey = "sounds.enabled"
 
     private let defaults: UserDefaults
-    private var players: [AppSound: AVAudioPlayer] = [:]
+    private let cues = CuePlayers()
     private var isSessionConfigured = false
+    private var sessionObservers: [NSObjectProtocol] = []
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -88,51 +89,105 @@ final class SoundPlayer {
         get { defaults.object(forKey: Self.enabledKey) as? Bool ?? true }
         set {
             defaults.set(newValue, forKey: Self.enabledKey)
-            if !newValue { players.values.forEach { $0.stop() } }
+            if !newValue { cues.stopAll() }
         }
     }
 
     /// Loads every cue up front so the first of each plays without delay.
     func prepare() {
-        configureSession()
-        for sound in AppSound.allCases where players[sound] == nil {
-            _ = player(for: sound)
-        }
+        guard !Self.isRunningTests else { return }
+        startSession()
+        cues.load(AppSound.allCases.compactMap { sound in sound.url.map { (sound.rawValue, $0) } })
     }
 
     func play(_ sound: AppSound) {
-        guard isEnabled, !Self.isRunningTests else { return }
-        configureSession()
-        guard let player = player(for: sound) else { return }
-        player.volume = sound.volume
-        player.currentTime = 0
-        player.play()
+        guard isEnabled, !Self.isRunningTests, let url = sound.url else { return }
+        startSession()
+        cues.play(sound.rawValue, url: url, volume: sound.volume)
     }
 
     /// Fades a cue that no longer matches the screen, for instance when a
     /// match closes before its sound has finished.
     func fadeOut(_ sounds: AppSound..., duration: TimeInterval = 0.35) {
-        for sound in sounds {
-            guard let player = players[sound], player.isPlaying else { continue }
-            player.setVolume(0, fadeDuration: duration)
+        cues.fadeOut(sounds.map(\.rawValue), duration: duration)
+    }
+
+    /// Sets the ambient category and activates the session ahead of the first
+    /// cue. Safe to call more than once; only the first call does anything.
+    func startSession() {
+        guard !isSessionConfigured, !Self.isRunningTests else { return }
+        isSessionConfigured = true
+        // The category stays synchronous: a cue that played before it was set
+        // would use the default category and silence other apps' audio.
+        try? AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+        cues.activateSession()
+        // The system deactivates the session in the background and during
+        // interruptions; reactivate it before a cue has to do so itself.
+        let center = NotificationCenter.default
+        let cues = cues
+        sessionObservers = [
+            center.addObserver(forName: UIApplication.willEnterForegroundNotification,
+                               object: nil, queue: nil) { _ in cues.activateSession() },
+            center.addObserver(forName: AVAudioSession.interruptionNotification,
+                               object: nil, queue: nil) { note in
+                let type = (note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt)
+                    .flatMap(AVAudioSession.InterruptionType.init(rawValue:))
+                if type == .ended { cues.activateSession() }
+            },
+        ]
+    }
+
+    nonisolated private static let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+}
+
+/// The cue players, kept off the main thread. Starting playback activates the
+/// audio session, which talks to the audio server and can block the calling
+/// thread, so every player is created, started and stopped on one serial
+/// queue. Session activation runs on the same queue, ahead of any cue.
+nonisolated private final class CuePlayers: @unchecked Sendable {
+    private let queue = DispatchQueue(label: "SoundPlayer.cues", qos: .userInitiated)
+    /// Only touched on `queue`.
+    private var players: [String: AVAudioPlayer] = [:]
+
+    func activateSession() {
+        queue.async { try? AVAudioSession.sharedInstance().setActive(true) }
+    }
+
+    func load(_ cues: [(name: String, url: URL)]) {
+        queue.async {
+            for cue in cues { _ = self.player(cue.name, url: cue.url) }
         }
     }
 
-    private func player(for sound: AppSound) -> AVAudioPlayer? {
-        if let player = players[sound] { return player }
-        guard let url = sound.url, let player = try? AVAudioPlayer(contentsOf: url) else { return nil }
+    func play(_ name: String, url: URL, volume: Float) {
+        queue.async {
+            guard let player = self.player(name, url: url) else { return }
+            player.volume = volume
+            player.currentTime = 0
+            player.play()
+        }
+    }
+
+    func fadeOut(_ names: [String], duration: TimeInterval) {
+        queue.async {
+            for name in names {
+                guard let player = self.players[name], player.isPlaying else { continue }
+                player.setVolume(0, fadeDuration: duration)
+            }
+        }
+    }
+
+    func stopAll() {
+        queue.async { self.players.values.forEach { $0.stop() } }
+    }
+
+    private func player(_ name: String, url: URL) -> AVAudioPlayer? {
+        if let player = players[name] { return player }
+        guard let player = try? AVAudioPlayer(contentsOf: url) else { return nil }
         player.prepareToPlay()
-        players[sound] = player
+        players[name] = player
         return player
     }
-
-    private func configureSession() {
-        guard !isSessionConfigured else { return }
-        isSessionConfigured = true
-        try? AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
-    }
-
-    private static let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 }
 
 extension View {

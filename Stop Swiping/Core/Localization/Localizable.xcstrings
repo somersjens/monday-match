@@ -7428,6 +7428,23 @@
         }
       }
     },
+    "Hide keyboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide keyboard"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toetsenbord verbergen"
+          }
+        }
+      }
+    },
     "Hindu" : {
       "extractionState" : "manual",
       "localizations" : {

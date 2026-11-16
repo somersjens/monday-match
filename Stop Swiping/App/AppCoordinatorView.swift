@@ -84,6 +84,9 @@ struct AppCoordinatorView: View {
         .task {
             guard appState.sessionState == .loading else { return }
             access.updateCompletion(savedCompletionDate)
+            // The audio session comes up while the light prepares, so the
+            // entrance cue doesn't have to activate it on the main thread.
+            SoundPlayer.shared.startSession()
             // Shaders, StoreKit and the stored session load side by side.
             async let lights: Void = WelcomeLightMetalRenderer.prepare()
             async let entitlements: Void = access.start()

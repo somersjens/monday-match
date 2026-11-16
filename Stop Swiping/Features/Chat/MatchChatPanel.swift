@@ -31,6 +31,7 @@ struct MatchChatPanel: View {
     @FocusState private var composerFocused: Bool
     @State private var showsSecurityCode = false
     @State private var showsDeviceReplacement = false
+    @State private var composerFrame: CGRect = .zero
 
     private var visibleMessages: [ChatMessage] { chat.conversation.messages }
 
@@ -229,6 +230,15 @@ struct MatchChatPanel: View {
 
     private var composer: some View {
         MatchChatComposer(chat: chat, draft: chat.draft, isFocused: $composerFocused)
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { composerFrame = $0 }
+            .background {
+                // A tap anywhere else on the screen — the gear, the header,
+                // the messages — closes the keyboard and still does its job.
+                KeyboardDismissTap(isActive: composerFocused, excluded: composerFrame) {
+                    composerFocused = false
+                }
+                .allowsHitTesting(false)
+            }
     }
 
     // MARK: - Security code
@@ -276,7 +286,8 @@ private struct MatchChatComposer: View {
 
     var body: some View {
         let canSend = chat.canSend
-        HStack(alignment: .bottom, spacing: 10) {
+        // The send pill sits inside the field, on its last line.
+        HStack(alignment: .bottom, spacing: 0) {
             TextField(L10n("Message"), text: $draft.text, axis: .vertical)
                 .font(.body)
                 .lineLimit(1...5)
@@ -284,40 +295,51 @@ private struct MatchChatComposer: View {
                 .tint(OnboardingTheme.cyan)
                 .focused(isFocused)
                 .submitLabel(.return)
-                .padding(.horizontal, 16)
+                .padding(.leading, 16)
+                .padding(.trailing, 4)
                 .padding(.vertical, 11)
-                .background {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(.white.opacity(0.08))
-                }
-                .overlay {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .strokeBorder(isFocused.wrappedValue ? OnboardingTheme.cyan.opacity(0.35) : OnboardingTheme.hairline,
-                                      lineWidth: isFocused.wrappedValue ? 1 : 0.5)
-                }
                 .accessibilityIdentifier("chat.composer")
                 .onChange(of: draft.text) { _, text in
+                    // Return in an empty field closes the keyboard instead of starting a new line.
+                    if text.contains("\n"), text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        draft.text = ""
+                        isFocused.wrappedValue = false
+                        return
+                    }
                     if text.utf8.count > 8000 { draft.text = String(text.prefix(4000)) }
                 }
 
-            Button(action: chat.sendMessage) {
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 17, weight: .bold))
+            Button {
+                // With nothing to send, the grey pill closes the keyboard.
+                if canSend { chat.sendMessage() } else { isFocused.wrappedValue = false }
+            } label: {
+                Image(systemName: "paperplane")
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(canSend ? Color.white : OnboardingTheme.tertiaryText)
-                    .frame(width: 44, height: 44)
+                    .frame(width: 52, height: 34)
                     .background {
-                        Circle().fill(canSend
+                        Capsule().fill(canSend
                             ? AnyShapeStyle(OnboardingTheme.buttonGradient)
                             : AnyShapeStyle(Color.white.opacity(0.08)))
                     }
-                    .shadow(color: OnboardingTheme.blue.opacity(canSend ? 0.6 : 0), radius: 10)
-                    .contentShape(Circle())
+                    .shadow(color: OnboardingTheme.violet.opacity(canSend ? 0.55 : 0), radius: 10)
+                    .padding(5)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .disabled(!canSend)
             .animation(.easeInOut(duration: 0.18), value: canSend)
-            .accessibilityLabel(L10n("Send"))
+            .accessibilityLabel(canSend ? L10n("Send") : L10n("Hide keyboard"))
             .accessibilityIdentifier("chat.send")
+        }
+        .background {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(.white.opacity(0.08))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(isFocused.wrappedValue ? OnboardingTheme.cyan.opacity(0.35) : OnboardingTheme.hairline,
+                              lineWidth: isFocused.wrappedValue ? 1 : 0.5)
+                .allowsHitTesting(false)
         }
         .padding(.horizontal, 12)
         .padding(.top, 8)
@@ -327,6 +349,73 @@ private struct MatchChatComposer: View {
                            startPoint: .top, endPoint: .center)
                 .ignoresSafeArea(edges: .bottom)
         }
+    }
+}
+
+/// Watches every tap in the window while the keyboard is up and calls
+/// `dismiss` for those outside `excluded` (in window coordinates). It never
+/// cancels the touch, so the button or gear that was tapped still works.
+private struct KeyboardDismissTap: UIViewRepresentable {
+    var isActive: Bool
+    var excluded: CGRect
+    var dismiss: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> WindowAnchor {
+        let view = WindowAnchor()
+        view.isUserInteractionEnabled = false
+        view.coordinator = context.coordinator
+        return view
+    }
+
+    func updateUIView(_ view: WindowAnchor, context: Context) {
+        context.coordinator.isActive = isActive
+        context.coordinator.excluded = excluded
+        context.coordinator.dismiss = dismiss
+    }
+
+    static func dismantleUIView(_ view: WindowAnchor, coordinator: Coordinator) {
+        coordinator.attach(to: nil)
+    }
+
+    final class WindowAnchor: UIView {
+        weak var coordinator: Coordinator?
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            coordinator?.attach(to: window)
+        }
+    }
+
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        var isActive = false
+        var excluded: CGRect = .zero
+        var dismiss: () -> Void = {}
+
+        private lazy var recognizer: UITapGestureRecognizer = {
+            let recognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
+            recognizer.cancelsTouchesInView = false
+            recognizer.delaysTouchesEnded = false
+            recognizer.delegate = self
+            return recognizer
+        }()
+
+        func attach(to window: UIWindow?) {
+            recognizer.view?.removeGestureRecognizer(recognizer)
+            window?.addGestureRecognizer(recognizer)
+        }
+
+        @objc private func tapped(_ recognizer: UITapGestureRecognizer) {
+            guard recognizer.state == .ended else { return }
+            dismiss()
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+            isActive && !excluded.contains(touch.location(in: gestureRecognizer.view))
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                               shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
     }
 }
 
