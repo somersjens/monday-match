@@ -5,6 +5,9 @@
 -- deletion, never matching the same people again (also via a recreated
 -- account), and the report flow: warning → 7-day block → ban.
 begin;
+-- Saves follow each other within milliseconds here: no one-minute search limit
+-- (202611180005). Its own checks are at the end of matching_regression.sql.
+set local stop_swiping.matching_throttle = 'off';
 create temporary table v3_results(name text primary key);
 grant select, insert on v3_results to authenticated;
 create function pg_temp.ok(passed boolean, label text) returns void

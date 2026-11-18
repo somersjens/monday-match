@@ -279,7 +279,7 @@ struct EarlyAccessView: View {
         .padding(.horizontal, 28)
         // With the reminder's own 4 pt below it, the same 12 pt as above.
         .padding(.top, 8)
-        .padding(.bottom, OnboardingTheme.controlsBottomPadding)
+        .controlsBottomPadding()
         .frame(maxWidth: .infinity)
         .background(Color("WelcomeBackground"))
         .overlay(alignment: .top) {

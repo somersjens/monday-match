@@ -564,7 +564,7 @@ struct MatchResultOverlay: View {
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)
-        .padding(.bottom, OnboardingTheme.controlsBottomPadding)
+        .controlsBottomPadding()
         .animation(.easeInOut(duration: 0.25), value: isSaved)
     }
 }
@@ -583,7 +583,7 @@ struct DemoMatchControls: View {
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)
-        .padding(.bottom, OnboardingTheme.controlsBottomPadding)
+        .controlsBottomPadding()
     }
 }
 

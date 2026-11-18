@@ -77,7 +77,7 @@ struct PersonalityPanel: View {
             }
             .frame(maxWidth: OnboardingTheme.controlWidth)
             .padding(.horizontal, 20)
-            .padding(.bottom, OnboardingTheme.controlsBottomPadding)
+            .controlsBottomPadding()
             .animation(motion, value: result.test)
         }
         .onChange(of: result.test) { _, _ in

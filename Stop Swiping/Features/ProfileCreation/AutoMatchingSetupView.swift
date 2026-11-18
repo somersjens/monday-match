@@ -741,7 +741,7 @@ struct AutoMatchingSetupView: View {
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)
         .padding(.top, 10)
-        .padding(.bottom, OnboardingTheme.controlsBottomPadding)
+        .controlsBottomPadding()
         .frame(maxWidth: .infinity)
     }
 

@@ -49,7 +49,7 @@ struct SignInPlaceholderView: View {
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)
-        .padding(.bottom, OnboardingTheme.controlsBottomPadding)
+        .controlsBottomPadding()
         .frame(maxWidth: .infinity)
         .adaptiveStageHeight()
         .animation(.easeInOut(duration: 0.2), value: viewModel.errorMessage)

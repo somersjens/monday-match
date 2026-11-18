@@ -3,6 +3,9 @@
 -- Covers: the photo and its verification in current_match, Storage access for
 -- the partner only, nothing for outsiders, and nothing once the match ends.
 begin;
+-- Saves follow each other within milliseconds here: no one-minute search limit
+-- (202611180005). Its own checks are at the end of matching_regression.sql.
+set local stop_swiping.matching_throttle = 'off';
 create temporary table photo_results(name text primary key);
 grant select, insert on photo_results to authenticated;
 create function pg_temp.ok(passed boolean, label text) returns void

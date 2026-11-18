@@ -256,9 +256,11 @@ struct WelcomeView: View {
             // of the light's frame.
             let sideEntry = animationWidth / 2 + 24
             let insets = proxy.safeAreaInsets
+            let corner = CornerButtonMetrics(size: layout.size)
             let demoStage = ExchangeDemoStage(size: proxy.size, insets: insets,
                                               helixCenter: lightCenter.y, helixUnit: layout.unit)
-            let chartLift = personalityLift(layout: layout, height: proxy.size.height, controlsInset: controlsInset)
+            let chartLift = personalityLift(layout: layout, height: proxy.size.height, controlsInset: controlsInset,
+                                            safeAreaBottom: insets.bottom)
             let lift = personalityResult == nil && matchPersonalityVisual == nil ? 0 : chartLift
 
             ZStack {
@@ -318,23 +320,21 @@ struct WelcomeView: View {
                         // slides out from under that button, so it is drawn
                         // first and animated before it is positioned: a scale
                         // after `position` grows from the middle of the screen.
-                        CodeScanButton(action: openScanner)
+                        CodeScanButton(size: corner.size, action: openScanner)
                             .scaleEffect(showsCode || reduceMotion ? 1 : 0.6)
-                            .offset(x: showsCode || reduceMotion ? 0 : HelixCodeButton.size + 10)
+                            .offset(x: showsCode || reduceMotion ? 0 : corner.size + corner.spacing)
                             .opacity(showsCode ? 1 : 0)
                             .animation(showsCode ? .spring(duration: 0.42, bounce: 0.18) : .easeIn(duration: 0.18),
                                        value: showsCode)
-                            .position(x: proxy.size.width - HelixCodeButton.trailingInset - HelixCodeButton.size * 1.5 - 10,
-                                      y: HelixCodeButton.topInset + HelixCodeButton.size / 2)
+                            .position(corner.center(slot: 1))
                             .disabled(isTransitioning)
                             .allowsHitTesting(showsCode)
                             .accessibilityHidden(!showsCode)
                             .transition(.opacity)
 
                         // Fixed to the screen's safe top-right corner.
-                        HelixCodeButton(showsCode: showsCode, action: toggleCode)
-                            .position(x: proxy.size.width - HelixCodeButton.trailingInset - HelixCodeButton.size / 2,
-                                      y: HelixCodeButton.topInset + HelixCodeButton.size / 2)
+                        HelixCodeButton(showsCode: showsCode, size: corner.size, action: toggleCode)
+                            .position(corner.center(slot: 0))
                             .disabled(isTransitioning)
                             .opacity(demoPhase == nil ? 1 : 0)
                             .transition(.opacity)
@@ -746,7 +746,7 @@ struct WelcomeView: View {
             }
             .frame(maxWidth: OnboardingTheme.controlWidth)
             .padding(.horizontal, 28)
-            .padding(.bottom, OnboardingTheme.controlsBottomPadding)
+            .controlsBottomPadding()
             .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion),
                        value: profileCreation.isUnderageLocked)
             .animation(.easeInOut(duration: 0.2), value: signIn.errorMessage)
@@ -799,7 +799,7 @@ struct WelcomeView: View {
             }
             .frame(maxWidth: OnboardingTheme.controlWidth)
             .padding(.horizontal, 28)
-            .padding(.bottom, OnboardingTheme.controlsBottomPadding)
+            .controlsBottomPadding()
             .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion),
                        value: profileCreation.state.nextAction)
             .animation(.easeInOut(duration: 0.3), value: showsCode)
@@ -1302,12 +1302,17 @@ struct WelcomeView: View {
 
     /// How far the chart rises so its lowest labels stay above the card,
     /// never further than the corner buttons allow. Zero on most screens.
-    private func personalityLift(layout: WelcomeStageLayout, height: CGFloat, controlsInset: CGFloat) -> CGFloat {
+    private func personalityLift(layout: WelcomeStageLayout, height: CGFloat, controlsInset: CGFloat,
+                                 safeAreaBottom: CGFloat) -> CGFloat {
         guard personalityCardHeight > 0 else { return 0 }
-        let cardTop = height - controlsInset - OnboardingTheme.controlsBottomPadding - personalityCardHeight
+        // The card's own padding, as `controlsBottomPadding()` measures it:
+        // lifted off the edge by the inset, it reaches no safe area.
+        let padding = OnboardingTheme.controlsBottomPadding(safeAreaBottom: controlsInset > 0 ? 0 : safeAreaBottom)
+        let cardTop = height - controlsInset - padding - personalityCardHeight
         let chartBottom = layout.lightCenter.y + 0.95 * layout.unit
         let chartTop = layout.lightCenter.y - layout.unit
-        let room = max(0, chartTop - (HelixCodeButton.topInset + HelixCodeButton.size + 8))
+        let corner = CornerButtonMetrics(size: layout.size)
+        let room = max(0, chartTop - (corner.top + corner.size + 8))
         return min(room, max(0, chartBottom + 12 - cardTop))
     }
 
@@ -1920,26 +1925,53 @@ struct WelcomeView: View {
     }
 }
 
+/// Size and place of the round buttons in the home screen's top right, for
+/// a safe-area size. Every iPhone keeps 44 pt; wider screens (iPhone Duo,
+/// iPad) grow them, their margins and their spacing together, up to 56 pt,
+/// so they keep their weight next to a larger light.
+struct CornerButtonMetrics: Equatable {
+    let containerWidth: CGFloat
+    let size: CGFloat
+    /// Below the safe top edge.
+    let top: CGFloat
+    let trailing: CGFloat
+    /// Between two buttons side by side.
+    let spacing: CGFloat
+
+    init(size container: CGSize) {
+        containerWidth = container.width
+        let shortSide = min(container.width, container.height)
+        let scale = min(max(shortSide / 440, 1), 56 / 44)
+        size = (44 * scale).rounded()
+        top = (14 * scale).rounded()
+        spacing = (10 * scale).rounded()
+        // While the bottom controls span the width, the right edge lines up
+        // with theirs; beside a centred column it keeps to the corner.
+        let controlsSpanWidth = container.width <= OnboardingTheme.controlWidth + 2 * 28
+        trailing = controlsSpanWidth ? 28 : (28 * scale).rounded()
+    }
+
+    /// Slot 0 is the corner; slot 1 sits to its left.
+    func center(slot: Int) -> CGPoint {
+        CGPoint(x: containerWidth - trailing - size / 2 - CGFloat(slot) * (size + spacing),
+                y: top + size / 2)
+    }
+}
+
 /// Turns the helix into its QR code and back, from the screen's top right.
 private struct HelixCodeButton: View {
-    static let size: CGFloat = 44
-    /// Below the safe top edge.
-    static let topInset: CGFloat = 14
-    /// The bottom controls' side margin, so on iPhone this button's right
-    /// edge lines up with theirs.
-    static let trailingInset: CGFloat = 28
-
     let showsCode: Bool
+    var size: CGFloat = 44
     let action: () -> Void
     @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
         Button(action: action) {
             Image(systemName: showsCode ? "xmark" : "qrcode")
-                .font(.system(size: showsCode ? 16 : 19, weight: .semibold))
+                .font(.system(size: size * (showsCode ? 16 : 19) / 44, weight: .semibold))
                 .foregroundStyle(OnboardingTheme.accentGradient)
                 .contentTransition(.symbolEffect(.replace))
-                .frame(width: Self.size, height: Self.size)
+                .frame(width: size, height: size)
                 .background {
                     Circle().fill(LinearGradient(
                         colors: [OnboardingTheme.blue.opacity(0.24), OnboardingTheme.violet.opacity(0.20)],
@@ -1961,15 +1993,16 @@ private struct HelixCodeButton: View {
 
 /// Opens the camera to scan someone else's code, beside `HelixCodeButton`.
 private struct CodeScanButton: View {
+    var size: CGFloat = 44
     let action: () -> Void
     @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
         Button(action: action) {
             Image(systemName: "camera.viewfinder")
-                .font(.system(size: 19, weight: .semibold))
+                .font(.system(size: size * 19 / 44, weight: .semibold))
                 .foregroundStyle(OnboardingTheme.accentGradient)
-                .frame(width: HelixCodeButton.size, height: HelixCodeButton.size)
+                .frame(width: size, height: size)
                 .background {
                     Circle().fill(LinearGradient(
                         colors: [OnboardingTheme.blue.opacity(0.24), OnboardingTheme.violet.opacity(0.20)],

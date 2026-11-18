@@ -2,6 +2,9 @@
 -- Run as postgres in Supabase SQL Editor ("Run without RLS"). Every fixture and change rolls back.
 -- The report/strike flow and history after a break are in lifecycle_moderation.sql.
 begin;
+-- Saves follow each other within milliseconds here: no one-minute search limit
+-- (202611180005). Its own checks are at the end of matching_regression.sql.
+set local stop_swiping.matching_throttle = 'off';
 create temporary table matching_test_results(name text primary key);
 grant select, insert on matching_test_results to authenticated;
 create function pg_temp.check_test(ok boolean, label text) returns void
@@ -382,6 +385,39 @@ do $$ begin
     end;
 end; $$;
 reset role;
+
+-- ===== One partner search per account per minute (202611180005) ==========
+set local stop_swiping.matching_throttle = 'on';
+create function pg_temp.throttle(uid text) returns matching_private.search_state language sql as $$
+    select * from matching_private.search_state where user_id = uid::uuid $$;
+insert into auth.users(id,aud,role) values
+('a7fa0000-0000-4000-8000-000000000901','authenticated','authenticated'),
+('a7fa0000-0000-4000-8000-000000000902','authenticated','authenticated');
+insert into public.profiles(id,profile,backup) select 'a7fa0000-0000-4000-8000-000000000901',p || '{"languages":["test-throttle"]}',b from matching_fixture;
+select pg_temp.check_test(exists(select 1 from matching_private.pool where user_id='a7fa0000-0000-4000-8000-000000000901')
+    and not (pg_temp.throttle('a7fa0000-0000-4000-8000-000000000901')).pending,'First save searches at once');
+update public.profiles set profile=profile where id='a7fa0000-0000-4000-8000-000000000901';
+select pg_temp.check_test(not (pg_temp.throttle('a7fa0000-0000-4000-8000-000000000901')).pending,'A save that changes nothing holds back no search');
+update public.profiles set profile=profile || '{"minimumMatchPercent":71}' where id='a7fa0000-0000-4000-8000-000000000901';
+select pg_temp.check_test((pg_temp.throttle('a7fa0000-0000-4000-8000-000000000901')).pending
+    and (select min_score=71 from matching_private.pool where user_id='a7fa0000-0000-4000-8000-000000000901'),'A second change within a minute updates the pool and holds the search back');
+update public.profiles set profile=profile || '{"autoMatchingEnabled":false}' where id='a7fa0000-0000-4000-8000-000000000901';
+select pg_temp.check_test(not exists(select 1 from matching_private.pool where user_id='a7fa0000-0000-4000-8000-000000000901'),'Switching matching off takes effect at once while searches are held back');
+update public.profiles set profile=profile || '{"autoMatchingEnabled":true}' where id='a7fa0000-0000-4000-8000-000000000901';
+select matching_private.run_pending_searches();
+select pg_temp.check_test((pg_temp.throttle('a7fa0000-0000-4000-8000-000000000901')).pending,'A held-back search waits until the minute is over');
+insert into public.profiles(id,profile,backup) select 'a7fa0000-0000-4000-8000-000000000902',p || '{"languages":["test-throttle"]}',b from matching_fixture;
+select pg_temp.check_test(exists(select 1 from public.matches where user_low='a7fa0000-0000-4000-8000-000000000901'
+    and user_high='a7fa0000-0000-4000-8000-000000000902' and ended_at is null),'Others still find someone whose own search is held back');
+update matching_private.search_state set searched_at=searched_at - interval '61 seconds' where user_id='a7fa0000-0000-4000-8000-000000000901';
+select matching_private.run_pending_searches();
+select pg_temp.check_test(not (pg_temp.throttle('a7fa0000-0000-4000-8000-000000000901')).pending,'The held-back search runs once the minute is over');
+select pg_temp.check_test(not has_function_privilege('authenticated','matching_private.request_search(uuid,boolean)','execute')
+    and not has_function_privilege('authenticated','matching_private.run_pending_searches()','execute')
+    and not has_function_privilege('authenticated','matching_private.try_match(uuid,boolean,boolean)','execute')
+    and not has_table_privilege('authenticated','matching_private.search_state','select'),'Clients cannot reach the search limiter');
+select pg_temp.check_test(exists(select 1 from cron.job where jobname='matching-pending-searches' and active),'Held-back searches are scheduled');
+
 -- The SELECT is the final result set shown by SQL Editor, even after ROLLBACK.
 select name, 'PASS' as result, count(*) over () as total_passed from matching_test_results order by name;
 rollback;

@@ -288,7 +288,7 @@ struct ProfileCreationFlowView: View {
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)
-        .padding(.bottom, OnboardingTheme.controlsBottomPadding)
+        .controlsBottomPadding()
         .opacity(hasEntered ? 1 : 0)
         .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: showsHeightHonestyNotice)
     }

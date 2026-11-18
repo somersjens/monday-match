@@ -49,11 +49,43 @@ advisory lock. Chat does not take it any more: `send_encrypted_message` and
 must update, so a message lands either before the break or not at all. A primary
 key on `matched_users` independently prevents double booking.
 
+### At most one search per account per minute
+
+Because the lock is shared, one account saving over and over (for example by
+calling the API directly) could hold up matching for everyone. Since
+`202611180005_matching_throttle.sql`:
+
+* a save that changes neither `profile` nor `backup` returns at once, without the lock;
+* the first change searches immediately;
+* further changes within the same minute only refresh the person's pool entry
+  (switching matching off still removes them at once) and mark the search as
+  pending in `matching_private.search_state`;
+* the pg_cron job `matching-pending-searches` (every 20 s) runs pending searches
+  once their minute is over. `retry_matching` follows the same rule.
+
+Trusted callers (photo verification, breaking a match, moderation, admin) call
+`try_match` directly and still search at once. A held-back person can still be
+found by others in the meantime; at worst their own search runs about a minute
+later. SQL tests switch the limit off with
+`set local stop_swiping.matching_throttle = 'off'`, which only works in a
+session opened as `postgres`.
+
+### Retention
+
+The pg_cron job `purge-expired-data` (daily, 03:17 UTC) runs
+`matching_private.purge_expired()` (`202611180003_retention_and_identity_hmac.sql`):
+messages go 12 months after they were sent, also in a broken match; matches that
+ended more than 12 months ago lose their cards, keys and read positions (the
+match row stays for the pair exclusion); a report's written explanation is
+blanked after 12 months while the strike keeps counting.
+
 ### Never the same two people again
 
 `unique (user_low, user_high)` blocks the same two accounts. In addition each
-match stores the sha256 of both people's sign-in identities (provider + subject,
-e.g. their Apple ID) in `matching_private.match_identities`. Someone who deletes
+match stores a keyed hash (HMAC-SHA256 with the Vault secret
+`identity_hash_key`; never rotate it without rehashing) of both people's sign-in
+identities (provider + subject, e.g. their Apple ID) in
+`matching_private.match_identities`. Someone who deletes
 their account and signs up again with the same Apple or Google account is still
 never matched with anyone they were matched with before. Off/on toggles,
 profile edits, retries and every way a match can end keep the exclusion.
@@ -254,6 +286,10 @@ authorization checks, asserts, and rolls back:
   pool entry, skipped unchanged saves, automatic match, chat, breaking, readable
   history, account deletion, recreated accounts, and warning → block → ban,
   dismissal and ban evasion.
+
+Both switch the one-minute search limit off; its own checks are at the end of
+`matching_regression.sql`. On 18 November 2026 the lifecycle file (72) and the
+limit checks (9) passed against the live project after `202611180005`.
 
 On 15 November 2026 both passed against the live project:
 **85** and **72** assertions, with zero fixture accounts, profiles, matches,

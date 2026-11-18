@@ -30,11 +30,23 @@ enum OnboardingTheme {
     static let contentWidth: CGFloat = 520
     static let controlWidth: CGFloat = 420
     static let buttonHeight: CGFloat = 58
-    /// The space under every screen's bottom controls, above the home
-    /// indicator. One value app-wide, so Continue / Back sit at the same
-    /// height everywhere and the landing's buttons become the questionnaire's
-    /// in place.
-    static let controlsBottomPadding: CGFloat = 12
+
+    /// The space under every screen's bottom controls, by how much room the
+    /// device already leaves beneath them. One rule app-wide, so Continue /
+    /// Back sit at the same height on every screen of a device and the
+    /// landing's buttons become the questionnaire's in place. Apply it with
+    /// `controlsBottomPadding()`.
+    static func controlsBottomPadding(safeAreaBottom: CGFloat) -> CGFloat {
+        switch safeAreaBottom {
+        // An iPhone's home indicator already leaves 34 pt.
+        case 30...: 12
+        // iPad and iPhone Duo leave 20 pt.
+        case 1...: 16
+        // A home button leaves nothing, and a band centred on a tall iPad
+        // ends away from the edge: the controls bring their own room.
+        default: 20
+        }
+    }
 }
 
 enum OnboardingMotion {
@@ -179,5 +191,31 @@ extension View {
                         )
                 }
         }
+    }
+}
+
+extension View {
+    /// The bottom padding every screen's bottom controls share; see
+    /// `OnboardingTheme.controlsBottomPadding(safeAreaBottom:)`.
+    func controlsBottomPadding() -> some View {
+        modifier(ControlsBottomPadding())
+    }
+}
+
+private struct ControlsBottomPadding: ViewModifier {
+    /// Nil until measured; an iPhone with a home indicator is the default.
+    @State private var safeAreaBottom: CGFloat?
+
+    func body(content: Content) -> some View {
+        content
+            .padding(.bottom, OnboardingTheme.controlsBottomPadding(safeAreaBottom: safeAreaBottom ?? 34))
+            .background {
+                // Reaches into the bottom safe area only where the controls
+                // touch it, so it reads the room the device leaves below.
+                Color.clear
+                    .ignoresSafeArea(.container, edges: .bottom)
+                    .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom } action: { safeAreaBottom = $0 }
+                    .accessibilityHidden(true)
+            }
     }
 }

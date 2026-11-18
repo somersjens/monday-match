@@ -1,0 +1,22 @@
+SFace face recognition model
+
+Original model: face_recognition_sface_2021dec
+Copyright (C) 2021, Shenzhen Institute of Artificial Intelligence and Robotics for Society.
+Licensed under Apache License 2.0; see SFace-LICENSE.txt.
+Original project: https://github.com/opencv/opencv_zoo/tree/main/models/face_recognition_sface
+
+Core ML conversion distributed by PINTO0309/PINTO_model_zoo, directory 256_SFace:
+https://github.com/PINTO0309/PINTO_model_zoo/tree/main/256_SFace
+Archive: https://s3.ap-northeast-2.wasabisys.com/pinto-model-zoo/256_SFace/resources.tar.gz
+Archive SHA-256: 304b187058246d95ed86c6c7d33f10bea3a22e75e817cd92f9040a62896352a3
+Archive member: model_coreml_float32.mlmodel
+
+Bundled as SFace.mlmodel; weights and graph are unmodified.
+Model SHA-256: 17d0f45666bd1d158e77da5334fc1159008a26135833b956770f616861b80214
+Input: data, Float32 [1,112,112,3], RGB, values 0...255.
+The graph applies (pixel - 127.5) / 128 internally.
+Output: Identity, 128-dimensional embedding; normalized by the app before cosine comparison.
+
+The app implements Vision landmark alignment and a basic randomized head-motion
+challenge. These are separate from the model and are not a certified presentation
+attack detection or Face ID implementation. Thresholds require device validation.
