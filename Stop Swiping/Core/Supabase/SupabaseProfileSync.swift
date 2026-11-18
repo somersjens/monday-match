@@ -4,7 +4,13 @@ import Supabase
 
 @MainActor
 protocol ProfileCloudSyncing {
+    /// Sends the profile when it differs from the server's copy.
     func synchronize() async throws
+    /// The automatic sync after an edit or on returning to the app. The
+    /// server only needs a profile that takes part in automatic matching, or
+    /// one that just stopped; otherwise the profile stays on the phone and the
+    /// account keeps the copy it last received.
+    func synchronizeMatchingProfile() async throws
 }
 
 /// Photos live in private Storage, not as base64 data in the profile JSON.
@@ -35,6 +41,14 @@ struct SupabaseProfileBackup: Codable, Equatable {
             self.draft.matchLocation = location
         }
     }
+
+    /// The backup apart from the questionnaire step last left open, which
+    /// changes while someone browses their profile and matters to no one else.
+    var withoutNavigation: Self {
+        var copy = self
+        copy.state.currentStep = .dateOfBirth
+        return copy
+    }
 }
 
 @MainActor
@@ -45,16 +59,35 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     private let store: ProfileCreationStateStoring
     private let defaults: UserDefaults
     private let ownerKey: String
+    private let uploadsKey: String
     private var worker: Task<Void, Error>?
     private var needsSync = false
-    private var uploadedPhotos: [String: [UUID: Data]] = [:]
+    /// Set when a pending sync must send the profile even if it takes no
+    /// part in matching (signing in, verifying a photo).
+    private var needsUploadOutsideMatching = false
     /// Set while a profile is being deleted, so no upload can bring it back.
     private var isDeleting = false
 
-    struct Row: Codable {
+    struct Row: Codable, Equatable {
         let id: String
         let profile: CloudProfile
         let backup: SupabaseProfileBackup
+
+        /// Equal apart from when each was made and the questionnaire step
+        /// last left open.
+        func hasSameContent(as other: Row) -> Bool {
+            var profile = profile
+            profile.updatedAt = other.profile.updatedAt
+            return id == other.id && profile == other.profile
+                && backup.withoutNavigation == other.backup.withoutNavigation
+        }
+    }
+
+    /// What the server last accepted from this phone for an account, kept
+    /// across launches so an unchanged profile is never sent again.
+    struct Upload: Codable {
+        var row: Row
+        var photoHashes: [UUID: Data]
     }
 
     init(client: SupabaseClient, projectURL: URL, repository: ProfileRepository,
@@ -65,6 +98,7 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         self.store = store
         self.defaults = defaults
         ownerKey = "supabase.profileOwner.\(projectURL.host ?? "default")"
+        uploadsKey = "supabase.profileUploads.\(projectURL.host ?? "default")"
     }
 
     var hasCompletedProfile: Bool { store.load()?.completedAt != nil }
@@ -91,12 +125,23 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     }
 
     func synchronize() async throws {
+        try await synchronize(outsideMatching: true)
+    }
+
+    func synchronizeMatchingProfile() async throws {
+        try await synchronize(outsideMatching: false)
+    }
+
+    private func synchronize(outsideMatching: Bool) async throws {
         needsSync = true
+        if outsideMatching { needsUploadOutsideMatching = true }
         if let worker { try await worker.value; return }
         let task = Task {
             while needsSync {
                 needsSync = false
-                try await uploadCurrentProfile()
+                let outsideMatching = needsUploadOutsideMatching
+                needsUploadOutsideMatching = false
+                try await uploadCurrentProfile(outsideMatching: outsideMatching)
             }
         }
         worker = task
@@ -104,22 +149,54 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         try await task.value
     }
 
-    private func uploadCurrentProfile() async throws {
+    private func uploadCurrentProfile(outsideMatching: Bool) async throws {
         guard !isDeleting, let state = store.load(), state.completedAt != nil,
               state.hasAcceptedProfilePrivacy, !state.isUnderageLocked,
               let draft = try repository.loadProfile() else { return }
         let userID = try await client.auth.session.user.id.uuidString.lowercased()
         guard defaults.string(forKey: ownerKey) == userID else { throw SupabaseSetupError.wrongAccount }
-        let backup = SupabaseProfileBackup(state: state, draft: draft)
-        let changedPhotos = draft.photos.filter { uploadedPhotos[userID]?[$0.id] != Data(SHA256.hash(data: $0.imageData)) }
+        let previous = uploads[userID]
+        // Edits to a profile outside matching stay on the phone. Switching
+        // matching off is still sent, so the server stops matching it.
+        let wasMatching = previous?.row.backup.state.autoMatching.isEnabled == true
+        guard outsideMatching || state.autoMatching.isEnabled || wasMatching else { return }
+        let row = Self.row(userID: userID, state: state, draft: draft, uploader: uploader)
+        let photoHashes = Self.photoHashes(draft.photos)
+        if let previous, previous.photoHashes == photoHashes,
+           previous.row.hasSameContent(as: Self.roundTripped(row)) { return }
+        let changedPhotos = draft.photos.filter { previous?.photoHashes[$0.id] != photoHashes[$0.id] }
         _ = try await uploader.uploadPhotos(changedPhotos, userID: userID)
-        for photo in changedPhotos { uploadedPhotos[userID, default: [:]][photo.id] = Data(SHA256.hash(data: photo.imageData)) }
+        try await client.from("profiles").upsert(row, onConflict: "id").execute()
+        uploads[userID] = Upload(row: row, photoHashes: photoHashes)
+    }
+
+    private static func row(userID: String, state: ProfileCreationState, draft: ProfileDraft,
+                            uploader: SupabaseProfilePhotoUploader) -> Row {
+        let backup = SupabaseProfileBackup(state: state, draft: draft)
         let urls = draft.photos.sorted { $0.order < $1.order }.map {
             uploader.reference(userID: userID, photoID: $0.id)
         }
-        let profile = CloudProfile(draft: backup.draft, photoURLs: urls)
-        try await client.from("profiles").upsert(Row(id: userID, profile: profile, backup: backup), onConflict: "id")
-            .execute()
+        return Row(id: userID, profile: CloudProfile(draft: backup.draft, photoURLs: urls), backup: backup)
+    }
+
+    /// The row as it comes back from storage. Some answers are not stored
+    /// field for field, so a fresh row is compared in this form.
+    private static func roundTripped(_ row: Row) -> Row {
+        (try? JSONDecoder().decode(Row.self, from: JSONEncoder().encode(row))) ?? row
+    }
+
+    private static func photoHashes(_ photos: [ProfilePhoto]) -> [UUID: Data] {
+        Dictionary(photos.map { ($0.id, Data(SHA256.hash(data: $0.imageData))) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    private var uploads: [String: Upload] {
+        get {
+            defaults.data(forKey: uploadsKey)
+                .flatMap { try? JSONDecoder().decode([String: Upload].self, from: $0) } ?? [:]
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) { defaults.set(data, forKey: uploadsKey) }
+        }
     }
 
     /// Stops uploads and waits for one already running to finish.
@@ -134,7 +211,7 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     func endDeletion(accountDeleted: Bool) {
         isDeleting = false
         guard accountDeleted else { return }
-        uploadedPhotos = [:]
+        defaults.removeObject(forKey: uploadsKey)
         defaults.removeObject(forKey: ownerKey)
     }
 
@@ -179,5 +256,8 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         try repository.saveProfile(draft)
         store.save(row.backup.state)
         defaults.set(row.id, forKey: ownerKey)
+        // The phone now holds what the server has: nothing to send back.
+        uploads[row.id] = Upload(row: Self.row(userID: row.id, state: row.backup.state, draft: draft, uploader: uploader),
+                                 photoHashes: Self.photoHashes(draft.photos))
     }
 }

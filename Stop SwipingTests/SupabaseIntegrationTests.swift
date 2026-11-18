@@ -231,6 +231,107 @@ final class SupabaseIntegrationTests: XCTestCase {
         } catch SupabaseProfilePhotoUploader.PhotoUploadError.changedIdentity {}
     }
 
+    func testUnchangedProfileIsNotSentAgainAcrossLaunches() async throws {
+        let response = try sessionData()
+        let requests = SupabaseTestRequests()
+        SupabaseTestURLProtocol.handler = { request in
+            requests.append(request)
+            if request.url!.path == "/auth/v1/token" { return (200, response) }
+            return request.httpMethod == "GET" ? (200, Data("[]".utf8)) : (201, Data())
+        }
+        let (client, _) = makeClient()
+        let suite = "supabase-test.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var state = matchingState()
+        let store = InMemoryProfileCreationStore(state: state)
+        var draft = ProfileDraft()
+        draft.displayName = state.displayName
+        draft.profileCreationCompletedAt = state.completedAt
+        let repository = InMemoryProfileRepository(profile: draft)
+        _ = try await SupabaseAuthService(client: client, profileSync: SupabaseProfileSync(
+            client: client, projectURL: projectURL, repository: repository, store: store, defaults: defaults))
+            .signInWithApple(payload: .init(identityToken: "apple-id-token", rawNonce: "nonce", fullName: nil))
+        func profileSaves() -> Int {
+            requests.all.filter { $0.url?.path == "/rest/v1/profiles" && $0.httpMethod == "POST" }.count
+        }
+        XCTAssertEqual(profileSaves(), 1)
+
+        // A new launch: a fresh sync object over the same stored state.
+        let relaunched = SupabaseProfileSync(client: client, projectURL: projectURL, repository: repository,
+                                             store: store, defaults: defaults)
+        try await relaunched.synchronize()
+        try await relaunched.synchronizeMatchingProfile()
+        XCTAssertEqual(profileSaves(), 1, "An unchanged profile must not be sent again.")
+
+        // Browsing the questionnaire is not a change worth sending.
+        state.currentStep = .height
+        store.save(state)
+        try await relaunched.synchronizeMatchingProfile()
+        XCTAssertEqual(profileSaves(), 1)
+
+        state.heightCentimeters += 3
+        store.save(state)
+        try await relaunched.synchronizeMatchingProfile()
+        XCTAssertEqual(profileSaves(), 2)
+    }
+
+    func testEditsOutsideMatchingStayOnThePhoneUntilMatchingIsSwitchedOff() async throws {
+        let response = try sessionData()
+        let requests = SupabaseTestRequests()
+        SupabaseTestURLProtocol.handler = { request in
+            requests.append(request)
+            if request.url!.path == "/auth/v1/token" { return (200, response) }
+            return request.httpMethod == "GET" ? (200, Data("[]".utf8)) : (201, Data())
+        }
+        let (client, _) = makeClient()
+        let suite = "supabase-test.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var state = matchingState()
+        let store = InMemoryProfileCreationStore(state: state)
+        var draft = ProfileDraft()
+        draft.displayName = state.displayName
+        draft.profileCreationCompletedAt = state.completedAt
+        let sync = SupabaseProfileSync(client: client, projectURL: projectURL,
+            repository: InMemoryProfileRepository(profile: draft), store: store, defaults: defaults)
+        _ = try await SupabaseAuthService(client: client, profileSync: sync)
+            .signInWithApple(payload: .init(identityToken: "apple-id-token", rawNonce: "nonce", fullName: nil))
+        func profileSaves() -> Int {
+            requests.all.filter { $0.url?.path == "/rest/v1/profiles" && $0.httpMethod == "POST" }.count
+        }
+        XCTAssertEqual(profileSaves(), 1)
+
+        // Switching matching off reaches the server, so it stops matching.
+        state.autoMatching.isEnabled = false
+        store.save(state)
+        try await sync.synchronizeMatchingProfile()
+        XCTAssertEqual(profileSaves(), 2)
+
+        // Later edits stay on the phone.
+        state.heightCentimeters += 3
+        store.save(state)
+        try await sync.synchronizeMatchingProfile()
+        XCTAssertEqual(profileSaves(), 2)
+
+        // Switching it back on sends the current profile.
+        state.autoMatching.isEnabled = true
+        store.save(state)
+        try await sync.synchronizeMatchingProfile()
+        XCTAssertEqual(profileSaves(), 3)
+    }
+
+    /// A profile that takes part in automatic matching, as it survives storage.
+    private func matchingState() -> ProfileCreationState {
+        var state = completedState()
+        state.autoMatching.privacyConsent = .init(version: PrivacyConsentKind.matching.version, acceptedAt: Date(),
+                                                  languageCode: "en")
+        state.autoMatching.ownAttractiveness = 6
+        state.autoMatching.partnerMinimumAttractiveness = 5
+        state.autoMatching.isEnabled = true
+        return state
+    }
+
     private func completedState() -> ProfileCreationState {
         var state = ProfileCreationState(today: .today(), applicationLanguage: "en")
         state.completedAt = Date()

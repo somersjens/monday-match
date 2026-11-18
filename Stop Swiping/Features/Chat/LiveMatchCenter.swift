@@ -12,7 +12,7 @@ final class LiveMatchCenter: ObservableObject {
     @Published private(set) var loadFailed = false
     /// Broken matches, newest first. Their conversations stay readable.
     @Published private(set) var pastMatches: [CloudChatMatch] = []
-    /// Reports against this account, refreshed about once a minute.
+    /// Reports against this account, refreshed every few minutes.
     @Published private(set) var moderation: ModerationStatus?
     /// The active match's photo of the other person. Kept in memory only:
     /// the server stops sharing it once the match ends.
@@ -27,6 +27,16 @@ final class LiveMatchCenter: ObservableObject {
     /// The Storage object `partnerPhoto` was downloaded from.
     private var partnerPhotoPath: String?
     private var lastPhotoAttempt = Date.distantPast
+    /// The server's unread count the conversation was last decrypted at.
+    /// The open chat refreshes itself; the home card only needs a new
+    /// download when this changes.
+    private var chatRefreshedAt: (matchID: UUID, unread: Int)?
+
+    /// How often the server is asked while the app is in front. Without a
+    /// match nothing can change quickly: a new match also arrives by push.
+    static let pollWithoutMatch: Duration = .seconds(30)
+    static let pollWithMatch: Duration = .seconds(10)
+    static let moderationInterval: TimeInterval = 5 * 60
 
     init(repository: SecureChatRepository?, defaults: UserDefaults = .standard) {
         self.repository = repository
@@ -46,8 +56,9 @@ final class LiveMatchCenter: ObservableObject {
         await loadHistory()
         while !Task.isCancelled {
             await refresh(ownProfile: ownProfile())
-            if Date().timeIntervalSince(lastModerationCheck) > 60 { await refreshModeration() }
-            do { try await Task.sleep(for: .seconds(5)) } catch { return }
+            if Date().timeIntervalSince(lastModerationCheck) > Self.moderationInterval { await refreshModeration() }
+            let interval = match == nil ? Self.pollWithoutMatch : Self.pollWithMatch
+            do { try await Task.sleep(for: interval) } catch { return }
         }
     }
 
@@ -96,8 +107,13 @@ final class LiveMatchCenter: ObservableObject {
             freezeOwnProfile(ownProfile, for: current.id)
             await shareCard(for: current.id)
             await loadPartnerPhoto(current)
-            // Registers this phone's key and decrypts anything already sent.
-            await chat?.refresh()
+            // The first time registers this phone's key and decrypts anything
+            // already sent; after that only a changed unread count needs it.
+            if chatRefreshedAt?.matchID != current.id || chatRefreshedAt?.unread != current.unreadCount {
+                await chat?.refresh()
+                // A failed download is tried again on the next poll.
+                chatRefreshedAt = chat?.errorMessage == nil ? (current.id, current.unreadCount) : nil
+            }
         } catch {
             if !Task.isCancelled { loadFailed = true }
         }

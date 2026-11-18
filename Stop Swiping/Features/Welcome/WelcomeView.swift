@@ -844,7 +844,7 @@ struct WelcomeView: View {
     private func syncProfile() async {
         guard hasAccount, let profileSync else { return }
         do {
-            try await profileSync.synchronize()
+            try await profileSync.synchronizeMatchingProfile()
             profileSyncFailed = false
         } catch {
             if !Task.isCancelled { profileSyncFailed = true }
