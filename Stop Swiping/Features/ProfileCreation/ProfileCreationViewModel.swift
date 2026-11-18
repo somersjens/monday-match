@@ -943,6 +943,17 @@ extension ProfileCreationViewModel {
         persist()
     }
 
+    /// Takes back the matching consent. Without it you can't be matched, so
+    /// auto matching stops too; turning it back on means reading and ticking
+    /// the policy again.
+    func withdrawMatchingPrivacy() {
+        guard state.autoMatching.privacyConsent != nil else { return }
+        state.autoMatching.privacyConsent = nil
+        stateBeforeEditing?.autoMatching.privacyConsent = nil
+        state.autoMatching.isEnabled = false
+        saveAutoMatching()
+    }
+
     func acknowledgeExplanation() {
         guard state.canShareProfile else { return }
         state.hasUnderstoodExplanation = true

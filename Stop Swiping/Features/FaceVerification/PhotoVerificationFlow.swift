@@ -1,4 +1,5 @@
 import AVFoundation
+import Supabase
 import SwiftUI
 
 /// What the photo check is doing, for the control that starts it.
@@ -13,6 +14,8 @@ struct PhotoVerificationState: Equatable {
 enum PhotoVerificationIssue: Equatable {
     /// The scan matched, but the server could not record it.
     case serviceUnavailable
+    /// The scan matched, but this account already used today's checks.
+    case dailyLimit
     /// The scan ended, but did not confirm the face in this photo.
     case noMatch
     case cameraAccess
@@ -20,6 +23,7 @@ enum PhotoVerificationIssue: Equatable {
     var symbol: String {
         switch self {
         case .serviceUnavailable: "icloud.slash"
+        case .dailyLimit: "clock.fill"
         case .noMatch: "person.crop.circle.badge.questionmark"
         case .cameraAccess: "camera.fill"
         }
@@ -28,6 +32,7 @@ enum PhotoVerificationIssue: Equatable {
     var title: String {
         switch self {
         case .serviceUnavailable: L10n("Verification isn’t working right now")
+        case .dailyLimit: L10n("Too many checks today")
         case .noMatch: L10n("This photo doesn’t match you")
         case .cameraAccess: L10n("Camera access needed")
         }
@@ -37,6 +42,8 @@ enum PhotoVerificationIssue: Equatable {
         switch self {
         case .serviceUnavailable:
             L10n("That’s on our side, not yours. Please try again in a few minutes.")
+        case .dailyLimit:
+            L10n("You can verify a photo five times a day. Please try again tomorrow.")
         case .noMatch:
             L10n("Choose a clear, recent photo of just you, then slowly move your head in a circle during the scan.")
         case .cameraAccess:
@@ -99,7 +106,7 @@ private struct PhotoVerificationFlow: ViewModifier {
                 do {
                     try await service.recordDeviceScan(photoID: receipt.photoID)
                 } catch {
-                    state.issue = .serviceUnavailable
+                    state.issue = Self.isDailyLimit(error) ? .dailyLimit : .serviceUnavailable
                     return
                 }
             }
@@ -111,5 +118,11 @@ private struct PhotoVerificationFlow: ViewModifier {
             let camera = AVCaptureDevice.authorizationStatus(for: .video)
             state.issue = camera == .denied || camera == .restricted ? .cameraAccess : nil
         }
+    }
+
+    /// `record_device_photo_verification` allows five checks per account per
+    /// day; the sixth is refused with this message.
+    private static func isDailyLimit(_ error: Error) -> Bool {
+        (error as? PostgrestError)?.message.contains("Daily verification limit") == true
     }
 }

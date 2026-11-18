@@ -57,6 +57,10 @@ nonisolated struct FaceCircleChallenge: Sendable {
     let clockwise: Bool
     private(set) var collected: Set<Int> = []
     static let minimumRadius: CGFloat = 0.5
+    /// Only the direction counts. A determined turn towards the ball measured
+    /// 6–10 on a real iPhone; the former cap of 4 silently ignored those frames
+    /// while the cursor was drawn on the ball. This only rejects nonsense.
+    static let maximumRadius: CGFloat = 25
     static let angularTolerance: Double = .pi * 2 / 9 // 40°, including natural vertical drift.
     private var previous: (motion: CGPoint, timestamp: TimeInterval)?
 
@@ -81,7 +85,7 @@ nonisolated struct FaceCircleChallenge: Sendable {
     mutating func observe(motion: CGPoint, at timestamp: TimeInterval) {
         guard !isComplete, timestamp.isFinite, motion.x.isFinite, motion.y.isFinite else { return }
         let radius = hypot(motion.x, motion.y)
-        guard radius >= Self.minimumRadius, radius <= 4 else { pause(); return }
+        guard radius >= Self.minimumRadius, radius <= Self.maximumRadius else { pause(); return }
         defer { previous = (motion, timestamp) }
         guard let previous else { return }
         let elapsed = timestamp - previous.timestamp
@@ -202,7 +206,10 @@ nonisolated struct FaceScanProgress {
         case .finishing:
             let motion = motion(for: pose)
             snapshot.cursor = motion
-            guard hypot(motion.x, motion.y) <= 0.7, abs(pose.yaw) <= 0.35 else {
+            // Facing the camera is enough. People rarely return to exactly
+            // the calibrated pose: on a real iPhone a frontal face scoring 0.66
+            // sat at 0.8–1.1 from it for 13 seconds under the former 0.7.
+            guard hypot(motion.x, motion.y) <= 1.6, abs(pose.yaw) <= 0.35 else {
                 samples.reset()
                 snapshot.instruction = L10n("Look at the camera")
                 return
@@ -222,7 +229,10 @@ nonisolated struct FaceScanProgress {
         guard score >= configuration.matchThreshold + configuration.uncertaintyMargin else {
             if mismatchSince == nil { mismatchSince = timestamp }
             mismatches += 1
-            if let mismatchSince, mismatches >= configuration.requiredSamples, timestamp - mismatchSince >= 0.4 {
+            // A blink or motion blur lowers single frames; only a sustained run
+            // of low scores means this is not the person in the photo.
+            if let mismatchSince, mismatches >= max(configuration.requiredSamples, 6),
+               timestamp - mismatchSince >= 1.5 {
                 outcome = .noMatch
             }
             snapshot.instruction = L10n("Relax and look at the camera")

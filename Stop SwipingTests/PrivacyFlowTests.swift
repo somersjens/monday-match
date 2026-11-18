@@ -59,6 +59,30 @@ final class PrivacyFlowTests: XCTestCase {
         XCTAssertTrue(model.resumeAutoMatching())
     }
 
+    func testWithdrawingMatchingConsentStopsMatchingAndRequiresAcceptingAgain() throws {
+        let repository = InMemoryProfileRepository()
+        let model = ProfileCreationViewModel(store: InMemoryProfileCreationStore(state: completedState()), repository: repository)
+        model.setDisplayName("Alex")
+        model.setOwnAttractiveness(7)
+        model.setPartnerMinimumAttractiveness(6)
+        model.acceptPrivacy(.profile)
+        model.acknowledgeExplanation()
+        model.acceptPrivacy(.matching)
+        XCTAssertTrue(model.joinAutoMatching())
+
+        model.withdrawMatchingPrivacy()
+        XCTAssertFalse(model.state.hasAcceptedMatchingPrivacy)
+        XCTAssertFalse(model.state.autoMatching.isEnabled)
+        let saved = try XCTUnwrap(repository.loadProfile()?.autoMatching)
+        XCTAssertNil(saved.privacyConsent, "The withdrawal reaches the server copy too.")
+        XCTAssertFalse(saved.isEnabled)
+        XCTAssertFalse(model.resumeAutoMatching())
+        XCTAssertFalse(model.joinAutoMatching())
+
+        model.acceptPrivacy(.matching)
+        XCTAssertTrue(model.joinAutoMatching())
+    }
+
     func testConsentReceiptsAndProgressSurviveRelaunch() throws {
         let originalLanguage = AppLanguageSettings.shared.language
         defer { AppLanguageSettings.shared.language = originalLanguage }

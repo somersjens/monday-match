@@ -47,7 +47,25 @@ The build system automatically compiles the model into the app bundle.
 
 ## Decision and liveness
 
-`FaceVerificationConfiguration` configures the cosine threshold (default 0.55),
+**Tuned on a real iPhone 17 Pro (18 November 2026)**, from per-frame logs of
+about fifteen scans (`FaceScanLog`, see below):
+
+- Same-person scores against the profile photo were 0.51–0.73, so the default
+  threshold is now 0.40 + 0.05 margin (OpenCV's reference SFace threshold is
+  0.363). A *No match* needs at least six low frames over 1.5 seconds; a blink
+  no longer ends the scan.
+- Turning towards a ball measured motion radii of 6–10; only the direction
+  counts now (frames above 25 are rejected as nonsense instead of above 4).
+- Vision reports roll in 30° steps, so head tilts up to 0.8 rad are accepted.
+- The face-jump check compares frames at most 0.3 s apart and tracks the face
+  during pauses too.
+- The final identity check accepts a frontal face up to 1.6 from the calibrated
+  pose instead of 0.7.
+
+Result: six of six complete scans matched in 7–10 seconds. To log again, launch
+a debug build with `FACE_SCAN_LOG=1` (command in `FaceScanLog.swift`).
+
+`FaceVerificationConfiguration` configures the cosine threshold (default 0.40),
 uncertainty margin (0.05), preferred capture quality (0.3), deadline (45 seconds), face-loss limit (2.5 seconds)
 and sample count (three to thirty). `FaceVerificationView` and its view model accept this
 configuration. These are developer settings, separate from the user's dating

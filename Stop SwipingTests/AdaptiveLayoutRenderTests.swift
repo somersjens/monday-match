@@ -81,6 +81,10 @@ final class AdaptiveLayoutRenderTests: XCTestCase {
                                                        startsOnPhotoStep: true, onFinish: {}),
                                  screen: verified ? "automatching-photo-verified" : "automatching-photo", device: device)
             }
+            try await render(AutoMatchingSetupView(viewModel: Self.photoModel(verified: true),
+                                                   locationService: LocationService(),
+                                                   startsOnPhotoStep: true, asksToRemovePhoto: true, onFinish: {}),
+                             screen: "automatching-photo-remove", device: device)
             let noPhoto = ProfileCreationViewModel(store: InMemoryProfileCreationStore(state: Self.completedState()),
                                                    repository: InMemoryProfileRepository())
             try await render(AutoMatchingSetupView(viewModel: noPhoto, locationService: LocationService(),
@@ -97,6 +101,12 @@ final class AdaptiveLayoutRenderTests: XCTestCase {
                                                     outcome: nil, needsCameraPermission: false,
                                                     onCancel: {}, onRetry: {}, onSettings: {}, onDone: {}) { Color.black },
                              screen: "photo-verification-scan", device: device)
+            try await render(FaceVerificationScreen(snapshot: FaceScanSnapshot(phase: .circling,
+                                                                                collectedSectors: Set(0..<FaceCircleChallenge.sectorCount),
+                                                                                targetSector: nil),
+                                                    outcome: .match, needsCameraPermission: false,
+                                                    onCancel: {}, onRetry: {}, onSettings: {}, onDone: {}) { Color.black },
+                             screen: "photo-verification-match", device: device)
             try await render(NavigationStack {
                 SignInPlaceholderView(authService: MockAuthService(), onAuthenticated: { _ in })
             }, screen: "sign-in", device: device)

@@ -51,22 +51,11 @@ struct FaceVerificationScreen<CameraContent: View>: View {
         .preferredColorScheme(.dark)
     }
 
+    /// Only the app's red cross, top right: the circle says the rest.
     private var topBar: some View {
         HStack {
-            Label(L10n("Verify photo"), systemImage: "checkmark.shield")
-                .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundStyle(OnboardingTheme.secondaryText)
             Spacer()
-            Button(action: onCancel) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(OnboardingTheme.primaryText)
-                    .frame(width: 44, height: 44)
-                    .background(Circle().fill(.white.opacity(0.08)))
-                    .overlay(Circle().strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(L10n("Cancel verification"))
+            RedCrossButton(accessibilityLabel: L10n("Cancel verification"), action: onCancel)
         }
         .padding(.horizontal, 24)
         .padding(.top, 8)
@@ -84,9 +73,20 @@ struct FaceVerificationScreen<CameraContent: View>: View {
                     if let outcome {
                         Circle().fill(.white.opacity(0.035))
                             .overlay {
-                                Image(systemName: outcome == .match ? "checkmark.shield.fill" : "arrow.clockwise")
-                                    .font(.system(size: 58, weight: .light))
-                                    .foregroundStyle(outcome == .match ? OnboardingTheme.cyan : OnboardingTheme.pink)
+                                if outcome == .match {
+                                    // The same verified badge a match sees next to your name.
+                                    Image(systemName: "checkmark.seal.fill")
+                                        .symbolRenderingMode(.palette)
+                                        .foregroundStyle(.white, OnboardingTheme.cyan)
+                                        .font(.system(size: 72, weight: .semibold))
+                                        .shadow(color: OnboardingTheme.cyan.opacity(0.7), radius: 16)
+                                        .transition(reduceMotion ? .opacity
+                                                    : .scale(scale: 0.5).combined(with: .opacity))
+                                } else {
+                                    Image(systemName: "arrow.clockwise")
+                                        .font(.system(size: 58, weight: .light))
+                                        .foregroundStyle(OnboardingTheme.pink)
+                                }
                             }
                     } else {
                         cameraContent()

@@ -43,7 +43,10 @@ nonisolated struct PhotoVerificationReceipt: Equatable, Sendable {
 /// SFace cosine similarity, not a probability. Tune against a representative
 /// validation set before release; never expose this as an end-user preference.
 nonisolated struct FaceVerificationConfiguration: Sendable {
-    var matchThreshold: Float = 0.55
+    // OpenCV's reference threshold for SFace is 0.363. The same person
+    // scored 0.51–0.72 against a profile photo on a real iPhone, so the former
+    // 0.55 + 0.05 rejected genuine scans.
+    var matchThreshold: Float = 0.40
     var uncertaintyMargin: Float = 0.05
     // Vision's score ranks captures of the same face; it is not an absolute
     // lighting/identity test. Prefer these frames, but never restart on a blink.

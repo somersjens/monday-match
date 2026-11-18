@@ -27,15 +27,18 @@ struct AutoMatchingSetupView: View {
 
     @State private var path: [Route]
 
-    /// `startsOnPhotoStep` opens the last step directly, for layout renders.
+    /// `startsOnPhotoStep` opens the last step directly, and
+    /// `asksToRemovePhoto` shows the removal prompt over a verified photo,
+    /// both for layout renders.
     init(viewModel: ProfileCreationViewModel, locationService: LocationService,
          serverVerification: PhotoVerificationService? = nil, startsOnPhotoStep: Bool = false,
-         onFinish: @escaping () -> Void) {
+         asksToRemovePhoto: Bool = false, onFinish: @escaping () -> Void) {
         self.viewModel = viewModel
         self.locationService = locationService
         self.serverVerification = serverVerification
         self.onFinish = onFinish
         _path = State(initialValue: startsOnPhotoStep ? [.appearance, .photo] : [])
+        _asksToRemoveVerifiedPhoto = State(initialValue: asksToRemovePhoto)
     }
 
     private enum Stage: Hashable {
@@ -138,23 +141,6 @@ struct AutoMatchingSetupView: View {
         .navigationBarBackButtonHidden()
         .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: settings)
         .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: photoIsVerified)
-        .overlay {
-            if stage == .photo && asksToRemoveVerifiedPhoto {
-                ConfirmationPrompt(
-                    symbol: "checkmark.seal.fill",
-                    title: L10n("Remove your verified photo?"),
-                    message: L10n("If you remove this picture and you want to add it later, you will need to verify it again."),
-                    keepTitle: L10n("Keep photo"),
-                    removeTitle: L10n("Remove photo"),
-                    onKeep: { setRemovalPrompt(false) },
-                    onRemove: {
-                        setRemovalPrompt(false)
-                        removePhoto()
-                    }
-                )
-                .transition(.opacity)
-            }
-        }
     }
 
     private func header(title: String, subtitle: String, backLabel: String, onBack: @escaping () -> Void) -> some View {
@@ -226,8 +212,18 @@ struct AutoMatchingSetupView: View {
                                 }
                                 .overlay(alignment: .topTrailing) {
                                     // Same size and column as the back chevron above.
-                                    removeButton
-                                        .offset(y: -16)
+                                    if !asksToRemoveVerifiedPhoto {
+                                        removeButton
+                                            .offset(y: -16)
+                                            .transition(reduceMotion ? .opacity
+                                                        : .scale(scale: 0.6).combined(with: .opacity))
+                                    }
+                                }
+                                .overlay {
+                                    // Asks right on the photo it is about.
+                                    if asksToRemoveVerifiedPhoto {
+                                        removalPrompt(side: side)
+                                    }
                                 }
                                 .transition(.opacity)
                         } else {
@@ -349,7 +345,11 @@ struct AutoMatchingSetupView: View {
             }
             toggleRow(title: L10n("Know what happens to your data"),
                       isOn: viewModel.state.hasAcceptedMatchingPrivacy) {
-                showsPrivacy = true
+                if viewModel.state.hasAcceptedMatchingPrivacy {
+                    viewModel.withdrawMatchingPrivacy()
+                } else {
+                    showsPrivacy = true
+                }
             }
         }
         .padding(.vertical, 4)
@@ -421,11 +421,13 @@ struct AutoMatchingSetupView: View {
     }
 
     private func photoTip(_ symbol: String, _ text: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
+        // Icons share one centre line; the sunglasses are wider than the
+        // rest and stick out a little on both sides.
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
             Image(systemName: symbol)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(OnboardingTheme.cyan)
-                .frame(width: 18, alignment: .leading)
+                .frame(width: 20)
                 .accessibilityHidden(true)
             Text(text)
                 .font(.subheadline)
@@ -483,26 +485,33 @@ struct AutoMatchingSetupView: View {
                            dimsPhoto: !photoIsVerified, showsScore: photoIsVerified)
     }
 
+    private func removalPrompt(side: CGFloat) -> some View {
+        ConfirmationPrompt(
+            side: side,
+            symbol: "checkmark.seal.fill",
+            title: L10n("Remove your verified photo?"),
+            message: L10n("If you remove this picture and you want to add it later, you will need to verify it again."),
+            keepTitle: L10n("Keep photo"),
+            removeTitle: L10n("Remove photo"),
+            onKeep: { setRemovalPrompt(false) },
+            onRemove: {
+                // One motion: prompt and photo leave together, the empty
+                // square fades in where they were.
+                withAnimation(removalAnimation) {
+                    asksToRemoveVerifiedPhoto = false
+                    removePhoto()
+                }
+            }
+        )
+        .transition(reduceMotion ? .opacity : .scale(scale: 0.94).combined(with: .opacity))
+    }
+
     /// A red cross on the card's corner, as big as the back chevron and
     /// right under it. A verified photo asks first, because adding it back
     /// means verifying again.
     private var removeButton: some View {
-        Button(action: requestPhotoRemoval) {
-            Image(systemName: "xmark")
-                .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(OnboardingTheme.destructive)
-                .frame(width: 44, height: 44)
-                .background {
-                    Circle()
-                        .fill(OnboardingTheme.background)
-                        .overlay { Circle().fill(OnboardingTheme.destructive.opacity(0.14)) }
-                }
-                .overlay { Circle().strokeBorder(OnboardingTheme.destructive.opacity(0.35), lineWidth: 1) }
-                .contentShape(Circle())
-        }
-        .buttonStyle(.plain)
-        .disabled(isLoadingPhoto || verification.isSaving)
-        .accessibilityLabel(L10n("Remove photo"))
+        RedCrossButton(accessibilityLabel: L10n("Remove photo"), action: requestPhotoRemoval)
+            .disabled(isLoadingPhoto || verification.isSaving)
     }
 
     private var appearanceScale: some View {
@@ -826,10 +835,12 @@ struct AutoMatchingSetupView: View {
         }
     }
 
+    private var removalAnimation: Animation {
+        OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion)
+    }
+
     private func setRemovalPrompt(_ shown: Bool) {
-        withAnimation(OnboardingMotion.resolved(.easeInOut(duration: 0.22), reduceMotion: reduceMotion)) {
-            asksToRemoveVerifiedPhoto = shown
-        }
+        withAnimation(removalAnimation) { asksToRemoveVerifiedPhoto = shown }
     }
 
     private func removePhoto() {
@@ -869,9 +880,11 @@ struct AutoMatchingSetupView: View {
     }
 }
 
-/// The app's own confirmation card, over a dimmed page. Keeping is the
-/// prominent choice; removing is the quiet one.
+/// Asks before something hard to undo, laid exactly over the photo square
+/// it is about: same size, same rounded corners. Removing is the red
+/// button, in the corner cross's colour; keeping is the quiet way back.
 private struct ConfirmationPrompt: View {
+    let side: CGFloat
     let symbol: String
     let title: String
     let message: String
@@ -880,78 +893,94 @@ private struct ConfirmationPrompt: View {
     let onKeep: () -> Void
     let onRemove: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var isShown = false
+    private var radius: CGFloat { side * 0.11 }
+    private var scale: CGFloat { MatchPhotoCardView.detailScale(for: side) }
 
     var body: some View {
-        ZStack {
-            Color.black.opacity(0.62)
-                .ignoresSafeArea()
-                .onTapGesture(perform: onKeep)
-                .accessibilityHidden(true)
+        ViewThatFits(in: .vertical) {
+            content
+            ScrollView { content }.scrollIndicators(.hidden)
+        }
+        .frame(width: side, height: side)
+        .background {
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .fill(OnboardingTheme.background)
+                .overlay {
+                    RoundedRectangle(cornerRadius: radius, style: .continuous)
+                        .fill(LinearGradient(colors: [OnboardingTheme.blue.opacity(0.18),
+                                                      OnboardingTheme.violet.opacity(0.10)],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing))
+                }
+        }
+        .overlay {
+            // The light's colours, like the photo card's own ring.
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .strokeBorder(AngularGradient(colors: [OnboardingTheme.cyan, OnboardingTheme.blue, OnboardingTheme.violet,
+                                                       OnboardingTheme.pink, OnboardingTheme.cyan],
+                                              center: .center, angle: .degrees(-45)),
+                              lineWidth: 2.5)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .accessibilityElement(children: .contain)
+        .accessibilityAddTraits(.isModal)
+    }
 
-            VStack(spacing: 20) {
-                Image(systemName: symbol)
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(.white, OnboardingTheme.cyan)
-                    .font(.system(size: 34, weight: .semibold))
-                    .shadow(color: OnboardingTheme.cyan.opacity(0.6), radius: 12)
-                    .accessibilityHidden(true)
-                VStack(spacing: 8) {
-                    Text(title)
-                        .font(.system(.title3, design: .rounded, weight: .semibold))
-                        .foregroundStyle(OnboardingTheme.primaryText)
-                        .accessibilityAddTraits(.isHeader)
-                    Text(message)
-                        .font(.callout)
-                        .foregroundStyle(OnboardingTheme.secondaryText)
-                        .lineSpacing(2)
-                }
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                VStack(spacing: 4) {
-                    Button(keepTitle, action: onKeep)
-                        .buttonStyle(GlowButtonStyle())
-                    Button(action: onRemove) {
-                        Text(removeTitle)
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(OnboardingTheme.pink)
-                            .frame(maxWidth: .infinity, minHeight: 48)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
+    private var content: some View {
+        VStack(spacing: 16 * scale) {
+            Image(systemName: symbol)
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(.white, OnboardingTheme.cyan)
+                .font(.system(size: 30 * scale, weight: .semibold))
+                .shadow(color: OnboardingTheme.cyan.opacity(0.6), radius: 12)
+                .accessibilityHidden(true)
+            VStack(spacing: 6) {
+                Text(title)
+                    .font(.system(.title3, design: .rounded, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .accessibilityAddTraits(.isHeader)
+                Text(message)
+                    .font(.callout)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+                    .lineSpacing(2)
             }
-            .padding(.horizontal, 22)
-            .padding(.top, 28)
-            .padding(.bottom, 14)
-            .frame(maxWidth: 360)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            VStack(spacing: 2) {
+                Button(removeTitle, action: onRemove)
+                    .buttonStyle(DestructiveButtonStyle())
+                Button(action: onKeep) {
+                    Text(keepTitle)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(OnboardingTheme.primaryText.opacity(0.86))
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, max(20, side * 0.07))
+        .padding(.top, 20 * scale)
+        .padding(.bottom, 8 * scale)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// The prompt's red choice: the corner cross's colour, filled, shaped like
+/// the app's other big buttons.
+private struct DestructiveButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: OnboardingTheme.buttonHeight)
             .background {
-                RoundedRectangle(cornerRadius: 30, style: .continuous)
-                    .fill(OnboardingTheme.background)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 30, style: .continuous)
-                            .fill(LinearGradient(colors: [OnboardingTheme.blue.opacity(0.18),
-                                                          OnboardingTheme.violet.opacity(0.10)],
-                                                 startPoint: .topLeading, endPoint: .bottomTrailing))
-                    }
+                RoundedRectangle(cornerRadius: 20).fill(OnboardingTheme.destructive)
             }
-            .overlay {
-                RoundedRectangle(cornerRadius: 30, style: .continuous)
-                    .strokeBorder(LinearGradient(colors: [OnboardingTheme.cyan.opacity(0.45),
-                                                          OnboardingTheme.violet.opacity(0.2)],
-                                                 startPoint: .topLeading, endPoint: .bottomTrailing),
-                                  lineWidth: 1)
-            }
-            .shadow(color: OnboardingTheme.blue.opacity(0.35), radius: 30)
-            .padding(.horizontal, 28)
-            .scaleEffect(isShown || reduceMotion ? 1 : 0.92)
-            .opacity(isShown ? 1 : 0)
-            .accessibilityElement(children: .contain)
-            .accessibilityAddTraits(.isModal)
-        }
-        .onAppear {
-            withAnimation(.spring(duration: 0.35, bounce: 0.25)) { isShown = true }
-        }
+            .contentShape(RoundedRectangle(cornerRadius: 20))
+            .shadow(color: OnboardingTheme.destructive.opacity(0.35), radius: 14)
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .brightness(configuration.isPressed ? -0.06 : 0)
+            .animation(.spring(duration: 0.25, bounce: 0.3), value: configuration.isPressed)
     }
 }

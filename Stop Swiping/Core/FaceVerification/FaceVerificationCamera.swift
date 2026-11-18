@@ -20,7 +20,9 @@ nonisolated final class FaceVerificationCamera: NSObject, AVCaptureVideoDataOutp
     private let analyzer = FaceFrameAnalyzer()
     private var scanProgress: FaceScanProgress
     private var lastFrameTime: TimeInterval = -.infinity
+    private var startTime: TimeInterval = 0
     private var lastFaceBox: CGRect?
+    private var lastFaceBoxTime: TimeInterval?
     private var lastGuidance = L10n("Look straight at the camera and hold still.")
     private var isScanning = false
     private var didFinish = false
@@ -46,7 +48,14 @@ nonisolated final class FaceVerificationCamera: NSObject, AVCaptureVideoDataOutp
                     throw FaceScanError.invalidPhoto
                 }
                 let upright = image.transformed(by: CGAffineTransform(translationX: -image.extent.minX, y: -image.extent.minY))
-                let analyzed = try analyzer.analyze(upright)
+                let analyzed: AnalyzedFaceFrame
+                do {
+                    analyzed = try analyzer.analyze(upright)
+                } catch FaceScanError.multipleFaces {
+                    // About the photo, not about who is in front of the camera.
+                    throw FaceScanError.faceCount
+                }
+                FaceScanLog.line("reference guidance=\(analyzed.geometry.guidance) yaw=\(FaceScanLog.number(analyzed.face.yaw?.doubleValue)) roll=\(FaceScanLog.number(analyzed.face.roll?.doubleValue)) box=\(analyzed.face.boundingBox) quality=\(FaceScanLog.number(analyzed.captureQuality)) size=\(upright.extent.size)")
                 guard analyzed.geometry.guidance == .ready, abs(analyzed.face.yaw?.doubleValue ?? .infinity) <= 0.35 else {
                     throw FaceScanError.poorQuality
                 }
@@ -62,10 +71,14 @@ nonisolated final class FaceVerificationCamera: NSObject, AVCaptureVideoDataOutp
                 }
                 self.timer = timer
                 timer.resume()
+                startTime = ProcessInfo.processInfo.systemUptime
+                FaceScanLog.line("start clockwise=\(scanProgress.snapshot.clockwise)")
                 session.startRunning()
                 guard session.isRunning else { throw FaceScanError.cameraConfiguration }
                 publishProgress()
             } catch {
+                startTime = ProcessInfo.processInfo.systemUptime
+                FaceScanLog.line("start failed: \(error)")
                 finish(.failed(error.localizedDescription))
             }
         }
@@ -149,27 +162,36 @@ nonisolated final class FaceVerificationCamera: NSObject, AVCaptureVideoDataOutp
                 do {
                     analyzed = try analyzer.analyze(image, includeCaptureQuality: scanProgress.needsIdentity)
                 } catch FaceScanError.faceCount {
+                    FaceScanLog.line("t=\(elapsed(now)) no face")
                     pauseScan(message: L10n("Face inside the circle"), at: now)
                     return
                 } catch FaceScanError.multipleFaces {
+                    FaceScanLog.line("t=\(elapsed(now)) FAIL multiple faces")
                     finish(.failed(L10n("Another face entered the scan. Keep only your face in view and try again.")))
                     return
                 }
-                let guidance = analyzed.geometry.guidance
-                guard guidance == .ready, let pose = analyzed.headPose else {
-                    pauseScan(message: guidance == .ready ? L10n("Show your eyes, nose and mouth") : guidance.message, at: now)
-                    return
-                }
                 let face = analyzed.face
-                if let previous = lastFaceBox {
+                // Track the face on every frame it is seen, also while the
+                // scan is paused, and only compare frames close in time. The
+                // former check compared against a box from before a pause and
+                // ended genuine scans as "face moved out".
+                if let previous = lastFaceBox, let seen = lastFaceBoxTime, now - seen <= 0.3 {
                     let intersection = previous.intersection(face.boundingBox)
                     let overlap = intersection.isNull ? 0 : intersection.width * intersection.height
-                    if overlap / max(previous.width * previous.height, 0.0001) < 0.35 {
+                    if overlap / max(previous.width * previous.height, 0.0001) < 0.2 {
+                        FaceScanLog.line("t=\(elapsed(now)) FAIL face jumped from \(Self.box(previous)) to \(Self.box(face.boundingBox))")
                         finish(.failed(L10n("The face moved out of the scan. Start again with your face inside the circle.")))
                         return
                     }
                 }
                 lastFaceBox = face.boundingBox
+                lastFaceBoxTime = now
+                let guidance = analyzed.geometry.guidance
+                guard guidance == .ready, let pose = analyzed.headPose else {
+                    FaceScanLog.line("t=\(elapsed(now)) pause guidance=\(guidance) pose=\(analyzed.headPose != nil) box=\(Self.box(analyzed.face.boundingBox)) yaw=\(FaceScanLog.number(analyzed.face.yaw?.doubleValue)) roll=\(FaceScanLog.number(analyzed.face.roll?.doubleValue)) conf=\(FaceScanLog.number(analyzed.face.confidence))")
+                    pauseScan(message: guidance == .ready ? L10n("Show your eyes, nose and mouth") : guidance.message, at: now)
+                    return
+                }
                 var score: Float?
                 if scanProgress.needsIdentity, abs(pose.yaw) <= 0.35 {
                     let embedding = try model.embedding(image: image, face: face)
@@ -177,15 +199,26 @@ nonisolated final class FaceVerificationCamera: NSObject, AVCaptureVideoDataOutp
                 }
                 // Every usable motion frame reaches the same state machine.
                 // There is no pose-only timestamp or hidden progress reset.
+                let phase = scanProgress.snapshot.phase
                 scanProgress.accept(pose: pose, identityScore: score, quality: analyzed.captureQuality, at: now)
+                let snapshot = scanProgress.snapshot
+                FaceScanLog.line("t=\(elapsed(now)) \(phase) yaw=\(FaceScanLog.number(pose.yaw)) pose=(\(FaceScanLog.number(pose.horizontal)),\(FaceScanLog.number(pose.vertical))) score=\(FaceScanLog.number(score)) q=\(FaceScanLog.number(analyzed.captureQuality)) box=\(Self.box(face.boundingBox)) cursor=\(snapshot.cursor.map { "(\(FaceScanLog.number(Double($0.x))),\(FaceScanLog.number(Double($0.y))))" } ?? "-") ticks=\(snapshot.collectedSectors.count) target=\(snapshot.targetSector.map(String.init) ?? "-") -> \(snapshot.instruction)")
                 publishProgress()
                 if let outcome = scanProgress.outcome { finish(outcome) }
             } catch FaceScanError.missingLandmarks {
+                FaceScanLog.line("t=\(elapsed(now)) missing landmarks")
                 pauseScan(message: L10n("Show your eyes, nose and mouth"), at: now)
             } catch {
+                FaceScanLog.line("t=\(elapsed(now)) FAIL error \(error)")
                 finish(.failed(error.localizedDescription))
             }
         }
+    }
+
+    private func elapsed(_ now: TimeInterval) -> String { String(format: "%.2f", now - startTime) }
+
+    private static func box(_ rect: CGRect) -> String {
+        String(format: "%.2f,%.2f %.2fx%.2f", rect.midX, rect.midY, rect.width, rect.height)
     }
 
     private func publishProgress() {
@@ -201,6 +234,7 @@ nonisolated final class FaceVerificationCamera: NSObject, AVCaptureVideoDataOutp
 
     private func finish(_ outcome: FaceVerificationOutcome) {
         guard !didFinish else { return }
+        FaceScanLog.line("t=\(elapsed(ProcessInfo.processInfo.systemUptime)) FINISH \(outcome)")
         didFinish = true
         isScanning = false
         // Let any in-flight sample callback return before stopping capture.
@@ -230,5 +264,6 @@ nonisolated final class FaceVerificationCamera: NSObject, AVCaptureVideoDataOutp
         model = nil
         scanProgress = FaceScanProgress(configuration: configuration)
         lastFaceBox = nil
+        lastFaceBoxTime = nil
     }
 }

@@ -49,6 +49,30 @@ enum OnboardingTheme {
     }
 }
 
+/// The app's red cross in a dark circle, as big as the back chevron: removes
+/// a photo, or closes the photo scan.
+struct RedCrossButton: View {
+    let accessibilityLabel: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "xmark")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(OnboardingTheme.destructive)
+                .frame(width: 44, height: 44)
+                .background {
+                    Circle()
+                        .fill(OnboardingTheme.background)
+                        .overlay { Circle().fill(OnboardingTheme.destructive.opacity(0.14)) }
+                }
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
+    }
+}
+
 enum OnboardingMotion {
     static let step = Animation.spring(duration: 0.56, bounce: 0.1)
     static let stage = Animation.spring(duration: 0.95, bounce: 0.08)

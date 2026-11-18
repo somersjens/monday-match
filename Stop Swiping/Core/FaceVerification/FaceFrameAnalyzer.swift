@@ -40,7 +40,9 @@ nonisolated struct FaceCaptureGeometry {
         guard box.width < 0.95, box.height < 0.95,
               box.minX >= -0.01, box.maxX <= 1.01, box.minY >= -0.01, box.maxY <= 1.01 else { return .moveBack }
         guard (0.15...0.85).contains(box.midX), (0.15...0.85).contains(box.midY) else { return .centerFace }
-        guard let roll, roll.isFinite, abs(Self.normalizedAngle(roll)) <= 0.5 else { return .levelPhone }
+        // Vision reports roll in 30° steps (0.52 rad). Tilting the head while
+        // circling must not pause the scan; a sideways phone (90°) still does.
+        guard let roll, roll.isFinite, abs(Self.normalizedAngle(roll)) <= 0.8 else { return .levelPhone }
         guard let yaw, yaw.isFinite, abs(yaw) <= 1.05 else { return .faceCamera }
         return .ready
     }

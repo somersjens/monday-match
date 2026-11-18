@@ -9,7 +9,7 @@ final class FaceVerificationTests: XCTestCase {
     func testDecisionRequiresEverySampleToClearThresholdAndUncertaintyMargin() {
         let config = FaceVerificationConfiguration()
         XCTAssertEqual(config.decision(scores: [0.8, 0.7, 0.9], livenessPassed: true), .match)
-        XCTAssertEqual(config.decision(scores: [0.8, 0.59, 0.9], livenessPassed: true), .noMatch)
+        XCTAssertEqual(config.decision(scores: [0.8, 0.43, 0.9], livenessPassed: true), .noMatch)
         XCTAssertEqual(config.decision(scores: [0.2, 0.3, 0.4], livenessPassed: true), .noMatch)
         XCTAssertNotEqual(config.decision(scores: [0.9, 0.9], livenessPassed: true), .match)
         XCTAssertNotEqual(config.decision(scores: [0.9, 0.9, 0.9], livenessPassed: false), .match)
@@ -124,6 +124,7 @@ final class FaceVerificationTests: XCTestCase {
         XCTAssertEqual(geometry(roll: .pi / 12).guidance, .ready, "15 degrees previously failed the arbitrary 0.25-radian cutoff.")
         XCTAssertEqual(geometry(roll: 2 * .pi - 0.1).guidance, .ready)
         XCTAssertEqual(geometry(roll: .pi / 2).guidance, .levelPhone, "A rotation error must not be called poor lighting.")
+        XCTAssertEqual(geometry(roll: 0.52).guidance, .ready, "Vision's 30-degree roll step paused every head tilt on a real iPhone.")
         XCTAssertEqual(geometry(roll: 0, yaw: .pi / 4).guidance, .ready, "A requested turn must not be rejected as bad framing.")
         XCTAssertEqual(geometry(roll: .nan).guidance, .levelPhone)
     }
@@ -156,7 +157,7 @@ final class FaceVerificationTests: XCTestCase {
         samples.append(score: 0.8, quality: 0.9, at: 0)
         samples.append(score: 0.8, quality: 0.9, at: 0.2)
         XCTAssertNil(samples.decision(configuration: .init(), livenessPassed: true, at: 1))
-        samples.append(score: 0.59, quality: 0.9, at: 0.4)
+        samples.append(score: 0.43, quality: 0.9, at: 0.4)
         XCTAssertEqual(samples.decision(configuration: .init(), livenessPassed: true, at: 1), .noMatch)
         var configuration = FaceVerificationConfiguration()
         configuration.requiredSamples = 6

@@ -18096,6 +18096,40 @@
         }
       }
     },
+    "Too many checks today" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many checks today"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vandaag te vaak gecontroleerd"
+          }
+        }
+      }
+    },
+    "You can verify a photo five times a day. Please try again tomorrow." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can verify a photo five times a day. Please try again tomorrow."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je kunt een foto vijf keer per dag verifiëren. Probeer het morgen opnieuw."
+          }
+        }
+      }
+    },
     "Verification isn’t working right now" : {
       "extractionState" : "manual",
       "localizations" : {

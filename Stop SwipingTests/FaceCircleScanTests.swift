@@ -122,8 +122,13 @@ final class FaceCircleScanTests: XCTestCase {
 
     func testUncertainFinalIdentityCannotMatchOrResetCompletedMovement() {
         var (scan, time) = fullCircle()
-        for _ in 0..<4 {
-            scan.accept(pose: neutral, identityScore: 0.59, quality: 0.9, at: time)
+        for _ in 0..<3 {
+            scan.accept(pose: neutral, identityScore: 0.43, quality: 0.9, at: time)
+            time += 0.25
+        }
+        XCTAssertNil(scan.outcome, "A few low frames (a blink, motion blur) must not end the scan.")
+        for _ in 0..<5 {
+            scan.accept(pose: neutral, identityScore: 0.43, quality: 0.9, at: time)
             time += 0.25
         }
         XCTAssertEqual(scan.outcome, .noMatch)
@@ -132,12 +137,23 @@ final class FaceCircleScanTests: XCTestCase {
 
     func testTransientUncertainFrameRetainsRingAndCanRecoverWithValidFinalSamples() {
         var (scan, time) = fullCircle()
-        scan.accept(pose: neutral, identityScore: 0.59, quality: 0.9, at: time)
+        scan.accept(pose: neutral, identityScore: 0.43, quality: 0.9, at: time)
         XCTAssertNil(scan.outcome)
         XCTAssertEqual(scan.snapshot.progress, 1)
         for _ in 0..<4 {
             time += 0.2
             scan.accept(pose: neutral, identityScore: 0.85, quality: 0.5, at: time)
+        }
+        XCTAssertEqual(scan.outcome, .match)
+    }
+
+    func testFinalCheckAcceptsAFrontalFaceSlightlyAwayFromTheCalibratedPose() {
+        var (scan, time) = fullCircle()
+        // Head a little higher than at the start, still facing the camera.
+        let drifted = FaceHeadPose(horizontal: 0.02, vertical: -0.5 + 0.1, yaw: 0)
+        for _ in 0..<4 {
+            scan.accept(pose: drifted, identityScore: 0.66, quality: 0.4, at: time)
+            time += 0.2
         }
         XCTAssertEqual(scan.outcome, .match)
     }
@@ -189,6 +205,21 @@ final class FaceCircleScanTests: XCTestCase {
         XCTAssertTrue(FaceScanSnapshot(phase: .circling, collectedSectors: [0, 1, 2]).canReplace(current))
         XCTAssertFalse(FaceScanSnapshot(phase: .circling, collectedSectors: Set(0..<8))
             .canReplace(FaceScanSnapshot(phase: .finishing, collectedSectors: Set(0..<8))))
+    }
+
+    func testLargeHeadTurnsStillCountByDirection() {
+        // A real iPhone measured motion radii of 6–10 when turning towards the
+        // ball. Those frames were ignored while the cursor sat on the ball.
+        var circle = FaceCircleChallenge(clockwise: true)
+        var time = 0.0
+        for sector in 0..<8 {
+            let angle = Double(sector) * .pi / 4
+            for _ in 0..<2 {
+                circle.observe(motion: CGPoint(x: 7 * sin(angle), y: -7 * cos(angle)), at: time)
+                time += 0.2
+            }
+        }
+        XCTAssertTrue(circle.isComplete)
     }
 
     func testContinuousSweepCollectsRingWithoutStoppingOnEachBall() {
