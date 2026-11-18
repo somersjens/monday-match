@@ -227,15 +227,20 @@ cannot change content. The backend cannot prove a client-supplied string was
 encrypted; the app's cryptographic path enforces it. Legacy `e2ee-v1` is retained
 for existing transport rows; the live client uses `hpke-auth-x25519-v1`.
 
-## AWS photo verification
+## Photo verification
 
-The real automatic-matching photo step now uses the official AWS FaceLiveness
-SDK, separate explicit biometric consent and server-confirmed attestation.
-The local offline onboarding verification remains local. Existing/current
-server photo verification can be restored without repeating a paid AWS scan.
-See [AWS activation](aws-photo-verification.md) for the implementation, Ireland
-region, server-only credentials, IAM template and remaining real-device validation.
-No trusted verification is fabricated when AWS is unavailable.
+During the beta the automatic-matching photo is verified by the app's own live
+scan on the phone ([photo verification](face-verification.md)). After a match the
+app calls `record_device_photo_verification(p_photo_id)`
+(`202611180002_device_photo_verification.sql`). It checks the caller's selected
+photo, current privacy consent and stored object, records that exact object
+version in `matching_private.photo_verifications` with `method = 'device'`, and
+re-runs matching. `has_verified_photo` is unchanged, so device and AWS records
+both count. The server cannot prove the scan happened; that is the accepted
+beta trade-off.
+
+AWS Face Liveness (server-proven) is parked; see
+[AWS photo verification](aws-photo-verification.md) for how to turn it back on.
 
 ## Validation and scaling
 

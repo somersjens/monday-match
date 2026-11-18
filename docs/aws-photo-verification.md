@@ -1,5 +1,53 @@
 # AWS photo verification activation
 
+> **Status: parked since 18 November 2026.** During the beta the app uses its own
+> on-device scan ([photo verification](face-verification.md)), which matches the
+> app's look and keeps the camera on the phone, but cannot be proven to the
+> server. This AWS version is kept so it can be turned back on.
+
+## Where it is kept
+
+| What | Where |
+| --- | --- |
+| Complete app at the moment AWS was active | Git tag `aws-liveness-v1` (commit `861516b`) |
+| Swift files (flow + consent screen, service, tests) | `archive/aws-face-liveness/` (outside the Xcode targets, so not compiled) |
+| Swift package | `https://github.com/aws-amplify/amplify-ui-swift-liveness`, exact version **1.6.0**, product `FaceLiveness`, app target only |
+| Edge Function | `supabase/functions/aws-face-verification` (still deployed; unused while parked) |
+| Database | Tables/functions in `202611160001_baseline.sql` + `begin_photo_verification` in `202611160004_privacy_consent_v2.sql` (still live) |
+| AWS infrastructure | `supabase/aws/liveness.yaml`, stack `stop-swiping-face-verification` in eu-west-1; Supabase secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_LIVENESS_STREAM_ROLE_ARN` |
+| Localized strings (consent screen, errors) | Still in `Localizable.xcstrings` |
+
+While parked, nothing calls AWS, so there are no Rekognition costs. The IAM
+worker key still exists; deactivate it in IAM if it should not stay usable.
+
+## Turning it back on
+
+1. In Xcode: File → Add Package Dependencies → the URL above, *Exact Version*
+   1.6.0, product **FaceLiveness** → target *Stop Swiping*. Clean the build folder
+   afterwards (see the Smithy plugin note: a stale DerivedData breaks the build).
+2. Move the files back:
+   `archive/aws-face-liveness/AWSPhotoVerificationFlow.swift` → `Stop Swiping/Features/FaceVerification/`,
+   `AWSPhotoVerificationService.swift` → `Stop Swiping/Core/FaceVerification/`,
+   `AWSPhotoVerificationTests.swift` → `Stop SwipingTests/`.
+3. In `AutoMatchingSetupView`, `WelcomeView` and `DependencyContainer`, swap
+   `PhotoVerificationService` → `AWSPhotoVerificationService`,
+   `PhotoVerificationState`/`Issue` → `AWSPhotoVerificationState`/`Issue`,
+   `.photoVerification(… isPresented:)` → `.awsPhotoVerification(… showsConsent:)`
+   and `isSaving` → `isStarting`. `git diff aws-liveness-v1 -- "Stop Swiping/Features/ProfileCreation/AutoMatchingSetupView.swift"`
+   shows exactly what changed. In `AdaptiveLayoutRenderTests`, render
+   `AWSVerificationConsentView` again as `photo-verification-consent`.
+   Optionally delete the on-device scan (Core/FaceVerification + SFace model)
+   again to save ~37 MB.
+4. Server: stop accepting phone-reported results with
+   `revoke execute on function public.record_device_photo_verification(uuid) from authenticated;`
+   To make everyone verify again with AWS:
+   `delete from matching_private.photo_verifications where method = 'device';`
+   Also add `method = 'aws'` to the `on conflict … do update` in
+   `complete_photo_verification`, so an AWS result replaces a device one's method.
+5. Check that `begin_photo_verification` still requires the current privacy
+   consent version (it is hard-coded there).
+6. Test on a physical iPhone (the simulator cannot run Face Liveness).
+
 The integration uses **Rekognition Face Liveness in eu-west-1 (Ireland)**, the
 region supported for Face Liveness within the EU. Supabase's matching data
 continues to live in the existing project. No Cognito account migration is needed.

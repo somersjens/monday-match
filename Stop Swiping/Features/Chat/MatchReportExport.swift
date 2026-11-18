@@ -6,8 +6,8 @@ struct MatchReportExport {
     let match: MatchSnapshot
     let messages: [ChatMessage]
     var isDemo = false
-    /// The other person's photo, when the phone has one. A match only
-    /// carries answers today, so their initial stands in.
+    /// The other person's photo, or your own for the demo, as the match
+    /// screen shows it. Without one, their initial stands in.
     var photo: UIImage? = nil
     var createdAt = Date()
 
@@ -27,9 +27,18 @@ struct MatchReportExport {
         return render(totalPages: pageCount).data
     }
 
+    private static var temporaryFolder: URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("ReportExports", isDirectory: true)
+    }
+
+    /// Deleting the profile: an exported conversation must not stay behind.
+    static func removeTemporaryFiles() {
+        try? FileManager.default.removeItem(at: temporaryFolder)
+    }
+
     /// Writes the PDF where the share sheet can pick it up.
     func writeTemporaryFile() throws -> URL {
-        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("ReportExports", isDirectory: true)
+        let folder = Self.temporaryFolder
         try? FileManager.default.removeItem(at: folder)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let url = folder.appendingPathComponent(fileName)

@@ -4,347 +4,10 @@
     "" : {
 
     },
-    "Are older than {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are older than {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ouder is dan {0} jaar"
-          }
-        }
-      }
-    },
-    "Are shorter than {0} cm" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are shorter than {0} cm"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Korter is dan {0} cm"
-          }
-        }
-      }
-    },
-    "Are shorter than {0} cm or taller than {1} cm" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are shorter than {0} cm or taller than {1} cm"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Korter is dan {0} cm of langer dan {1} cm"
-          }
-        }
-      }
-    },
-    "Are taller than {0} cm" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are taller than {0} cm"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Langer is dan {0} cm"
-          }
-        }
-      }
-    },
-    "Are younger than {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are younger than {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jonger is dan {0} jaar"
-          }
-        }
-      }
-    },
-    "Are younger than {0} or older than {1}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are younger than {0} or older than {1}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jonger is dan {0} of ouder dan {1} jaar"
-          }
-        }
-      }
-    },
-    "Drink alcohol {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drink alcohol {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} alcohol drinkt"
-          }
-        }
-      }
-    },
-    "Drinks alcohol {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drinks alcohol {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} alcohol drinkt"
-          }
-        }
-      }
-    },
-    "Is older than {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Is older than {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ouder is dan {0} jaar"
-          }
-        }
-      }
-    },
-    "Is shorter than {0} cm" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Is shorter than {0} cm"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Korter is dan {0} cm"
-          }
-        }
-      }
-    },
-    "Is shorter than {0} cm or taller than {1} cm" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Is shorter than {0} cm or taller than {1} cm"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Korter is dan {0} cm of langer dan {1} cm"
-          }
-        }
-      }
-    },
-    "Is taller than {0} cm" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Is taller than {0} cm"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Langer is dan {0} cm"
-          }
-        }
-      }
-    },
-    "Is younger than {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Is younger than {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jonger is dan {0} jaar"
-          }
-        }
-      }
-    },
-    "Is younger than {0} or older than {1}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Is younger than {0} or older than {1}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jonger is dan {0} of ouder dan {1} jaar"
-          }
-        }
-      }
-    },
-    "Smoke or vape {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smoke or vape {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} rookt of vapet"
-          }
-        }
-      }
-    },
-    "Smokes or vapes {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smokes or vapes {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} rookt of vapet"
-          }
-        }
-      }
-    },
-    "Speak neither {0} nor {1}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Speak neither {0} nor {1}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noch {0} noch {1} spreekt"
-          }
-        }
-      }
-    },
-    "Speaks neither {0} nor {1}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Speaks neither {0} nor {1}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noch {0} noch {1} spreekt"
-          }
-        }
-      }
-    },
-    "Use cannabis or other drugs {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use cannabis or other drugs {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} cannabis of andere drugs gebruikt"
-          }
-        }
-      }
-    },
-    "Uses cannabis or other drugs {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uses cannabis or other drugs {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} cannabis of andere drugs gebruikt"
-          }
-        }
-      }
-    },
     "–" : {
+
+    },
+    ", %lld" : {
 
     },
     "{0} broke this match on {1}" : {
@@ -568,6 +231,23 @@
         }
       }
     },
+    "{0} km away" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} km away"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} km van je vandaan"
+          }
+        }
+      }
+    },
     "{0} lives more than {1} km away" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -581,6 +261,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "{0} woont meer dan {1} km bij je vandaan"
+          }
+        }
+      }
+    },
+    "{0} messages" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} messages"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} berichten"
           }
         }
       }
@@ -683,6 +380,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "{0} procent vastgelegd"
+          }
+        }
+      }
+    },
+    "{0} percent match" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} percent match"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} procent match"
           }
         }
       }
@@ -908,6 +622,23 @@
         }
       }
     },
+    "{0}, {1}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0}, {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0}, {1}"
+          }
+        }
+      }
+    },
     "{0}, {1} percent, a match" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1114,6 +845,26 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld %2$@"
+          }
+        }
+      }
+    },
+    "%lld%%" : {
+
+    },
+    "1 message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 message"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 bericht"
           }
         }
       }
@@ -2070,6 +1821,23 @@
         }
       }
     },
+    "Allow camera access in Settings to verify your photo." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow camera access in Settings to verify your photo."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sta cameratoegang toe in Instellingen om je foto te verifiëren."
+          }
+        }
+      }
+    },
     "Allow notifications" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2100,6 +1868,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Match ook verbreken"
+          }
+        }
+      }
+    },
+    "Also for manual matching" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also for manual matching"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ook bij handmatig matchen"
           }
         }
       }
@@ -2138,6 +1923,23 @@
         }
       }
     },
+    "Also use for manual matching" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also use for manual matching"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ook gebruiken bij handmatig matchen"
+          }
+        }
+      }
+    },
     "Also: {0}, {1}" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2172,6 +1974,23 @@
         }
       }
     },
+    "Always your choice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Always your choice"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Altijd jouw keuze"
+          }
+        }
+      }
+    },
     "Ambitious and adaptable. You want to succeed and be valued, and fear being worthless." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2185,6 +2004,669 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ambitieus en flexibel. Je wilt slagen en gewaardeerd worden, en bent bang om waardeloos te zijn."
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_camera_permission_button_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You may need to allow camera access in Settings, then close the app and try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mogelijk moet je cameratoegang geven in Instellingen en daarna de app sluiten en opnieuw proberen."
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_camera_permission_button_header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The camera isn’t accessible"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De camera is niet beschikbaar"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_camera_permission_button_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change camera setting"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera-instelling wijzigen"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_camera_permission_page_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liveness check"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live check"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_camera_setting_alert_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow camera access in Settings."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geef cameratoegang in Instellingen."
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_camera_setting_alert_not_now_button_text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not now"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu niet"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_camera_setting_alert_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change your camera settings"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas je camera-instellingen aan"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_camera_setting_alert_update_setting_button_text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Instellingen"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_center_your_face_text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Center your face"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zet je gezicht in het midden"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_challenge_cancel_a11y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel check"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check annuleren"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_challenge_connecting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinden…"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_challenge_instruction_hold_face_during_countdown" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold your face still during the countdown"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd je gezicht stil tijdens het aftellen"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_challenge_instruction_hold_face_during_freshness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep your face in the oval while the colors flash"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd je gezicht in het ovaal terwijl de kleuren flitsen"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_challenge_instruction_hold_still" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold still"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blijf stil"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_challenge_instruction_move_face_back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move back"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ga iets naar achteren"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_challenge_instruction_move_face_closer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move closer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kom iets dichterbij"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_challenge_instruction_move_face_in_front_of_camera" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move your face in front of the camera"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breng je gezicht voor de camera"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_challenge_instruction_multiple_faces_detected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only one face per check"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maar één gezicht per check"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_challenge_recording_indicator_label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "REC"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "REC"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_challenge_verifying" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifying"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleren"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_close_button_a11y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sluiten"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_face_not_prepared_reason_face_too_close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move a little farther away"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ga iets verder weg"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_face_not_prepared_reason_move_face_closer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move closer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kom iets dichterbij"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_face_not_prepared_reason_move_face_left" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move your face left"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beweeg je gezicht naar links"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_face_not_prepared_reason_move_face_right" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move your face right"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beweeg je gezicht naar rechts"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_face_not_prepared_reason_move_to_brighter_area" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move somewhere brighter"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek een lichtere plek"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_face_not_prepared_reason_move_to_dimmer_area" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move somewhere less bright"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek een minder felle plek"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_face_not_prepared_reason_multiple_faces" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only one face per check"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maar één gezicht per check"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_face_not_prepared_reason_no_face" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move your face in front of the camera"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breng je gezicht voor de camera"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_face_not_prepared_reason_not_in_oval" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fit your face in the oval"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zet je gezicht in het ovaal"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_get_ready_begin_check" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start video check"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start videocheck"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_get_ready_page_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liveness check"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live check"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_get_ready_photosensitivity_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This check flashes different colors. Use caution if you are photosensitive."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze check flitst in verschillende kleuren. Wees voorzichtig als je lichtgevoelig bent."
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_get_ready_photosensitivity_dialog_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some people may experience epileptic seizures when exposed to colored lights. Use caution if you, or anyone in your family, have an epileptic condition."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sommige mensen kunnen een epileptische aanval krijgen door gekleurde lichten. Wees voorzichtig als jij of iemand in je familie epilepsie heeft."
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_get_ready_photosensitivity_dialog_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photosensitivity warning"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waarschuwing voor lichtgevoeligheid"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_get_ready_photosensitivity_icon_a11y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photosensitivity information"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informatie over lichtgevoeligheid"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_get_ready_photosensitivity_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photosensitivity warning"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waarschuwing voor lichtgevoeligheid"
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_orientation_prompt_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotate your device to portrait to continue."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draai je toestel naar staand om verder te gaan."
+          }
+        }
+      }
+    },
+    "amplify_ui_liveness_orientation_prompt_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold your phone upright"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd je telefoon rechtop"
           }
         }
       }
@@ -2308,6 +2790,23 @@
         }
       }
     },
+    "Another face entered the scan. Keep only your face in view and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another face entered the scan. Keep only your face in view and try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er kwam een ander gezicht in beeld. Houd alleen je eigen gezicht in beeld en probeer opnieuw."
+          }
+        }
+      }
+    },
     "Any height" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2389,6 +2888,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Architect"
+          }
+        }
+      }
+    },
+    "Are older than {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are older than {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouder is dan {0} jaar"
+          }
+        }
+      }
+    },
+    "Are shorter than {0} cm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are shorter than {0} cm"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korter is dan {0} cm"
+          }
+        }
+      }
+    },
+    "Are shorter than {0} cm or taller than {1} cm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are shorter than {0} cm or taller than {1} cm"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korter is dan {0} cm of langer dan {1} cm"
+          }
+        }
+      }
+    },
+    "Are taller than {0} cm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are taller than {0} cm"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langer is dan {0} cm"
           }
         }
       }
@@ -2491,6 +3058,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Weet je het zeker? Dit is je laatste kans om hem te bewaren."
+          }
+        }
+      }
+    },
+    "Are younger than {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are younger than {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jonger is dan {0} jaar"
+          }
+        }
+      }
+    },
+    "Are younger than {0} or older than {1}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are younger than {0} or older than {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jonger is dan {0} of ouder dan {1} jaar"
           }
         }
       }
@@ -2682,6 +3283,23 @@
         }
       }
     },
+    "Average match: {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Average match: {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gemiddelde match: {0}"
+          }
+        }
+      }
+    },
     "AWS checks that a real person is present and that the face matches your photo. This uses facial biometric analysis. Supabase saves the verification result and photo version, not the video or face features." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2695,6 +3313,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AWS controleert of er een echt persoon aanwezig is en of het gezicht overeenkomt met je foto. Hiervoor wordt biometrische gezichtsanalyse gebruikt. Supabase bewaart de verificatie-uitslag en fotoversie, niet de video of gezichtskenmerken."
+          }
+        }
+      }
+    },
+    "AWS checks your live video to confirm you’re real and look like your photo, using face biometrics. We only keep the result, not the video or your face data." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWS checks your live video to confirm you’re real and look like your photo, using face biometrics. We only keep the result, not the video or your face data."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWS controleert met je livevideo of je echt bent en op je foto lijkt, met gezichtsbiometrie. Wij bewaren alleen de uitkomst, niet de video of je gezichtsgegevens."
           }
         }
       }
@@ -3039,6 +3674,23 @@
         }
       }
     },
+    "Broken match" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Broken match"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbroken match"
+          }
+        }
+      }
+    },
     "Buddhist" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3120,6 +3772,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rustig en praktisch. Je lost problemen hands-on op en wilt de vrijheid om dingen op je eigen manier te doen."
+          }
+        }
+      }
+    },
+    "Camera access is required for a live scan. Allow camera access in Settings, then try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera access is required for a live scan. Allow camera access in Settings, then try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cameratoegang is nodig voor een livescan. Geef toegang via Instellingen en probeer opnieuw."
           }
         }
       }
@@ -3222,6 +3891,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uitwisselen met {0} annuleren"
+          }
+        }
+      }
+    },
+    "Cancel verification" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel verification"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificatie annuleren"
           }
         }
       }
@@ -3379,6 +4065,23 @@
         }
       }
     },
+    "Center your face" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Center your face"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaats je gezicht in het midden"
+          }
+        }
+      }
+    },
     "Certified hottie" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3515,6 +4218,23 @@
         }
       }
     },
+    "Chat history is kept for up to 12 months, even after the match is broken." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat history is kept for up to 12 months, even after the match is broken."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chatgeschiedenis blijft tot 12 maanden bewaard, ook na het verbreken van de match."
+          }
+        }
+      }
+    },
     "Check your connection and try again. Nothing was deleted." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3528,6 +4248,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Controleer je verbinding en probeer het opnieuw. Er is niets verwijderd."
+          }
+        }
+      }
+    },
+    "Checking…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleren…"
           }
         }
       }
@@ -3566,6 +4303,40 @@
         }
       }
     },
+    "Choose a clear, recent photo of just you, and keep your face inside the oval during the scan." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a clear, recent photo of just you, and keep your face inside the oval during the scan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies een duidelijke, recente foto van alleen jezelf, en houd je gezicht tijdens de scan binnen het ovaal."
+          }
+        }
+      }
+    },
+    "Choose a clear, recent photo of just you, then slowly move your head in a circle during the scan." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a clear, recent photo of just you, then slowly move your head in a circle during the scan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies een duidelijke, recente foto van alleen jezelf en beweeg tijdens de scan rustig je hoofd in een rondje."
+          }
+        }
+      }
+    },
     "Choose all that apply. No selection means open to all." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3579,6 +4350,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kies alle passende opties. Zonder selectie sta je voor iedereen open."
+          }
+        }
+      }
+    },
+    "Choose another photo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose another photo"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies een andere foto"
           }
         }
       }
@@ -4283,6 +5071,23 @@
         }
       }
     },
+    "Conversation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conversation"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chatgesprek"
+          }
+        }
+      }
+    },
     "Conversation with {0}" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4385,6 +5190,23 @@
         }
       }
     },
+    "Could not create the PDF" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not create the PDF"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De pdf kon niet worden gemaakt"
+          }
+        }
+      }
+    },
     "Could not submit report" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4432,6 +5254,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Maak je account aan"
+          }
+        }
+      }
+    },
+    "Created on {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created on {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gemaakt op {0}"
           }
         }
       }
@@ -4725,19 +5564,19 @@
         }
       }
     },
-    "Demo conversation. Every message gets a reply." : {
+    "Demo conversation, not a real match" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Demo conversation. Every message gets a reply."
+            "value" : "Demo conversation, not a real match"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Demogesprek. Elk bericht krijgt een antwoord."
+            "value" : "Demogesprek, geen echte match"
           }
         }
       }
@@ -5762,6 +6601,40 @@
         }
       }
     },
+    "Download chat and profile as PDF" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download chat and profile as PDF"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chatgesprek en profiel downloaden als pdf"
+          }
+        }
+      }
+    },
+    "Drink alcohol {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drink alcohol {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} alcohol drinkt"
+          }
+        }
+      }
+    },
     "Drink alcohol {0} or more often" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5775,6 +6648,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "{0} of vaker alcohol drinkt"
+          }
+        }
+      }
+    },
+    "Drinks alcohol {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drinks alcohol {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} alcohol drinkt"
           }
         }
       }
@@ -6510,6 +7400,40 @@
         }
       }
     },
+    "Face detected." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face detected."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gezicht herkend."
+          }
+        }
+      }
+    },
+    "Face inside the circle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face inside the circle"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gezicht binnen de cirkel"
+          }
+        }
+      }
+    },
     "Face the camera. Show your full face, eyes, nose and mouth." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6523,6 +7447,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kijk in de camera. Houd je volledige gezicht, ogen, neus en mond zichtbaar."
+          }
+        }
+      }
+    },
+    "Face verification is unavailable on this device. Please try again later." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face verification is unavailable on this device. Please try again later."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gezichtsverificatie is niet beschikbaar op dit apparaat. Probeer het later opnieuw."
           }
         }
       }
@@ -6557,6 +7498,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nep- of misleidend profiel"
+          }
+        }
+      }
+    },
+    "False information can lead to account termination." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "False information can lead to account termination."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onjuiste informatie kan je account kosten."
           }
         }
       }
@@ -6778,6 +7736,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Volgen"
+          }
+        }
+      }
+    },
+    "Follow the ball with your head" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow the ball with your head"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volg het bolletje met je hoofd"
           }
         }
       }
@@ -7309,6 +8284,23 @@
         }
       }
     },
+    "Head movement captured" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Head movement captured"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoofdbeweging vastgelegd"
+          }
+        }
+      }
+    },
     "Height" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7526,6 +8518,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoe de antwoorden van {0} passen bij wat jij zoekt."
+          }
+        }
+      }
+    },
+    "How a match sees you" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How a match sees you"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zo ziet een match jou"
           }
         }
       }
@@ -7853,6 +8862,23 @@
         }
       }
     },
+    "If you remove this picture and you want to add it later, you will need to verify it again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you remove this picture and you want to add it later, you will need to verify it again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als je deze foto verwijdert en hem later opnieuw wilt toevoegen, moet je hem opnieuw verifiëren."
+          }
+        }
+      }
+    },
     "If your future match disputes your height, age, name or picture, you risk losing your account." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7917,6 +8943,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Belangrijk"
+          }
+        }
+      }
+    },
+    "In case of a criminal offence, go to the police" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In case of a criminal offence, go to the police"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bij een strafbaar feit, ga naar de politie"
           }
         }
       }
@@ -8261,6 +9304,108 @@
         }
       }
     },
+    "Is older than {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Is older than {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouder is dan {0} jaar"
+          }
+        }
+      }
+    },
+    "Is shorter than {0} cm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Is shorter than {0} cm"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korter is dan {0} cm"
+          }
+        }
+      }
+    },
+    "Is shorter than {0} cm or taller than {1} cm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Is shorter than {0} cm or taller than {1} cm"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korter is dan {0} cm of langer dan {1} cm"
+          }
+        }
+      }
+    },
+    "Is taller than {0} cm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Is taller than {0} cm"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langer is dan {0} cm"
+          }
+        }
+      }
+    },
+    "Is younger than {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Is younger than {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jonger is dan {0} jaar"
+          }
+        }
+      }
+    },
+    "Is younger than {0} or older than {1}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Is younger than {0} or older than {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jonger is dan {0} of ouder dan {1} jaar"
+          }
+        }
+      }
+    },
     "Is your home mainly a quiet place for yourself, or is the door always open to guests?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8363,6 +9508,23 @@
         }
       }
     },
+    "Join without a photo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join without a photo"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meedoen zonder foto"
+          }
+        }
+      }
+    },
     "Judging" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8376,6 +9538,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Oordelend"
+          }
+        }
+      }
+    },
+    "Just you in the picture, no friends or exes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Just you in the picture, no friends or exes"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen jij op de foto, geen vrienden of exen"
           }
         }
       }
@@ -8431,6 +9610,40 @@
         }
       }
     },
+    "Keep only your face in view. Other faces cannot be included in the scan." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep only your face in view. Other faces cannot be included in the scan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd alleen je eigen gezicht in beeld. Andere gezichten mogen niet in de scan voorkomen."
+          }
+        }
+      }
+    },
+    "Keep photo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep photo"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto houden"
+          }
+        }
+      }
+    },
     "Keep private" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8465,6 +9678,23 @@
         }
       }
     },
+    "Keep your eyes, nose and mouth visible." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep your eyes, nose and mouth visible."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd je ogen, neus en mond zichtbaar."
+          }
+        }
+      }
+    },
     "Keep your message under 8,000 characters." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8478,6 +9708,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Houd je bericht onder 8.000 tekens."
+          }
+        }
+      }
+    },
+    "Keep your phone upright" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep your phone upright"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd je telefoon rechtop"
           }
         }
       }
@@ -8808,6 +10055,23 @@
         }
       }
     },
+    "Live front camera preview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live front camera preview"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Livebeeld van de frontcamera"
+          }
+        }
+      }
+    },
     "Live more than {0} km away" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9012,6 +10276,40 @@
         }
       }
     },
+    "Look at the camera" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Look at the camera"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kijk in de camera"
+          }
+        }
+      }
+    },
+    "Look straight at the camera and hold still." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Look straight at the camera and hold still."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kijk recht in de camera en blijf stil."
+          }
+        }
+      }
+    },
     "Looks aren't everything, right?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9110,6 +10408,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Loyalist"
+          }
+        }
+      }
+    },
+    "Make a good first impression" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make a good first impression"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak een goede eerste indruk"
           }
         }
       }
@@ -9216,6 +10531,23 @@
         }
       }
     },
+    "Match ended on {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match ended on {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match beëindigd op {0}"
+          }
+        }
+      }
+    },
     "Match name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9280,6 +10612,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Instellingen van de match"
+          }
+        }
+      }
+    },
+    "Matched on {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matched on {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gematcht op {0}"
           }
         }
       }
@@ -9416,23 +10765,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Berichten worden op je telefoon versleuteld. Verloren privésleutels kunnen niet vanuit Supabase worden hersteld."
-          }
-        }
-      }
-    },
-    "Messages are end-to-end encrypted. Only you and your match can read them." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Messages are end-to-end encrypted. Only you and your match can read them."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Berichten zijn end-to-end versleuteld. Alleen jij en je match kunnen ze lezen."
           }
         }
       }
@@ -9658,6 +10990,23 @@
         }
       }
     },
+    "More about AWS Face Liveness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More about AWS Face Liveness"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meer over AWS Face Liveness"
+          }
+        }
+      }
+    },
     "More information" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9671,6 +11020,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Meer informatie"
+          }
+        }
+      }
+    },
+    "Move a little closer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move a little closer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kom iets dichterbij"
+          }
+        }
+      }
+    },
+    "Move a little farther away" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move a little farther away"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ga iets verder weg"
           }
         }
       }
@@ -10100,6 +11483,23 @@
         }
       }
     },
+    "No messages yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No messages yet."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nog geen berichten."
+          }
+        }
+      }
+    },
     "No payment details required." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10215,6 +11615,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nooit een abonnement"
+          }
+        }
+      }
+    },
+    "No sunglasses, nothing covering your face" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No sunglasses, nothing covering your face"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen zonnebril, niets dat je gezicht bedekt"
           }
         }
       }
@@ -10338,6 +11755,23 @@
         }
       }
     },
+    "Notifications are off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are off"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldingen staan uit"
+          }
+        }
+      }
+    },
     "Notifications are off. You can allow them in Settings to receive your reminder." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10351,6 +11785,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Meldingen staan uit. Sta ze toe in Instellingen om je herinnering te ontvangen."
+          }
+        }
+      }
+    },
+    "Notifications are on" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are on"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldingen staan aan"
           }
         }
       }
@@ -10644,6 +12095,23 @@
         }
       }
     },
+    "Only a verified photo is used for auto matching." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only a verified photo is used for auto matching."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen een geverifieerde foto wordt gebruikt voor automatisch matchen."
+          }
+        }
+      }
+    },
     "Only at home" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10657,6 +12125,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alleen thuis"
+          }
+        }
+      }
+    },
+    "Only match with verified users" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only match with verified users"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen geverifieerde matches"
           }
         }
       }
@@ -11014,6 +12499,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eigen privacy"
+          }
+        }
+      }
+    },
+    "Page {0} of {1}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page {0} of {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pagina {0} van {1}"
           }
         }
       }
@@ -11426,6 +12928,23 @@
         }
       }
     },
+    "Photosensitivity warning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photosensitivity warning"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waarschuwing voor lichtgevoeligheid"
+          }
+        }
+      }
+    },
     "Physical affection" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11715,6 +13234,23 @@
         }
       }
     },
+    "Preparing your camera…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing your camera…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera voorbereiden…"
+          }
+        }
+      }
+    },
     "Pretty decent, actually" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11779,6 +13315,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Privacyverklaring"
+          }
+        }
+      }
+    },
+    "Profile and conversation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile and conversation"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiel en chatgesprek"
           }
         }
       }
@@ -12191,6 +13744,23 @@
         }
       }
     },
+    "Relax and look at the camera" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relax and look at the camera"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontspan en kijk in de camera"
+          }
+        }
+      }
+    },
     "Reliable and structured. You keep your word, value order and like things done properly." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12242,6 +13812,23 @@
         }
       }
     },
+    "Remove photo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove photo"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto verwijderen"
+          }
+        }
+      }
+    },
     "Remove sunglasses, masks and anything covering your face. Avoid beauty filters, edits and AI images." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12255,6 +13842,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verwijder zonnebrillen, maskers en alles wat je gezicht bedekt. Gebruik geen schoonheidsfilters, bewerkingen of AI-afbeeldingen."
+          }
+        }
+      }
+    },
+    "Remove your verified photo?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove your verified photo?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geverifieerde foto verwijderen?"
           }
         }
       }
@@ -12357,6 +13961,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rapporteer je match"
+          }
+        }
+      }
+    },
+    "Reporting can affect {0}’s account. Because you can only be matched with one person at a time, a report may be traced back to you. Please keep this in mind." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reporting can affect {0}’s account. Because you can only be matched with one person at a time, a report may be traced back to you. Please keep this in mind."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapporteren kan gevolgen hebben voor het account van {0}. Omdat je maar met één persoon tegelijk gematcht kunt zijn, is het rapporteren mogelijk aan jou te linken. Wees je hiervan bewust."
           }
         }
       }
@@ -12595,6 +14216,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Naam opslaan"
+          }
+        }
+      }
+    },
+    "Saved by you as {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved by you as {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Door jou opgeslagen als {0}"
           }
         }
       }
@@ -12990,6 +14628,23 @@
         }
       }
     },
+    "Send this photo along when you hold your phones together. A QR code can’t carry a photo." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send this photo along when you hold your phones together. A QR code can’t carry a photo."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuur deze foto mee als jullie je telefoons tegen elkaar houden. Een QR-code kan geen foto meenemen."
+          }
+        }
+      }
+    },
     "Sensing" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13381,6 +15036,23 @@
         }
       }
     },
+    "Show {0}’s photo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show {0}’s photo"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto van {0} tonen"
+          }
+        }
+      }
+    },
     "Show how it works" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13415,6 +15087,23 @@
         }
       }
     },
+    "Show your eyes, nose and mouth" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show your eyes, nose and mouth"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd je ogen, neus en mond zichtbaar"
+          }
+        }
+      }
+    },
     "Show your helix" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13432,6 +15121,23 @@
         }
       }
     },
+    "Show your photo card" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show your photo card"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je fotokaart tonen"
+          }
+        }
+      }
+    },
     "Showing appreciation" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13445,6 +15151,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Waardering tonen"
+          }
+        }
+      }
+    },
+    "Shows {0}’s photo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows {0}’s photo"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toont de foto van {0}"
           }
         }
       }
@@ -13479,6 +15202,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toont je persoonlijkheidsinschattingen."
+          }
+        }
+      }
+    },
+    "Shows your photo card" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows your photo card"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toont je fotokaart"
           }
         }
       }
@@ -13670,6 +15410,23 @@
         }
       }
     },
+    "Smoke or vape {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smoke or vape {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} rookt of vapet"
+          }
+        }
+      }
+    },
     "Smoke or vape {0} or more often" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13683,6 +15440,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "{0} of vaker rookt of vapet"
+          }
+        }
+      }
+    },
+    "Smokes or vapes {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smokes or vapes {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} rookt of vapet"
           }
         }
       }
@@ -13925,6 +15699,23 @@
         }
       }
     },
+    "Speak neither {0} nor {1}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speak neither {0} nor {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch {0} noch {1} spreekt"
+          }
+        }
+      }
+    },
     "Speak none of {0}" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13938,6 +15729,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geen {0} spreekt"
+          }
+        }
+      }
+    },
+    "Speaks neither {0} nor {1}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speaks neither {0} nor {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch {0} noch {1} spreekt"
           }
         }
       }
@@ -14210,6 +16018,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nog aan het ontdekken"
+          }
+        }
+      }
+    },
+    "Stop anytime or join without a photo. Up to five checks a day." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop anytime or join without a photo. Up to five checks a day."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop wanneer je wilt of doe mee zonder foto. Maximaal vijf checks per dag."
           }
         }
       }
@@ -14639,6 +16464,23 @@
         }
       }
     },
+    "Tap anywhere to close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap anywhere to close"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tik ergens om te sluiten"
+          }
+        }
+      }
+    },
     "Tap to deselect." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14843,6 +16685,23 @@
         }
       }
     },
+    "That’s on our side, not yours. Please try again in a few minutes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That’s on our side, not yours. Please try again in a few minutes."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dat ligt aan ons, niet aan jou. Probeer het over een paar minuten opnieuw."
+          }
+        }
+      }
+    },
     "The app's local storage directory is unavailable." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14877,6 +16736,74 @@
         }
       }
     },
+    "The camera couldn’t be started. Close other camera apps and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The camera couldn’t be started. Close other camera apps and try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De camera kon niet worden gestart. Sluit andere camera-apps en probeer opnieuw."
+          }
+        }
+      }
+    },
+    "The camera stream was interrupted. Please start a new scan." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The camera stream was interrupted. Please start a new scan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De camerastream is onderbroken. Begin een nieuwe scan."
+          }
+        }
+      }
+    },
+    "The camera was interrupted. Please start a new scan." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The camera was interrupted. Please start a new scan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De camera is onderbroken. Begin een nieuwe scan."
+          }
+        }
+      }
+    },
+    "The check flashes colors on your screen. Take care if you or your family have epilepsy." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The check flashes colors on your screen. Take care if you or your family have epilepsy."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De check laat je scherm in kleuren flitsen. Pas op als jij of je familie epilepsie heeft."
+          }
+        }
+      }
+    },
     "The Enneagram describes nine types, each driven by its own core motivation and fear. The lines in the figure show how the types connect." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14890,6 +16817,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Het Enneagram beschrijft negen types, elk gedreven door een eigen kernmotivatie en angst. De lijnen in de figuur laten zien hoe de types met elkaar samenhangen."
+          }
+        }
+      }
+    },
+    "The face moved out of the scan. Start again with your face inside the circle." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The face moved out of the scan. Start again with your face inside the circle."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het gezicht kwam buiten de scan. Begin opnieuw met je gezicht binnen de cirkel."
+          }
+        }
+      }
+    },
+    "The face recognition model couldn’t process this scan." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The face recognition model couldn’t process this scan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het gezichtsherkenningsmodel kon deze scan niet verwerken."
+          }
+        }
+      }
+    },
+    "The front camera is unavailable. Try this on an iPhone with a front camera." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The front camera is unavailable. Try this on an iPhone with a front camera."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De frontcamera is niet beschikbaar. Probeer het op een iPhone met een frontcamera."
           }
         }
       }
@@ -14962,6 +16940,23 @@
         }
       }
     },
+    "The phone rotated during the scan. Keep it upright and start a new scan." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The phone rotated during the scan. Keep it upright and start a new scan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De telefoon draaide tijdens de scan. Houd hem rechtop en begin een nieuwe scan."
+          }
+        }
+      }
+    },
     "The Predictive Index measures four behavioural drives at work and matches the pattern to one of 17 reference profiles." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14992,6 +16987,108 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Het vorige apparaat ontvangt geen nieuwe berichten meer. Niet-verzonden berichten op deze iPhone worden verwijderd. Geschiedenis van andere apparaten kan hier niet worden hersteld. Vergelijk de nieuwe beveiligingscode met je match."
+          }
+        }
+      }
+    },
+    "The real you, matching your photo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The real you, matching your photo"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Echt jij, net als op je foto"
+          }
+        }
+      }
+    },
+    "The scan settings are invalid." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The scan settings are invalid."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De scaninstellingen zijn ongeldig."
+          }
+        }
+      }
+    },
+    "The scan timed out. {0} Then try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The scan timed out. {0} Then try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De scan duurde te lang. {0} Probeer het daarna opnieuw."
+          }
+        }
+      }
+    },
+    "The scan was incomplete." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The scan was incomplete."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De scan was niet volledig."
+          }
+        }
+      }
+    },
+    "The scan was incomplete. Please try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The scan was incomplete. Please try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De scan was niet volledig. Probeer opnieuw."
+          }
+        }
+      }
+    },
+    "The scan was interrupted. Please try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The scan was interrupted. Please try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De scan is onderbroken. Probeer opnieuw."
           }
         }
       }
@@ -15115,6 +17212,23 @@
         }
       }
     },
+    "This camera rotation is unsupported. Hold your phone upright and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This camera rotation is unsupported. Hold your phone upright and try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze camerastand wordt niet ondersteund. Houd je telefoon rechtop en probeer opnieuw."
+          }
+        }
+      }
+    },
     "This can’t be undone" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15217,6 +17331,23 @@
         }
       }
     },
+    "This document was made on your own phone, from the conversation as it is stored there." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This document was made on your own phone, from the conversation as it is stored there."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit document is op je eigen telefoon gemaakt, uit het gesprek zoals het daar is opgeslagen."
+          }
+        }
+      }
+    },
     "This match has been blocked. Messaging is disabled." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15315,6 +17446,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deze foto is op een ander apparaat gewijzigd. Selecteer hem opnieuw om een nieuwe foto te uploaden."
+          }
+        }
+      }
+    },
+    "This photo couldn’t be opened. Please choose another photo." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This photo couldn’t be opened. Please choose another photo."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze foto kon niet worden geopend. Kies een andere foto."
+          }
+        }
+      }
+    },
+    "This photo doesn’t match you" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This photo doesn’t match you"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze foto matcht niet met jou"
           }
         }
       }
@@ -15710,6 +17875,23 @@
         }
       }
     },
+    "Use a photo containing exactly one face: yours." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use a photo containing exactly one face: yours."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik een foto met precies één gezicht: dat van jou."
+          }
+        }
+      }
+    },
     "Use a recent, sharp photo of yourself, with exactly one face." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15727,6 +17909,23 @@
         }
       }
     },
+    "Use a sharp, well-lit photo looking straight at the camera, with your whole face visible." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use a sharp, well-lit photo looking straight at the camera, with your whole face visible."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik een scherpe, goed belichte foto waarop je recht naar de camera kijkt en je hele gezicht zichtbaar is."
+          }
+        }
+      }
+    },
     "Use another account" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15740,6 +17939,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ander account gebruiken"
+          }
+        }
+      }
+    },
+    "Use cannabis or other drugs {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use cannabis or other drugs {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} cannabis of andere drugs gebruikt"
           }
         }
       }
@@ -15829,6 +18045,23 @@
         }
       }
     },
+    "Uses cannabis or other drugs {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uses cannabis or other drugs {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} cannabis of andere drugs gebruikt"
+          }
+        }
+      }
+    },
     "Uses cannabis or other drugs {0} or more often" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15863,6 +18096,74 @@
         }
       }
     },
+    "Verification isn’t working right now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verification isn’t working right now"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificatie werkt nu even niet"
+          }
+        }
+      }
+    },
+    "Verification was cancelled. Start a new scan to verify this photo." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verification was cancelled. Start a new scan to verify this photo."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De verificatie is geannuleerd. Begin een nieuwe scan om deze foto te verifiëren."
+          }
+        }
+      }
+    },
+    "Verified live" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verified live"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live geverifieerd"
+          }
+        }
+      }
+    },
+    "Verified profile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verified profile"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geverifieerd profiel"
+          }
+        }
+      }
+    },
     "Verify again" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15876,6 +18177,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Opnieuw verifiëren"
+          }
+        }
+      }
+    },
+    "Verify photo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verify photo"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto verifiëren"
           }
         }
       }
@@ -16284,6 +18602,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "We hebben een bereik rond je leeftijd voorgesteld. Pas het gerust aan."
+          }
+        }
+      }
+    },
+    "We’ll text you when we’ve found the one." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We’ll text you when we’ve found the one."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wij zoeken jouw match. Jij hoort het vanzelf."
           }
         }
       }
@@ -17529,6 +19864,23 @@
         }
       }
     },
+    "You only get one, so choose wisely" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You only get one, so choose wisely"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je krijgt er maar één, dus kies met zorg"
+          }
+        }
+      }
+    },
     "You recharge on your own and prefer calm and small circles." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17903,6 +20255,40 @@
         }
       }
     },
+    "Your eyes, nose and mouth must be clearly visible. Please choose another photo." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your eyes, nose and mouth must be clearly visible. Please choose another photo."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je ogen, neus en mond moeten duidelijk zichtbaar zijn. Kies een andere foto."
+          }
+        }
+      }
+    },
+    "Your face was out of view for too long. Please start a new scan." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your face was out of view for too long. Please start a new scan."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je gezicht was te lang buiten beeld. Begin een nieuwe scan."
+          }
+        }
+      }
+    },
     "Your forever starts here ✨" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18175,6 +20561,23 @@
         }
       }
     },
+    "Your photo isn’t verified yet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your photo isn’t verified yet"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je foto is nog niet geverifieerd"
+          }
+        }
+      }
+    },
     "Your profile" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18307,1709 +20710,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je herinnering kon niet worden gepland. Probeer deze opnieuw aan te zetten."
-          }
-        }
-      }
-    },
-    "Notifications are off" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications are off"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meldingen staan uit"
-          }
-        }
-      }
-    },
-    ", %lld" : {
-
-    },
-    "1 message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1 message"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1 bericht"
-          }
-        }
-      }
-    },
-    "AWS checks your live video to confirm you’re real and look like your photo, using face biometrics. We only keep the result, not the video or your face data." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AWS checks your live video to confirm you’re real and look like your photo, using face biometrics. We only keep the result, not the video or your face data."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AWS controleert met je livevideo of je echt bent en op je foto lijkt, met gezichtsbiometrie. Wij bewaren alleen de uitkomst, niet de video of je gezichtsgegevens."
-          }
-        }
-      }
-    },
-    "Allow camera access in Settings to verify your photo." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow camera access in Settings to verify your photo."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sta cameratoegang toe in Instellingen om je foto te verifiëren."
-          }
-        }
-      }
-    },
-    "Also for manual matching" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Also for manual matching"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ook bij handmatig matchen"
-          }
-        }
-      }
-    },
-    "Also use for manual matching" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Also use for manual matching"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ook gebruiken bij handmatig matchen"
-          }
-        }
-      }
-    },
-    "Always your choice" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Always your choice"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Altijd jouw keuze"
-          }
-        }
-      }
-    },
-    "Average match: {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Average match: {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gemiddelde match: {0}"
-          }
-        }
-      }
-    },
-    "Broken match" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Broken match"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbroken match"
-          }
-        }
-      }
-    },
-    "Choose a clear, recent photo of just you, and keep your face inside the oval during the scan." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a clear, recent photo of just you, and keep your face inside the oval during the scan."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies een duidelijke, recente foto van alleen jezelf, en houd je gezicht tijdens de scan binnen het ovaal."
-          }
-        }
-      }
-    },
-    "Conversation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Conversation"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chatgesprek"
-          }
-        }
-      }
-    },
-    "Could not create the PDF" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not create the PDF"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De pdf kon niet worden gemaakt"
-          }
-        }
-      }
-    },
-    "Created on {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Created on {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gemaakt op {0}"
-          }
-        }
-      }
-    },
-    "Demo conversation, not a real match" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Demo conversation, not a real match"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Demogesprek, geen echte match"
-          }
-        }
-      }
-    },
-    "Download chat and profile as PDF" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download chat and profile as PDF"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chatgesprek en profiel downloaden als pdf"
-          }
-        }
-      }
-    },
-    "False information can lead to account termination." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "False information can lead to account termination."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Onjuiste informatie kan je account kosten."
-          }
-        }
-      }
-    },
-    "How a match sees you" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "How a match sees you"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zo ziet een match jou"
-          }
-        }
-      }
-    },
-    "If you remove this picture and you want to add it later, you will need to verify it again." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If you remove this picture and you want to add it later, you will need to verify it again."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Als je deze foto verwijdert en hem later opnieuw wilt toevoegen, moet je hem opnieuw verifiëren."
-          }
-        }
-      }
-    },
-    "In case of a criminal offence, go to the police" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In case of a criminal offence, go to the police"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bij een strafbaar feit, ga naar de politie"
-          }
-        }
-      }
-    },
-    "Join without a photo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Join without a photo"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meedoen zonder foto"
-          }
-        }
-      }
-    },
-    "Just you in the picture, no friends or exes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Just you in the picture, no friends or exes"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alleen jij op de foto, geen vrienden of exen"
-          }
-        }
-      }
-    },
-    "Keep photo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep photo"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Foto houden"
-          }
-        }
-      }
-    },
-    "Make a good first impression" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Make a good first impression"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Maak een goede eerste indruk"
-          }
-        }
-      }
-    },
-    "Match ended on {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Match ended on {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Match beëindigd op {0}"
-          }
-        }
-      }
-    },
-    "Matched on {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Matched on {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gematcht op {0}"
-          }
-        }
-      }
-    },
-    "More about AWS Face Liveness" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More about AWS Face Liveness"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meer over AWS Face Liveness"
-          }
-        }
-      }
-    },
-    "No messages yet." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No messages yet."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nog geen berichten."
-          }
-        }
-      }
-    },
-    "No sunglasses, nothing covering your face" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No sunglasses, nothing covering your face"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geen zonnebril, niets dat je gezicht bedekt"
-          }
-        }
-      }
-    },
-    "Notifications are on" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications are on"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meldingen staan aan"
-          }
-        }
-      }
-    },
-    "Only a verified photo is used for auto matching." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Only a verified photo is used for auto matching."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alleen een geverifieerde foto wordt gebruikt voor automatisch matchen."
-          }
-        }
-      }
-    },
-    "Only match with verified users" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Only match with verified users"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alleen geverifieerde matches"
-          }
-        }
-      }
-    },
-    "Page {0} of {1}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Page {0} of {1}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pagina {0} van {1}"
-          }
-        }
-      }
-    },
-    "Photosensitivity warning" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Photosensitivity warning"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Waarschuwing voor lichtgevoeligheid"
-          }
-        }
-      }
-    },
-    "Profile and conversation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profile and conversation"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profiel en chatgesprek"
-          }
-        }
-      }
-    },
-    "Remove photo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove photo"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Foto verwijderen"
-          }
-        }
-      }
-    },
-    "Remove your verified photo?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove your verified photo?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geverifieerde foto verwijderen?"
-          }
-        }
-      }
-    },
-    "Reporting can affect {0}’s account. Because you can only be matched with one person at a time, a report may be traced back to you. Please keep this in mind." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reporting can affect {0}’s account. Because you can only be matched with one person at a time, a report may be traced back to you. Please keep this in mind."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rapporteren kan gevolgen hebben voor het account van {0}. Omdat je maar met één persoon tegelijk gematcht kunt zijn, is het rapporteren mogelijk aan jou te linken. Wees je hiervan bewust."
-          }
-        }
-      }
-    },
-    "Saved by you as {0}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saved by you as {0}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Door jou opgeslagen als {0}"
-          }
-        }
-      }
-    },
-    "Send this photo along when you hold your phones together. A QR code can’t carry a photo." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Send this photo along when you hold your phones together. A QR code can’t carry a photo."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stuur deze foto mee als jullie je telefoons tegen elkaar houden. Een QR-code kan geen foto meenemen."
-          }
-        }
-      }
-    },
-    "Show your photo card" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show your photo card"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je fotokaart tonen"
-          }
-        }
-      }
-    },
-    "Show {0}’s photo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show {0}’s photo"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Foto van {0} tonen"
-          }
-        }
-      }
-    },
-    "Shows your photo card" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shows your photo card"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toont je fotokaart"
-          }
-        }
-      }
-    },
-    "Shows {0}’s photo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shows {0}’s photo"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toont de foto van {0}"
-          }
-        }
-      }
-    },
-    "Stop anytime or join without a photo. Up to five checks a day." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stop anytime or join without a photo. Up to five checks a day."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stop wanneer je wilt of doe mee zonder foto. Maximaal vijf checks per dag."
-          }
-        }
-      }
-    },
-    "Tap anywhere to close" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap anywhere to close"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tik ergens om te sluiten"
-          }
-        }
-      }
-    },
-    "That’s on our side, not yours. Please try again in a few minutes." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "That’s on our side, not yours. Please try again in a few minutes."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dat ligt aan ons, niet aan jou. Probeer het over een paar minuten opnieuw."
-          }
-        }
-      }
-    },
-    "The check flashes colors on your screen. Take care if you or your family have epilepsy." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The check flashes colors on your screen. Take care if you or your family have epilepsy."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De check laat je scherm in kleuren flitsen. Pas op als jij of je familie epilepsie heeft."
-          }
-        }
-      }
-    },
-    "The real you, matching your photo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The real you, matching your photo"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Echt jij, net als op je foto"
-          }
-        }
-      }
-    },
-    "This document was made on your own phone, from the conversation as it is stored there." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This document was made on your own phone, from the conversation as it is stored there."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dit document is op je eigen telefoon gemaakt, uit het gesprek zoals het daar is opgeslagen."
-          }
-        }
-      }
-    },
-    "This photo doesn’t match you" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This photo doesn’t match you"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deze foto matcht niet met jou"
-          }
-        }
-      }
-    },
-    "Verification isn’t working right now" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verification isn’t working right now"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verificatie werkt nu even niet"
-          }
-        }
-      }
-    },
-    "Verified live" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verified live"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Live geverifieerd"
-          }
-        }
-      }
-    },
-    "Verified profile" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verified profile"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geverifieerd profiel"
-          }
-        }
-      }
-    },
-    "We’ll text you when we’ve found the one." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "We’ll text you when we’ve found the one."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wij zoeken jouw match. Jij hoort het vanzelf."
-          }
-        }
-      }
-    },
-    "You only get one, so choose wisely" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You only get one, so choose wisely"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je krijgt er maar één, dus kies met zorg"
-          }
-        }
-      }
-    },
-    "Your photo isn’t verified yet" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your photo isn’t verified yet"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je foto is nog niet geverifieerd"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_camera_permission_button_description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You may need to allow camera access in Settings, then close the app and try again."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mogelijk moet je cameratoegang geven in Instellingen en daarna de app sluiten en opnieuw proberen."
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_camera_permission_button_header" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The camera isn’t accessible"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De camera is niet beschikbaar"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_camera_permission_button_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Change camera setting"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Camera-instelling wijzigen"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_camera_permission_page_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Liveness check"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Live check"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_camera_setting_alert_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow camera access in Settings."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geef cameratoegang in Instellingen."
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_camera_setting_alert_not_now_button_text" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not now"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nu niet"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_camera_setting_alert_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Change your camera settings"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pas je camera-instellingen aan"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_camera_setting_alert_update_setting_button_text" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Settings"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Instellingen"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_center_your_face_text" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Center your face"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zet je gezicht in het midden"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_challenge_cancel_a11y" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel check"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Check annuleren"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_challenge_connecting" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connecting…"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbinden…"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_challenge_instruction_hold_face_during_countdown" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hold your face still during the countdown"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Houd je gezicht stil tijdens het aftellen"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_challenge_instruction_hold_face_during_freshness" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep your face in the oval while the colors flash"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Houd je gezicht in het ovaal terwijl de kleuren flitsen"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_challenge_instruction_hold_still" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hold still"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blijf stil"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_challenge_instruction_move_face_back" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move back"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ga iets naar achteren"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_challenge_instruction_move_face_closer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move closer"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kom iets dichterbij"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_challenge_instruction_move_face_in_front_of_camera" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move your face in front of the camera"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Breng je gezicht voor de camera"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_challenge_instruction_multiple_faces_detected" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Only one face per check"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Maar één gezicht per check"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_challenge_recording_indicator_label" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "REC"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "REC"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_challenge_verifying" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verifying"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Controleren"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_close_button_a11y" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Close"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sluiten"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_face_not_prepared_reason_face_too_close" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move a little farther away"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ga iets verder weg"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_face_not_prepared_reason_move_face_closer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move closer"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kom iets dichterbij"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_face_not_prepared_reason_move_face_left" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move your face left"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beweeg je gezicht naar links"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_face_not_prepared_reason_move_face_right" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move your face right"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beweeg je gezicht naar rechts"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_face_not_prepared_reason_move_to_brighter_area" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move somewhere brighter"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zoek een lichtere plek"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_face_not_prepared_reason_move_to_dimmer_area" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move somewhere less bright"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zoek een minder felle plek"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_face_not_prepared_reason_multiple_faces" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Only one face per check"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Maar één gezicht per check"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_face_not_prepared_reason_no_face" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move your face in front of the camera"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Breng je gezicht voor de camera"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_face_not_prepared_reason_not_in_oval" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fit your face in the oval"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zet je gezicht in het ovaal"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_get_ready_begin_check" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start video check"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start videocheck"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_get_ready_page_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Liveness check"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Live check"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_get_ready_photosensitivity_description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This check flashes different colors. Use caution if you are photosensitive."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deze check flitst in verschillende kleuren. Wees voorzichtig als je lichtgevoelig bent."
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_get_ready_photosensitivity_dialog_description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Some people may experience epileptic seizures when exposed to colored lights. Use caution if you, or anyone in your family, have an epileptic condition."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sommige mensen kunnen een epileptische aanval krijgen door gekleurde lichten. Wees voorzichtig als jij of iemand in je familie epilepsie heeft."
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_get_ready_photosensitivity_dialog_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Photosensitivity warning"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Waarschuwing voor lichtgevoeligheid"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_get_ready_photosensitivity_icon_a11y" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Photosensitivity information"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Informatie over lichtgevoeligheid"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_get_ready_photosensitivity_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Photosensitivity warning"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Waarschuwing voor lichtgevoeligheid"
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_orientation_prompt_description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rotate your device to portrait to continue."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draai je toestel naar staand om verder te gaan."
-          }
-        }
-      }
-    },
-    "amplify_ui_liveness_orientation_prompt_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hold your phone upright"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Houd je telefoon rechtop"
-          }
-        }
-      }
-    },
-    "{0} km away" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} km away"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} km van je vandaan"
-          }
-        }
-      }
-    },
-    "{0} messages" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} messages"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} berichten"
-          }
-        }
-      }
-    },
-    "{0} percent match" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} percent match"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0} procent match"
-          }
-        }
-      }
-    },
-    "{0}, {1}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}, {1}"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "{0}, {1}"
-          }
-        }
-      }
-    },
-    "Choose another photo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose another photo"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies een andere foto"
           }
         }
       }

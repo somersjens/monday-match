@@ -158,9 +158,10 @@ struct MatchChatPanel: View {
     }
 
     private var notice: some View {
-        Label(chat.isDemo ? L10n("Demo conversation. Every message gets a reply.")
-                          : L10n("Messages are end-to-end encrypted. Only you and your match can read them."),
-              systemImage: chat.isDemo ? "sparkles" : "lock.fill")
+        // The same for a demo and a live match: how long the server keeps
+        // the conversation (see 202611180003_retention_and_identity_hmac.sql).
+        Label(L10n("Chat history is kept for up to 12 months, even after the match is broken."),
+              systemImage: "clock")
             .font(.caption2)
             .foregroundStyle(OnboardingTheme.secondaryText)
             .multilineTextAlignment(.center)

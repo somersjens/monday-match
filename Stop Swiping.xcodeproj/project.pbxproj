@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		CD8820010000000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = CD8820010000000000000002 /* Supabase */; };
-		CD8820020000000000000001 /* FaceLiveness in Frameworks */ = {isa = PBXBuildFile; productRef = CD8820020000000000000002 /* FaceLiveness */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,7 +70,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				CD8820010000000000000001 /* Supabase in Frameworks */,
-				CD8820020000000000000001 /* FaceLiveness in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -133,7 +131,6 @@
 			name = "Stop Swiping";
 			packageProductDependencies = (
 				CD8820010000000000000002 /* Supabase */,
-				CD8820020000000000000002 /* FaceLiveness */,
 			);
 			productName = "Stop Swiping";
 			productReference = F9D98B6B2FE9028200B20CE0 /* Stop Swiping.app */;
@@ -220,7 +217,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				CD8820010000000000000003 /* XCRemoteSwiftPackageReference "supabase-swift" */,
-				CD8820020000000000000003 /* XCRemoteSwiftPackageReference "amplify-ui-swift-liveness" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F9D98B6C2FE9028200B20CE0 /* Products */;
@@ -678,14 +674,6 @@
 				minimumVersion = 2.55.6;
 			};
 		};
-		CD8820020000000000000003 /* XCRemoteSwiftPackageReference "amplify-ui-swift-liveness" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/aws-amplify/amplify-ui-swift-liveness";
-			requirement = {
-				kind = exactVersion;
-				version = 1.6.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -693,11 +681,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = CD8820010000000000000003 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
-		};
-		CD8820020000000000000002 /* FaceLiveness */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CD8820020000000000000003 /* XCRemoteSwiftPackageReference "amplify-ui-swift-liveness" */;
-			productName = FaceLiveness;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

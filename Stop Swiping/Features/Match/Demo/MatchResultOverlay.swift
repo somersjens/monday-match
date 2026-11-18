@@ -63,6 +63,9 @@ struct MatchResultOverlay: View {
     /// The other person's photo card: for a match the server made, and for
     /// the demo (your own). Nil hides the photo button.
     var photoCard: MatchPhotoCard? = nil
+    /// The photo for the report's PDF: like the card's, but kept after the
+    /// match is broken, when reporting is still possible.
+    var reportPhoto: UIImage? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var confirmsDeletion = false
@@ -179,7 +182,8 @@ struct MatchResultOverlay: View {
         .destructiveConfirmation(isPresented: $confirmsDeletion, confirmTitle: L10n("Delete match"), action: onDelete)
         .destructiveConfirmation(isPresented: $confirmsBreak, confirmTitle: L10n("Break match"), action: onBreakMatch)
         .sheet(item: $reportReason) { reason in
-            MatchReportSheet(match: match, chat: chat, reason: reason, onSubmit: onReport)
+            MatchReportSheet(match: match, chat: chat, photo: reportPhoto ?? photoCard?.photo,
+                             reason: reason, onSubmit: onReport)
         }
         .animation(.easeInOut(duration: reduceMotion ? 0.2 : 0.55), value: isChatting)
         .onChange(of: isChatting) { _, _ in closePhoto() }

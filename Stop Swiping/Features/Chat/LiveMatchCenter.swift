@@ -297,7 +297,18 @@ final class LiveMatchCenter: ObservableObject {
         defaults.removeObject(forKey: cacheKey)
     }
 
+    /// Deleting the profile: the cached match and everything kept per match,
+    /// including each partner's card (their age, area and answers) and the
+    /// frozen copy of this profile. None of it may outlive the account.
+    nonisolated static func clearLocalData(defaults: UserDefaults = .standard) {
+        for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(keyPrefix) {
+            defaults.removeObject(forKey: key)
+        }
+    }
+
+    nonisolated private static let keyPrefix = "liveMatch."
+
     private static func key(_ kind: String, _ id: UUID) -> String {
-        "liveMatch.\(kind).\(id.uuidString.lowercased())"
+        "\(keyPrefix)\(kind).\(id.uuidString.lowercased())"
     }
 }

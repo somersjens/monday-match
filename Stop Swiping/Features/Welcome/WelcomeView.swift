@@ -9,7 +9,7 @@ struct WelcomeView: View {
     private let authService: AuthServicing
     private let profileSync: ProfileCloudSyncing?
     private let chatRepository: SecureChatRepository?
-    private let photoVerification: AWSPhotoVerificationService?
+    private let photoVerification: PhotoVerificationService?
     private let automaticallyShowsAccessOnAppear: Bool
     private let onDeleteProfile: (() async throws -> Void)?
     private let onProfileDeleted: () -> Void
@@ -147,7 +147,7 @@ struct WelcomeView: View {
         hasAccount: Bool = false,
         profileSync: ProfileCloudSyncing? = nil,
         chatRepository: SecureChatRepository? = nil,
-        photoVerification: AWSPhotoVerificationService? = nil,
+        photoVerification: PhotoVerificationService? = nil,
         codeInbox: ProfileCodeInbox? = nil,
         onDeleteProfile: (() async throws -> Void)? = nil,
         onProfileDeleted: @escaping () -> Void = {},
@@ -394,7 +394,8 @@ struct WelcomeView: View {
                             onShowPersonality: openMatchPersonality,
                             onBreakMatch: breakMatch,
                             onReport: reportMatch,
-                            photoCard: activePhotoCard
+                            photoCard: activePhotoCard,
+                            reportPhoto: activeReportPhoto
                         )
                         // Gives the light to the chart: fades quickly as the rings
                         // start to reweave, and returns once they are nearly back.
@@ -1514,6 +1515,17 @@ struct WelcomeView: View {
         // Another phone can't prove its photo was verified, so it never says so.
         return MatchPhotoCard(name: snapshot.name, age: snapshot.them.age(on: today), photo: matchPhoto,
                               isVerified: false, distanceKilometers: snapshot.distanceKilometers)
+    }
+
+    /// The photo for a report's PDF: the other person's, or your own in the
+    /// demo. Unlike the photo card, also after a live match is broken.
+    private var activeReportPhoto: UIImage? {
+        guard let snapshot = activeMatch?.snapshot else { return nil }
+        if snapshot.isLive {
+            guard liveMatches.match?.id == snapshot.id else { return nil }
+            return liveMatches.partnerPhoto
+        }
+        return matchPhoto
     }
 
     /// Reads the photo for a demo or exchanged match once, decoding it off

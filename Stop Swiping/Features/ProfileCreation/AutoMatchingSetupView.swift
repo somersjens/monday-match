@@ -6,7 +6,7 @@ import UIKit
 struct AutoMatchingSetupView: View {
     @ObservedObject var viewModel: ProfileCreationViewModel
     @ObservedObject var locationService: LocationService
-    var serverVerification: AWSPhotoVerificationService? = nil
+    var serverVerification: PhotoVerificationService? = nil
     let onFinish: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -19,8 +19,8 @@ struct AutoMatchingSetupView: View {
     @State private var showsPrivacy = false
     /// Joining opens the data policy first; accepting it continues joining.
     @State private var joinsAfterPrivacy = false
-    @State private var showsVerificationConsent = false
-    @State private var verification = AWSPhotoVerificationState()
+    @State private var showsVerificationScan = false
+    @State private var verification = PhotoVerificationState()
     @State private var asksAboutUnverifiedPhoto = false
     @State private var asksToRemoveVerifiedPhoto = false
     @State private var appearanceMode: PartnerPreferenceScale.Mode = .own
@@ -29,7 +29,7 @@ struct AutoMatchingSetupView: View {
 
     /// `startsOnPhotoStep` opens the last step directly, for layout renders.
     init(viewModel: ProfileCreationViewModel, locationService: LocationService,
-         serverVerification: AWSPhotoVerificationService? = nil, startsOnPhotoStep: Bool = false,
+         serverVerification: PhotoVerificationService? = nil, startsOnPhotoStep: Bool = false,
          onFinish: @escaping () -> Void) {
         self.viewModel = viewModel
         self.locationService = locationService
@@ -213,7 +213,7 @@ struct AutoMatchingSetupView: View {
                                         ownPhotoCard(photo, side: side)
                                     }
                                     .buttonStyle(.plain)
-                                    .disabled(isLoadingPhoto || verification.isStarting)
+                                    .disabled(isLoadingPhoto || verification.isSaving)
                                     .accessibilityLabel(L10n("Choose another photo"))
                                 }
                             }
@@ -258,19 +258,17 @@ struct AutoMatchingSetupView: View {
         .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion),
                    value: verification.issue)
         .animation(.spring(duration: 0.45, bounce: 0.2), value: photoIsVerified)
-        .awsPhotoVerification(
+        .photoVerification(
             photo: viewModel.autoMatchingReferencePhoto,
             service: serverVerification,
             isVerified: photoIsVerified,
-            showsConsent: $showsVerificationConsent,
+            isPresented: $showsVerificationScan,
             state: $verification,
             onComplete: viewModel.recordAutoMatchingPhotoVerification
         )
         .confirmationDialog(L10n("Your photo isn’t verified yet"), isPresented: $asksAboutUnverifiedPhoto,
                             titleVisibility: .visible) {
-            if serverVerification != nil {
-                Button(L10n("Verify this photo")) { showsVerificationConsent = true }
-            }
+            Button(L10n("Verify this photo")) { showsVerificationScan = true }
             Button(L10n("Join without a photo")) {
                 removePhoto()
                 if photo == nil { join() }
@@ -282,7 +280,7 @@ struct AutoMatchingSetupView: View {
     }
 
     /// Why the last check did not go through, and what to do about it.
-    private func verificationNotice(_ issue: AWSPhotoVerificationIssue) -> some View {
+    private func verificationNotice(_ issue: PhotoVerificationIssue) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: issue.symbol)
                 .font(.system(size: 17, weight: .semibold))
@@ -452,9 +450,9 @@ struct AutoMatchingSetupView: View {
     }
 
     private func verifyButton(scale: CGFloat) -> some View {
-        Button { showsVerificationConsent = true } label: {
+        Button { showsVerificationScan = true } label: {
             HStack(spacing: 6 * scale) {
-                if verification.isStarting {
+                if verification.isSaving {
                     ProgressView().controlSize(.small).tint(.white)
                 }
                 Text(L10n("Verify this photo"))
@@ -476,7 +474,7 @@ struct AutoMatchingSetupView: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .disabled(serverVerification == nil || verification.isStarting || isLoadingPhoto)
+        .disabled(verification.isSaving || isLoadingPhoto)
         .transition(.scale(scale: 0.8).combined(with: .opacity))
     }
 
@@ -503,7 +501,7 @@ struct AutoMatchingSetupView: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .disabled(isLoadingPhoto || verification.isStarting)
+        .disabled(isLoadingPhoto || verification.isSaving)
         .accessibilityLabel(L10n("Remove photo"))
     }
 
@@ -762,7 +760,7 @@ struct AutoMatchingSetupView: View {
         case .appearance:
             return !settings.isReady && missingAppearanceSide == nil
         case .photo:
-            return !settings.isReady || isLoadingPhoto || verification.isStarting
+            return !settings.isReady || isLoadingPhoto || verification.isSaving
         }
     }
 

@@ -62,7 +62,15 @@ final class ChatViewModel: ObservableObject {
         ChatViewModel(conversation: conversation, autoReply: "Hi")
     }
 
-    private static func readKey(_ matchID: UUID) -> String { "chat.lastRead.\(matchID.uuidString.lowercased())" }
+    private nonisolated static let readKeyPrefix = "chat.lastRead."
+    private static func readKey(_ matchID: UUID) -> String { readKeyPrefix + matchID.uuidString.lowercased() }
+
+    /// Deleting the profile: how far each conversation was read goes too.
+    nonisolated static func clearReadPositions(defaults: UserDefaults = .standard) {
+        for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(readKeyPrefix) {
+            defaults.removeObject(forKey: key)
+        }
+    }
 
     /// Messages from the partner that arrived after the chat was last open.
     var unreadMessages: [ChatMessage] {

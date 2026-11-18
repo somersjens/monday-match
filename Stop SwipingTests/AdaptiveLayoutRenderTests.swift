@@ -92,8 +92,11 @@ final class AdaptiveLayoutRenderTests: XCTestCase {
                              screen: "how-it-works", device: device)
             try await render(PrivacyConsentView(kind: .profile, onAccept: {}),
                              screen: "privacy", device: device)
-            try await render(AWSVerificationConsentView(onBack: {}, onAgree: {}),
-                             screen: "photo-verification-consent", device: device)
+            try await render(FaceVerificationScreen(snapshot: FaceScanSnapshot(phase: .circling, collectedSectors: [0, 1, 2],
+                                                                                targetSector: 3),
+                                                    outcome: nil, needsCameraPermission: false,
+                                                    onCancel: {}, onRetry: {}, onSettings: {}, onDone: {}) { Color.black },
+                             screen: "photo-verification-scan", device: device)
             try await render(NavigationStack {
                 SignInPlaceholderView(authService: MockAuthService(), onAuthenticated: { _ in })
             }, screen: "sign-in", device: device)

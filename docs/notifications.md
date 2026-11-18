@@ -251,31 +251,34 @@ leaves the phone; wire the summary to an analytics service if one is added.
 
 ## 6. Deploying the server half
 
-Nothing here is live yet. In order:
+Done on 18 November 2026:
+
+- `202611160002_push_notifications.sql` ran on the live database;
+  `supabase/tests/push_notifications.sql` passed there (33 checks, rolled back).
+- `202611160003_match_partner_photo.sql` ran too; `tests/match_partner_photo.sql`
+  passed (16 checks).
+- `supabase/functions/push-dispatch` (with `policy.ts` and `copy.json`) is
+  deployed.
+- `202611180004_push_dispatch_schedule.sql` enabled `pg_cron` and `pg_net` and
+  scheduled `push-dispatch` every 15 seconds. The job only calls the function
+  once the Vault secret exists and a push is due, so an idle project makes no
+  calls. A daily `push-prune` job clears old outbox rows and pg_cron's run log.
+
+Still to do, by hand (secrets never go through Claude):
 
 1. Create an APNs auth key (Apple Developer → Keys → Apple Push Notifications
    service). Add Supabase function secrets `APNS_KEY_ID`, `APNS_PRIVATE_KEY`
    (the .p8 contents) and `PUSH_DISPATCH_SECRET` (a long random string).
    `APPLE_TEAM_ID` is already set for `apple-revoke`.
-2. Run `supabase/migrations/202611160002_push_notifications.sql` in the SQL
-   Editor (it runs after the baseline; never rerun the baseline).
-3. Run `supabase/tests/push_notifications.sql` ("Run without RLS"; it rolls back).
-4. Deploy `supabase/functions/push-dispatch` (with `policy.ts` and
-   `copy.json`). "Verify JWT with legacy secret" must be off; the function
-   checks `PUSH_DISPATCH_SECRET` itself.
-5. Enable `pg_cron` and `pg_net`, store the secret in Vault, and schedule:
+2. Store the same dispatch secret in Vault from the SQL Editor:
 
    ```sql
    select vault.create_secret('<PUSH_DISPATCH_SECRET>', 'push_dispatch_secret');
-   select cron.schedule('push-dispatch', '15 seconds', $$
-     select net.http_post(
-       url := 'https://yrnwzehdzlxwnhyabwja.supabase.co/functions/v1/push-dispatch',
-       headers := jsonb_build_object('Content-Type', 'application/json',
-         'X-Dispatch-Secret', (select decrypted_secret from vault.decrypted_secrets where name = 'push_dispatch_secret')),
-       body := '{}'::jsonb, timeout_milliseconds := 10000);
-   $$);
    ```
-6. Switch `aps-environment` to `production` for App Store builds (the app sends
+3. Turn "Verify JWT with legacy secret" **off** for `push-dispatch`
+   (Edge Functions → push-dispatch → Settings). pg_cron sends no JWT; the
+   function checks `PUSH_DISPATCH_SECRET` itself.
+4. Switch `aps-environment` to `production` for App Store builds (the app sends
    `sandbox` from debug builds and `production` otherwise).
 
 Until then the app's local notifications work on their own; new matches and

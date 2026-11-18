@@ -46,6 +46,19 @@ final class MatchReportExportTests: XCTestCase {
         }
     }
 
+    func testThePhotoIsDrawnIntoThePDF() throws {
+        let photo = UIGraphicsImageRenderer(size: CGSize(width: 60, height: 80)).image { context in
+            UIColor.systemTeal.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 60, height: 80))
+        }
+        let match = demoMatch()
+        let withPhoto = MatchReportExport(match: match, messages: [], photo: photo).pdfData()
+        let withoutPhoto = MatchReportExport(match: match, messages: []).pdfData()
+        let imageMarker = Data("/Subtype /Image".utf8)
+        XCTAssertNotNil(withPhoto.range(of: imageMarker), "The photo must be in the PDF.")
+        XCTAssertNil(withoutPhoto.range(of: imageMarker), "Without a photo, the initial stands in.")
+    }
+
     func testAnEmptyConversationStillExports() throws {
         let export = MatchReportExport(match: demoMatch(), messages: [])
         let document = try XCTUnwrap(PDFDocument(data: export.pdfData()))

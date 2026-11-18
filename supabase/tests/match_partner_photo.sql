@@ -85,7 +85,12 @@ select pg_temp.ok(not exists(select 1 from storage.objects where name = pg_temp.
     'Other photos of the partner stay hidden');
 
 -- ===== After the match ends ===============================================
-select public.break_match(pg_temp.match_of(1));
+-- Clients cannot read matching_private, so the match ID is looked up first.
+select pg_temp.as_admin();
+create temporary table photo_match as select pg_temp.match_of(1) as id;
+grant select on photo_match to authenticated;
+select pg_temp.as_user(1);
+select public.break_match((select id from photo_match));
 -- Breaking puts person 1 back in the pool, where person 3 is waiting.
 select pg_temp.ok((select m->'partner_photo' = 'null'::jsonb and not (m->>'partner_photo_verified')::boolean
     from jsonb_array_elements(public.my_matches()) m where m->>'partner_id' = pg_temp.id(2)::text),

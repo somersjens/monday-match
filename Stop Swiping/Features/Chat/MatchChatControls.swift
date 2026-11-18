@@ -131,6 +131,8 @@ private struct MatchSettingsPanel: View {
         }
     }
 
+    private static let destructive = Color(red: 1, green: 0.36, blue: 0.4)
+
     private var divider: some View {
         Rectangle().fill(OnboardingTheme.hairline).frame(height: 0.5).padding(.vertical, 4)
     }
@@ -141,6 +143,8 @@ private struct MatchSettingsPanel: View {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
                     .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(isDestructive ? AnyShapeStyle(Self.destructive)
+                                                   : AnyShapeStyle(OnboardingTheme.accentGradient))
                     .frame(width: 24)
                 Text(title)
                     .font(.body)
@@ -153,7 +157,7 @@ private struct MatchSettingsPanel: View {
                         .foregroundStyle(OnboardingTheme.tertiaryText)
                 }
             }
-            .foregroundStyle(isDestructive ? Color(red: 1, green: 0.36, blue: 0.4) : OnboardingTheme.primaryText)
+            .foregroundStyle(isDestructive ? Self.destructive : OnboardingTheme.primaryText)
             .padding(.horizontal, 16)
             .frame(minHeight: 46)
             .contentShape(Rectangle())
@@ -176,10 +180,14 @@ struct MatchReportSheet: View {
     let match: MatchSnapshot
     /// The conversation to put in the PDF; the demo's too.
     let chat: ChatViewModel?
+    /// For the PDF: the other person's photo, or your own in the demo.
+    let photo: UIImage?
     let onSubmit: (ReportReason, String, Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var reason: ReportReason
+    @State private var showsReasons = false
     @State private var details = ""
     @State private var alsoBreak = false
     @State private var confirmsBreak = false
@@ -189,10 +197,11 @@ struct MatchReportSheet: View {
 
     private var name: String { match.name }
 
-    init(match: MatchSnapshot, chat: ChatViewModel?, reason: ReportReason,
+    init(match: MatchSnapshot, chat: ChatViewModel?, photo: UIImage?, reason: ReportReason,
          onSubmit: @escaping (ReportReason, String, Bool) -> Void) {
         self.match = match
         self.chat = chat
+        self.photo = photo
         self.onSubmit = onSubmit
         _reason = State(initialValue: reason)
     }
@@ -356,45 +365,73 @@ struct MatchReportSheet: View {
     }
 
     /// The reason was already picked from the menu, so it shows as one row;
-    /// tapping it opens the other reasons to switch.
+    /// tapping it unfolds the other reasons in place, under it.
     private var reasonPicker: some View {
-        Menu {
-            Picker(L10n("Reason"), selection: $reason) {
-                ForEach(ReportReason.allCases) { option in
-                    Label(option.title, systemImage: option.symbol).tag(option)
+        VStack(spacing: 0) {
+            Button {
+                detailsFocused = false
+                withAnimation(reasonAnimation) { showsReasons.toggle() }
+            } label: {
+                reasonLabel(reason) {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(OnboardingTheme.tertiaryText)
+                        .rotationEffect(.degrees(showsReasons ? 180 : 0))
                 }
+                // The new reason takes its place at once, without sliding.
+                .transaction(value: reason) { $0.animation = nil }
             }
-            .pickerStyle(.inline)
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: reason.symbol)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(OnboardingTheme.accentGradient)
-                    .frame(width: 24)
-                Text(reason.title)
-                    .foregroundStyle(OnboardingTheme.primaryText)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(OnboardingTheme.tertiaryText)
+            .buttonStyle(MenuRowStyle())
+            .accessibilityLabel(L10n("Reason"))
+            .accessibilityValue(reason.title)
+            .accessibilityIdentifier("report.reason")
+
+            if showsReasons {
+                VStack(spacing: 0) {
+                    ForEach(ReportReason.allCases.filter { $0 != reason }) { option in
+                        Rectangle().fill(.white.opacity(0.07)).frame(height: 0.5).padding(.leading, 50)
+                        Button {
+                            reason = option
+                            withAnimation(reasonAnimation) { showsReasons = false }
+                        } label: {
+                            reasonLabel(option) { EmptyView() }
+                        }
+                        .buttonStyle(MenuRowStyle())
+                    }
+                }
+                .transition(.opacity)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .clipShape(.rect(cornerRadius: 16))
         .onboardingSurface(cornerRadius: 16)
-        .simultaneousGesture(TapGesture().onEnded { detailsFocused = false })
-        .accessibilityLabel(L10n("Reason"))
-        .accessibilityValue(reason.title)
-        .accessibilityIdentifier("report.reason")
+    }
+
+    private var reasonAnimation: Animation {
+        reduceMotion ? .easeInOut(duration: 0.2) : .smooth(duration: 0.3)
+    }
+
+    private func reasonLabel<Trailing: View>(_ option: ReportReason,
+                                             @ViewBuilder trailing: () -> Trailing) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: option.symbol)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(OnboardingTheme.accentGradient)
+                .frame(width: 24)
+            Text(option.title)
+                .foregroundStyle(OnboardingTheme.primaryText)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            trailing()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
     }
 
     private func exportPDF() {
         detailsFocused = false
         let document = MatchReportExport(match: match, messages: chat?.conversation.messages ?? [],
-                                         isDemo: chat?.isDemo ?? false)
+                                         isDemo: chat?.isDemo ?? false, photo: photo)
         do {
             export = ExportedFile(url: try document.writeTemporaryFile())
         } catch {

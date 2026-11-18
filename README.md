@@ -103,9 +103,9 @@ migrations and the rollback-only SQL tests are in `supabase/`.
 See [matching backend](docs/supabase-matching.md) for the lifecycle, API contract,
 admin overview, verification requirements and deployment notes. The real profile home now
 opens live encrypted chat, with CryptoKit HPKE, Keychain device keys, security
-codes, retry handling, blocking and reporting. AWS Face Liveness integration for
-verified profile photos is implemented; see [AWS activation](docs/aws-photo-verification.md)
-for the account/secret setup that remains before real verification can run.
+codes, retry handling, blocking and reporting. Profile photos are verified with
+an on-device live scan during the beta; see [photo verification](docs/face-verification.md).
+The AWS Face Liveness version is parked; see [AWS photo verification](docs/aws-photo-verification.md).
 
 Reference: [Supabase SwiftUI setup](https://supabase.com/docs/guides/getting-started/quickstarts/ios-swiftui),
 [Apple sign-in](https://supabase.com/docs/guides/auth/social-sign-in/auth-apple),
@@ -171,8 +171,13 @@ limit.
 
 ## Photo verification
 
-Photos are verified on the server with AWS Face Liveness; see
-[AWS activation](docs/aws-photo-verification.md). The earlier on-device scan
-(Vision plus the 37 MB SFace Core ML model) was removed on 16 November 2026:
-the app always used the server check, so the model only added download size.
-It is in the Git history if it is ever needed again.
+During the beta, photos are verified with the app's own live scan on the phone
+(Vision plus the 37 MB SFace Core ML model); see [photo verification](docs/face-verification.md).
+After a match the app tells the server, which records that photo version as
+verified (`record_device_photo_verification`). The server trusts the app for this.
+
+The AWS Face Liveness version (server-proven, but in AWS's own look) was taken
+out on 18 November 2026 and is parked: Git tag `aws-liveness-v1`, the Swift files
+in `archive/aws-face-liveness/`, and the Supabase function and AWS template still
+in `supabase/`. See [AWS photo verification](docs/aws-photo-verification.md) to
+turn it back on.
