@@ -87,6 +87,38 @@ final class BrokenMatchTests: XCTestCase {
         XCTAssertFalse(chat.canSend)
     }
 
+    /// After a hard close the app opens on the active match straight away,
+    /// before the server has answered, and forgets it once the server does.
+    func testActiveMatchIsThereAtLaunchBeforeTheServerAnswers() async throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "BrokenMatchTests-\(UUID())"))
+        let repository = HistoryRepository()
+        let id = UUID()
+        repository.current = CloudChatMatch(id: id, partnerID: UUID(), partnerName: "Mila", ownScore: 80, partnerScore: 84,
+                                             matchedAt: Date(), unreadCount: 2)
+        let first = LiveMatchCenter(repository: repository, defaults: defaults)
+        XCTAssertNil(first.match)
+        await first.refresh(ownProfile: Self.profile("Emma"))
+        XCTAssertEqual(first.match?.id, id)
+
+        let relaunched = LiveMatchCenter(repository: repository, defaults: defaults)
+        XCTAssertEqual(relaunched.match, repository.current)
+        XCTAssertEqual(relaunched.chat?.conversation.matchID, id)
+        XCTAssertNotNil(relaunched.snapshot(fallbackYou: Self.profile("Emma")))
+
+        // The match ended while the app was closed.
+        repository.current = nil
+        await relaunched.refresh(ownProfile: Self.profile("Emma"))
+        XCTAssertNil(relaunched.match)
+        XCTAssertNil(LiveMatchCenter(repository: repository, defaults: defaults).match)
+
+        // Signing out leaves nothing for the next account.
+        repository.current = CloudChatMatch(id: id, partnerID: UUID(), partnerName: "Mila", ownScore: 80, partnerScore: 84)
+        await relaunched.refresh(ownProfile: Self.profile("Emma"))
+        LiveMatchCenter.clearCache(defaults: defaults)
+        XCTAssertNil(LiveMatchCenter(repository: repository, defaults: defaults).match)
+        XCTAssertNil(LiveMatchCenter(repository: nil, defaults: defaults).match)
+    }
+
     private static func profile(_ name: String) -> ProfileCreationState {
         var state = ProfileCreationState(today: .today(), applicationLanguage: "nl")
         state.displayName = name
@@ -115,8 +147,9 @@ final class BrokenMatchTests: XCTestCase {
 private final class HistoryRepository: SecureChatRepository {
     let scope = "history-test-" + UUID().uuidString
     var history: [CloudChatMatch] = []
+    var current: CloudChatMatch?
     func userID() async throws -> UUID { UUID() }
-    func currentMatch() async throws -> CloudChatMatch? { nil }
+    func currentMatch() async throws -> CloudChatMatch? { current }
     func isClosed(_ matchID: UUID) async throws -> Bool { true }
     func bundles(_ matchID: UUID) async throws -> [CloudChatBundle] { [] }
     func register(_ matchID: UUID, deviceID: UUID, key: Data, replace: Bool) async throws {}

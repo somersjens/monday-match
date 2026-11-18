@@ -34,7 +34,8 @@ protocol NotificationCentering: AnyObject {
 /// analytics and keeps the push device registration current.
 @MainActor
 final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCenterDelegate {
-    @Published private(set) var preferences: NotificationPreferences
+    /// Everything on: there are no notification switches in the app.
+    let preferences = NotificationPreferences.standard
     @Published private(set) var permission: NotificationPermissionState = .notDetermined
     @Published var notice: InAppNotice?
     /// A screen a notification asked to open, waiting for the home screen.
@@ -45,7 +46,6 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
 
     private let center: NotificationCentering
     private let loadProfile: () -> ProfileCreationState?
-    private let preferencesStore: NotificationPreferencesStore
     private let ledgerStore: NotificationLedgerStore
     private let signalStore: NotificationSignalStore
     private let registrar: PushDeviceRegistering?
@@ -82,14 +82,14 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
         self.language = language ?? { AppLanguageSettings.shared.language }
         self.center = center ?? SystemNotificationCenter()
         self.loadProfile = loadProfile
-        preferencesStore = NotificationPreferencesStore(defaults: defaults)
         ledgerStore = NotificationLedgerStore(defaults: defaults)
         signalStore = NotificationSignalStore(defaults: defaults)
         self.registrar = registrar
         self.policy = policy ?? .standard
         self.calendar = calendar
         self.now = now
-        preferences = preferencesStore.load()
+        // Switches from before notifications became all or nothing.
+        defaults.removeObject(forKey: Self.legacyPreferencesKey)
         ledger = ledgerStore.load()
         signals = signalStore.load()
         super.init()
@@ -238,24 +238,7 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
         self.notice = nil
     }
 
-    // MARK: - Preferences and permission
-
-    func setPreferences(_ updated: NotificationPreferences) {
-        let previous = preferences
-        guard updated != previous else { return }
-        let switches: [(String, KeyPath<NotificationPreferences, Bool>)] = [
-            ("matches_and_messages", \.matchesAndMessages), ("tips_and_nudges", \.tipsAndNudges),
-            ("match_ended_alerts", \.matchEndedAlerts), ("message_previews", \.messagePreviews),
-            ("quiet_hours", \.quietHoursEnabled),
-        ]
-        for (name, path) in switches where previous[keyPath: path] != updated[keyPath: path] {
-            ledger.log(.init(name: updated[keyPath: path] ? .optedIn : .optedOut, at: now(), detail: name))
-        }
-        preferences = updated
-        preferencesStore.save(updated)
-        ledgerStore.save(ledger)
-        scheduleSync(after: .milliseconds(300))
-    }
+    // MARK: - Permission
 
     func requestPermission() async {
         _ = await center.requestAuthorization()
@@ -438,7 +421,7 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
     static func clearLocalData(defaults: UserDefaults = .standard) {
         NotificationLedgerStore(defaults: defaults).clear()
         NotificationSignalStore(defaults: defaults).clear()
-        NotificationPreferencesStore(defaults: defaults).clear()
+        defaults.removeObject(forKey: legacyPreferencesKey)
         let center = UNUserNotificationCenter.current()
         Task {
             let requests = await center.pendingNotificationRequests()
@@ -446,6 +429,8 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
             center.removeAllDeliveredNotifications()
         }
     }
+
+    private static let legacyPreferencesKey = "notifications.preferences.v1"
 
     nonisolated static func isOurs(_ identifier: String) -> Bool { identifier.hasPrefix("stopswiping.") }
     static func matchKey(_ id: UUID) -> String { "match_new.\(id.uuidString.lowercased())" }

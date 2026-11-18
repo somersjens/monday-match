@@ -60,15 +60,21 @@ struct MatchResultOverlay: View {
     var onShowPersonality: () -> Void = {}
     var onBreakMatch: () -> Void = {}
     var onReport: (ReportReason, String, Bool) -> Void = { _, _, _ in }
+    /// The other person's photo card: for a match the server made, and for
+    /// the demo (your own). Nil hides the photo button.
+    var photoCard: MatchPhotoCard? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var confirmsDeletion = false
-    @State private var confirmsDeletionAgain = false
     @State private var confirmsBreak = false
-    @State private var confirmsBreakAgain = false
     @State private var reportReason: ReportReason?
     @State private var showsNameEditor = false
     @State private var hasMoreIssuesBelow = false
+    /// Where the photo card pops out from while it is shown.
+    @State private var photoOrigin: CGPoint?
+    @State private var photoButtonCenter: CGPoint?
+
+    private static let space = "matchOverlay"
 
     private let issueListPadding: CGFloat = 18
     private var layout: WelcomeLightMatch.Layout { .of(isMatch: report.isMatch) }
@@ -98,7 +104,7 @@ struct MatchResultOverlay: View {
                     let movingFrame = MatchStageFrame(
                         center: CGPoint(x: frame.center.x, y: frame.center.y + offset * frame.unit), unit: frame.unit)
                     ZStack {
-                        average
+                        heartAverage(at: movingFrame.point(0, layout.heartCenterY))
                             .position(movingFrame.point(0, layout.heartCenterY))
                             .opacity(reveal >= .average ? 1 : 0)
                             .scaleEffect(reveal >= .average || reduceMotion ? 1 : 0.92)
@@ -161,53 +167,85 @@ struct MatchResultOverlay: View {
                 .offset(y: isChatting && !reduceMotion ? 30 : 0)
                 .allowsHitTesting(!isChatting)
                 .accessibilityHidden(isChatting)
+
+                if let photoOrigin, let photoCard {
+                    photoLayer(photoCard, origin: photoOrigin, size: proxy.size)
+                        .zIndex(5)
+                }
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
+            .coordinateSpace(.named(Self.space))
         }
-        .alert(L10n("This can’t be undone"), isPresented: $confirmsDeletion) {
-            Button(L10n("Cancel"), role: .cancel) {}
-            Button(L10n("Continue"), role: .destructive) {
-                Task {
-                    try? await Task.sleep(for: .milliseconds(350))
-                    confirmsDeletionAgain = true
-                }
-            }
-        } message: {
-            Text(L10n("Deleting removes your match with \(match.name) for good."))
-        }
-        .background {
-            Color.clear
-                .alert(L10n("Delete your match with \(match.name)?"), isPresented: $confirmsDeletionAgain) {
-                    Button(L10n("Cancel"), role: .cancel) {}
-                    Button(L10n("Delete match"), role: .destructive, action: onDelete)
-                } message: {
-                    Text(L10n("Are you sure? This is your last chance to keep it."))
-                }
-        }
-        .alert(L10n("This can’t be undone"), isPresented: $confirmsBreak) {
-            Button(L10n("Cancel"), role: .cancel) {}
-            Button(L10n("Continue"), role: .destructive) {
-                Task {
-                    try? await Task.sleep(for: .milliseconds(350))
-                    confirmsBreakAgain = true
-                }
-            }
-        } message: {
-            Text(L10n("Breaking ends your match with \(match.name) for both of you."))
-        }
-        .background {
-            Color.clear
-                .alert(L10n("Break your match with \(match.name)?"), isPresented: $confirmsBreakAgain) {
-                    Button(L10n("Cancel"), role: .cancel) {}
-                    Button(L10n("Break match"), role: .destructive, action: onBreakMatch)
-                } message: {
-                    Text(L10n("Are you sure? This is your last chance to keep it."))
-                }
-        }
+        .destructiveConfirmation(isPresented: $confirmsDeletion, confirmTitle: L10n("Delete match"), action: onDelete)
+        .destructiveConfirmation(isPresented: $confirmsBreak, confirmTitle: L10n("Break match"), action: onBreakMatch)
         .sheet(item: $reportReason) { reason in
-            MatchReportSheet(name: match.name, reason: reason, onSubmit: onReport)
+            MatchReportSheet(match: match, chat: chat, reason: reason, onSubmit: onReport)
         }
         .animation(.easeInOut(duration: reduceMotion ? 0.2 : 0.55), value: isChatting)
+        .onChange(of: isChatting) { _, _ in closePhoto() }
+        .onChange(of: match.id) { _, _ in closePhoto() }
+        .onChange(of: photoCard == nil) { _, isGone in if isGone { closePhoto() } }
+        .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.7), trigger: photoOrigin != nil) { _, shown in shown }
+    }
+
+    // MARK: - Photo
+
+    private func openPhoto(from origin: CGPoint) {
+        guard photoCard != nil, photoOrigin == nil else { return }
+        withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.5, bounce: 0.32)) {
+            photoOrigin = origin
+        }
+    }
+
+    private func closePhoto() {
+        guard photoOrigin != nil else { return }
+        withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.32, bounce: 0)) {
+            photoOrigin = nil
+        }
+    }
+
+    /// The card over the heart and the scores, popping out of what was
+    /// tapped. A tap anywhere puts it back.
+    private func photoLayer(_ card: MatchPhotoCard, origin: CGPoint, size: CGSize) -> some View {
+        let side = min(size.width - 48, size.height - 150, 380)
+        let preferredY = isChatting ? size.height * 0.42 : frame.point(0, (layout.heartCenterY + layout.lineY) / 2).y
+        let center = CGPoint(x: size.width / 2,
+                             y: min(max(preferredY, side / 2 + 64), size.height - side / 2 - 24))
+        // The card grows from the tapped point, even when that lies outside it.
+        let anchor = UnitPoint(x: (origin.x - (center.x - side / 2)) / side,
+                               y: (origin.y - (center.y - side / 2)) / side)
+        let pop: AnyTransition = reduceMotion
+            ? .opacity
+            : .scale(scale: 0.08, anchor: anchor).combined(with: .opacity)
+        return ZStack {
+            Rectangle()
+                .fill(.black.opacity(0.55))
+                .background(.ultraThinMaterial.opacity(0.6))
+                .ignoresSafeArea()
+                .transition(.opacity)
+                .accessibilityHidden(true)
+
+            MatchPhotoCardView(card: card, average: report.average, side: side)
+                .position(center)
+                .transition(pop)
+                .accessibilityAddTraits(.isModal)
+                .accessibilityHint(L10n("Tap anywhere to close"))
+        }
+        .contentShape(Rectangle())
+        .onTapGesture(perform: closePhoto)
+        .accessibilityAction(.escape, closePhoto)
+    }
+
+    private func photoButton(_ card: MatchPhotoCard) -> some View {
+        MatchPhotoButton(card: card) {
+            openPhoto(from: photoButtonCenter ?? CGPoint(x: 0, y: 0))
+        }
+        .onGeometryChange(for: CGPoint.self) { proxy in
+            let frame = proxy.frame(in: .named(Self.space))
+            return CGPoint(x: frame.midX, y: frame.midY)
+        } action: { photoButtonCenter = $0 }
+        .opacity(photoOrigin == nil ? 1 : 0)
+        .transition(.opacity.combined(with: .scale(scale: 0.6)))
     }
 
     // MARK: - Pieces
@@ -249,6 +287,10 @@ struct MatchResultOverlay: View {
             }
 
             Spacer(minLength: 0)
+
+            if let photoCard {
+                photoButton(photoCard)
+            }
 
             Button(action: onShowProfile) {
                 Image(systemName: "person.text.rectangle")
@@ -301,6 +343,10 @@ struct MatchResultOverlay: View {
 
             Spacer(minLength: 0)
 
+            if let photoCard {
+                photoButton(photoCard)
+            }
+
             MatchSettingsMenu(name: match.name, onViewProfile: onViewProfile,
                               onShowPersonality: onShowPersonality, onShowScores: onShowScores,
                               onReport: { reportReason = $0 }, onBreak: { confirmsBreak = true },
@@ -325,6 +371,22 @@ struct MatchResultOverlay: View {
         .padding(.trailing, 16)
         .padding(.top, 10)
         .frame(height: MatchChatLayout.headerHeight, alignment: .top)
+    }
+
+    /// With a photo card, the big percentage opens it too.
+    @ViewBuilder
+    private func heartAverage(at point: CGPoint) -> some View {
+        if photoCard != nil {
+            Button { openPhoto(from: point) } label: {
+                average.contentShape(Rectangle())
+            }
+            .buttonStyle(ScoreButtonStyle())
+            .accessibilityHint(photoCard?.isOwnPreview == true
+                ? L10n("Shows your photo card") : L10n("Shows \(match.name)’s photo"))
+            .accessibilityIdentifier("match.average")
+        } else {
+            average
+        }
     }
 
     private var average: some View {
@@ -463,7 +525,15 @@ struct MatchResultOverlay: View {
 
     private var controls: some View {
         VStack(spacing: 12) {
-            if match.isBroken {
+            if match.isBroken && !match.isLive {
+                // A saved match that was deleted once: only looked back on,
+                // until it is deleted for good.
+                Button(L10n("Close"), action: onClose)
+                    .buttonStyle(GlowButtonStyle())
+                Button(L10n("Delete match")) { confirmsDeletion = true }
+                    .buttonStyle(QuietButtonStyle())
+                    .accessibilityIdentifier("match.deleteForGood")
+            } else if match.isBroken {
                 // The header's close button is the way out; the room goes to the conversation.
                 EmptyView()
             } else if match.isLive && report.isMatch, let chat {
@@ -490,7 +560,7 @@ struct MatchResultOverlay: View {
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)
-        .padding(.bottom, 18)
+        .padding(.bottom, OnboardingTheme.controlsBottomPadding)
         .animation(.easeInOut(duration: 0.25), value: isSaved)
     }
 }
@@ -509,7 +579,7 @@ struct DemoMatchControls: View {
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)
-        .padding(.bottom, 18)
+        .padding(.bottom, OnboardingTheme.controlsBottomPadding)
     }
 }
 

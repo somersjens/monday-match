@@ -1,18 +1,19 @@
 import Foundation
 
-/// What the user allows, separate from the system permission. Transactional
-/// notifications and nudges have their own switches, as do message previews
-/// and match-ended alerts.
-struct NotificationPreferences: Codable, Equatable {
+/// What the app sends once the system permission is granted. There are no
+/// switches: you get everything or, with notifications off in Settings,
+/// nothing. The fields stay so the planner and the push registration keep
+/// one place to read them from.
+struct NotificationPreferences: Equatable {
     /// New matches, messages and unsent-message warnings.
     var matchesAndMessages = true
     /// Reminders and playful re-engagement.
     var tipsAndNudges = true
-    /// A push when a match ends. Off by default: the app tells you in person
-    /// the next time you open it, which is kinder than a lock-screen breakup.
-    var matchEndedAlerts = false
-    /// The sender's name in message notifications. Off hides it everywhere.
+    /// A push when a match ends.
+    var matchEndedAlerts = true
+    /// The sender's name in message notifications.
     var messagePreviews = true
+    /// Nudges that can wait, wait until morning.
     var quietHoursEnabled = true
     /// Hours on a 24-hour clock in the user's current time zone.
     var quietHoursStart = 22
@@ -27,22 +28,6 @@ struct NotificationPreferences: Codable, Equatable {
         case .reminder, .engagement: tipsAndNudges
         }
     }
-
-    init() {}
-
-    init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        let standard = Self.standard
-        matchesAndMessages = try values.decodeIfPresent(Bool.self, forKey: .matchesAndMessages) ?? standard.matchesAndMessages
-        tipsAndNudges = try values.decodeIfPresent(Bool.self, forKey: .tipsAndNudges) ?? standard.tipsAndNudges
-        matchEndedAlerts = try values.decodeIfPresent(Bool.self, forKey: .matchEndedAlerts) ?? standard.matchEndedAlerts
-        messagePreviews = try values.decodeIfPresent(Bool.self, forKey: .messagePreviews) ?? standard.messagePreviews
-        quietHoursEnabled = try values.decodeIfPresent(Bool.self, forKey: .quietHoursEnabled) ?? standard.quietHoursEnabled
-        quietHoursStart = Self.hour(try values.decodeIfPresent(Int.self, forKey: .quietHoursStart)) ?? standard.quietHoursStart
-        quietHoursEnd = Self.hour(try values.decodeIfPresent(Int.self, forKey: .quietHoursEnd)) ?? standard.quietHoursEnd
-    }
-
-    private static func hour(_ value: Int?) -> Int? { value.flatMap { (0...23).contains($0) ? $0 : nil } }
 }
 
 /// Quiet hours on the user's local wall clock.
@@ -68,22 +53,4 @@ struct QuietHours: Equatable {
                                                matchingPolicy: .nextTime) ?? date
         return startOfEndHour
     }
-}
-
-@MainActor
-final class NotificationPreferencesStore {
-    private let defaults: UserDefaults
-    private let key = "notifications.preferences.v1"
-
-    init(defaults: UserDefaults = .standard) { self.defaults = defaults }
-
-    func load() -> NotificationPreferences {
-        defaults.data(forKey: key).flatMap { try? JSONDecoder().decode(NotificationPreferences.self, from: $0) } ?? .standard
-    }
-
-    func save(_ preferences: NotificationPreferences) {
-        if let data = try? JSONEncoder().encode(preferences) { defaults.set(data, forKey: key) }
-    }
-
-    func clear() { defaults.removeObject(forKey: key) }
 }

@@ -740,6 +740,16 @@ extension ProfileCreationViewModel {
         return receipt.outcome == .match && receipt.belongs(to: photo.id, imageData: photo.imageData)
     }
 
+    /// Your matching photo and whether a live scan verified it, for the
+    /// demo's photo card. Setup can only be completed with a photo once it
+    /// was verified, and replacing the photo starts setup over.
+    var matchCardPhoto: (imageData: Data, isVerified: Bool)? {
+        guard let photo = autoMatchingReferencePhoto else { return nil }
+        let receipt = autoMatchingPhotoVerification
+        let scanned = receipt?.outcome == .match && receipt?.belongs(to: photo.id, imageData: photo.imageData) == true
+        return (photo.imageData, state.autoMatching.hasCompletedSetup || scanned)
+    }
+
     func recordAutoMatchingPhotoVerification(_ receipt: PhotoVerificationReceipt) {
         guard let photo = autoMatchingReferencePhoto,
               receipt.belongs(to: photo.id, imageData: photo.imageData) else { return }
@@ -808,6 +818,19 @@ extension ProfileCreationViewModel {
 
     func setMinimumMatchPercent(_ percent: Int) {
         state.autoMatching.minimumMatchPercent = AutoMatchingSettings.clampedScore(percent)
+    }
+
+    func setSharesPhotoWithManualMatching(_ shares: Bool) {
+        state.autoMatching.sharesPhotoWithManualMatching = shares
+    }
+
+    /// The photo sent along when profiles are exchanged phone to phone:
+    /// the matching photo, made small enough for one message. Nil unless
+    /// the user chose to share it.
+    var manualMatchingPhoto: Data? {
+        guard state.autoMatching.sharesPhotoWithManualMatching,
+              let photo = autoMatchingReferencePhoto else { return nil }
+        return try? ImageProcessingService(maximumDimension: 720, compressionQuality: 0.72).process(photo.imageData)
     }
 
     func setRequiresVerifiedPartnerPhoto(_ required: Bool) {

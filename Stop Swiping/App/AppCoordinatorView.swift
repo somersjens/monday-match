@@ -9,7 +9,11 @@ struct AppCoordinatorView: View {
 
     /// Codes the app was opened with, for instance from the Camera app.
     @StateObject private var codeInbox = ProfileCodeInbox()
-    @State private var showsWelcomeFromAccess = false
+    /// Every launch opens on the welcome screen, also when an account stored
+    /// on this phone (a reinstall keeps it in the Keychain) has no access:
+    /// the access screen follows from there. Only once someone has moved on
+    /// to the questionnaire does losing access take over the whole screen.
+    @State private var showsWelcomeFromAccess = true
     /// Starts the welcome screen over after a returning account signs in, so
     /// it opens on the profile that came back with it.
     @State private var welcomeGeneration = 0
@@ -49,6 +53,7 @@ struct AppCoordinatorView: View {
                 welcomeFlow
             case .onboarding:
                 onboardingFlow
+                    .onAppear { showsWelcomeFromAccess = false }
             case .accessRequired:
                 EarlyAccessView(access: access, onContinue: {}, onBack: {
                     showsWelcomeFromAccess = true
@@ -71,7 +76,10 @@ struct AppCoordinatorView: View {
             codeInbox.open(url, isProfileReady: dependencies.profileCreationStore.load()?.canShareProfile == true)
         }
         .task {
-            appState.willSignOut = { [notifications] in await notifications.accountSignedOut() }
+            appState.willSignOut = { [notifications] in
+                LiveMatchCenter.clearCache()
+                await notifications.accountSignedOut()
+            }
         }
         .onChange(of: AppLanguageSettings.shared.language) { _, _ in
             // Pending notifications and the server's copy follow the app's language.
@@ -90,6 +98,9 @@ struct AppCoordinatorView: View {
             // Shaders, StoreKit and the stored session load side by side.
             async let lights: Void = WelcomeLightMetalRenderer.prepare()
             async let entitlements: Void = access.start()
+            // The keyboard's first load stalls the main thread; take that
+            // here, behind the still launch screen, not under the moving light.
+            KeyboardWarmup.run()
             await appState.start()
             await lights
             isLightReady = true
@@ -102,9 +113,6 @@ struct AppCoordinatorView: View {
         .onChange(of: appState.sessionState) { _, _ in
             // Session restoration can restore a profile from Supabase too.
             access.updateCompletion(savedCompletionDate)
-        }
-        .onChange(of: access.hasAccess) { _, allowed in
-            if allowed { showsWelcomeFromAccess = false }
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {

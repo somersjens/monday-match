@@ -31,9 +31,14 @@ struct MatchSettingsMenu: View {
         .popover(isPresented: $isOpen, attachmentAnchor: .point(.bottom), arrowEdge: .top) {
             MatchSettingsPanel(name: name, canBreak: canBreak) { choice in
                 isOpen = false
-                if case .personality = choice {
-                    // The tests cover the conversation; the keyboard has nothing left to type into.
+                switch choice {
+                case .personality, .scores:
+                    // The tests and the scores cover the conversation; the keyboard has
+                    // nothing left to type into. Closed now, while the panel closes: a
+                    // keyboard that went down under the opening scores sheet moved it
+                    // as it settled, and it came back up when the sheet closed.
                     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                default: break
                 }
                 Task {
                     // Let the panel close before a sheet or alert takes over.
@@ -165,9 +170,12 @@ private struct MenuRowStyle: ButtonStyle {
 }
 
 /// After a reason is picked from the menu: what happened, and whether the
-/// match ends too. The other person is never told who reported them.
+/// match ends too. With one match at a time, a report may be traced back to
+/// whoever made it, so the screen says so up front.
 struct MatchReportSheet: View {
-    let name: String
+    let match: MatchSnapshot
+    /// The conversation to put in the PDF; the demo's too.
+    let chat: ChatViewModel?
     let onSubmit: (ReportReason, String, Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -175,84 +183,168 @@ struct MatchReportSheet: View {
     @State private var details = ""
     @State private var alsoBreak = false
     @State private var confirmsBreak = false
+    @State private var export: ExportedFile?
+    @State private var exportFailed = false
     @FocusState private var detailsFocused: Bool
 
-    init(name: String, reason: ReportReason, onSubmit: @escaping (ReportReason, String, Bool) -> Void) {
-        self.name = name
+    private var name: String { match.name }
+
+    init(match: MatchSnapshot, chat: ChatViewModel?, reason: ReportReason,
+         onSubmit: @escaping (ReportReason, String, Bool) -> Void) {
+        self.match = match
+        self.chat = chat
         self.onSubmit = onSubmit
         _reason = State(initialValue: reason)
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    Text(L10n("Reports are private. \(name) will not be told who submitted the report."))
-                        .font(.subheadline)
-                        .foregroundStyle(OnboardingTheme.secondaryText)
-                        .fixedSize(horizontal: false, vertical: true)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                header
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        sectionTitle(L10n("What happened?"))
-                        VStack(spacing: 0) {
-                            ForEach(ReportReason.allCases) { option in
-                                reasonRow(option, isLast: option == ReportReason.allCases.last)
+                VStack(alignment: .leading, spacing: 10) {
+                    sectionTitle(L10n("Reason"))
+                    reasonPicker
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    sectionTitle(L10n("Details"))
+                    TextField(L10n("Describe what happened (optional)"), text: $details, axis: .vertical)
+                        .lineLimit(7...14)
+                        .focused($detailsFocused)
+                        .submitLabel(.done)
+                        .foregroundStyle(OnboardingTheme.primaryText)
+                        .tint(OnboardingTheme.cyan)
+                        .padding(14)
+                        .onboardingSurface(cornerRadius: 16)
+                        .onChange(of: details) { _, text in
+                            // Return closes the keyboard instead of starting a new line.
+                            if text.contains("\n") {
+                                details = text.replacingOccurrences(of: "\n", with: "")
+                                detailsFocused = false
+                                return
                             }
+                            if text.utf8.count > 4000 { details = String(text.prefix(2000)) }
                         }
-                        .onboardingSurface(cornerRadius: 18)
-                    }
+                }
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        sectionTitle(L10n("Details"))
-                        TextField(L10n("Describe what happened (optional)"), text: $details, axis: .vertical)
-                            .lineLimit(3...8)
-                            .focused($detailsFocused)
+                Toggle(isOn: $alsoBreak) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L10n("Also break the match"))
                             .foregroundStyle(OnboardingTheme.primaryText)
-                            .tint(OnboardingTheme.cyan)
-                            .padding(14)
-                            .onboardingSurface(cornerRadius: 16)
-                            .onChange(of: details) { _, text in
-                                if text.utf8.count > 4000 { details = String(text.prefix(2000)) }
-                            }
+                        Text(L10n("\(name) can no longer send you messages."))
+                            .font(.footnote)
+                            .foregroundStyle(OnboardingTheme.secondaryText)
                     }
-
-                    Toggle(isOn: $alsoBreak) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(L10n("Also break the match"))
-                                .foregroundStyle(OnboardingTheme.primaryText)
-                            Text(L10n("\(name) can no longer send you messages."))
-                                .font(.footnote)
-                                .foregroundStyle(OnboardingTheme.secondaryText)
-                        }
-                    }
-                    .tint(OnboardingTheme.violet)
-                    .padding(14)
-                    .onboardingSurface(cornerRadius: 16)
-
-                    Button(L10n("Send report"), action: submit)
-                        .buttonStyle(GlowButtonStyle())
-                        .padding(.top, 4)
                 }
-                .padding(20)
+                .tint(OnboardingTheme.violet)
+                .padding(14)
+                .onboardingSurface(cornerRadius: 16)
+                .onChange(of: alsoBreak) { detailsFocused = false }
+
+                policeCard
+
+                Button(L10n("Send report"), action: submit)
+                    .buttonStyle(GlowButtonStyle())
+                    .padding(.top, 4)
             }
-            .scrollDismissesKeyboard(.interactively)
-            .background(OnboardingTheme.background.ignoresSafeArea())
-            .navigationTitle(L10n("Report \(name)"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(L10n("Cancel")) { dismiss() }
-                }
+            .frame(maxWidth: OnboardingTheme.contentWidth)
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+            .padding(.bottom, 32)
+            .frame(maxWidth: .infinity)
+            // A tap anywhere outside the text field closes the keyboard.
+            .background {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { detailsFocused = false }
             }
-            .alert(L10n("This can’t be undone"), isPresented: $confirmsBreak) {
-                Button(L10n("Cancel"), role: .cancel) {}
-                Button(L10n("Report and break match"), role: .destructive) { send() }
-            } message: {
-                Text(L10n("Breaking ends your match with \(name) for both of you."))
-            }
+        }
+        .scrollIndicators(.hidden)
+        .scrollDismissesKeyboard(.interactively)
+        .background(OnboardingTheme.background.ignoresSafeArea())
+        .alert(L10n("This can’t be undone"), isPresented: $confirmsBreak) {
+            Button(L10n("Cancel"), role: .cancel) {}
+            Button(L10n("Report and break match"), role: .destructive) { send() }
+        } message: {
+            Text(L10n("Breaking ends your match with \(name) for both of you."))
+        }
+        .alert(L10n("Could not create the PDF"), isPresented: $exportFailed) {
+            Button(L10n("OK"), role: .cancel) {}
+        }
+        .sheet(item: $export) { file in
+            ShareSheet(items: [file.url])
+                .presentationDetents([.medium, .large])
+                .ignoresSafeArea()
         }
         .presentationBackground(OnboardingTheme.background)
         .preferredColorScheme(.dark)
+    }
+
+    private var header: some View {
+        HStack(alignment: .headerTitle, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n("Report \(name)"))
+                    .font(.system(size: 34, weight: .semibold, design: .rounded))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .headerTitleGuide()
+                Text(L10n("Reporting can affect \(name)’s account. Because you can only be matched with one person at a time, a report may be traced back to you. Please keep this in mind."))
+                    .font(.subheadline)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+
+            Spacer(minLength: 0)
+
+            Button { dismiss() } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.accentGradient)
+                    .frame(width: 44, height: 44)
+                    .background { Circle().fill(.white.opacity(0.08)) }
+                    .overlay { Circle().strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5) }
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(L10n("Back"))
+        }
+    }
+
+    /// For anything criminal: the police, with the conversation and profile in hand.
+    private var policeCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(L10n("In case of a criminal offence, go to the police"))
+                .font(.subheadline)
+                .foregroundStyle(OnboardingTheme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 14)
+                .padding(.top, 12)
+                .padding(.bottom, 10)
+
+            Rectangle().fill(.white.opacity(0.07)).frame(height: 0.5).padding(.leading, 14)
+
+            Button(action: exportPDF) {
+                HStack(spacing: 12) {
+                    Text(L10n("Download chat and profile as PDF"))
+                        .foregroundStyle(OnboardingTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Image(systemName: "square.and.arrow.down")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(OnboardingTheme.accentGradient)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("report.exportPDF")
+        }
+        .onboardingSurface(cornerRadius: 16)
     }
 
     private func sectionTitle(_ text: String) -> some View {
@@ -263,31 +355,51 @@ struct MatchReportSheet: View {
             .foregroundStyle(OnboardingTheme.tertiaryText)
     }
 
-    private func reasonRow(_ option: ReportReason, isLast: Bool) -> some View {
-        Button { reason = option } label: {
+    /// The reason was already picked from the menu, so it shows as one row;
+    /// tapping it opens the other reasons to switch.
+    private var reasonPicker: some View {
+        Menu {
+            Picker(L10n("Reason"), selection: $reason) {
+                ForEach(ReportReason.allCases) { option in
+                    Label(option.title, systemImage: option.symbol).tag(option)
+                }
+            }
+            .pickerStyle(.inline)
+        } label: {
             HStack(spacing: 12) {
-                Image(systemName: option.symbol)
+                Image(systemName: reason.symbol)
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(OnboardingTheme.accentGradient)
                     .frame(width: 24)
-                Text(option.title)
+                Text(reason.title)
                     .foregroundStyle(OnboardingTheme.primaryText)
+                    .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: reason == option ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(reason == option ? AnyShapeStyle(OnboardingTheme.accentGradient)
-                                                      : AnyShapeStyle(OnboardingTheme.tertiaryText))
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.tertiaryText)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .overlay(alignment: .bottom) {
-            if !isLast {
-                Rectangle().fill(.white.opacity(0.07)).frame(height: 0.5).padding(.leading, 50)
-            }
+        .onboardingSurface(cornerRadius: 16)
+        .simultaneousGesture(TapGesture().onEnded { detailsFocused = false })
+        .accessibilityLabel(L10n("Reason"))
+        .accessibilityValue(reason.title)
+        .accessibilityIdentifier("report.reason")
+    }
+
+    private func exportPDF() {
+        detailsFocused = false
+        let document = MatchReportExport(match: match, messages: chat?.conversation.messages ?? [],
+                                         isDemo: chat?.isDemo ?? false)
+        do {
+            export = ExportedFile(url: try document.writeTemporaryFile())
+        } catch {
+            exportFailed = true
         }
-        .accessibilityAddTraits(reason == option ? .isSelected : [])
     }
 
     private func submit() {
@@ -299,6 +411,22 @@ struct MatchReportSheet: View {
         onSubmit(reason, details.trimmingCharacters(in: .whitespacesAndNewlines), alsoBreak)
         dismiss()
     }
+}
+
+private struct ExportedFile: Identifiable {
+    let url: URL
+    var id: URL { url }
+}
+
+/// The system share sheet, where a file can be saved to Files or sent on.
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
 }
 
 /// On the match screen, before the conversation is opened: what the other

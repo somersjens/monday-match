@@ -17,6 +17,14 @@ struct MatchSnapshot: Codable, Identifiable, Equatable {
     /// Set for a server match that was broken. Its conversation stays
     /// readable, but no more messages can be sent and the two never match again.
     var ended: Ended?
+    /// Made up on this phone to show how matching works. Its photo card
+    /// shows your own name, age and photo: how a match will see you.
+    /// Optional in storage so matches saved before it existed still decode.
+    private var storedIsDemo: Bool?
+    var isDemo: Bool {
+        get { storedIsDemo ?? false }
+        set { storedIsDemo = newValue ? true : nil }
+    }
 
     struct FixedScores: Codable, Equatable {
         let yours: Int
@@ -31,21 +39,28 @@ struct MatchSnapshot: Codable, Identifiable, Equatable {
     }
 
     init(id: UUID = UUID(), matchedAt: Date, you: ProfileCreationState, them: ProfileCreationState,
-         fixedScores: FixedScores? = nil) {
+         fixedScores: FixedScores? = nil, isDemo: Bool = false) {
         self.id = id
         self.matchedAt = matchedAt
         self.you = you
         self.them = them
         self.fixedScores = fixedScores
+        self.isDemo = isDemo
     }
 
     /// A match made by the server, with a conversation behind it.
     var isLive: Bool { fixedScores != nil }
 
-    /// A server match that is no longer active.
+    /// A server match that is no longer active, or a saved match that was
+    /// deleted once and is kept as broken.
     var isBroken: Bool { ended != nil }
 
     var name: String { customName ?? them.displayName }
+
+    /// How far apart the two live, rounded to whole kilometres, at least 1.
+    var distanceKilometers: Int? {
+        MatchReport.distanceKilometers(you.location, them.location).map { max(1, Int($0.rounded())) }
+    }
 
     @discardableResult
     mutating func rename(to name: String) -> Bool {
@@ -324,6 +339,15 @@ final class SavedMatchStore: ObservableObject {
 
     func delete(_ id: UUID) {
         matches.removeAll { $0.id == id }
+        write()
+        MatchPhotoStore.shared.delete(id)
+    }
+
+    /// A deleted match stays in the list as broken; deleting it from there
+    /// removes it for good.
+    func markBroken(_ id: UUID, at date: Date = Date()) {
+        guard let index = matches.firstIndex(where: { $0.id == id }), !matches[index].isBroken else { return }
+        matches[index].ended = .init(at: date, reason: nil, byMe: true)
         write()
     }
 

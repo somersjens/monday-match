@@ -5,12 +5,6 @@ struct MatchProfileView: View {
     let match: MatchSnapshot
 
     private var them: ProfileCreationState { match.them }
-    private var day: CalendarDate { CalendarDate.today(calendar: BirthDateRules.calendar, now: match.matchedAt) }
-
-    private static let basics: [ProfileCreationStep] = [
-        .height, .gender, .partnerGenders, .sexualArrangement, .religion, .languages,
-        .hasChildren, .partnerHasChildren, .futureChildren, .alcohol, .smoking, .drugs
-    ]
 
     var body: some View {
         ScrollView {
@@ -48,23 +42,7 @@ struct MatchProfileView: View {
         .presentationBackground(OnboardingTheme.background)
     }
 
-    /// Age and distance come first; the birthday and exact place are never shared.
-    private var facts: [(title: String, value: String)] {
-        var facts: [(String, String)] = []
-        if let age = them.age(on: day) {
-            facts.append((L10n("Age"), L10n("\(age) years")))
-        }
-        if let place = them.location?.placeName, !place.isEmpty {
-            facts.append((ProfileCreationStep.location.shortTitle, place))
-        }
-        if let distance = MatchReport.distanceKilometers(match.you.location, them.location) {
-            facts.append((L10n("Distance"), L10n("About \(max(1, Int(distance.rounded()))) km away")))
-        }
-        for step in Self.basics {
-            facts.append((step.shortTitle, them.summary(for: step, today: day).compact))
-        }
-        return facts
-    }
+    private var facts: [(title: String, value: String)] { match.sharedFacts }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -150,5 +128,32 @@ struct MatchProfileView: View {
             .fill(.white.opacity(0.07))
             .frame(height: 0.5)
             .padding(.leading, 16)
+    }
+}
+
+extension MatchSnapshot {
+    private static let basics: [ProfileCreationStep] = [
+        .height, .gender, .partnerGenders, .sexualArrangement, .religion, .languages,
+        .hasChildren, .partnerHasChildren, .futureChildren, .alcohol, .smoking, .drugs
+    ]
+
+    /// The other person's basic answers. Age and distance come first; the
+    /// birthday and exact place are never shared.
+    var sharedFacts: [(title: String, value: String)] {
+        let day = CalendarDate.today(calendar: BirthDateRules.calendar, now: matchedAt)
+        var facts: [(String, String)] = []
+        if let age = them.age(on: day) {
+            facts.append((L10n("Age"), L10n("\(age) years")))
+        }
+        if let place = them.location?.placeName, !place.isEmpty {
+            facts.append((ProfileCreationStep.location.shortTitle, place))
+        }
+        if let distance = distanceKilometers {
+            facts.append((L10n("Distance"), L10n("About \(distance) km away")))
+        }
+        for step in Self.basics {
+            facts.append((step.shortTitle, them.summary(for: step, today: day).compact))
+        }
+        return facts
     }
 }

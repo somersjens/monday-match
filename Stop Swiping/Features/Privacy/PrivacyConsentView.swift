@@ -20,7 +20,9 @@ struct PrivacyConsentView: View {
 
                     VStack(spacing: 14) {
                         PrivacyCheckbox(text: copy.acknowledgement, isOn: $acknowledged)
+                            .soundFeedback(.select, trigger: acknowledged)
                         Button(L10n("Accept")) {
+                            SoundPlayer.shared.play(.seal)
                             onAccept()
                             dismiss()
                         }
@@ -332,27 +334,5 @@ private struct PrivacyDocumentBody: View {
                 }
             }
         }
-    }
-}
-
-struct PrivacyActionCard: View {
-    let title: String
-    let isAccepted: Bool
-    let onOpen: () -> Void
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Button(action: onOpen) {
-                Text(title)
-                    .font(.system(.body, weight: .semibold))
-                    .foregroundStyle(OnboardingTheme.primaryText)
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            }
-            .buttonStyle(.plain)
-            GlowToggle(isOn: isAccepted, label: title, action: onOpen)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .onboardingSurface(cornerRadius: 24)
     }
 }

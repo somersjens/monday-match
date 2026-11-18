@@ -11,10 +11,8 @@ struct ProfileOverviewView: View {
     var onDeleteProfile: (() async throws -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.notificationEngine) private var notificationEngine
     @State private var path: [Route] = []
     @State private var showsLanguagePicker = false
-    @State private var playsSounds = SoundPlayer.shared.isEnabled
     @State private var confirmsDeletion = false
     @State private var isDeleting = false
     @State private var deletionError: String?
@@ -74,13 +72,6 @@ struct ProfileOverviewView: View {
         .interactiveDismissDisabled(isDeleting)
     }
 
-    /// Turning sounds on plays one, so the choice is heard straight away.
-    private func toggleSounds() {
-        playsSounds.toggle()
-        SoundPlayer.shared.isEnabled = playsSounds
-        if playsSounds { SoundPlayer.shared.play(.success) }
-    }
-
     private func deleteProfile() {
         guard let onDeleteProfile, !isDeleting else { return }
         withAnimation(.easeInOut(duration: 0.2)) { isDeleting = true }
@@ -125,12 +116,6 @@ struct ProfileOverviewView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                         .onboardingSurface(cornerRadius: 24)
                     }
-                }
-
-                soundsRow
-
-                if let notificationEngine {
-                    NotificationSettingsSection(engine: notificationEngine)
                 }
 
                 if onDeleteProfile != nil {
@@ -239,24 +224,6 @@ struct ProfileOverviewView: View {
         .accessibilityAddTraits(.isButton)
     }
 
-    private var soundsRow: some View {
-        HStack(spacing: 14) {
-            IconTile(systemImage: playsSounds ? "speaker.wave.2.fill" : "speaker.slash.fill")
-                .contentTransition(.symbolEffect(.replace))
-                .accessibilityHidden(true)
-            Text(L10n("Sounds"))
-                .font(.system(.body, weight: .semibold))
-                .foregroundStyle(OnboardingTheme.primaryText)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            GlowToggle(isOn: playsSounds, label: L10n("Sounds"), action: toggleSounds)
-        }
-        .padding(.leading, 16)
-        .padding(.trailing, 10)
-        .padding(.vertical, 6)
-        .onboardingSurface(cornerRadius: 24)
-        .padding(.top, 12)
-    }
-
     private var deleteRow: some View {
         Button { confirmsDeletion = true } label: {
             HStack(spacing: 14) {
@@ -272,7 +239,7 @@ struct ProfileOverviewView: View {
                     .font(.system(.body, weight: .semibold))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .foregroundStyle(Color(red: 1, green: 0.38, blue: 0.40))
+            .foregroundStyle(OnboardingTheme.destructive)
             .padding(.horizontal, 16)
             .padding(.vertical, 13)
             .contentShape(Rectangle())

@@ -18,7 +18,7 @@ enum DemoMatchGenerator {
         if !shouldMatch {
             breakRequirements(of: &them, you: you, today: today, now: now, calendar: calendar, rng: &rng)
         }
-        return MatchSnapshot(matchedAt: now, you: you, them: them)
+        return MatchSnapshot(matchedAt: now, you: you, them: them, isDemo: true)
     }
 
     /// The average the explanation's match ends on.
@@ -62,7 +62,7 @@ enum DemoMatchGenerator {
             if miss < best?.miss ?? .max { best = (them, miss) }
             if miss == 0 { break }
         }
-        return MatchSnapshot(matchedAt: now, you: you, them: best!.them)
+        return MatchSnapshot(matchedAt: now, you: you, them: best!.them, isDemo: true)
     }
 
     /// Moves random 1–5 answers a step at a time while that brings the

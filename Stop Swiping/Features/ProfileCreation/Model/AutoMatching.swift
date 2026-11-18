@@ -65,6 +65,9 @@ struct AutoMatchingSettings: Codable, Equatable {
     var minimumMatchPercent = 70
     /// Whether proposed partners must have verified their photo.
     var requiresVerifiedPartnerPhoto = true
+    /// Also send this photo when profiles are exchanged by holding two
+    /// phones together. Off until chosen.
+    var sharesPhotoWithManualMatching = false
 
     var isReady: Bool {
         guard let ownAttractiveness, let partnerMinimumAttractiveness else { return false }
@@ -76,12 +79,14 @@ struct AutoMatchingSettings: Codable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case isEnabled, photoID, ownAttractiveness, partnerMinimumAttractiveness, minimumMatchPercent
         case appearanceScaleVersion, requiresVerifiedPartnerPhoto, hasCompletedSetup, privacyConsent
+        case sharesPhotoWithManualMatching
     }
 
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         requiresVerifiedPartnerPhoto = try values.decodeIfPresent(Bool.self, forKey: .requiresVerifiedPartnerPhoto) ?? true
         photoID = try values.decodeIfPresent(UUID.self, forKey: .photoID)
+        sharesPhotoWithManualMatching = try values.decodeIfPresent(Bool.self, forKey: .sharesPhotoWithManualMatching) ?? false
         minimumMatchPercent = Self.clampedScore(try values.decodeIfPresent(Int.self, forKey: .minimumMatchPercent) ?? 70)
         // The previous 1–5 answers included importance, not a minimum score.
         // Keep the photo and match threshold, and ask for the new scores.
@@ -104,6 +109,7 @@ struct AutoMatchingSettings: Codable, Equatable {
         try values.encode(hasCompletedSetup, forKey: .hasCompletedSetup)
         try values.encode(requiresVerifiedPartnerPhoto, forKey: .requiresVerifiedPartnerPhoto)
         try values.encodeIfPresent(photoID, forKey: .photoID)
+        try values.encode(sharesPhotoWithManualMatching, forKey: .sharesPhotoWithManualMatching)
         try values.encodeIfPresent(ownAttractiveness, forKey: .ownAttractiveness)
         try values.encodeIfPresent(partnerMinimumAttractiveness, forKey: .partnerMinimumAttractiveness)
         try values.encode(minimumMatchPercent, forKey: .minimumMatchPercent)

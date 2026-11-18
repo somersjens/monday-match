@@ -9,24 +9,35 @@ nonisolated final class ProfileCodeCamera: NSObject, AVCaptureMetadataOutputObje
     private let queue = DispatchQueue(label: "com.stopswiping.profile-code", qos: .userInitiated)
     private let onCode: @Sendable (String) -> Void
     private var isConfigured = false
+    /// Written on `queue` before `prepare` reports success, only read after.
+    private(set) var device: AVCaptureDevice?
 
     init(onCode: @escaping @Sendable (String) -> Void) {
         self.onCode = onCode
     }
 
+    /// Sets the session up without starting it. Reports whether it can run.
+    func prepare(completion: @escaping @Sendable (Bool) -> Void) {
+        queue.async { [self] in
+            if !isConfigured { isConfigured = configure() }
+            completion(isConfigured)
+        }
+    }
+
     /// Reports whether the camera is running.
     func start(completion: @escaping @Sendable (Bool) -> Void) {
         queue.async { [self] in
-            if !isConfigured { isConfigured = configure() }
             guard isConfigured else { return completion(false) }
             if !session.isRunning { session.startRunning() }
             completion(session.isRunning)
         }
     }
 
-    func stop() {
+    /// Reports once the session has stopped.
+    func stop(completion: (@Sendable () -> Void)? = nil) {
         queue.async { [self] in
             if session.isRunning { session.stopRunning() }
+            completion?()
         }
     }
 
@@ -40,6 +51,7 @@ nonisolated final class ProfileCodeCamera: NSObject, AVCaptureMetadataOutputObje
         session.addInput(input)
         session.addOutput(output)
         guard output.availableMetadataObjectTypes.contains(.qr) else { return false }
+        self.device = device
         output.metadataObjectTypes = [.qr]
         output.setMetadataObjectsDelegate(self, queue: queue)
         // A code on another phone is small and close.
@@ -74,11 +86,17 @@ final class ProfileCodeScannerModel: ObservableObject {
     @Published private(set) var showsUnknownCode = false
     @Published private(set) var profile: ProfileCreationState?
     private(set) var camera: ProfileCodeCamera?
+    /// Owned here rather than by SwiftUI: it joins the session before the
+    /// session starts and leaves only after it has stopped. Attaching or
+    /// detaching a preview while the session starts or stops waits for it on
+    /// the main thread, which froze the app for a moment on closing.
+    private(set) lazy var preview = ProfileCodeCameraPreviewView()
+    private var isClosed = false
     private var unknownCodeTask: Task<Void, Never>?
     private var lastRejected: String?
 
     func start() {
-        guard camera == nil else { return }
+        guard camera == nil, !isClosed else { return }
         Task { [weak self] in
             let authorized: Bool
             switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -90,20 +108,48 @@ final class ProfileCodeScannerModel: ObservableObject {
                 self?.phase = .denied
                 return
             }
-            guard let model = self, model.camera == nil else { return }
+            guard let self, camera == nil, !isClosed else { return }
             let camera = ProfileCodeCamera { [weak self] text in
                 Task { @MainActor [weak self] in self?.read(text) }
             }
-            model.camera = camera
+            self.camera = camera
+            let ready = await withCheckedContinuation { continuation in
+                camera.prepare { continuation.resume(returning: $0) }
+            }
+            guard !isClosed else { return }
+            guard ready else {
+                phase = .unavailable
+                return
+            }
+            preview.attach(camera)
             camera.start { [weak self] running in
                 Task { @MainActor [weak self] in self?.phase = running ? .scanning : .unavailable }
             }
         }
     }
 
-    func stop() {
+    /// Picks up again after the app comes back to the foreground.
+    func resume() {
+        guard !isClosed, profile == nil, phase == .scanning else { return }
+        camera?.start { _ in }
+    }
+
+    /// Stops the camera; `resume` can start it again.
+    func pause() {
         unknownCodeTask?.cancel()
         camera?.stop()
+    }
+
+    /// Stops the camera for good. The preview lets go of the session only
+    /// once it has stopped, off the main thread.
+    func close() {
+        isClosed = true
+        unknownCodeTask?.cancel()
+        guard let camera else { return }
+        let preview = preview
+        camera.stop {
+            Task { @MainActor in preview.detach() }
+        }
     }
 
     /// Decodes what the camera read. The first profile found ends the scan.
@@ -118,7 +164,7 @@ final class ProfileCodeScannerModel: ObservableObject {
         if let scanned = ProfileCode.profile(fromScanned: text, today: today) {
             profile = scanned
             showsUnknownCode = false
-            stop()
+            pause()
         } else {
             lastRejected = text
             showUnknownCode()
@@ -155,8 +201,8 @@ struct ProfileCodeScannerView: View {
             ZStack {
                 OnboardingTheme.background.ignoresSafeArea()
 
-                if model.phase == .scanning, let camera = model.camera {
-                    ProfileCodeCameraPreview(session: camera.session)
+                if model.phase == .scanning {
+                    ProfileCodeCameraPreview(view: model.preview)
                         .ignoresSafeArea()
                         .transition(.opacity)
                     ScannerWindow(side: side)
@@ -172,10 +218,12 @@ struct ProfileCodeScannerView: View {
                             Spacer()
                             Button(action: onClose) {
                                 Image(systemName: "xmark")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundStyle(.white)
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(OnboardingTheme.accentGradient)
                                     .frame(width: 44, height: 44)
-                                    .background(.ultraThinMaterial, in: Circle())
+                                    .background { Circle().fill(.white.opacity(0.08)) }
+                                    .overlay { Circle().strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5) }
+                                    .contentShape(Circle())
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel(L10n("Close"))
@@ -215,12 +263,12 @@ struct ProfileCodeScannerView: View {
         .sensoryFeedback(.success, trigger: model.profile) { _, profile in profile != nil }
         .sensoryFeedback(.warning, trigger: model.showsUnknownCode) { _, shown in shown }
         .onAppear { model.start() }
-        .onDisappear { model.stop() }
+        .onDisappear { model.close() }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active, model.profile == nil, model.phase == .scanning {
-                model.camera?.start { _ in }
+            if phase == .active {
+                model.resume()
             } else if phase == .background {
-                model.stop()
+                model.pause()
             }
         }
         .onChange(of: model.profile) { _, profile in
@@ -310,61 +358,58 @@ private struct ScannerWindow: Shape {
     }
 }
 
+/// Shows the model's preview; the model decides when it joins the session.
 private struct ProfileCodeCameraPreview: UIViewRepresentable {
-    let session: AVCaptureSession
+    let view: ProfileCodeCameraPreviewView
 
-    func makeUIView(context: Context) -> PreviewView {
-        let view = PreviewView()
-        view.previewLayer.videoGravity = .resizeAspectFill
-        view.configure(session: session)
-        return view
+    func makeUIView(context: Context) -> ProfileCodeCameraPreviewView { view }
+
+    func updateUIView(_ view: ProfileCodeCameraPreviewView, context: Context) {}
+}
+
+final class ProfileCodeCameraPreviewView: UIView {
+    override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
+    private var previewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
+    private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
+    private var rotationObservation: NSKeyValueObservation?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        previewLayer.videoGravity = .resizeAspectFill
     }
 
-    func updateUIView(_ view: PreviewView, context: Context) {
-        view.configure(session: session)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 
-    static func dismantleUIView(_ view: PreviewView, coordinator: ()) {
-        view.stopPreview()
+    /// Call while the session is stopped.
+    func attach(_ camera: ProfileCodeCamera) {
+        previewLayer.session = camera.session
+        guard let device = camera.device else { return }
+        let rotation = AVCaptureDevice.RotationCoordinator(device: device, previewLayer: previewLayer)
+        rotationCoordinator = rotation
+        rotationObservation = rotation.observe(\.videoRotationAngleForHorizonLevelPreview,
+                                               options: [.initial, .new]) { [weak self] _, _ in
+            Task { @MainActor [weak self] in self?.updateRotation() }
+        }
     }
 
-    final class PreviewView: UIView {
-        override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
-        var previewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
-        private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
-        private var rotationObservation: NSKeyValueObservation?
+    /// Call once the session has stopped.
+    func detach() {
+        rotationObservation?.invalidate()
+        rotationObservation = nil
+        rotationCoordinator = nil
+        previewLayer.session = nil
+    }
 
-        func configure(session: AVCaptureSession) {
-            if previewLayer.session !== session { previewLayer.session = session }
-            if let device = (session.inputs.first as? AVCaptureDeviceInput)?.device,
-               rotationCoordinator?.device !== device {
-                rotationObservation?.invalidate()
-                let rotation = AVCaptureDevice.RotationCoordinator(device: device, previewLayer: previewLayer)
-                rotationCoordinator = rotation
-                rotationObservation = rotation.observe(\.videoRotationAngleForHorizonLevelPreview,
-                                                       options: [.initial, .new]) { [weak self] _, _ in
-                    Task { @MainActor [weak self] in self?.updateRotation() }
-                }
-            }
-            updateRotation()
-        }
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        updateRotation()
+    }
 
-        override func layoutSubviews() {
-            super.layoutSubviews()
-            updateRotation()
-        }
-
-        private func updateRotation() {
-            guard let rotationCoordinator, let connection = previewLayer.connection else { return }
-            let angle = rotationCoordinator.videoRotationAngleForHorizonLevelPreview
-            if connection.isVideoRotationAngleSupported(angle) { connection.videoRotationAngle = angle }
-        }
-
-        func stopPreview() {
-            rotationObservation?.invalidate()
-            rotationObservation = nil
-            rotationCoordinator = nil
-            previewLayer.session = nil
-        }
+    private func updateRotation() {
+        guard let rotationCoordinator, let connection = previewLayer.connection else { return }
+        let angle = rotationCoordinator.videoRotationAngleForHorizonLevelPreview
+        if connection.isVideoRotationAngleSupported(angle) { connection.videoRotationAngle = angle }
     }
 }

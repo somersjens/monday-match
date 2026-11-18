@@ -12,25 +12,38 @@ struct MatchScoreDetailView: View {
     /// smaller: the last digit then sits about as far in as the titles do.
     private static let sectionGap: CGFloat = 20
     private static let rowInsets = EdgeInsets(top: 11, leading: 16, bottom: 11, trailing: 4)
+    private static let scoreSize: CGFloat = 30
+    private static let scoreCapHeight = UIFont.systemFont(ofSize: scoreSize, weight: .light).capHeight
 
-    /// How far an answer sits from the one that was looked for.
-    private enum Fit {
-        case exact, near, far
-
-        var color: Color {
-            switch self {
-            case .exact: OnboardingTheme.cyan
-            case .near: OnboardingTheme.primaryText
-            case .far: OnboardingTheme.pink
-            }
-        }
+    /// Follows Dynamic Type, like the title itself.
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    private var titleCapHeight: CGFloat {
+        UIFont.preferredFont(forTextStyle: .title2,
+                             compatibleWith: UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(dynamicTypeSize)))
+            .capHeight
     }
 
-    private func fit(_ row: MatchReport.Row) -> Fit {
+    /// How far an answer sits from the one that was looked for, as a colour
+    /// on one spectrum: cyan where it matches, pink at the far end of the
+    /// scale (a 5 where a 1 was looked for), and the shades between for
+    /// every step in between.
+    private func fitColor(_ row: MatchReport.Row) -> Color {
         let gap = abs(row.value - row.wanted)
-        if gap == 0 { return .exact }
         // A gap on an answer that doesn't count costs nothing, so it isn't flagged.
-        return gap >= 2 && row.weight > 0 ? .far : .near
+        if gap > 0 && row.weight == 0 { return OnboardingTheme.primaryText }
+        let span = MatchWeighting.scaleSpan
+        return Self.fitSpectrum(Double(min(gap, span)) / Double(span))
+    }
+
+    /// Mixes cyan into pink; `amount` runs from 0 (a match) to 1 (the
+    /// largest gap the scale allows).
+    static func fitSpectrum(_ amount: Double) -> Color {
+        let near = (red: 0.20, green: 0.81, blue: 1.0)   // OnboardingTheme.cyan
+        let far = (red: 0.95, green: 0.35, blue: 0.85)   // OnboardingTheme.pink
+        let t = min(max(amount, 0), 1)
+        return Color(red: near.red + (far.red - near.red) * t,
+                     green: near.green + (far.green - near.green) * t,
+                     blue: near.blue + (far.blue - near.blue) * t)
     }
 
     private var rows: [ProfileCreationStep: MatchReport.Row] {
@@ -79,12 +92,16 @@ struct MatchScoreDetailView: View {
         .presentationBackground(OnboardingTheme.background)
     }
 
+    /// The title and the score line up on the top of their letters and
+    /// digits, not on their baselines: the score is the larger of the two, so
+    /// on a shared baseline it rose above the title.
     private var header: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
+        HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(perspective == .yours ? L10n("Your match with \(name)") : L10n("\(name)’s match with you"))
                     .font(.system(.title2, design: .rounded, weight: .semibold))
                     .foregroundStyle(OnboardingTheme.primaryText)
+                    .alignmentGuide(.top) { $0[.firstTextBaseline] - titleCapHeight }
                 Text(perspective == .yours
                      ? L10n("How \(name)’s answers fit what you look for.")
                      : L10n("How your answers fit what \(name) looks for."))
@@ -94,9 +111,10 @@ struct MatchScoreDetailView: View {
             }
             Spacer(minLength: 0)
             Text(report.score(perspective), format: .percent)
-                .font(.system(size: 30, weight: .light, design: .rounded))
+                .font(.system(size: Self.scoreSize, weight: .light, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(OnboardingTheme.cyan)
+                .alignmentGuide(.top) { $0[.firstTextBaseline] - Self.scoreCapHeight }
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
@@ -140,7 +158,7 @@ struct MatchScoreDetailView: View {
                 .foregroundStyle(OnboardingTheme.primaryText)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            number(row.value, color: fit(row).color, weight: .semibold)
+            number(row.value, color: fitColor(row), weight: .semibold)
             number(row.wanted, color: OnboardingTheme.secondaryText)
             importance(row)
         }

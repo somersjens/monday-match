@@ -25,6 +25,8 @@ final class ProfileExchangeSession: NSObject, ObservableObject {
         let id: UUID
         let you: ProfileCreationState
         let them: ProfileCreationState
+        /// Their photo, when they chose to share it with manual matching.
+        var photo: Data? = nil
     }
 
     /// Matches `NSBonjourServices` in Info.plist.
@@ -64,12 +66,12 @@ final class ProfileExchangeSession: NSObject, ObservableObject {
     // MARK: - Lifecycle
 
     /// Starts looking for other phones, offering a copy of `profile`.
-    func start(profile: ProfileCreationState, today: CalendarDate? = nil) {
+    func start(profile: ProfileCreationState, photo: Data? = nil, today: CalendarDate? = nil) {
         guard !isActive, profile.canShareProfile else { return }
         let today = today ?? .today()
         let peer = MCPeerID(displayName: UUID().uuidString)
         localPeer = peer
-        negotiation = ProfileExchangeNegotiation(profile: profile.sharedCopy(today: today), today: today)
+        negotiation = ProfileExchangeNegotiation(profile: profile.sharedCopy(today: today), today: today, photo: photo)
         result = nil
         notice = nil
 
@@ -159,9 +161,9 @@ final class ProfileExchangeSession: NSObject, ObservableObject {
             case .send(let message, let id):
                 guard let link = links[id], let data = message.encoded() else { continue }
                 try? link.session.send(data, toPeers: [link.peer], with: .reliable)
-            case .completed(_, let profile):
+            case .completed(_, let profile, let photo):
                 guard let you = negotiation?.profile else { continue }
-                result = Result(id: UUID(), you: you, them: profile)
+                result = Result(id: UUID(), you: you, them: profile, photo: photo)
                 finish()
                 return
             case .declined(let id):

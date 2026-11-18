@@ -141,6 +141,32 @@ private struct LandingSwapEffect: ViewModifier {
     }
 }
 
+extension View {
+    /// Rises out of a blur into place like an arriving landing control, for
+    /// controls that are already laid out and only have to appear.
+    func landingArrival(_ hasArrived: Bool, index: Int, reduceMotion: Bool) -> some View {
+        modifier(hasArrived
+                 ? LandingSwapEffect(offset: 0, blur: 0, scale: 1, opacity: 1)
+                 : reduceMotion
+                    ? LandingSwapEffect(offset: 0, blur: 0, scale: 1, opacity: 0)
+                    : LandingSwapEffect(offset: 22, blur: 10, scale: 0.97, opacity: 0))
+        .animation(reduceMotion
+                   ? .easeInOut(duration: 0.2)
+                   : .spring(duration: 0.62, bounce: 0.14).delay(0.16 + Double(index) * 0.07),
+                   value: hasArrived)
+    }
+
+    /// Sinks out of focus like a leaving landing control while keeping its place.
+    func landingDeparture(_ hasDeparted: Bool, reduceMotion: Bool) -> some View {
+        modifier(!hasDeparted
+                 ? LandingSwapEffect(offset: 0, blur: 0, scale: 1, opacity: 1)
+                 : reduceMotion
+                    ? LandingSwapEffect(offset: 0, blur: 0, scale: 1, opacity: 0)
+                    : LandingSwapEffect(offset: 14, blur: 8, scale: 0.97, opacity: 0))
+        .animation(reduceMotion ? .easeInOut(duration: 0.2) : .easeIn(duration: 0.22), value: hasDeparted)
+    }
+}
+
 extension AnyTransition {
     /// Landing controls trade places in a cascade: the leaving ones sink and
     /// lose focus, the arriving ones rise out of a blur one after another.

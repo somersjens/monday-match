@@ -21,8 +21,15 @@ enum ProfileExchangeMessage: Codable, Equatable {
 
     case hello(Hello)
     case ready
+    /// Sent just before `profile`, only when its owner chose to share it.
+    /// Older versions can't read it and simply skip it.
+    case photo(Data)
     case profile(ProfileCreationState)
     case decline
+
+    /// A photo larger than this is not sent or kept; it leaves room for
+    /// base64 within `maximumBytes`.
+    static let maximumPhotoBytes = 180 * 1024
 
     func encoded() -> Data? { try? JSONEncoder().encode(self) }
 
@@ -88,8 +95,8 @@ extension ProfileCreationState {
 struct ProfileExchangeNegotiation {
     enum Effect: Equatable {
         case send(ProfileExchangeMessage, to: String)
-        /// Both profiles have crossed.
-        case completed(peer: String, profile: ProfileCreationState)
+        /// Both profiles have crossed, with their photo when they shared one.
+        case completed(peer: String, profile: ProfileCreationState, photo: Data? = nil)
         /// The other person said no, or took the offer back.
         case declined(peer: String)
     }
@@ -103,18 +110,28 @@ struct ProfileExchangeNegotiation {
         var localReady = false
         var remoteReady = false
         var sentProfile = false
+        /// Their photo, when it came before their profile.
+        var photo: Data?
     }
 
     /// The copy of the user's profile that is sent, and matched with.
     let profile: ProfileCreationState
+    /// Sent with the profile when the user chose to share it.
+    let photo: Data?
     let today: CalendarDate
     private(set) var peers: [String: Peer] = [:]
     /// Once ready for one person, everyone else waits.
     private(set) var engagedPeer: String?
 
-    init(profile: ProfileCreationState, today: CalendarDate) {
+    init(profile: ProfileCreationState, today: CalendarDate, photo: Data? = nil) {
         self.profile = profile
         self.today = today
+        self.photo = photo.flatMap { $0.count <= ProfileExchangeMessage.maximumPhotoBytes ? $0 : nil }
+    }
+
+    /// The photo first, so it has arrived by the time the profile completes the exchange.
+    private func profileMessages(to peer: String) -> [Effect] {
+        (photo.map { [Effect.send(.photo($0), to: peer)] } ?? []) + [.send(.profile(profile), to: peer)]
     }
 
     /// A connection opened: greet, with this phone's token for measuring
@@ -141,7 +158,7 @@ struct ProfileExchangeNegotiation {
         var effects: [Effect] = [.send(.ready, to: peer)]
         if state.remoteReady {
             state.sentProfile = true
-            effects.append(.send(.profile(profile), to: peer))
+            effects += profileMessages(to: peer)
         }
         peers[peer] = state
         return effects
@@ -173,7 +190,13 @@ struct ProfileExchangeNegotiation {
             state.remoteReady = true
             guard state.localReady, !state.sentProfile else { return [] }
             state.sentProfile = true
-            return [.send(.profile(profile), to: peer)]
+            return profileMessages(to: peer)
+        case .photo(let data):
+            // Like the profile: only from the person this side is exchanging with.
+            guard state.localReady, state.remoteReady, engagedPeer == peer,
+                  data.count <= ProfileExchangeMessage.maximumPhotoBytes else { return [] }
+            state.photo = data
+            return []
         case .profile(let theirs):
             // Only someone this side is ready for may deliver a profile, and
             // only in exchange for this side's own.
@@ -184,7 +207,7 @@ struct ProfileExchangeNegotiation {
                 engagedPeer = nil
                 return [.declined(peer: peer)]
             }
-            return [.completed(peer: peer, profile: received)]
+            return [.completed(peer: peer, profile: received, photo: state.photo)]
         case .decline:
             guard state.hasGreeted, !state.sentProfile else { return [] }
             let wasInvolved = state.localReady || state.remoteReady

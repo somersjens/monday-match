@@ -31,17 +31,24 @@ final class AppSoundTests: XCTestCase {
         }
     }
 
+    /// The bed loops without a seam only if the decoder gives back exactly
+    /// the 24 seconds that were written, without AAC priming or padding.
+    func testAmbienceDecodesToExactlyOneLoop() throws {
+        let file = try AVAudioFile(forReading: try XCTUnwrap(AppSound.ambienceURL))
+        XCTAssertEqual(file.length, 24 * 44_100)
+        XCTAssertEqual(file.processingFormat.channelCount, 2)
+    }
+
     func testQuestionnaireStepsClimbTheScaleAndStartOver() {
         XCTAssertEqual((1...7).map(AppSound.step), [.step1, .step2, .step3, .step4, .step5, .step1, .step2])
         XCTAssertEqual(AppSound.step(0), .step5)
     }
 
-    func testSoundsAreOnByDefaultAndTheChoiceIsRemembered() throws {
+    func testTheOldSoundsSwitchIsCleared() throws {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: #function))
-        defaults.removePersistentDomain(forName: #function)
-        XCTAssertTrue(SoundPlayer(defaults: defaults).isEnabled)
-        SoundPlayer(defaults: defaults).isEnabled = false
-        XCTAssertFalse(SoundPlayer(defaults: defaults).isEnabled)
+        defaults.set(false, forKey: "sounds.enabled")
+        _ = SoundPlayer(defaults: defaults)
+        XCTAssertNil(defaults.object(forKey: "sounds.enabled"))
         defaults.removePersistentDomain(forName: #function)
     }
 }

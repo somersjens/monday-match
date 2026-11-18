@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// My matches, newest first: matches saved from a code exchange and every
-/// automatic match that was broken. Opening one replays its match screen; a
+/// My matches, newest first: matches saved from a code exchange, every match
+/// whose conversation was started, and every automatic match that was broken. Opening one replays its match screen; a
 /// broken one shows its conversation there.
 struct SavedMatchesView: View {
     @ObservedObject var store: SavedMatchStore
@@ -27,8 +27,12 @@ struct SavedMatchesView: View {
     }
 
     private var entries: [Entry] {
-        let saved = store.matches.map(Entry.saved)
-        let saveIDs = Set(store.matches.map(\.id))
+        // A server match saved when its chat started is shown from the
+        // server's history once it has ended, which knows how it ended.
+        let pastIDs = Set(center.pastMatches.map(\.id))
+        let kept = store.matches.filter { !($0.isLive && pastIDs.contains($0.id)) }
+        let saved = kept.map(Entry.saved)
+        let saveIDs = Set(kept.map(\.id))
         let broken = center.pastMatches.filter { !saveIDs.contains($0.id) }.map(Entry.broken)
         return (saved + broken).sorted { $0.date > $1.date }
     }
@@ -114,7 +118,7 @@ struct SavedMatchesView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(match.name)
                         .font(.system(.body, weight: .semibold))
-                        .foregroundStyle(OnboardingTheme.primaryText)
+                        .foregroundStyle(OnboardingTheme.primaryText.opacity(match.isBroken ? 0.75 : 1))
                     Text(date)
                         .font(.footnote)
                         .foregroundStyle(OnboardingTheme.secondaryText)
@@ -125,10 +129,16 @@ struct SavedMatchesView: View {
                     Text(report.average, format: .percent)
                         .font(.system(.body, design: .rounded, weight: .semibold))
                         .monospacedDigit()
-                        .foregroundStyle(OnboardingTheme.cyan)
-                    Text(report.isMatch ? L10n("Match") : L10n("No match"))
-                        .font(.caption2)
-                        .foregroundStyle(report.isMatch ? OnboardingTheme.secondaryText : OnboardingTheme.pink)
+                        .foregroundStyle(OnboardingTheme.cyan.opacity(match.isBroken ? 0.55 : 1))
+                    if match.isBroken {
+                        Text(L10n("Broken match"))
+                            .font(.caption2)
+                            .foregroundStyle(OnboardingTheme.pink)
+                    } else {
+                        Text(report.isMatch ? L10n("Match") : L10n("No match"))
+                            .font(.caption2)
+                            .foregroundStyle(report.isMatch ? OnboardingTheme.secondaryText : OnboardingTheme.pink)
+                    }
                 }
 
                 Image(systemName: "chevron.right")
@@ -151,7 +161,9 @@ struct SavedMatchesView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(match.name)
-        .accessibilityValue(report.isMatch
+        .accessibilityValue(match.isBroken
+            ? L10n("\(date), \(report.average) percent, a match that is no longer active")
+            : report.isMatch
             ? L10n("\(date), \(report.average) percent, a match")
             : L10n("\(date), \(report.average) percent, no match"))
         .accessibilityAddTraits(.isButton)
@@ -180,11 +192,7 @@ extension SavedMatchesView {
                         .font(.system(.body, design: .rounded, weight: .semibold))
                         .monospacedDigit()
                         .foregroundStyle(OnboardingTheme.cyan.opacity(0.55))
-                    Text(L10n("Match"))
-                        .font(.caption2)
-                        .strikethrough(true, color: OnboardingTheme.pink)
-                        .foregroundStyle(OnboardingTheme.secondaryText)
-                    Text(L10n("No longer active"))
+                    Text(L10n("Broken match"))
                         .font(.caption2)
                         .foregroundStyle(OnboardingTheme.pink)
                 }

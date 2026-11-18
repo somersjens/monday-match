@@ -322,20 +322,6 @@ final class NotificationEngineTests: XCTestCase {
         XCTAssertEqual(summary["lower_standards.a"]?.dismissed, 1)
     }
 
-    func testSwitchingOffNudgesIsRecordedAndCancelsThem() async {
-        let engine = makeEngine()
-        await ready(engine)
-        XCTAssertTrue(pendingKinds.contains(.firstMatchmaking))
-        var preferences = engine.preferences
-        preferences.tipsAndNudges = false
-        engine.setPreferences(preferences)
-        await engine.sync()
-        XCTAssertFalse(pendingKinds.contains(where: { $0.category.isNudge }))
-        XCTAssertTrue(engine.ledger.events.contains { $0.name == .optedOut && $0.detail == "tips_and_nudges" })
-        // Kept across launches.
-        XCTAssertFalse(NotificationPreferencesStore(defaults: defaults).load().tipsAndNudges)
-    }
-
     func testRevokedPermissionIsRecordedAndUnregistersPush() async {
         let registrar = FakeRegistrar()
         let engine = makeEngine(registrar: registrar)
@@ -346,7 +332,7 @@ final class NotificationEngineTests: XCTestCase {
         XCTAssertTrue(engine.ledger.events.contains { $0.name == .permissionRevoked })
     }
 
-    func testPushTokenIsRegisteredOnceAndAgainWhenPreferencesChange() async {
+    func testPushTokenIsRegisteredOnce() async {
         let registrar = FakeRegistrar()
         let engine = makeEngine(registrar: registrar)
         await ready(engine)
@@ -354,11 +340,15 @@ final class NotificationEngineTests: XCTestCase {
         await engine.sync()
         await engine.sync()
         XCTAssertEqual(registrar.registrations, 1)
-        var preferences = engine.preferences
-        preferences.messagePreviews = false
-        engine.setPreferences(preferences)
-        await engine.sync()
-        XCTAssertEqual(registrar.registrations, 2)
+    }
+
+    func testOldNotificationSwitchesAreIgnoredAndCleared() async {
+        defaults.set(Data(#"{"tipsAndNudges":false}"#.utf8), forKey: "notifications.preferences.v1")
+        let engine = makeEngine()
+        await ready(engine)
+        XCTAssertEqual(engine.preferences, .standard)
+        XCTAssertTrue(pendingKinds.contains(.firstMatchmaking))
+        XCTAssertNil(defaults.object(forKey: "notifications.preferences.v1"))
     }
 
     // MARK: - Language

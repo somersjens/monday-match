@@ -17,6 +17,8 @@ struct EarlyAccessView: View {
 
     @State private var selection = LifetimeProductID.lifetime
     @State private var hasAppeared = false
+    /// The reminder above the footer, which the plans scroll clear of.
+    @State private var reminderHeight: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
 
@@ -73,7 +75,7 @@ struct EarlyAccessView: View {
                 .frame(maxWidth: OnboardingTheme.contentWidth)
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
-                .padding(.bottom, 12)
+                .padding(.bottom, 12 + (showsReminder ? reminderHeight : 0))
                 .frame(maxWidth: .infinity)
             }
             .safeAreaInset(edge: .top, spacing: 0) { lightNavigation }
@@ -238,15 +240,19 @@ struct EarlyAccessView: View {
         }
     }
 
+    private var showsReminder: Bool {
+        selection == .earlyAdopter && access.canOfferEarlyAccess
+    }
+
+    /// The footer keeps one height, so the Continue button never moves: the
+    /// reminder rises above it instead of pushing it, and the plans make room
+    /// for it at the end of their scroll.
+    ///
+    /// Continue and Restore purchases sit exactly where the landing page's
+    /// Get started and account link are, and where the questionnaire's
+    /// Continue and Back follow, so the buttons stay put between the screens.
     private var footer: some View {
-        VStack(spacing: 6) {
-            if selection == .earlyAdopter && access.canOfferEarlyAccess {
-                ReminderRow(isOn: access.ledger.reminderEnabled,
-                            isDisabled: access.isRequestingReminder || access.isBusy) {
-                    Task { await access.setReminderEnabled(!access.ledger.reminderEnabled) }
-                }
-                .transition(.reminderReveal(reduceMotion: reduceMotion))
-            }
+        VStack(spacing: 12) {
             Button {
                 Task {
                     if await access.continueWith(selection) { onContinue() }
@@ -266,17 +272,35 @@ struct EarlyAccessView: View {
                     if access.hasAccess { onContinue() }
                 }
             }
-            .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(OnboardingTheme.secondaryText)
-            .frame(minHeight: 32)
+            .buttonStyle(QuietButtonStyle())
             .disabled(access.isBusy)
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
-        .padding(.horizontal, 20)
-        .padding(.top, 6)
-        .padding(.bottom, 4)
+        .padding(.horizontal, 28)
+        // With the reminder's own 4 pt below it, the same 12 pt as above.
+        .padding(.top, 8)
+        .padding(.bottom, OnboardingTheme.controlsBottomPadding)
         .frame(maxWidth: .infinity)
         .background(Color("WelcomeBackground"))
+        .overlay(alignment: .top) {
+            ZStack {
+                if showsReminder {
+                    ReminderRow(isOn: access.ledger.reminderEnabled,
+                                isDisabled: access.isRequestingReminder || access.isBusy) {
+                        Task { await access.setReminderEnabled(!access.ledger.reminderEnabled) }
+                    }
+                    .frame(maxWidth: OnboardingTheme.controlWidth)
+                    .padding(.horizontal, 28)
+                    .padding(.top, 6)
+                    .frame(maxWidth: .infinity)
+                    .background(Color("WelcomeBackground"))
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { reminderHeight = $0 }
+                    .transition(.reminderReveal(reduceMotion: reduceMotion))
+                }
+            }
+            // The row's bottom rests on the footer's top edge.
+            .alignmentGuide(.top) { $0[.bottom] }
+        }
         .animation(OnboardingMotion.resolved(.spring(duration: 0.55, bounce: 0.14), reduceMotion: reduceMotion),
                    value: selection)
     }

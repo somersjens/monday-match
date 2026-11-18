@@ -75,12 +75,25 @@ final class AdaptiveLayoutRenderTests: XCTestCase {
                              screen: "overview", device: device)
             try await render(AutoMatchingSetupView(viewModel: model, locationService: LocationService(), onFinish: {}),
                              screen: "automatching", device: device)
+            for verified in [false, true] {
+                try await render(AutoMatchingSetupView(viewModel: Self.photoModel(verified: verified),
+                                                       locationService: LocationService(),
+                                                       startsOnPhotoStep: true, onFinish: {}),
+                                 screen: verified ? "automatching-photo-verified" : "automatching-photo", device: device)
+            }
+            let noPhoto = ProfileCreationViewModel(store: InMemoryProfileCreationStore(state: Self.completedState()),
+                                                   repository: InMemoryProfileRepository())
+            try await render(AutoMatchingSetupView(viewModel: noPhoto, locationService: LocationService(),
+                                                   startsOnPhotoStep: true, onFinish: {}),
+                             screen: "automatching-no-photo", device: device)
             try await render(EarlyAccessView(access: await Self.access(), onContinue: {}),
                              screen: "early-access", device: device)
             try await render(NavigationStack { HowItWorksView(onContinue: {}) },
                              screen: "how-it-works", device: device)
             try await render(PrivacyConsentView(kind: .profile, onAccept: {}),
                              screen: "privacy", device: device)
+            try await render(AWSVerificationConsentView(onBack: {}, onAgree: {}),
+                             screen: "photo-verification-consent", device: device)
             try await render(NavigationStack {
                 SignInPlaceholderView(authService: MockAuthService(), onAuthenticated: { _ in })
             }, screen: "sign-in", device: device)
@@ -142,6 +155,28 @@ final class AdaptiveLayoutRenderTests: XCTestCase {
         state.profilePrivacyConsent = .init(version: PrivacyConsentKind.profile.version, acceptedAt: Date(), languageCode: "en")
         state.hasUnderstoodExplanation = true
         return state
+    }
+
+    /// A profile with an auto-matching photo, verified or not yet.
+    static func photoModel(verified: Bool) -> ProfileCreationViewModel {
+        let model = ProfileCreationViewModel(store: InMemoryProfileCreationStore(state: completedState()),
+                                             repository: InMemoryProfileRepository())
+        let size = CGSize(width: 600, height: 600)
+        let image = UIGraphicsImageRenderer(size: size).jpegData(withCompressionQuality: 0.9) { context in
+            let colors = [UIColor.systemOrange.cgColor, UIColor.systemPink.cgColor, UIColor.systemIndigo.cgColor]
+            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray,
+                                      locations: [0, 0.5, 1])!
+            context.cgContext.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: size.width, y: size.height),
+                                                 options: [])
+            UIColor.white.withAlphaComponent(0.85).setFill()
+            context.cgContext.fillEllipse(in: CGRect(x: 200, y: 120, width: 200, height: 240))
+        }
+        _ = model.setAutoMatchingPhoto(image)
+        if verified, let photo = model.autoMatchingReferencePhoto {
+            model.recordAutoMatchingPhotoVerification(
+                PhotoVerificationReceipt(photoID: photo.id, imageData: photo.imageData, outcome: .match))
+        }
+        return model
     }
 
     static func access() async -> LifetimeAccessStore {

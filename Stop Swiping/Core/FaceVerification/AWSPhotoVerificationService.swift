@@ -32,15 +32,9 @@ nonisolated struct AWSPhotoVerificationSession: Decodable, Identifiable {
     let credentials: AWSLivenessCredentials
     enum CodingKeys: String,CodingKey { case id="request_id",sessionID="session_id",region,credentials }
 }
-nonisolated enum AWSPhotoVerificationError: LocalizedError {
+/// Shown to the person as an `AWSPhotoVerificationIssue`, never as text of its own.
+nonisolated enum AWSPhotoVerificationError: Error {
     case unavailable, expired, notVerified
-    var errorDescription: String? {
-        switch self {
-        case .unavailable: L10n("Server photo verification is not available yet. Please try again later.")
-        case .expired: L10n("This verification expired. Please start a new check.")
-        case .notVerified: L10n("The server could not verify this photo. Try a clear photo of yourself and repeat the scan.")
-        }
-    }
 }
 /// Decoded off the main actor by Supabase, so these must not be main-actor isolated.
 private nonisolated struct AWSMatchingStatus: Decodable { let photo_verified:Bool }

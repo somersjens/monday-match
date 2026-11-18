@@ -36,16 +36,13 @@ struct WelcomeLightMetalView: UIViewRepresentable {
         view.layer.isOpaque = false
         view.backgroundColor = .clear
         view.framebufferOnly = true
-        view.preferredFramesPerSecond = framesPerSecond
         view.delegate = context.coordinator
         updateUIView(view, context: context)
         return view
     }
 
     func updateUIView(_ view: MTKView, context: Context) {
-        if view.preferredFramesPerSecond != framesPerSecond {
-            view.preferredFramesPerSecond = framesPerSecond
-        }
+        context.coordinator.setFramesPerSecond(framesPerSecond, for: view)
         context.coordinator.update(reduceMotion: reduceMotion, isActive: isActive)
         context.coordinator.updateForm(form, pulse: lockPulse, showsCode: showsCode,
                                        helixEntryDistance: helixEntryDistance)
@@ -83,7 +80,7 @@ struct WelcomeLightUniforms {
     var chat: SIMD4<Float> = .zero
     /// Helix-to-chart progress, chart-to-chart progress, and both charts' kinds.
     var personality: SIMD4<Float> = .zero
-    /// Both charts' value counts.
+    /// Both charts' value counts, and 1 when the chart grows out of the match rings.
     var personalityShape: SIMD4<Float> = .zero
     var personalityFrom: (SIMD4<Float>, SIMD4<Float>, SIMD4<Float>) = (.zero, .zero, .zero)
     var personalityTo: (SIMD4<Float>, SIMD4<Float>, SIMD4<Float>) = (.zero, .zero, .zero)
@@ -131,7 +128,7 @@ struct WelcomeLightUniforms {
         apply(WelcomeLightHelix.Arrival.settled)
     }
 
-    mutating func apply(_ pose: WelcomeLightPersonality.Pose) {
+    mutating func apply(_ pose: WelcomeLightPersonality.Pose, overMatch: Bool = false) {
         func pack(_ values: [Double]) -> (SIMD4<Float>, SIMD4<Float>, SIMD4<Float>) {
             var padded = values.prefix(WelcomeLightPersonality.maximumValues).map(Float.init)
             padded += Array(repeating: 0, count: WelcomeLightPersonality.maximumValues - padded.count)
@@ -139,7 +136,7 @@ struct WelcomeLightUniforms {
         }
         personality = SIMD4(Float(pose.amount), Float(pose.cross),
                             Float(pose.from.kind.rawValue), Float(pose.to.kind.rawValue))
-        personalityShape = SIMD4(Float(pose.from.values.count), Float(pose.to.values.count), 0, 0)
+        personalityShape = SIMD4(Float(pose.from.values.count), Float(pose.to.values.count), overMatch ? 1 : 0, 0)
         personalityFrom = pack(pose.from.values)
         personalityTo = pack(pose.to.values)
     }
@@ -352,10 +349,52 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
     private var code: WelcomeLightCode.Matrix?
     private var codeBuffer: MTLBuffer?
     private var personalityMotion = WelcomeLightPersonality.Motion()
+    /// The chart was opened during a match: it grows out of the rings and
+    /// rewinds into them, and only while that match lasts.
+    private var personalityOverMatch = false
+
+    private weak var view: MTKView?
+    private var framesPerSecond = 60
+    /// Bumped by each keyboard slide, so only the last one restores the rate.
+    private var keyboardSlide = 0
+    private var isKeyboardSliding = false
 
     init(skipsEntrance: Bool = false) {
         presentationElapsed = skipsEntrance ? WelcomeLightEntrance.duration + 1 : 0
         super.init()
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillMove(_:)),
+                                               name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+    }
+
+    func setFramesPerSecond(_ framesPerSecond: Int, for view: MTKView) {
+        self.view = view
+        self.framesPerSecond = framesPerSecond
+        applyFrameRate()
+    }
+
+    /// The light and the keyboard's glass share the GPU, and the screen
+    /// redraws the conversation in every frame of the slide. Drawing the
+    /// light at half rate while the keyboard moves leaves the slide room to
+    /// stay smooth. Its motion follows the clock, so it keeps its speed.
+    @objc private func keyboardWillMove(_ notification: Notification) {
+        let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0
+        guard duration > 0 else { return }
+        keyboardSlide += 1
+        let slide = keyboardSlide
+        isKeyboardSliding = true
+        applyFrameRate()
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(duration + 0.1))
+            guard let self, self.keyboardSlide == slide else { return }
+            self.isKeyboardSliding = false
+            self.applyFrameRate()
+        }
+    }
+
+    private func applyFrameRate() {
+        guard let view else { return }
+        let rate = isKeyboardSliding ? min(framesPerSecond, 30) : framesPerSecond
+        if view.preferredFramesPerSecond != rate { view.preferredFramesPerSecond = rate }
     }
 
     func update(reduceMotion: Bool, isActive: Bool) {
@@ -378,12 +417,20 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
     /// from the sides, as on arrival.
     func updateMatch(_ request: WelcomeLightMatch.Request?) {
         guard request != match else { return }
+        if request?.id != match?.id, personalityOverMatch {
+            // A chart from the last match never lingers over the next one.
+            personalityMotion = WelcomeLightPersonality.Motion()
+            personalityOverMatch = false
+        }
         if let request, request.id != match?.id { matchStartedAt = presentationElapsed }
         if request == nil, match != nil { helixStartedAt = presentationElapsed }
         if let request, request.isChatting {
             if request.id != match?.id {
-                // Reopening a conversation: the rings are already formed.
+                // Reopening a conversation: the rings are already formed,
+                // and so is the helix they came from.
                 chatStartedAt = presentationElapsed - WelcomeLightMatch.Chat.morphDuration
+                helixStartedAt = min(helixStartedAt, presentationElapsed
+                                     - WelcomeLightHelix.Arrival.delay - WelcomeLightHelix.Arrival.duration)
             } else if chatStartedAt == nil {
                 chatStartedAt = presentationElapsed
             }
@@ -400,7 +447,10 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     func updatePersonality(_ visual: WelcomeLightPersonality.Visual?) {
-        personalityMotion.update(visual, now: ProcessInfo.processInfo.systemUptime, animated: !reduceMotion)
+        let now = ProcessInfo.processInfo.systemUptime
+        // Decided when a chart opens; while it rewinds it keeps its origin.
+        if visual != nil, personalityMotion.pose(at: now) == nil { personalityOverMatch = match != nil }
+        personalityMotion.update(visual, now: now, animated: !reduceMotion)
     }
 
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
@@ -432,8 +482,8 @@ final class WelcomeLightMetalRenderer: NSObject, MTKViewDelegate {
                 startSeconds: WelcomeLightHelix.Arrival.motionSeconds(atPresentation: helixStartedAt, reduceMotion: reduceMotion),
                 reduceMotion: reduceMotion))
         }
-        if match == nil, let pose = personalityMotion.pose(at: now) {
-            uniforms.apply(pose)
+        if let pose = personalityMotion.pose(at: now), (match != nil) == personalityOverMatch {
+            uniforms.apply(pose, overMatch: personalityOverMatch)
         }
         if let match {
             uniforms.apply(match, elapsed: presentationElapsed - matchStartedAt,

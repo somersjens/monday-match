@@ -18,6 +18,7 @@ struct ProfileCreationFlowView: View {
     @State private var direction: StepDirection = .forward
     @State private var isNavigating = false
     @State private var navigationToken = 0
+    @State private var pendingAutoAdvance: Task<Void, Never>?
     @State private var hasEntered = false
     /// Changing one answer of a finished profile shows the step dots; filling
     /// in the questionnaire shows the progress card.
@@ -144,9 +145,9 @@ struct ProfileCreationFlowView: View {
             OnboardingProgressCard(progress: finish == .none ? viewModel.state.progress : 1,
                                    deadline: countdownDeadline,
                                    isFinished: finish >= .sealed)
+                // Snug under the status bar, close to the question below.
                 .padding(.horizontal, 24)
-                .padding(.top, 6)
-                .padding(.bottom, 14)
+                .padding(.bottom, 6)
                 .frame(maxWidth: OnboardingTheme.contentWidth)
                 .frame(maxWidth: .infinity)
                 .scaleEffect(finish == .leaving && !reduceMotion ? 1.04 : 1)
@@ -287,7 +288,7 @@ struct ProfileCreationFlowView: View {
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)
-        .padding(.bottom, 18)
+        .padding(.bottom, OnboardingTheme.controlsBottomPadding)
         .opacity(hasEntered ? 1 : 0)
         .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: showsHeightHonestyNotice)
     }
@@ -299,30 +300,24 @@ struct ProfileCreationFlowView: View {
     }
 
     private var heightHonestyNotice: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Image(systemName: "exclamationmark.shield")
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(OnboardingTheme.cyan)
-            Text(L10n("False information can lead to account termination. Purchases and the free new-user offer may not be restored."))
-                .foregroundStyle(OnboardingTheme.primaryText.opacity(0.85))
-                .multilineTextAlignment(.leading)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .font(.footnote)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 11)
-        .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(.white.opacity(0.06))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(.white.opacity(0.1), lineWidth: 1)
-                }
-        }
-        .accessibilityElement(children: .combine)
+        Text(L10n("False information can lead to account termination."))
+            .foregroundStyle(OnboardingTheme.primaryText.opacity(0.85))
+            .multilineTextAlignment(.center)
+            .lineLimit(2)
+            .minimumScaleFactor(0.8)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .font(.footnote)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .background {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(.white.opacity(0.06))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(.white.opacity(0.1), lineWidth: 1)
+                    }
+            }
     }
 
     // MARK: - Testing shortcut
@@ -357,7 +352,7 @@ struct ProfileCreationFlowView: View {
         // the next one moves on.
         if displayedStep == .height, !showsHeightHonestyNotice {
             hasRevealedHeightNotice = true
-            AccessibilityNotification.Announcement(L10n("False information can lead to account termination. Purchases and the free new-user offer may not be restored.")).post()
+            AccessibilityNotification.Announcement(L10n("False information can lead to account termination.")).post()
             return
         }
         handleSubmission(viewModel.submitCurrentStep())
@@ -397,16 +392,27 @@ struct ProfileCreationFlowView: View {
         handleContinue()
     }
 
+    /// Lets the tapped answer visibly settle before the page moves on, and
+    /// restarts on every new tap so changing your mind never skips ahead.
     private func advanceAfterAnswerSelection() {
-        guard viewModel.currentStep == displayedStep,
+        pendingAutoAdvance?.cancel()
+        let step = viewModel.currentStep
+        guard step == displayedStep,
               viewModel.shouldAutoAdvanceAfterAnswerSelection else { return }
-        handleContinue()
+        pendingAutoAdvance = Task {
+            try? await Task.sleep(for: OnboardingMotion.answerSettle)
+            guard !Task.isCancelled,
+                  viewModel.currentStep == step, displayedStep == step,
+                  viewModel.shouldAutoAdvanceAfterAnswerSelection else { return }
+            handleContinue()
+        }
     }
 
     /// The outgoing step must adopt the new direction before it is removed,
     /// so the direction is applied one update ahead of the step change.
     private func show(_ step: ProfileCreationStep) {
         guard step != displayedStep else { return }
+        pendingAutoAdvance?.cancel()
         direction = step > displayedStep ? .forward : .backward
         isNavigating = true
         navigationToken += 1

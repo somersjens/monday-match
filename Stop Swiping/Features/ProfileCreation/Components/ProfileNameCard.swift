@@ -80,6 +80,7 @@ struct ProfileNameCard: View {
         guard canSave else { return }
         isFocused = false
         viewModel.setDisplayName(name)
+        SoundPlayer.shared.play(.name)
     }
 }
 

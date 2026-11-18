@@ -296,6 +296,109 @@ final class WelcomeLightChatRenderingTests: XCTestCase {
         }
     }
 
+    /// Opened from the conversation, the chart grows straight out of the
+    /// rings: untouched rings at zero, exactly the chart at one, no helix between.
+    func testPersonalityChartGrowsOutOfTheChatRingsWithoutTheHelix() throws {
+        let resources = try XCTUnwrap(WelcomeLightMetalRenderer.resources)
+        let source = WelcomeLightShaderSource.code + """
+        kernel void ringsToChartProbe(uint id [[thread_position_in_grid]], constant WelcomeUniforms &p [[buffer(0)]],
+                                      device const float2 *controls [[buffer(1)]], device float4 *output [[buffer(2)]]) {
+            uint instance = id/97;
+            float u = p.stream.w + float(id%97)/96.0;
+            float3 q = lockedRibbonPoint(u, instance, p, controls);
+            bool saved = p.matchMorph.y > 0.5;
+            float3 rings = saved ? savedMatchPoint(u, instance, p) : matchPoint(u, instance, p);
+            output[id*3] = float4(q, personalityAmount(u, instance, p));
+            output[id*3 + 1] = float4(rings, 0);
+            output[id*3 + 2] = float4(personalityTarget(u, instance, p).point, 0);
+        }
+        """
+        let library = try resources.device.makeLibrary(source: source, options: WelcomeLightMetalResources.compileOptions())
+        let pipeline = try resources.device.makeComputePipelineState(
+            function: XCTUnwrap(library.makeFunction(name: "ringsToChartProbe")))
+        let count = 120 * 97
+        let buffer = try XCTUnwrap(resources.device.makeBuffer(
+            length: count * 3 * MemoryLayout<SIMD4<Float>>.stride, options: .storageModeShared))
+        let visual = WelcomeLightPersonality.Visual(kind: .radar, values: [0.2, 0.9, 0.5, 0.4, 0.7])
+        for transition in [WelcomeLightMatch.Transition.newMatch, .savedMatch] {
+            for amount in [0.0, 0.3, 0.6, 1.0] {
+                var uniforms = makeUniforms(elapsed: 8, transition: transition)
+                uniforms.apply(WelcomeLightPersonality.Pose(amount: amount, cross: 1, from: visual, to: visual),
+                               overMatch: true)
+                let command = try XCTUnwrap(resources.queue.makeCommandBuffer())
+                let encoder = try XCTUnwrap(command.makeComputeCommandEncoder())
+                encoder.setComputePipelineState(pipeline)
+                encoder.setBytes(&uniforms, length: MemoryLayout<WelcomeLightUniforms>.stride, index: 0)
+                encoder.setBuffer(resources.controls, offset: 0, index: 1)
+                encoder.setBuffer(buffer, offset: 0, index: 2)
+                encoder.dispatchThreads(MTLSize(width: count, height: 1, depth: 1),
+                                        threadsPerThreadgroup: MTLSize(width: 64, height: 1, depth: 1))
+                encoder.endEncoding()
+                command.commit()
+                command.waitUntilCompleted()
+                XCTAssertNil(command.error)
+                let values = buffer.contents().bindMemory(to: SIMD4<Float>.self, capacity: count * 3)
+                for index in 0..<count {
+                    let q = values[index * 3], rings = values[index * 3 + 1], chart = values[index * 3 + 2]
+                    let point = SIMD3(q.x, q.y, q.z)
+                    XCTAssertTrue(point.x.isFinite && point.y.isFinite && point.z.isFinite)
+                    if amount == 0 {
+                        XCTAssertEqual(q.w, 0)
+                        XCTAssertLessThan(simd_distance(point, SIMD3(rings.x, rings.y, rings.z)), 1e-5,
+                                          "Without a chart the rings must be untouched.")
+                    } else if amount == 1 {
+                        XCTAssertEqual(q.w, 1, accuracy: 1e-5)
+                        XCTAssertLessThan(simd_distance(point, SIMD3(chart.x, chart.y, chart.z)), 1e-5,
+                                          "The open chart must be exactly the chart from the helix.")
+                    } else {
+                        // On the straight way from its ring to its place in the chart.
+                        let expected = simd_mix(SIMD3(rings.x, rings.y, rings.z), SIMD3(chart.x, chart.y, chart.z),
+                                                SIMD3(repeating: q.w))
+                        XCTAssertLessThan(simd_distance(point, expected), 1e-4)
+                    }
+                }
+            }
+        }
+        // Without the flag a match never shows a chart, as before.
+        var uniforms = makeUniforms(elapsed: 8, transition: .newMatch)
+        uniforms.apply(WelcomeLightPersonality.Pose(amount: 1, cross: 1, from: visual, to: visual))
+        XCTAssertEqual(uniforms.personalityShape.z, 0)
+    }
+
+    func testRenderChatRingsReweavingIntoThePersonalityChart() throws {
+        let visual = WelcomeLightPersonality.Visual(kind: .radar, values: [0.2, 0.9, 0.5, 0.4, 0.7])
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let amounts = [0.0, 0.15, 0.3, 0.45, 0.6, 0.8, 1.0]
+        var previews: [UIImage] = []
+        for transition in [WelcomeLightMatch.Transition.newMatch, .savedMatch] {
+            for amount in amounts {
+                var uniforms = makeUniforms(elapsed: 8, transition: transition)
+                uniforms.apply(WelcomeLightPersonality.Pose(amount: amount, cross: 1, from: visual, to: visual),
+                               overMatch: true)
+                let image = try render(uniforms)
+                previews.append(UIGraphicsImageRenderer(size: CGSize(width: 197, height: 300), format: format).image { _ in
+                    UIColor.black.setFill()
+                    UIRectFill(CGRect(x: 0, y: 0, width: 197, height: 300))
+                    UIImage(cgImage: image).draw(in: CGRect(x: 0, y: -60, width: 197, height: 413))
+                    ("\(transition) / \(amount)" as NSString).draw(at: CGPoint(x: 5, y: 5), withAttributes: [
+                        .foregroundColor: UIColor.white, .font: UIFont.systemFont(ofSize: 11)])
+                })
+            }
+        }
+        let sheet = UIGraphicsImageRenderer(size: CGSize(width: 197 * amounts.count, height: 600), format: format).image { _ in
+            for (index, preview) in previews.enumerated() {
+                preview.draw(at: CGPoint(x: index % amounts.count * 197, y: index / amounts.count * 300))
+            }
+        }
+        let attachment = XCTAttachment(image: sheet)
+        attachment.name = "Chat rings reweaving into the personality chart"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        try XCTUnwrap(sheet.pngData()).write(to: URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("chat-rings-to-chart-sheet.png"))
+    }
+
     private func makeUniforms(elapsed: Double, transition: WelcomeLightMatch.Transition) -> WelcomeLightUniforms {
         var uniforms = WelcomeLightUniforms(elapsed: 0, size: CGSize(width: 393, height: 825), pixelScale: 1)
         uniforms.shape.w = Float(40 + elapsed)

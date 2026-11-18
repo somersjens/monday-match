@@ -1,5 +1,6 @@
 import Combine
 import SwiftUI
+import UIKit
 
 struct WelcomeView: View {
     /// A returning account signed in from the landing controls.
@@ -64,8 +65,9 @@ struct WelcomeView: View {
     /// The buttons come back from under the personality card, so they wait
     /// for it to leave instead of fading in through it.
     @State private var returnsFromPersonality = false
-    /// The personality estimates opened from a match's settings, drawn over
-    /// the conversation by a light of their own; nil while the chat shows.
+    /// The personality estimates opened from a match's settings. The match
+    /// rings reweave into the chart while the conversation fades; nil while
+    /// the chat shows.
     @State private var matchPersonalityTest: PersonalityTest?
     /// A profile read by the in-app scanner, waiting for its match to be shown.
     @State private var scannedProfile: ProfileCreationState?
@@ -83,6 +85,10 @@ struct WelcomeView: View {
     @StateObject private var exchange = ProfileExchangeSession()
     @State private var exchanges = 0
     @State private var showsMatchProfile = false
+    /// The photo behind a demo match (your own) or an exchanged one (theirs,
+    /// when they shared it). A live match's photo comes from `liveMatches`.
+    @State private var matchPhoto: UIImage?
+    @State private var matchPhotoIsVerified = false
     /// The match shown in place of the home controls.
     @State private var activeMatch: ActiveMatch?
     /// What the light draws. It trails `activeMatch` while the heart fades out.
@@ -96,6 +102,9 @@ struct WelcomeView: View {
     /// Fake matches alternate between a match and no match.
     @State private var nextFakeMatchSucceeds = true
     @State private var showsProfilePrivacy = false
+    /// The light stops only once a cover has finished sliding over it, so it
+    /// keeps moving for as long as any of it can still be seen.
+    @State private var isLightCovered = false
     @State private var isDemoPlaying = false
     /// Playing the demo again keeps its buttons on the screen itself, not on
     /// the phone that shrinks away.
@@ -250,7 +259,7 @@ struct WelcomeView: View {
             let demoStage = ExchangeDemoStage(size: proxy.size, insets: insets,
                                               helixCenter: lightCenter.y, helixUnit: layout.unit)
             let chartLift = personalityLift(layout: layout, height: proxy.size.height, controlsInset: controlsInset)
-            let lift = personalityResult == nil ? 0 : chartLift
+            let lift = personalityResult == nil && matchPersonalityVisual == nil ? 0 : chartLift
 
             ZStack {
                 Color("WelcomeBackground")
@@ -263,13 +272,12 @@ struct WelcomeView: View {
                     // and opacity change, so the Metal surface is never resized.
                     WelcomeLightAnimation(form: lightForm, lockPulse: lockPulse,
                                           showsCode: showsCode, code: shareCode, skipsEntrance: skipsEntrance,
-                                          isPaused: showsOverview || showsAutoMatching || showsSavedMatches || showsProfilePrivacy || showsScanner
-                                            || matchPersonalityTest != nil,
+                                          isPaused: isLightCovered,
                                           framesPerSecond: isOnboarding ? 30 : 60,
                                           helixEntryDistance: sideEntry / max(animationWidth * 0.42, 1)
                                             + WelcomeLightHelix.radius + 0.12,
                                           match: lightMatch,
-                                          personality: personalityResult?.visual)
+                                          personality: personalityResult?.visual ?? matchPersonalityVisual)
                         .frame(width: animationWidth, height: drawingHeight)
                         .scaleEffect(showsAccess ? AccessScreenMotion.lightScale(for: animationWidth)
                                      : (isOnboarding ? 0.62 : 1))
@@ -306,22 +314,30 @@ struct WelcomeView: View {
                                     removal: .opacity.animation(.easeOut(duration: 0.2))))
                         }
 
+                        // Next to the close button while the code is shown. It
+                        // slides out from under that button, so it is drawn
+                        // first and animated before it is positioned: a scale
+                        // after `position` grows from the middle of the screen.
+                        CodeScanButton(action: openScanner)
+                            .scaleEffect(showsCode || reduceMotion ? 1 : 0.6)
+                            .offset(x: showsCode || reduceMotion ? 0 : HelixCodeButton.size + 10)
+                            .opacity(showsCode ? 1 : 0)
+                            .animation(showsCode ? .spring(duration: 0.42, bounce: 0.18) : .easeIn(duration: 0.18),
+                                       value: showsCode)
+                            .position(x: proxy.size.width - HelixCodeButton.trailingInset - HelixCodeButton.size * 1.5 - 10,
+                                      y: HelixCodeButton.topInset + HelixCodeButton.size / 2)
+                            .disabled(isTransitioning)
+                            .allowsHitTesting(showsCode)
+                            .accessibilityHidden(!showsCode)
+                            .transition(.opacity)
+
                         // Fixed to the screen's safe top-right corner.
                         HelixCodeButton(showsCode: showsCode, action: toggleCode)
-                            .position(x: proxy.size.width - 16 - HelixCodeButton.size / 2,
-                                      y: 8 + HelixCodeButton.size / 2)
+                            .position(x: proxy.size.width - HelixCodeButton.trailingInset - HelixCodeButton.size / 2,
+                                      y: HelixCodeButton.topInset + HelixCodeButton.size / 2)
                             .disabled(isTransitioning)
                             .opacity(demoPhase == nil ? 1 : 0)
                             .transition(.opacity)
-
-                        // Next to the close button while the code is shown.
-                        if showsCode {
-                            CodeScanButton(action: openScanner)
-                                .position(x: proxy.size.width - 16 - HelixCodeButton.size * 1.5 - 10,
-                                          y: 8 + HelixCodeButton.size / 2)
-                                .disabled(isTransitioning)
-                                .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.7)))
-                        }
                     }
 
                     if showsAccess {
@@ -377,8 +393,17 @@ struct WelcomeView: View {
                             onViewProfile: { showsOverview = true },
                             onShowPersonality: openMatchPersonality,
                             onBreakMatch: breakMatch,
-                            onReport: reportMatch
+                            onReport: reportMatch,
+                            photoCard: activePhotoCard
                         )
+                        // Gives the light to the chart: fades quickly as the rings
+                        // start to reweave, and returns once they are nearly back.
+                        .animation(MatchPersonalityMotion.chat(returning: matchPersonalityTest == nil,
+                                                               reduceMotion: reduceMotion)) {
+                            $0.opacity(matchPersonalityTest == nil ? 1 : 0)
+                                .blur(radius: matchPersonalityTest != nil && !reduceMotion ? 10 : 0)
+                        }
+                        .allowsHitTesting(matchPersonalityTest == nil)
                         .transition(.opacity)
                     } else if stage == .complete, demoPhase != nil {
                         // The explanation's phones show only their light.
@@ -412,11 +437,25 @@ struct WelcomeView: View {
 
                     if stage == .complete, activeMatch != nil, let matchPersonalityTest,
                        let result = personalityResults[matchPersonalityTest] {
-                        matchPersonality(result, center: CGPoint(x: lightCenter.x, y: lightCenter.y - chartLift),
-                                         lightSize: CGSize(width: animationWidth, height: drawingHeight),
-                                         unit: layout.unit, controlsInset: controlsInset)
-                            .transition(.opacity)
-                            .zIndex(3)
+                        // The chart itself is the match light, rewoven; only its
+                        // labels and the card are drawn here, as from the helix.
+                        PersonalityChartLabels(result: result,
+                                               center: CGPoint(x: lightCenter.x, y: lightCenter.y - chartLift),
+                                               unit: layout.unit)
+                            .id(result.test)
+                            .transition(.asymmetric(
+                                insertion: .opacity.animation(.easeInOut(duration: 0.45)
+                                    .delay(reduceMotion ? 0 : WelcomeLightPersonality.crossDuration * 0.75)),
+                                removal: .opacity.animation(.easeOut(duration: 0.18))))
+                            .zIndex(3.1)
+
+                        PersonalityPanel(result: result,
+                                         results: PersonalityTest.allCases.compactMap { personalityResults[$0] },
+                                         onSelect: selectMatchPersonalityTest, onClose: closeMatchPersonality,
+                                         onCardHeightChange: updatePersonalityCardHeight)
+                            .padding(.bottom, controlsInset)
+                            .transition(.personalitySwap(reduceMotion: reduceMotion))
+                            .zIndex(3.2)
                     }
 
                     if showsUnderageNotice {
@@ -570,6 +609,15 @@ struct WelcomeView: View {
         .onChange(of: canShowScannedMatch && !(hasAccount && liveMatches.match != nil), initial: true) { _, ready in
             if ready { resumeDemoChat() }
         }
+        .task(id: coversLight) {
+            // Presenting slides the cover up over the light; dismissing
+            // starts it again straight away, before any of it shows.
+            if coversLight {
+                try? await Task.sleep(for: .seconds(0.6))
+                guard !Task.isCancelled else { return }
+            }
+            isLightCovered = coversLight
+        }
         .onChange(of: showsOverview) { _, shown in
             // The code holds the answers themselves, so edits change it.
             if !shown, showsCode { refreshShareCode() }
@@ -595,7 +643,7 @@ struct WelcomeView: View {
         }
         .onChange(of: isSharing, initial: true) { _, sharing in
             if sharing {
-                exchange.start(profile: profileCreation.state)
+                exchange.start(profile: profileCreation.state, photo: profileCreation.manualMatchingPhoto)
             } else {
                 exchange.stop()
             }
@@ -605,10 +653,12 @@ struct WelcomeView: View {
             profileCreation.markProfileExchangeUsed()
             notificationEngine?.recordCompatibilityCheck()
             exchanges += 1
+            if let photo = result.photo { MatchPhotoStore.shared.save(photo, for: result.id) }
             present(MatchSnapshot(id: result.id, matchedAt: Date(), you: result.you, them: result.them))
         }
         .onAppear {
-            if lightStage == .complete { waitForHelixEntrance() }
+            guard lightStage == .complete else { return }
+            if !resumeConversationAtLaunch() { waitForHelixEntrance() }
         }
     }
 
@@ -695,7 +745,7 @@ struct WelcomeView: View {
             }
             .frame(maxWidth: OnboardingTheme.controlWidth)
             .padding(.horizontal, 28)
-            .padding(.bottom, 18)
+            .padding(.bottom, OnboardingTheme.controlsBottomPadding)
             .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion),
                        value: profileCreation.isUnderageLocked)
             .animation(.easeInOut(duration: 0.2), value: signIn.errorMessage)
@@ -729,28 +779,26 @@ struct WelcomeView: View {
                         Button(L10n("I fully understand")) { profileCreation.acknowledgeExplanation() }
                             .buttonStyle(QuietButtonStyle())
                     case .matching:
-                        matchingEntry
+                        matchingEntry(hasAccount: hasAccount)
                     }
                 }
 
                 if accountCard != .closed {
                     // Signing in has the controls to itself.
                 } else if profileCreation.state.nextAction == .matching {
-                    // The finished flow: the profile itself, and every match it made.
-                    Button(L10n("Adjust profile"), action: adjustProfile)
-                        .buttonStyle(GlowButtonStyle())
-                        .modifier(fakeMatchHold)
-                    Button(L10n("My matches"), action: openSavedMatches)
-                        .buttonStyle(QuietButtonStyle())
+                    finishedProfileButtons
                 } else if profileCreation.state.nextAction != .explanation {
                     Button(L10n("Adjust profile"), action: adjustProfile)
                         .buttonStyle(QuietButtonStyle())
                         .modifier(fakeMatchHold)
                 }
             }
+            .overlay(alignment: .bottom) {
+                if accountCard.isSignedIn { accountHandover }
+            }
             .frame(maxWidth: OnboardingTheme.controlWidth)
             .padding(.horizontal, 28)
-            .padding(.bottom, 18)
+            .padding(.bottom, OnboardingTheme.controlsBottomPadding)
             .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion),
                        value: profileCreation.state.nextAction)
             .animation(.easeInOut(duration: 0.3), value: showsCode)
@@ -803,8 +851,38 @@ struct WelcomeView: View {
         }
     }
 
+    /// The finished flow: the profile itself, and every match it made.
     @ViewBuilder
-    private var matchingEntry: some View {
+    private var finishedProfileButtons: some View {
+        Button(L10n("Adjust profile"), action: adjustProfile)
+            .buttonStyle(GlowButtonStyle())
+            .modifier(fakeMatchHold)
+        Button(L10n("My matches"), action: openSavedMatches)
+            .buttonStyle(QuietButtonStyle())
+    }
+
+    /// The controls that follow the account, drawn exactly where they will
+    /// settle. They rise one after another while the confirmed card sinks,
+    /// then the real ones replace them without moving, so nothing jumps.
+    private var accountHandover: some View {
+        let hasArrived = accountCard == .handover
+        return VStack(spacing: 12) {
+            matchingEntry(hasAccount: true)
+                .landingArrival(hasArrived, index: 0, reduceMotion: reduceMotion)
+            Button(L10n("Adjust profile"), action: {})
+                .buttonStyle(GlowButtonStyle())
+                .landingArrival(hasArrived, index: 1, reduceMotion: reduceMotion)
+            Button(L10n("My matches"), action: {})
+                .buttonStyle(QuietButtonStyle())
+                .landingArrival(hasArrived, index: 2, reduceMotion: reduceMotion)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private func matchingEntry(hasAccount: Bool) -> some View {
         if hasAccount, liveMatches.match != nil {
             LiveMatchCard(center: liveMatches, onOpen: openLiveMatch)
         }
@@ -922,6 +1000,10 @@ struct WelcomeView: View {
                 // The two phones in the explanation turn toward each other.
                 .soundFeedback(.exchange, trigger: view.demoPhase) { _, phase in phase == .together }
                 .onAppear(perform: view.playEntrance)
+                .onChange(of: view.ambienceLevel, initial: true) { _, level in
+                    SoundPlayer.shared.setAmbience(level)
+                }
+                .onDisappear { SoundPlayer.shared.setAmbience(0) }
                 // A message that arrives while the conversation isn't open.
                 // Older unread messages loading at launch stay quiet.
                 .onChange(of: view.liveMatches.unreadMessages.last?.id) { _, id in
@@ -934,11 +1016,39 @@ struct WelcomeView: View {
 
     /// The light threads in once when the welcome screen first appears.
     /// With reduced motion the light doesn't travel, so neither does the sound.
+    /// A finished profile opens on the helix flying in instead, unless the
+    /// app goes straight on to a match, which brings its own sound.
     private func playEntrance() {
         guard !hasPlayedEntrance else { return }
         hasPlayedEntrance = true
-        guard !skipsEntrance, !reduceMotion else { return }
-        SoundPlayer.shared.play(.entrance)
+        guard !reduceMotion else { return }
+        guard skipsEntrance else {
+            SoundPlayer.shared.play(.entrance)
+            return
+        }
+        Task {
+            await Task.yield()
+            guard activeMatch == nil, demoPhase == nil, stage == .complete else { return }
+            SoundPlayer.shared.play(.helixArrival)
+        }
+    }
+
+    /// The bed recedes step by step as the user moves in: full under the
+    /// landing page's heart, half behind the access screen, a quarter under
+    /// the questionnaire, where the step notes carry the sound. It fades out
+    /// as the profile completes, the lock shows, or the light holds still.
+    private var ambienceLevel: Float {
+        guard scenePhase == .active, !reduceMotion, !profileCreation.isUnderageLocked else { return 0 }
+        switch stage {
+        case .landing: return showsAccess ? 0.5 : 1
+        case .onboarding: return 0.25
+        case .complete: return 0
+        }
+    }
+
+    /// Each personality test has its own note, like tuning to another instrument.
+    private func playPersonalityNote(for test: PersonalityTest) {
+        SoundPlayer.shared.play(.step((PersonalityTest.allCases.firstIndex(of: test) ?? 0) + 1))
     }
 
     // MARK: - Account
@@ -987,7 +1097,7 @@ struct WelcomeView: View {
     /// The account card's switch slides on and opens sign-in in place;
     /// sliding it back closes it again.
     private func toggleAccountCard() {
-        guard !isTransitioning, !signIn.isSigningIn, accountCard != .signedIn else { return }
+        guard !isTransitioning, !signIn.isSigningIn, !accountCard.isSignedIn else { return }
         showsCode = false
         SoundPlayer.shared.play(accountCard == .closed ? .open : .close)
         withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) {
@@ -1010,20 +1120,27 @@ struct WelcomeView: View {
                 accountCard = .closed
             }
             return true
-        case .signedIn:
+        case .signedIn, .handover:
             return false
         }
     }
 
-    /// The card confirms the account for a moment, then hands over to the
-    /// next step while the rest of the home controls return.
+    /// The card confirms the account for a moment where its switch was slid,
+    /// then sinks while the next step and the home controls rise in their
+    /// final places. Once they have settled they become the real controls in
+    /// one unanimated step, so nothing moves.
     private func finishAccountCreation(_ session: RestoredSession) {
         guard session != .signedOut else { return }
         withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) { accountCard = .signedIn }
         AccessibilityNotification.Announcement(L10n("You’re signed in")).post()
         Task {
             try? await Task.sleep(for: .seconds(reduceMotion ? 0.6 : 1.2))
-            withAnimation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion)) {
+            // The card and the arriving controls each carry their own motion.
+            accountCard = .handover
+            try? await Task.sleep(for: .seconds(reduceMotion ? 0.25 : 1.0))
+            var settled = Transaction()
+            settled.disablesAnimations = true
+            withTransaction(settled) {
                 hasAccount = true
                 accountCard = .closed
             }
@@ -1116,6 +1233,11 @@ struct WelcomeView: View {
         }
     }
 
+    /// A screen is presented over the light.
+    private var coversLight: Bool {
+        showsOverview || showsAutoMatching || showsSavedMatches || showsProfilePrivacy || showsScanner
+    }
+
     private func adjustProfile() {
         guard !isTransitioning, activeMatch == nil else { return }
         showsOverview = true
@@ -1159,6 +1281,7 @@ struct WelcomeView: View {
     }
 
     private func selectPersonalityTest(_ test: PersonalityTest) {
+        if test != personalityTest { playPersonalityNote(for: test) }
         lastPersonalityTest = test
         withAnimation(.easeInOut(duration: 0.3)) { personalityTest = test }
     }
@@ -1169,44 +1292,21 @@ struct WelcomeView: View {
         withAnimation(.easeInOut(duration: 0.3)) { personalityTest = nil }
     }
 
-    /// The same estimates as from the helix, laid over the conversation. There
-    /// is no code to share here, so the corner stays empty; closing returns to
-    /// the chat.
-    private func matchPersonality(_ result: PersonalityResult, center: CGPoint,
-                                  lightSize: CGSize, unit: CGFloat, controlsInset: CGFloat) -> some View {
-        ZStack {
-            Color("WelcomeBackground")
-                .ignoresSafeArea()
-
-            WelcomeLightAnimation(form: .helix, skipsEntrance: true,
-                                  isPaused: showsOverview || showsScanner,
-                                  personality: result.visual)
-                .frame(width: lightSize.width, height: lightSize.height)
-                .position(center)
-
-            PersonalityChartLabels(result: result, center: center, unit: unit)
-                .id(result.test)
-                .transition(.asymmetric(
-                    insertion: .opacity.animation(.easeInOut(duration: 0.45)
-                        .delay(reduceMotion ? 0 : WelcomeLightPersonality.crossDuration * 0.75)),
-                    removal: .opacity.animation(.easeOut(duration: 0.2))))
-
-            PersonalityPanel(result: result,
-                             results: PersonalityTest.allCases.compactMap { personalityResults[$0] },
-                             onSelect: selectMatchPersonalityTest, onClose: closeMatchPersonality,
-                             onCardHeightChange: updatePersonalityCardHeight)
-                .padding(.bottom, controlsInset)
-        }
+    /// The chart the match rings reweave into while the conversation is
+    /// set aside for the personality estimates.
+    private var matchPersonalityVisual: WelcomeLightPersonality.Visual? {
+        guard activeMatch != nil, let matchPersonalityTest else { return nil }
+        return personalityResults[matchPersonalityTest]?.visual
     }
 
     /// How far the chart rises so its lowest labels stay above the card,
     /// never further than the corner buttons allow. Zero on most screens.
     private func personalityLift(layout: WelcomeStageLayout, height: CGFloat, controlsInset: CGFloat) -> CGFloat {
         guard personalityCardHeight > 0 else { return 0 }
-        let cardTop = height - controlsInset - 18 - personalityCardHeight
+        let cardTop = height - controlsInset - OnboardingTheme.controlsBottomPadding - personalityCardHeight
         let chartBottom = layout.lightCenter.y + 0.95 * layout.unit
         let chartTop = layout.lightCenter.y - layout.unit
-        let room = max(0, chartTop - (8 + HelixCodeButton.size + 8))
+        let room = max(0, chartTop - (HelixCodeButton.topInset + HelixCodeButton.size + 8))
         return min(room, max(0, chartBottom + 12 - cardTop))
     }
 
@@ -1216,18 +1316,20 @@ struct WelcomeView: View {
     }
 
     private func openMatchPersonality() {
-        guard activeMatch != nil else { return }
+        guard activeMatch != nil, matchPersonalityTest == nil else { return }
         refreshPersonalityResults()
         SoundPlayer.shared.play(.open)
         withAnimation(.easeInOut(duration: 0.3)) { matchPersonalityTest = lastPersonalityTest }
     }
 
     private func selectMatchPersonalityTest(_ test: PersonalityTest) {
+        if test != matchPersonalityTest { playPersonalityNote(for: test) }
         lastPersonalityTest = test
         withAnimation(.easeInOut(duration: 0.3)) { matchPersonalityTest = test }
     }
 
     private func closeMatchPersonality() {
+        guard matchPersonalityTest != nil else { return }
         SoundPlayer.shared.play(.close)
         withAnimation(.easeInOut(duration: 0.3)) { matchPersonalityTest = nil }
     }
@@ -1289,7 +1391,7 @@ struct WelcomeView: View {
         let snapshot: MatchSnapshot
         let replaces = activeMatch != nil
         if isDemoPlaying, let current = activeMatch?.snapshot {
-            snapshot = MatchSnapshot(matchedAt: current.matchedAt, you: current.you, them: current.them)
+            snapshot = MatchSnapshot(matchedAt: current.matchedAt, you: current.you, them: current.them, isDemo: true)
         } else {
             snapshot = DemoMatchGenerator.makeExample(for: profileCreation.state, using: &generator)
         }
@@ -1387,9 +1489,62 @@ struct WelcomeView: View {
 
     /// New matches send the helix away; saved matches unfold it in place.
     /// The labels follow the selected light timeline.
+    /// The photo card behind the match on screen; without a photo there is
+    /// none, and no button for it. A match the server made shows the other
+    /// person while it is active; a demo shows your own card, as a match
+    /// would see it; an exchange shows the photo they chose to share.
+    private var activePhotoCard: MatchPhotoCard? {
+        guard let snapshot = activeMatch?.snapshot else { return nil }
+        let today = CalendarDate.today()
+        if snapshot.isLive {
+            guard !snapshot.isBroken, let live = liveMatches.match, live.id == snapshot.id,
+                  let photo = liveMatches.partnerPhoto else { return nil }
+            return MatchPhotoCard(name: snapshot.name, age: snapshot.them.age(on: today), photo: photo,
+                                  isVerified: live.partnerPhotoVerified,
+                                  distanceKilometers: snapshot.distanceKilometers)
+        }
+        guard let matchPhoto else { return nil }
+        if snapshot.isDemo {
+            let you = profileCreation.state
+            return MatchPhotoCard(name: you.displayName.isEmpty ? L10n("You") : you.displayName,
+                                  age: you.age(on: today), photo: matchPhoto,
+                                  isVerified: matchPhotoIsVerified,
+                                  distanceKilometers: snapshot.distanceKilometers, isOwnPreview: true)
+        }
+        // Another phone can't prove its photo was verified, so it never says so.
+        return MatchPhotoCard(name: snapshot.name, age: snapshot.them.age(on: today), photo: matchPhoto,
+                              isVerified: false, distanceKilometers: snapshot.distanceKilometers)
+    }
+
+    /// Reads the photo for a demo or exchanged match once, decoding it off
+    /// the main actor. A live match's photo comes from the server instead.
+    private func loadMatchPhoto(for snapshot: MatchSnapshot) {
+        matchPhoto = nil
+        matchPhotoIsVerified = false
+        guard !snapshot.isLive else { return }
+        let data: Data?
+        if snapshot.isDemo, let own = profileCreation.matchCardPhoto {
+            matchPhotoIsVerified = own.isVerified
+            data = own.imageData
+        } else {
+            data = snapshot.isDemo ? nil : MatchPhotoStore.shared.photo(for: snapshot.id)
+        }
+        guard let data else { return }
+        let id = snapshot.id
+        Task {
+            let image = await Task.detached(priority: .userInitiated) { () -> UIImage? in
+                guard let image = UIImage(data: data) else { return nil }
+                return await image.byPreparingForDisplay() ?? image
+            }.value
+            guard activeMatch?.snapshot.id == id else { return }
+            matchPhoto = image
+        }
+    }
+
     private func present(_ snapshot: MatchSnapshot, transition: WelcomeLightMatch.Transition = .newMatch,
                          chatting: Bool = false) {
         let report = snapshot.report
+        if activeMatch?.snapshot.id != snapshot.id { loadMatchPhoto(for: snapshot) }
         showsCode = false
         personalityTest = nil
         matchPersonalityTest = nil
@@ -1464,8 +1619,14 @@ struct WelcomeView: View {
         AccessibilityNotification.Announcement(L10n("Match name updated.")).post()
     }
 
+    /// A saved match is first kept as broken; a broken or unsaved one goes for good.
     private func deleteMatch(_ snapshot: MatchSnapshot) {
-        savedMatches.delete(snapshot.id)
+        if savedMatches.contains(snapshot.id) && !snapshot.isBroken {
+            savedMatches.markBroken(snapshot.id)
+            AccessibilityNotification.Announcement(L10n("Match broken.")).post()
+        } else {
+            savedMatches.delete(snapshot.id)
+        }
         closeMatch()
     }
 
@@ -1479,7 +1640,10 @@ struct WelcomeView: View {
         scoreDetail = nil
         showsMatchProfile = false
         SoundPlayer.shared.fadeOut(.match, .noMatch, .unfold, .chatOpen)
-        SoundPlayer.shared.play(.close)
+        // Without motion nothing flies back in; the panel just closes.
+        if reduceMotion { SoundPlayer.shared.play(.close) }
+        // Photos of matches that weren't kept go with them.
+        MatchPhotoStore.shared.prune(keeping: Set(savedMatches.matches.map(\.id)))
         Task {
             withAnimation(.easeOut(duration: 0.3)) {
                 pinsDemoControls = false
@@ -1489,7 +1653,11 @@ struct WelcomeView: View {
                 matchReveal = .hidden
                 if !reduceMotion { isLightHidden = true }
             }
-            if !reduceMotion { try? await Task.sleep(for: .seconds(0.3)) }
+            if !reduceMotion {
+                try? await Task.sleep(for: .seconds(0.3))
+                // The helix ropes back in from the sides.
+                SoundPlayer.shared.play(.helixArrival)
+            }
             var instant = Transaction()
             instant.disablesAnimations = true
             withTransaction(instant) {
@@ -1531,6 +1699,8 @@ struct WelcomeView: View {
         }
         activeChat?.markAllRead()
         if activeChat?.isLive == true { liveMatches.markChatStarted(activeMatch.snapshot.id) }
+        // A conversation has no Save match button: talking keeps the match.
+        if !activeMatch.snapshot.isBroken { savedMatches.save(activeMatch.snapshot) }
         AccessibilityNotification.Announcement(L10n("Conversation with \(activeMatch.snapshot.name)")).post()
     }
 
@@ -1555,6 +1725,22 @@ struct WelcomeView: View {
         }
     }
 
+    /// The app was closed in a conversation: it opens in it again with the
+    /// rings already formed, instead of letting the helix fly in first and
+    /// turning that into the rings. A match whose chat hasn't started still
+    /// unfolds from the helix once it has arrived.
+    private func resumeConversationAtLaunch() -> Bool {
+        guard stage == .complete, activeMatch == nil, demoPhase == nil, !showsAccess,
+              profileCreation.state.canShareProfile else { return false }
+        if hasAccount, let match = liveMatches.match {
+            guard liveMatches.hasStartedChat(match.id) else { return false }
+            openLiveMatch()
+        } else {
+            resumeDemoChat()
+        }
+        return activeMatch != nil
+    }
+
     /// Back into the demo conversation the app was closed on.
     private func resumeDemoChat() {
         guard activeMatch == nil, let open = OpenDemoChat.load() else { return }
@@ -1571,7 +1757,8 @@ struct WelcomeView: View {
             chat.endMatch()
             liveMatches.forget()
         }
-        savedMatches.delete(activeMatch.snapshot.id)
+        // It stays in My matches as broken.
+        savedMatches.markBroken(activeMatch.snapshot.id)
         AccessibilityNotification.Announcement(L10n("Match broken.")).post()
         closeMatch()
     }
@@ -1581,6 +1768,7 @@ struct WelcomeView: View {
         AccessibilityNotification.Announcement(L10n("Thanks. Your report was sent.")).post()
         if alsoBreak {
             if activeChat?.isLive == true { liveMatches.forget() }
+            if let id = activeMatch?.snapshot.id { savedMatches.markBroken(id) }
             closeMatch()
         }
     }
@@ -1606,6 +1794,21 @@ struct WelcomeView: View {
     }
 
     private func openSavedMatch(_ snapshot: MatchSnapshot) {
+        // A server match opens with its conversation, wherever it stands.
+        if snapshot.isLive {
+            if liveMatches.match?.id == snapshot.id {
+                showsSavedMatches = false
+                Task {
+                    try? await Task.sleep(for: .seconds(0.45))
+                    openLiveMatch()
+                }
+                return
+            }
+            if let past = liveMatches.pastMatches.first(where: { $0.id == snapshot.id }) {
+                openBrokenMatch(past)
+                return
+            }
+        }
         showsSavedMatches = false
         Task {
             // Let the cover finish closing before the in-place morph starts.
@@ -1708,6 +1911,11 @@ struct WelcomeView: View {
 /// Turns the helix into its QR code and back, from the screen's top right.
 private struct HelixCodeButton: View {
     static let size: CGFloat = 44
+    /// Below the safe top edge.
+    static let topInset: CGFloat = 14
+    /// The bottom controls' side margin, so on iPhone this button's right
+    /// edge lines up with theirs.
+    static let trailingInset: CGFloat = 28
 
     let showsCode: Bool
     let action: () -> Void
@@ -1869,5 +2077,16 @@ private struct FakeMatchHold: ViewModifier {
                     .onEnded { _ in action() }
             )
             .accessibilityAction(named: L10n("Start a demo match"), action)
+    }
+}
+
+/// How the conversation makes way for the personality charts opened from a
+/// match's settings. The rings take about 1.6 s to reweave either way.
+private enum MatchPersonalityMotion {
+    static func chat(returning: Bool, reduceMotion: Bool) -> Animation {
+        if reduceMotion { return .easeInOut(duration: 0.2) }
+        // Out before the rings have moved far; back once the chart has mostly
+        // rewound, so its strands never run through the messages.
+        return returning ? .easeInOut(duration: 0.5).delay(0.65) : .easeOut(duration: 0.3)
     }
 }

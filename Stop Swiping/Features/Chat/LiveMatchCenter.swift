@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import UIKit
 
 /// The account's one active server match and its conversation. Discovering a
 /// match shares this phone's profile card and registers its chat key at once,
@@ -13,6 +14,9 @@ final class LiveMatchCenter: ObservableObject {
     @Published private(set) var pastMatches: [CloudChatMatch] = []
     /// Reports against this account, refreshed about once a minute.
     @Published private(set) var moderation: ModerationStatus?
+    /// The active match's photo of the other person. Kept in memory only:
+    /// the server stops sharing it once the match ends.
+    @Published private(set) var partnerPhoto: UIImage?
 
     private let repository: SecureChatRepository?
     private let defaults: UserDefaults
@@ -20,10 +24,19 @@ final class LiveMatchCenter: ObservableObject {
     private var chatChanges: AnyCancellable?
     private var historyChats: [UUID: ChatViewModel] = [:]
     private var lastModerationCheck = Date.distantPast
+    /// The Storage object `partnerPhoto` was downloaded from.
+    private var partnerPhotoPath: String?
+    private var lastPhotoAttempt = Date.distantPast
 
     init(repository: SecureChatRepository?, defaults: UserDefaults = .standard) {
         self.repository = repository
         self.defaults = defaults
+        // The match the app was closed on, so a cold start opens on it at
+        // once instead of on the home screen until the server answers. The
+        // first refresh confirms it, updates it or ends it.
+        if repository != nil, let cached = Self.cachedMatch(defaults: defaults), cached.isActive {
+            adopt(cached)
+        }
     }
 
     /// Polls while the app is in front. The chat refreshes on its own clock
@@ -65,35 +78,44 @@ final class LiveMatchCenter: ObservableObject {
             let current = try await repository.currentMatch()
             loadFailed = false
             guard let current else {
+                Self.clearCache(defaults: defaults)
                 if match != nil {
                     // The other person broke it: it moves to My matches.
                     match = nil
                     chat = nil
                     chatChanges = nil
+                    clearPartnerPhoto()
                     await loadHistory()
                 }
                 return
             }
-            if chat?.conversation.matchID != current.id {
-                chat = ChatViewModel(
-                    conversation: ChatConversation(id: current.id, matchID: current.id,
-                                                   participantName: current.partnerName, messages: []),
-                    secureSession: SecureChatSession(match: current, repository: repository))
-                // The home card shows the newest message and the unread badge.
-                // Only what the card shows: forwarding every keystroke would redraw
-                // the whole home screen, light and all, while typing.
-                chatChanges = chat?.summaryChanges.sink { [weak self] in self?.objectWillChange.send() }
-            }
-            match = current
+            if current != match { cache(current) }
+            adopt(current)
             rememberPartnerCard(current)
             chat?.partnerReadAt = current.partnerReadAt
             freezeOwnProfile(ownProfile, for: current.id)
             await shareCard(for: current.id)
+            await loadPartnerPhoto(current)
             // Registers this phone's key and decrypts anything already sent.
             await chat?.refresh()
         } catch {
             if !Task.isCancelled { loadFailed = true }
         }
+    }
+
+    /// Makes `match` the active one, with a conversation of its own.
+    private func adopt(_ match: CloudChatMatch) {
+        if let repository, chat?.conversation.matchID != match.id {
+            chat = ChatViewModel(
+                conversation: ChatConversation(id: match.id, matchID: match.id,
+                                               participantName: match.partnerName, messages: []),
+                secureSession: SecureChatSession(match: match, repository: repository))
+            // The home card shows the newest message and the unread badge.
+            // Only what the card shows: forwarding every keystroke would redraw
+            // the whole home screen, light and all, while typing.
+            chatChanges = chat?.summaryChanges.sink { [weak self] in self?.objectWillChange.send() }
+        }
+        self.match = match
     }
 
     /// Messages waiting to be read, from the decrypted chat when it has
@@ -154,6 +176,7 @@ final class LiveMatchCenter: ObservableObject {
     /// Called after breaking or reporting: the server match is gone and
     /// shows up under My matches.
     func forget() {
+        Self.clearCache(defaults: defaults)
         if let match, let chat {
             var ended = match
             ended.endedAt = Date()
@@ -166,6 +189,40 @@ final class LiveMatchCenter: ObservableObject {
         match = nil
         chat = nil
         chatChanges = nil
+        clearPartnerPhoto()
+    }
+
+    // MARK: - Photo
+
+    /// Downloads the partner's photo once per photo; a new photo replaces
+    /// it on the next refresh. A failed download is tried again after a while.
+    private func loadPartnerPhoto(_ match: CloudChatMatch) async {
+        guard let repository else { return }
+        guard let path = match.partnerPhotoPath else {
+            clearPartnerPhoto()
+            return
+        }
+        guard path != partnerPhotoPath, Date().timeIntervalSince(lastPhotoAttempt) > 30 else { return }
+        lastPhotoAttempt = Date()
+        guard let data = try? await repository.partnerPhoto(path: path),
+              let image = await Self.decodedPhoto(data),
+              self.match?.id == match.id else { return }
+        partnerPhoto = image
+        partnerPhotoPath = path
+    }
+
+    private func clearPartnerPhoto() {
+        partnerPhoto = nil
+        partnerPhotoPath = nil
+        lastPhotoAttempt = .distantPast
+    }
+
+    /// Decoded off the main actor, so the first draw doesn't stall.
+    private nonisolated static func decodedPhoto(_ data: Data) async -> UIImage? {
+        await Task.detached(priority: .userInitiated) {
+            guard let image = UIImage(data: data) else { return nil }
+            return await image.byPreparingForDisplay() ?? image
+        }.value
     }
 
     // MARK: - Cards
@@ -203,6 +260,25 @@ final class LiveMatchCenter: ObservableObject {
         } catch {
             // Tried again on the next refresh.
         }
+    }
+
+    // MARK: - Cache
+
+    nonisolated private static let cacheKey = "liveMatch.current.v1"
+
+    private func cache(_ match: CloudChatMatch) {
+        guard let data = try? JSONEncoder().encode(match) else { return }
+        defaults.set(data, forKey: Self.cacheKey)
+    }
+
+    private static func cachedMatch(defaults: UserDefaults) -> CloudChatMatch? {
+        defaults.data(forKey: cacheKey).flatMap { try? JSONDecoder().decode(CloudChatMatch.self, from: $0) }
+    }
+
+    /// Signing out or deleting the profile: the next account must not
+    /// open on this one's match.
+    nonisolated static func clearCache(defaults: UserDefaults = .standard) {
+        defaults.removeObject(forKey: cacheKey)
     }
 
     private static func key(_ kind: String, _ id: UUID) -> String {

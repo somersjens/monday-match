@@ -161,6 +161,31 @@ final class DemoMatchTests: XCTestCase {
         XCTAssertFalse(reloaded.contains(newer.id))
     }
 
+    func testDeletingSavedMatchFirstKeepsItAsBroken() throws {
+        let suite = "DemoMatchTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var generator = SeededGenerator(seed: 5)
+        let match = DemoMatchGenerator.makeMatch(for: restrictiveProfile(), shouldMatch: true, now: now, using: &generator)
+        let store = SavedMatchStore(defaults: defaults)
+        store.save(match)
+
+        store.markBroken(match.id, at: now.addingTimeInterval(120))
+        let broken = try XCTUnwrap(SavedMatchStore(defaults: defaults).matches.first)
+        XCTAssertEqual(broken.id, match.id)
+        XCTAssertTrue(broken.isBroken)
+        XCTAssertFalse(broken.isLive)
+        XCTAssertEqual(broken.ended, .init(at: now.addingTimeInterval(120), reason: nil, byMe: true))
+        XCTAssertEqual(broken.report.average, match.report.average)
+
+        // Breaking again keeps the first date.
+        store.markBroken(match.id, at: now.addingTimeInterval(600))
+        XCTAssertEqual(store.matches.first?.ended?.at, now.addingTimeInterval(120))
+
+        store.delete(match.id)
+        XCTAssertTrue(SavedMatchStore(defaults: defaults).matches.isEmpty)
+    }
+
     // MARK: - Name
 
     func testRenamingSavedMatchPersistsWithoutChangingProfilesScoresOrOrder() throws {

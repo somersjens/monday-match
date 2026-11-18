@@ -10,15 +10,33 @@ struct AutoMatchingSetupView: View {
     let onFinish: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.notificationEngine) private var notificationEngine
     @State private var pickerItem: PhotosPickerItem?
     @State private var photo: UIImage?
     @State private var isLoadingPhoto = false
     @State private var photoError: String?
     @State private var saveFailed = false
     @State private var showsPrivacy = false
+    /// Joining opens the data policy first; accepting it continues joining.
+    @State private var joinsAfterPrivacy = false
+    @State private var showsVerificationConsent = false
+    @State private var verification = AWSPhotoVerificationState()
+    @State private var asksAboutUnverifiedPhoto = false
+    @State private var asksToRemoveVerifiedPhoto = false
     @State private var appearanceMode: PartnerPreferenceScale.Mode = .own
 
-    @State private var path: [Route] = []
+    @State private var path: [Route]
+
+    /// `startsOnPhotoStep` opens the last step directly, for layout renders.
+    init(viewModel: ProfileCreationViewModel, locationService: LocationService,
+         serverVerification: AWSPhotoVerificationService? = nil, startsOnPhotoStep: Bool = false,
+         onFinish: @escaping () -> Void) {
+        self.viewModel = viewModel
+        self.locationService = locationService
+        self.serverVerification = serverVerification
+        self.onFinish = onFinish
+        _path = State(initialValue: startsOnPhotoStep ? [.appearance, .photo] : [])
+    }
 
     private enum Stage: Hashable {
         case preferences
@@ -60,7 +78,7 @@ struct AutoMatchingSetupView: View {
                 }
         }
         .preferredColorScheme(.dark)
-        .sheet(isPresented: $showsPrivacy) {
+        .sheet(isPresented: $showsPrivacy, onDismiss: continueJoiningAfterPrivacy) {
             PrivacyConsentView(kind: .matching) { viewModel.acceptPrivacy(.matching) }
         }
         .onAppear(perform: loadSavedPhoto)
@@ -73,7 +91,7 @@ struct AutoMatchingSetupView: View {
 
     private func subtitle(for stage: Stage) -> String {
         switch stage {
-        case .preferences: L10n("Set your preferences. We propose matches for you.")
+        case .preferences: L10n("We’ll text you when we’ve found the one.")
         case .appearance: L10n("Rate your own appearance and set the minimum score you’re looking for in a partner.")
         case .photo: L10n("Add and verify a photo, or join without one.")
         }
@@ -92,40 +110,15 @@ struct AutoMatchingSetupView: View {
                     switch stage {
                     case .photo:
                         photoCard
-                        if settings.photoID != nil {
-                            Group {
-                                if let serverVerification, let reference=viewModel.autoMatchingReferencePhoto {
-                                    AWSPhotoVerificationSection(photo:reference,service:serverVerification,
-                                        receipt:viewModel.autoMatchingPhotoVerification,
-                                        onComplete:viewModel.recordAutoMatchingPhotoVerification)
-                                } else {
-                                    PhotoVerificationSection(
-                                        photo: viewModel.autoMatchingReferencePhoto,
-                                        receipt: viewModel.autoMatchingPhotoVerification,
-                                        onComplete: viewModel.recordAutoMatchingPhotoVerification
-                                    )
-                                }
-                            }
-                            .padding(18)
-                            .onboardingSurface(cornerRadius: 24)
-                            .disabled(isLoadingPhoto)
-
-                            Button(L10n("Continue without a photo"), action: removePhoto)
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(OnboardingTheme.secondaryText)
-                                .frame(maxWidth: .infinity, minHeight: 44)
-                                .disabled(isLoadingPhoto)
-                        }
-                        partnerVerificationCard
-                        PrivacyActionCard(title: L10n("Know what happens to your data"),
-                                          isAccepted: viewModel.state.hasAcceptedMatchingPrivacy) {
-                            showsPrivacy = true
-                        }
+                        photoSettingsCard
                     case .appearance:
                         appearanceScale
                     case .preferences:
                         minimumMatchCard
                         dealbreakersCard
+                        if let notificationEngine {
+                            NotificationsOffCard(engine: notificationEngine)
+                        }
                     }
                 }
                 .frame(maxWidth: OnboardingTheme.contentWidth)
@@ -144,6 +137,24 @@ struct AutoMatchingSetupView: View {
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
         .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: settings)
+        .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: photoIsVerified)
+        .overlay {
+            if stage == .photo && asksToRemoveVerifiedPhoto {
+                ConfirmationPrompt(
+                    symbol: "checkmark.seal.fill",
+                    title: L10n("Remove your verified photo?"),
+                    message: L10n("If you remove this picture and you want to add it later, you will need to verify it again."),
+                    keepTitle: L10n("Keep photo"),
+                    removeTitle: L10n("Remove photo"),
+                    onKeep: { setRemovalPrompt(false) },
+                    onRemove: {
+                        setRemovalPrompt(false)
+                        removePhoto()
+                    }
+                )
+                .transition(.opacity)
+            }
+        }
     }
 
     private func header(title: String, subtitle: String, backLabel: String, onBack: @escaping () -> Void) -> some View {
@@ -180,64 +191,320 @@ struct AutoMatchingSetupView: View {
 
     // MARK: - Pieces
 
+    /// Your photo as a match will see it: square, with your name, age and a
+    /// distance. It stays greyed out until a live scan verified it; only then
+    /// does the match bubble show. The button in the corner starts that scan.
     private var photoCard: some View {
-        PhotosPicker(selection: $pickerItem, matching: .images) {
-            HStack(spacing: 16) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(.white.opacity(0.06))
-                    if let photo {
-                        Image(uiImage: photo)
-                            .resizable()
-                            .scaledToFill()
-                    } else if isLoadingPhoto {
-                        ProgressView()
-                    } else {
-                        Image(systemName: "person.crop.square.badge.camera")
-                            .font(.system(size: 28, weight: .regular))
-                            .foregroundStyle(LinearGradient(
-                                colors: [OnboardingTheme.cyan, OnboardingTheme.violet],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ))
-                    }
-                }
-                .frame(width: 84, height: 84)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        VStack(alignment: .leading, spacing: 10) {
+            Color.clear
+                .aspectRatio(1, contentMode: .fit)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .strokeBorder(
-                            photo == nil ? AnyShapeStyle(.white.opacity(0.14)) : AnyShapeStyle(OnboardingTheme.accentGradient),
-                            style: StrokeStyle(lineWidth: 1, dash: photo == nil ? [4, 4] : [])
-                        )
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(photo == nil ? L10n("Upload a photo of yourself") : L10n("Your photo"))
-                        .font(.system(.subheadline, weight: .semibold))
-                        .foregroundStyle(OnboardingTheme.primaryText)
-                    Text(photo == nil
-                         ? L10n("Use a recent, sharp photo of yourself, with exactly one face.")
-                         : L10n("Used as the reference for your live face scan. Tap to change it."))
-                        .font(.footnote)
-                        .foregroundStyle(OnboardingTheme.secondaryText)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if let photoError {
-                        Text(photoError)
-                            .font(.system(.caption, weight: .medium))
-                            .foregroundStyle(OnboardingTheme.pink)
+                    GeometryReader { proxy in
+                        let side = proxy.size.width
+                        if let photo {
+                            // An unverified photo is still a picker: tap it
+                            // to choose another. A verified one only goes
+                            // through the cross, which asks first.
+                            Group {
+                                if photoIsVerified {
+                                    ownPhotoCard(photo, side: side)
+                                } else {
+                                    PhotosPicker(selection: $pickerItem, matching: .images) {
+                                        ownPhotoCard(photo, side: side)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .disabled(isLoadingPhoto || verification.isStarting)
+                                    .accessibilityLabel(L10n("Choose another photo"))
+                                }
+                            }
+                                .overlay { if isLoadingPhoto { ProgressView().controlSize(.large) } }
+                                .overlay(alignment: .topLeading) {
+                                    if !photoIsVerified {
+                                        verifyButton(scale: MatchPhotoCardView.detailScale(for: side))
+                                            .padding(MatchPhotoCardView.ring + 14 * MatchPhotoCardView.detailScale(for: side))
+                                    }
+                                }
+                                .overlay(alignment: .topTrailing) {
+                                    // Same size and column as the back chevron above.
+                                    removeButton
+                                        .offset(y: -16)
+                                }
+                                .transition(.opacity)
+                        } else {
+                            PhotosPicker(selection: $pickerItem, matching: .images) {
+                                photoPlaceholder(side: side)
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(isLoadingPhoto)
+                            .accessibilityLabel(L10n("Upload a photo of yourself"))
+                            .transition(.opacity)
+                        }
                     }
                 }
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: 440)
+                .frame(maxWidth: .infinity)
+            if let photoError {
+                Text(photoError)
+                    .font(.system(.footnote, weight: .medium))
+                    .foregroundStyle(OnboardingTheme.pink)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if let issue = verification.issue {
+                verificationNotice(issue)
+                    .padding(.top, 4)
+                    .transition(.onboardingReveal(reduceMotion: reduceMotion))
             }
-            .padding(16)
-            .contentShape(Rectangle())
+        }
+        .animation(.easeInOut(duration: 0.3), value: photo == nil)
+        .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion),
+                   value: verification.issue)
+        .animation(.spring(duration: 0.45, bounce: 0.2), value: photoIsVerified)
+        .awsPhotoVerification(
+            photo: viewModel.autoMatchingReferencePhoto,
+            service: serverVerification,
+            isVerified: photoIsVerified,
+            showsConsent: $showsVerificationConsent,
+            state: $verification,
+            onComplete: viewModel.recordAutoMatchingPhotoVerification
+        )
+        .confirmationDialog(L10n("Your photo isn’t verified yet"), isPresented: $asksAboutUnverifiedPhoto,
+                            titleVisibility: .visible) {
+            if serverVerification != nil {
+                Button(L10n("Verify this photo")) { showsVerificationConsent = true }
+            }
+            Button(L10n("Join without a photo")) {
+                removePhoto()
+                if photo == nil { join() }
+            }
+            Button(L10n("Cancel"), role: .cancel) {}
+        } message: {
+            Text(L10n("Only a verified photo is used for auto matching."))
+        }
+    }
+
+    /// Why the last check did not go through, and what to do about it.
+    private func verificationNotice(_ issue: AWSPhotoVerificationIssue) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: issue.symbol)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(OnboardingTheme.pink)
+                .frame(width: 34, height: 34)
+                .background { Circle().fill(OnboardingTheme.pink.opacity(0.14)) }
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(issue.title)
+                    .font(.system(.subheadline, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                Text(issue.message)
+                    .font(.footnote)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+                if issue == .cameraAccess, let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                    Link(L10n("Open Settings"), destination: settingsURL)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(OnboardingTheme.cyan)
+                        .padding(.top, 4)
+                }
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(14)
+        .background {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(OnboardingTheme.pink.opacity(0.08))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(OnboardingTheme.pink.opacity(0.28), lineWidth: 1)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    /// The photo's switches in one card. Each row slides in once it means
+    /// something: the photo's use once there is one, verified-only matching
+    /// once you are verified yourself. The data policy is always last.
+    private var photoSettingsCard: some View {
+        let reveal = AnyTransition.asymmetric(
+            insertion: .move(edge: .top).combined(with: .onboardingReveal(reduceMotion: reduceMotion)),
+            removal: .opacity
+        )
+        return VStack(spacing: 0) {
+            if settings.photoID != nil {
+                VStack(spacing: 0) {
+                    toggleRow(title: L10n("Also use for manual matching"),
+                              isOn: settings.sharesPhotoWithManualMatching) {
+                        viewModel.setSharesPhotoWithManualMatching(!settings.sharesPhotoWithManualMatching)
+                    }
+                    .disabled(isLoadingPhoto)
+                    rowDivider
+                }
+                .transition(reduceMotion ? .opacity : reveal)
+            }
+            if photoIsVerified {
+                VStack(spacing: 0) {
+                    toggleRow(title: L10n("Only match with verified users"),
+                              isOn: settings.requiresVerifiedPartnerPhoto) {
+                        viewModel.setRequiresVerifiedPartnerPhoto(!settings.requiresVerifiedPartnerPhoto)
+                    }
+                    rowDivider
+                }
+                .transition(reduceMotion ? .opacity : reveal)
+            }
+            toggleRow(title: L10n("Know what happens to your data"),
+                      isOn: viewModel.state.hasAcceptedMatchingPrivacy) {
+                showsPrivacy = true
+            }
+        }
+        .padding(.vertical, 4)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .onboardingSurface(cornerRadius: 24)
+    }
+
+    private var rowDivider: some View {
+        Rectangle()
+            .fill(OnboardingTheme.hairline)
+            .frame(height: 0.5)
+            .padding(.leading, 16)
+    }
+
+    /// The empty square: what makes a good photo, and a tap to pick one.
+    /// Everything hangs off one leading edge, like a card: the camera badge
+    /// top-left, the title and the tips anchored to the bottom.
+    private func photoPlaceholder(side: CGFloat) -> some View {
+        let radius = side * 0.11
+        let inset = max(20, side * 0.07)
+        return VStack(alignment: .leading, spacing: 0) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.white.opacity(0.08))
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+                if isLoadingPhoto {
+                    ProgressView()
+                } else {
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(OnboardingTheme.accentGradient)
+                }
+            }
+            .frame(width: 52, height: 52)
+            .accessibilityHidden(true)
+
+            Spacer(minLength: 14)
+
+            Text(L10n("Upload a photo of yourself"))
+                .font(.system(.title3, design: .rounded, weight: .semibold))
+                .foregroundStyle(OnboardingTheme.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Rectangle()
+                .fill(.white.opacity(0.12))
+                .frame(height: 1)
+                .padding(.vertical, 14)
+
+            VStack(alignment: .leading, spacing: 10) {
+                photoTip("sparkles", L10n("Make a good first impression"))
+                photoTip("person.fill", L10n("Just you in the picture, no friends or exes"))
+                photoTip("sunglasses.fill", L10n("No sunglasses, nothing covering your face"))
+                photoTip("hand.point.up.left.fill", L10n("You only get one, so choose wisely"))
+            }
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .minimumScaleFactor(0.8)
+        .padding(inset)
+        .frame(width: side, height: side, alignment: .topLeading)
+        .background {
+            RoundedRectangle(cornerRadius: radius, style: .continuous).fill(.white.opacity(0.05))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .strokeBorder(.white.opacity(0.18), style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
+        }
+        .contentShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+    }
+
+    private func photoTip(_ symbol: String, _ text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Image(systemName: symbol)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(OnboardingTheme.cyan)
+                .frame(width: 18, alignment: .leading)
+                .accessibilityHidden(true)
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(OnboardingTheme.primaryText.opacity(0.86))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// The photo card a match would see. The distance is an example: there
+    /// is no match yet.
+    private func ownCard(_ photo: UIImage) -> MatchPhotoCard {
+        let state = viewModel.state
+        return MatchPhotoCard(name: state.displayName.isEmpty ? L10n("You") : state.displayName,
+                              age: state.age(on: viewModel.today), photo: photo,
+                              isVerified: photoIsVerified, distanceKilometers: 3)
+    }
+
+    /// A chosen photo counts once a live scan verified it, or once setup was
+    /// completed with it: replacing the photo starts setup over.
+    private var photoIsVerified: Bool {
+        settings.photoID != nil && (settings.hasCompletedSetup || viewModel.hasVerifiedAutoMatchingPhoto)
+    }
+
+    private func verifyButton(scale: CGFloat) -> some View {
+        Button { showsVerificationConsent = true } label: {
+            HStack(spacing: 6 * scale) {
+                if verification.isStarting {
+                    ProgressView().controlSize(.small).tint(.white)
+                }
+                Text(L10n("Verify this photo"))
+            }
+            .font(.system(size: 14 * scale, weight: .semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 14 * scale)
+            .padding(.vertical, 9 * scale)
+            .background { Capsule().fill(.ultraThinMaterial) }
+            .environment(\.colorScheme, .dark)
+            .overlay {
+                // The light's colours, like the card's own ring.
+                Capsule().strokeBorder(AngularGradient(colors: [OnboardingTheme.cyan, OnboardingTheme.blue,
+                                                                OnboardingTheme.violet, OnboardingTheme.pink,
+                                                                OnboardingTheme.cyan],
+                                                       center: .center), lineWidth: 2)
+            }
+            .shadow(color: OnboardingTheme.blue.opacity(0.6), radius: 10)
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .disabled(isLoadingPhoto)
-        .onboardingSurface(cornerRadius: 24)
-        .accessibilityLabel(photo == nil ? L10n("Upload a photo of yourself") : L10n("Change your photo"))
+        .disabled(serverVerification == nil || verification.isStarting || isLoadingPhoto)
+        .transition(.scale(scale: 0.8).combined(with: .opacity))
+    }
+
+    private func ownPhotoCard(_ photo: UIImage, side: CGFloat) -> some View {
+        MatchPhotoCardView(card: ownCard(photo), average: 100, side: side,
+                           dimsPhoto: !photoIsVerified, showsScore: photoIsVerified)
+    }
+
+    /// A red cross on the card's corner, as big as the back chevron and
+    /// right under it. A verified photo asks first, because adding it back
+    /// means verifying again.
+    private var removeButton: some View {
+        Button(action: requestPhotoRemoval) {
+            Image(systemName: "xmark")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(OnboardingTheme.destructive)
+                .frame(width: 44, height: 44)
+                .background {
+                    Circle()
+                        .fill(OnboardingTheme.background)
+                        .overlay { Circle().fill(OnboardingTheme.destructive.opacity(0.14)) }
+                }
+                .overlay { Circle().strokeBorder(OnboardingTheme.destructive.opacity(0.35), lineWidth: 1) }
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isLoadingPhoto || verification.isStarting)
+        .accessibilityLabel(L10n("Remove photo"))
     }
 
     private var appearanceScale: some View {
@@ -246,10 +513,26 @@ struct AutoMatchingSetupView: View {
             ownIndex: settings.ownAttractiveness.map { AppearanceRating.range.upperBound - $0 },
             partnerLimitIndex: settings.partnerMinimumAttractiveness.map { AppearanceRating.range.upperBound - $0 },
             mode: $appearanceMode,
-            onSelectOwn: { viewModel.setOwnAttractiveness(AppearanceRating.range.upperBound - $0) },
+            onSelectOwn: selectOwnAppearance,
             onSelectPartnerLimit: { viewModel.setPartnerMinimumAttractiveness(AppearanceRating.range.upperBound - $0) },
             subject: .appearance
         )
+    }
+
+    /// The first own rating moves on to the partner minimum by itself.
+    private func selectOwnAppearance(_ index: Int) {
+        let needsMinimum = appearanceMode == .own && settings.partnerMinimumAttractiveness == nil
+        viewModel.setOwnAttractiveness(AppearanceRating.range.upperBound - index)
+        guard needsMinimum else { return }
+        Task {
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 380))
+            guard path.last == .appearance,
+                  appearanceMode == .own,
+                  settings.partnerMinimumAttractiveness == nil else { return }
+            withAnimation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion)) {
+                appearanceMode = .partner
+            }
+        }
     }
 
     private var minimumMatchCard: some View {
@@ -270,15 +553,12 @@ struct AutoMatchingSetupView: View {
         Button { path.append(.exclusions) } label: {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top, spacing: 12) {
-                    Label(L10n("Who is excluded?"), systemImage: "exclamationmark.shield")
+                    Text(viewModel.dealbreakers.heading)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(OnboardingTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
-                    chevron
                 }
-                Text(viewModel.dealbreakers.heading)
-                    .font(.footnote)
-                    .foregroundStyle(OnboardingTheme.secondaryText)
                 exclusionLines
             }
             .multilineTextAlignment(.leading)
@@ -401,24 +681,23 @@ struct AutoMatchingSetupView: View {
             .accessibilityHidden(true)
     }
 
-    private var partnerVerificationCard: some View {
-        HStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n("Only photo-verified matches"))
-                    .font(.subheadline.weight(.semibold))
+    /// A single-line setting with a switch, one row of the photo settings card.
+    private func toggleRow(title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+        HStack(spacing: 12) {
+            Button(action: action) {
+                Text(title)
+                    .font(.system(.body, weight: .semibold))
                     .foregroundStyle(OnboardingTheme.primaryText)
-                Text(L10n("Your matches must have verified their photo. You can join without a photo yourself."))
-                    .font(.footnote)
-                    .foregroundStyle(OnboardingTheme.secondaryText)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            GlowToggle(isOn: settings.requiresVerifiedPartnerPhoto, label: L10n("Only photo-verified matches")) {
-                viewModel.setRequiresVerifiedPartnerPhoto(!settings.requiresVerifiedPartnerPhoto)
-            }
+            .buttonStyle(.plain)
+            GlowToggle(isOn: isOn, label: title, action: action)
         }
-        .padding(18)
-        .onboardingSurface(cornerRadius: 24)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 2)
     }
 
     private func bottomBar(_ stage: Stage) -> some View {
@@ -432,23 +711,6 @@ struct AutoMatchingSetupView: View {
                 Text(L10n("Set both appearance scores to continue."))
                     .font(.footnote)
                     .foregroundStyle(OnboardingTheme.tertiaryText)
-            } else if isFinalStep && !viewModel.state.hasAcceptedMatchingPrivacy {
-                Text(L10n("Accept the data policy to enable auto matching."))
-                    .font(.footnote)
-                    .foregroundStyle(OnboardingTheme.tertiaryText)
-            } else if isFinalStep && settings.photoID != nil && !viewModel.hasVerifiedAutoMatchingPhoto {
-                Text(L10n("Verify your photo, or continue without one."))
-                    .font(.footnote)
-                    .foregroundStyle(OnboardingTheme.tertiaryText)
-            }
-
-            if isFinalStep {
-                Text(L10n("If your future match disputes your height, age, name or picture, you risk losing your account."))
-                    .font(.footnote)
-                    .foregroundStyle(OnboardingTheme.secondaryText)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.bottom, 4)
             }
 
             Button(primaryTitle(for: stage)) {
@@ -463,17 +725,25 @@ struct AutoMatchingSetupView: View {
                         path.append(.photo)
                     }
                 case .photo:
-                    saveFailed = !viewModel.joinAutoMatching()
-                    if !saveFailed { onFinish() }
+                    join()
                 }
             }
             .buttonStyle(GlowButtonStyle())
             .disabled(isPrimaryDisabled(for: stage))
+
+            if isFinalStep {
+                Text(L10n("If your future match disputes your height, age, name or picture, you risk losing your account."))
+                    .font(.footnote)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+            }
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)
         .padding(.top, 10)
-        .padding(.bottom, 12)
+        .padding(.bottom, OnboardingTheme.controlsBottomPadding)
         .frame(maxWidth: .infinity)
     }
 
@@ -492,10 +762,7 @@ struct AutoMatchingSetupView: View {
         case .appearance:
             return !settings.isReady && missingAppearanceSide == nil
         case .photo:
-            return !viewModel.state.hasAcceptedMatchingPrivacy
-                || !settings.isReady
-                || isLoadingPhoto
-                || (settings.photoID != nil && !viewModel.hasVerifiedAutoMatchingPhoto)
+            return !settings.isReady || isLoadingPhoto || verification.isStarting
         }
     }
 
@@ -526,7 +793,46 @@ struct AutoMatchingSetupView: View {
         .onboardingSurface(cornerRadius: 24)
     }
 
+    // MARK: - Joining
+
+    /// Opens the data policy first when it wasn't accepted yet, and asks what
+    /// to do with a photo that isn't verified.
+    private func join() {
+        saveFailed = false
+        guard viewModel.state.hasAcceptedMatchingPrivacy else {
+            joinsAfterPrivacy = true
+            showsPrivacy = true
+            return
+        }
+        guard settings.photoID == nil || photoIsVerified else {
+            asksAboutUnverifiedPhoto = true
+            return
+        }
+        saveFailed = !viewModel.joinAutoMatching()
+        if !saveFailed { onFinish() }
+    }
+
+    private func continueJoiningAfterPrivacy() {
+        guard joinsAfterPrivacy else { return }
+        joinsAfterPrivacy = false
+        if viewModel.state.hasAcceptedMatchingPrivacy { join() }
+    }
+
     // MARK: - Photo
+
+    private func requestPhotoRemoval() {
+        if photoIsVerified {
+            setRemovalPrompt(true)
+        } else {
+            removePhoto()
+        }
+    }
+
+    private func setRemovalPrompt(_ shown: Bool) {
+        withAnimation(OnboardingMotion.resolved(.easeInOut(duration: 0.22), reduceMotion: reduceMotion)) {
+            asksToRemoveVerifiedPhoto = shown
+        }
+    }
 
     private func removePhoto() {
         if let error = viewModel.removeAutoMatchingPhoto() {
@@ -534,6 +840,7 @@ struct AutoMatchingSetupView: View {
         } else {
             photo = nil
             photoError = nil
+            verification.issue = nil
             saveFailed = false
         }
     }
@@ -560,6 +867,93 @@ struct AutoMatchingSetupView: View {
             } else {
                 photo = viewModel.autoMatchingPhoto.flatMap { UIImage(data: $0) }
             }
+        }
+    }
+}
+
+/// The app's own confirmation card, over a dimmed page. Keeping is the
+/// prominent choice; removing is the quiet one.
+private struct ConfirmationPrompt: View {
+    let symbol: String
+    let title: String
+    let message: String
+    let keepTitle: String
+    let removeTitle: String
+    let onKeep: () -> Void
+    let onRemove: () -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isShown = false
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.62)
+                .ignoresSafeArea()
+                .onTapGesture(perform: onKeep)
+                .accessibilityHidden(true)
+
+            VStack(spacing: 20) {
+                Image(systemName: symbol)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.white, OnboardingTheme.cyan)
+                    .font(.system(size: 34, weight: .semibold))
+                    .shadow(color: OnboardingTheme.cyan.opacity(0.6), radius: 12)
+                    .accessibilityHidden(true)
+                VStack(spacing: 8) {
+                    Text(title)
+                        .font(.system(.title3, design: .rounded, weight: .semibold))
+                        .foregroundStyle(OnboardingTheme.primaryText)
+                        .accessibilityAddTraits(.isHeader)
+                    Text(message)
+                        .font(.callout)
+                        .foregroundStyle(OnboardingTheme.secondaryText)
+                        .lineSpacing(2)
+                }
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                VStack(spacing: 4) {
+                    Button(keepTitle, action: onKeep)
+                        .buttonStyle(GlowButtonStyle())
+                    Button(action: onRemove) {
+                        Text(removeTitle)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(OnboardingTheme.pink)
+                            .frame(maxWidth: .infinity, minHeight: 48)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 22)
+            .padding(.top, 28)
+            .padding(.bottom, 14)
+            .frame(maxWidth: 360)
+            .background {
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .fill(OnboardingTheme.background)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 30, style: .continuous)
+                            .fill(LinearGradient(colors: [OnboardingTheme.blue.opacity(0.18),
+                                                          OnboardingTheme.violet.opacity(0.10)],
+                                                 startPoint: .topLeading, endPoint: .bottomTrailing))
+                    }
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .strokeBorder(LinearGradient(colors: [OnboardingTheme.cyan.opacity(0.45),
+                                                          OnboardingTheme.violet.opacity(0.2)],
+                                                 startPoint: .topLeading, endPoint: .bottomTrailing),
+                                  lineWidth: 1)
+            }
+            .shadow(color: OnboardingTheme.blue.opacity(0.35), radius: 30)
+            .padding(.horizontal, 28)
+            .scaleEffect(isShown || reduceMotion ? 1 : 0.92)
+            .opacity(isShown ? 1 : 0)
+            .accessibilityElement(children: .contain)
+            .accessibilityAddTraits(.isModal)
+        }
+        .onAppear {
+            withAnimation(.spring(duration: 0.35, bounce: 0.25)) { isShown = true }
         }
     }
 }

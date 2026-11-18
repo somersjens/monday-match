@@ -153,6 +153,8 @@ final class ProfileExchangeTests: XCTestCase {
         var b: ProfileExchangeNegotiation
         var completedA: ProfileCreationState?
         var completedB: ProfileCreationState?
+        var photoA: Data?
+        var photoB: Data?
         var declinedA = 0
         var declinedB = 0
         var profilesSent = 0
@@ -169,8 +171,8 @@ final class ProfileExchangeTests: XCTestCase {
                     } else {
                         run(a.received(decoded, from: "b"), fromA: true)
                     }
-                case .completed(_, let profile):
-                    if fromA { completedA = profile } else { completedB = profile }
+                case .completed(_, let profile, let photo):
+                    if fromA { completedA = profile; photoA = photo } else { completedB = profile; photoB = photo }
                 case .declined:
                     if fromA { declinedA += 1 } else { declinedB += 1 }
                 }
@@ -178,10 +180,10 @@ final class ProfileExchangeTests: XCTestCase {
         }
     }
 
-    private func connectedPair(tokenA: Data? = nil, tokenB: Data? = nil) -> Pair {
+    private func connectedPair(tokenA: Data? = nil, tokenB: Data? = nil, photoA: Data? = nil) -> Pair {
         let jens = profile(name: "Jens")
         let emma = profile(name: "Emma", gender: .woman, partnerGenders: [.man])
-        var pair = Pair(a: ProfileExchangeNegotiation(profile: jens.sharedCopy(today: today), today: today),
+        var pair = Pair(a: ProfileExchangeNegotiation(profile: jens.sharedCopy(today: today), today: today, photo: photoA),
                         b: ProfileExchangeNegotiation(profile: emma.sharedCopy(today: today), today: today))
         // Both connections are open before either greeting arrives.
         let greetingA = pair.a.connected("b", proximityToken: tokenA)
@@ -214,6 +216,28 @@ final class ProfileExchangeTests: XCTestCase {
         XCTAssertEqual(pair.completedB?.displayName, "Jens")
         XCTAssertEqual(pair.completedA, pair.b.profile)
         XCTAssertEqual(pair.completedB, pair.a.profile)
+    }
+
+    func testASharedPhotoArrivesWithTheProfileOnlyOneWay() {
+        let photo = Data(repeating: 7, count: 64 * 1024)
+        var pair = connectedPair(photoA: photo)
+        pair.run(pair.a.confirm("b"), fromA: true)
+        pair.run(pair.b.confirm("a"), fromA: false)
+        XCTAssertEqual(pair.photoB, photo, "Emma receives the photo Jens chose to share")
+        XCTAssertNil(pair.photoA, "Emma shared none, so Jens gets none")
+        XCTAssertEqual(pair.completedB?.displayName, "Jens")
+    }
+
+    func testAnUninvitedOrOversizedPhotoIsIgnored() {
+        var pair = connectedPair()
+        XCTAssertTrue(pair.a.received(.photo(Data([1, 2, 3])), from: "b").isEmpty)
+        XCTAssertNil(pair.a.peers["b"]?.photo, "Nobody is ready yet")
+        let huge = Data(count: ProfileExchangeMessage.maximumPhotoBytes + 1)
+        let negotiation = ProfileExchangeNegotiation(profile: profile(name: "Jens").sharedCopy(today: today),
+                                                     today: today, photo: huge)
+        XCTAssertNil(negotiation.photo, "A photo too large for one message is not sent")
+        XCTAssertNotNil(ProfileExchangeMessage.photo(Data(count: ProfileExchangeMessage.maximumPhotoBytes)).encoded()
+            .flatMap(ProfileExchangeMessage.decoded), "The largest photo still fits in one message")
     }
 
     func testAnUninvitedProfileIsIgnoredAndNothingIsSentBack() {

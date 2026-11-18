@@ -59,13 +59,18 @@ struct AutoMatchingCard: View {
 
 /// The account step of the home screen. Its switch slides on and the card
 /// opens in place into Apple and Google sign-in, so the helix stays on
-/// screen. Once signed in the card confirms it for a moment before the next
-/// step takes its place; sliding the switch back closes it again.
+/// screen. Once signed in the card keeps its height and confirms it where the
+/// switch was, then sinks away while the next step rises in its place;
+/// sliding the switch back closes it again.
 struct AccountCreationCard: View {
     enum Phase: Equatable {
         case closed
         case open
         case signedIn
+        /// The confirmed card fades out while the next step takes over.
+        case handover
+
+        var isSignedIn: Bool { self == .signedIn || self == .handover }
     }
 
     let phase: Phase
@@ -75,23 +80,23 @@ struct AccountCreationCard: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var isLocked: Bool { phase == .signedIn || signIn.isSigningIn }
+    private var isLocked: Bool { phase.isSignedIn || signIn.isSigningIn }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 6) {
                 Button(action: onToggle) {
                     HStack(spacing: 8) {
-                        if phase == .signedIn {
+                        if phase.isSignedIn {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundStyle(OnboardingTheme.accentGradient)
                                 .transition(.scale(scale: 0.4).combined(with: .opacity))
                         }
-                        Text(phase == .signedIn ? L10n("You’re signed in") : L10n("Create your account"))
+                        Text(phase.isSignedIn ? L10n("You’re signed in") : L10n("Create your account"))
                             .lineLimit(1)
                             .minimumScaleFactor(0.6)
                             .contentTransition(.opacity)
-                            .id(phase == .signedIn)
+                            .id(phase.isSignedIn)
                             .transition(.onboardingReveal(reduceMotion: reduceMotion))
                     }
                     .font(.system(.body, weight: .semibold))
@@ -107,7 +112,9 @@ struct AccountCreationCard: View {
             .frame(minHeight: OnboardingTheme.buttonHeight)
             .disabled(isLocked)
 
-            if phase == .open {
+            // Signed in, the sign-in buttons fade but keep their room, so the
+            // confirmation stays where the switch was slid.
+            if phase != .closed {
                 VStack(spacing: 10) {
                     Text(L10n("Keep your profile safe and let your matches reach you."))
                         .font(.footnote)
@@ -130,10 +137,15 @@ struct AccountCreationCard: View {
                 }
                 .padding(.horizontal, 10)
                 .padding(.bottom, 10)
+                .opacity(phase == .open ? 1 : 0)
+                .blur(radius: phase == .open || reduceMotion ? 0 : 6)
+                .allowsHitTesting(phase == .open)
+                .accessibilityHidden(phase != .open)
                 .transition(.onboardingReveal(reduceMotion: reduceMotion))
             }
         }
         .modifier(MatchingActionSurface(isOn: phase != .closed))
+        .landingDeparture(phase == .handover, reduceMotion: reduceMotion)
         .animation(.easeInOut(duration: 0.2), value: signIn.errorMessage)
     }
 }

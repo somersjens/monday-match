@@ -26,7 +26,7 @@ struct WelcomeUniforms {
     float4 matchMorph;  // progress, saved match enabled, shared vertical offset, captured helix seconds
     float4 chat;        // heart-to-rings progress, welcome deformation clock, rotation cosine/sine
     float4 personality; // helix-to-chart progress, chart-to-chart progress, from kind, to kind
-    float4 personalityShape; // from value count, to value count
+    float4 personalityShape; // from value count, to value count, 1 when the chart grows out of the match rings
     float4 personalityFrom[3];
     float4 personalityTo[3];
 };
@@ -621,8 +621,11 @@ PersonalitySample personalitySample(float kind, float count, constant float4 *va
 float personalityEase(float k) { return k*k*k*(k*(k*6 - 15) + 10); }
 
 // Rows weave in from the top down, each loop with its own small delay.
+// From the helix, or, opened from a conversation, from the match rings.
 float personalityAmount(float u, uint instance, constant WelcomeUniforms &p) {
-    if (p.lock.w < 0.5 || p.personality.x <= 0 || p.matchLayout.w > 0.5) return 0.0;
+    if (p.personality.x <= 0) return 0.0;
+    bool overMatch = p.personalityShape.z > 0.5;
+    if (overMatch ? p.matchLayout.w < 0.5 : (p.lock.w < 0.5 || p.matchLayout.w > 0.5)) return 0.0;
     uint rows = uint(clamp(p.personalityShape.y, 1.0, 12.0));
     float order = rows > 1 ? float(instance % rows)/float(rows - 1) : 0.0;
     float jitter = 0.18*(0.5 + 0.5*sin(u*tau + float(instance)*0.37));
@@ -932,10 +935,15 @@ float3 savedMatchPoint(float u, uint instance, constant WelcomeUniforms &p) {
 // Strands leave the heart at slightly different moments, so the lock or helix
 // forms as travelling silk rather than a crossfade. Zero leaves the heart untouched.
 float3 lockedRibbonPoint(float u, uint instance, constant WelcomeUniforms &p, device const float2 *controls) {
-    if (p.matchMorph.y > 0.5) {
-        return savedMatchPoint(u, instance, p);
+    bool savedHeart = p.matchMorph.y > 0.5;
+    if (savedHeart || (p.matchLayout.w > 0.5 && p.match.x >= 1)) {
+        // Zero unless the personality charts were opened from the conversation:
+        // then the rings reweave into the chart directly, without the helix.
+        float chart = personalityAmount(u, instance, p);
+        if (chart >= 1) return personalityTarget(u, instance, p).point;
+        float3 heart = savedHeart ? savedMatchPoint(u, instance, p) : matchPoint(u, instance, p);
+        return chart > 0 ? mix(heart, personalityTarget(u, instance, p).point, chart) : heart;
     }
-    if (p.matchLayout.w > 0.5 && p.match.x >= 1) return matchPoint(u, instance, p);
     if (p.lock.x <= 0) return ribbonPoint(u, instance, p, controls);
     float stagger = 0.35*(0.5 + 0.5*sin(u*tau + float(instance)*0.37));
     float k = clamp(p.lock.x*1.35 - stagger, 0.0, 1.0);
@@ -1038,7 +1046,10 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
     float code = codeAmount(u, instance, p)*(1 - matchHeart);
     float2 local = float2(0);
     if (code > 0) codePoint(u, instance, p, local);
-    float chart = personalityAmount(u, instance, p)*(1 - matchHeart);
+    // A chart grown from the rings takes over the match's own light below.
+    bool chartOverMatch = p.personalityShape.z > 0.5;
+    float chart = personalityAmount(u, instance, p)*(chartOverMatch ? 1.0 : 1 - matchHeart);
+    float helixChart = chartOverMatch ? 0.0 : chart;
     PersonalitySample chartSample;
     chartSample.light = 1;
     chartSample.color = float3(0);
@@ -1062,14 +1073,17 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
                            float3(0.68,0.50,1.0), smoothstep(0.45, 1.0, diagonal));
     codeColor = mix(codeColor, float3(0.60,0.90,1.0), tint*0.25);
     helixColor = mix(helixColor, codeColor, code);
-    helixColor = mix(helixColor, mix(chartSample.color, float3(0.60,0.90,1.0), tint*0.2), chart);
+    float3 chartColor = mix(chartSample.color, float3(0.60,0.90,1.0), tint*0.2);
+    helixColor = mix(helixColor, chartColor, helixChart);
     color = mix(color, helixColor, max(helix, matchHeart));
+    if (chartOverMatch) color = mix(color, chartColor, chart);
     color = mix(color, float3(0.47,0.84,1), highlight*light*0.5);
     RibbonVertex out;
     out.position = float4(screen.x/p.viewport.x*2-1, 1-screen.y/p.viewport.y*2, 0, 1);
     out.distance = edge * halfWidth / p.viewport.w;
     out.depth = point.z;
     out.intensity = (0.022 + heartFlow*0.019 + (0.055 + heartFlow*0.015)*light + highlight*(0.22 + 0.65*light)*(1-heartFlow*0.34)) * (0.72 + 0.28*cos(u*tau + phase));
+    float chartBase = out.intensity;
     // Finish the tiny soft reveal edge before closure; at head distance 1
     // every pixel already uses the ordinary loop, including the closing join.
     // The far side of the helix recedes, and its base pairs stay quieter
@@ -1099,7 +1113,7 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
     float helixLight = (0.55 + 1.1*rim - 0.25*aura)*(1 - 0.4*back)*(sheet == 0 ? 1.0 : 0.85)
                      *rungSpan*endpoint;
     helixLight = mix(helixLight, 2.6, code);
-    helixLight = mix(helixLight, chartSample.light, chart);
+    helixLight = mix(helixLight, chartSample.light, helixChart);
     out.intensity *= mix(1.0, helixLight, helix);
     float visible = mix(smoothstep(-0.008,0.008,p.entrance.x-travel),1.0,
                         smoothstep(0.97,1.0,p.entrance.x));
@@ -1133,6 +1147,9 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
         float chatLight = smoothstep(0.2, 0.85, p.chat.x);
         out.intensity *= window*strandLight*mix(1 - smoothstep(0.88, 1.0, s), chatSeam(s), chatLight)*(1 - 0.35*p.match.w);
     }
+    // The rings' windows and seams give way to the chart's own light, so the
+    // parts of each strand the rings hide light up as they reach the chart.
+    if (chartOverMatch && chart > 0) out.intensity = mix(out.intensity, chartBase*chartSample.light, chart);
     out.coreWidth = (1 + highlight*(1.3 - 0.45*heartFlow) + head*0.45)*mix(1.0, 2.0, code*helix);
     out.color = color;
     out.screen = screen;

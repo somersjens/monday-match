@@ -7,6 +7,8 @@ enum OnboardingTheme {
     static let blue = Color(red: 0.16, green: 0.32, blue: 1)
     static let violet = Color(red: 0.61, green: 0.30, blue: 1)
     static let pink = Color(red: 0.95, green: 0.35, blue: 0.85)
+    /// Delete and remove actions, like Delete profile.
+    static let destructive = Color(red: 1, green: 0.38, blue: 0.40)
 
     static let buttonGradient = LinearGradient(
         colors: [Color(red: 0.22, green: 0.42, blue: 0.94), Color(red: 0.40, green: 0.29, blue: 0.86)],
@@ -28,6 +30,11 @@ enum OnboardingTheme {
     static let contentWidth: CGFloat = 520
     static let controlWidth: CGFloat = 420
     static let buttonHeight: CGFloat = 58
+    /// The space under every screen's bottom controls, above the home
+    /// indicator. One value app-wide, so Continue / Back sit at the same
+    /// height everywhere and the landing's buttons become the questionnaire's
+    /// in place.
+    static let controlsBottomPadding: CGFloat = 12
 }
 
 enum OnboardingMotion {
@@ -37,6 +44,10 @@ enum OnboardingMotion {
     static let selection = Animation.spring(duration: 0.16, bounce: 0.12)
     /// How long navigation stays locked while a step transition plays.
     static let stepLock: Duration = .milliseconds(580)
+    /// The pause between tapping a deciding answer and the page moving on:
+    /// long enough to see the selection land (and a mirrored partner value
+    /// follow), short enough that it still feels like one gesture.
+    static let answerSettle: Duration = .milliseconds(450)
 
     static func resolved(_ animation: Animation, reduceMotion: Bool) -> Animation {
         reduceMotion ? .easeInOut(duration: 0.2) : animation

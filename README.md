@@ -24,7 +24,16 @@ and licence-free. They share one key (D major pentatonic with a Lydian colour)
 and one glass-bell voice: the welcome light's entrance, a note per
 questionnaire step that climbs the scale, the heart blooming for a match or
 gently letting go for no match, the phones exchanging, the rings of the chat,
-messages, and soft breaths of air for panels opening and closing.
+messages, and soft breaths of air for panels opening and closing. The helix
+has its own motion in sound: two strands of air drawn in from the sides with
+the base pairs clicking into place as it arrives, and pulled apart as it
+leaves for a match. Each personality test has its own note, a saved name
+sweeps up like stardust, and accepting privacy terms seals with a twinkle.
+
+While the heart turns on the landing page, a 24-second bed (`ambience.caf`)
+loops seamlessly underneath at a very low level. It fades in after the
+entrance, fades out as soon as the landing page is left, and stays silent
+while another app plays audio or with Reduce Motion on.
 
 `AppSound` lists the cues and `SoundPlayer` plays them in the ambient audio
 category, so they follow the silent switch and mix with other audio. They can

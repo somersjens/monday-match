@@ -17,7 +17,7 @@ struct OnboardingProgressCard: View {
     @State private var sweep: CGFloat = -0.35
     @State private var glows = false
 
-    private static let cornerRadius: CGFloat = 20
+    private static let cornerRadius: CGFloat = 18
     private static let outline = LinearGradient(
         colors: [OnboardingTheme.cyan, OnboardingTheme.blue, OnboardingTheme.violet],
         startPoint: .leading, endPoint: .trailing)
@@ -66,7 +66,7 @@ struct OnboardingProgressCard: View {
             if showsTimer || isFinished {
                 Rectangle()
                     .fill(OnboardingTheme.hairline)
-                    .frame(width: 1, height: 26)
+                    .frame(width: 1, height: 22)
                     .padding(.horizontal, compact ? 12 : 16)
                     .transition(.opacity)
                 // Sized for the widest of the countdown and the checkmark, so
@@ -91,7 +91,7 @@ struct OnboardingProgressCard: View {
         .foregroundStyle(OnboardingTheme.primaryText)
         .lineLimit(1)
         .padding(.horizontal, compact ? 14 : 18)
-        .padding(.vertical, 18)
+        .padding(.vertical, 13)
     }
 
     private func progressSection(compact: Bool) -> some View {

@@ -246,26 +246,166 @@ def seal() -> np.ndarray:
     return finish(reverb(mix, 1.8, 0.35), -7.0)
 
 
-def complete() -> np.ndarray:
-    """The helix arrives: an arpeggio climbing into a warm, open chord."""
+def strand(duration: float, f_from: float, f_to: float, pan_from: float, pan_to: float, seed: int,
+           shape) -> np.ndarray:
+    """One backbone of the helix as a ribbon of air travelling across the
+    stereo field (equal-power pan, changing over time)."""
+    sound = air(duration, f_from, f_to, q=2.4, seed=seed, shape=shape)
+    t = np.linspace(0, 1, len(sound))
+    pan = pan_from + (pan_to - pan_from) * (t * t * (3 - 2 * t))
+    left = np.cos((pan + 1) * math.pi / 4)
+    right = np.sin((pan + 1) * math.pi / 4)
+    return np.stack([sound * left, sound * right], axis=1) * math.sqrt(2)
+
+
+# WelcomeLightHelix.Arrival: strands pulled in for 1.9 s after 0.05 s, the
+# base pairs laid from 1.5 s for 0.8 s.
+ARRIVAL_FLIGHT, RUNGS_START, RUNGS_DURATION = 1.9, 1.5, 0.8
+
+
+def arrival(mix: np.ndarray, at: float, level: float = 1.0) -> None:
+    """The helix flies in: two strands of air drawn in from either side,
+    meeting in the middle, then the base pairs clicking into place one by one
+    as small glass notes climbing the scale."""
+    rise = lambda t: np.sin(np.pi * np.minimum(t * 0.62, 1)) ** 1.6
+    start = at + 0.05
+    place(mix, strand(ARRIVAL_FLIGHT + 0.2, 500, 1900, -0.95, -0.12, 111, rise), start, 0.55 * level)
+    place(mix, strand(ARRIVAL_FLIGHT + 0.2, 560, 2100, 0.95, 0.12, 112, rise), start + 0.04, 0.55 * level)
+    place(mix, pad([D4, A4], 2.6, attack=1.4, release=1.2, level=0.3 * level), start + 0.6)
+    rungs = (D6, E6, Fs6, A6, B6, D7, E7)
+    for i, note in enumerate(rungs):
+        when = start + RUNGS_START + RUNGS_DURATION * i / len(rungs)
+        place(mix, glass(note, 0.8, decay=0.16, brightness=0.6, attack=0.003), when,
+              (0.2 - i * 0.012) * level, 0.35 if i % 2 else -0.35)
+
+
+def helix_arrival() -> np.ndarray:
+    """The helix arriving on the home screen, after launch or a match."""
     mix = silence(4.0)
-    place(mix, pad([D4, A4, Fs5], 3.6, attack=0.5, release=1.8, level=0.5), 0.0)
+    arrival(mix, 0.0)
+    return finish(reverb(mix, 2.4, 0.4), -7.0)
+
+
+def complete() -> np.ndarray:
+    """The profile is done: the helix flies in for the first time (0.3 s
+    after the questionnaire fades), and as it settles an arpeggio climbs
+    into a warm, open chord."""
+    mix = silence(5.6)
+    arrival(mix, 0.3)
+    settle = 0.3 + 0.05 + ARRIVAL_FLIGHT
+    place(mix, pad([D4, A4, Fs5], 3.0, attack=0.4, release=1.6, level=0.45), settle - 0.2)
     for i, note in enumerate((D5, Fs5, A5, Cs6, E6, A6)):
-        place(mix, glass(note, 2.2, decay=0.8, brightness=0.85), 0.1 + i * 0.1, 0.42, -0.5 + i * 0.2)
-    place(mix, sparkles(1.4, 10, seed=21, density=lambda x: x ** 1.4, level=0.4), 0.75)
+        place(mix, glass(note, 2.2, decay=0.8, brightness=0.85), settle + i * 0.09, 0.4, -0.5 + i * 0.2)
+    place(mix, sparkles(1.4, 10, seed=21, density=lambda x: x ** 1.4, level=0.4), settle + 0.6)
     return finish(reverb(mix, 2.8, 0.42), -5.0)
 
 
-def intro(mix: np.ndarray, seed: int) -> None:
-    """The first 1.6 s of every new match: the helix leaving as rising air."""
-    place(mix, air(1.75, 320, 2600, q=1.4, seed=seed, shape=lambda t: (np.sin(np.pi * t * 0.55) ** 2)), 0.0, 0.5)
-    place(mix, sparkles(1.3, 8, seed=seed + 1, density=lambda x: x ** 0.5, level=0.3), 0.35)
+def departure(mix: np.ndarray, seed: int) -> None:
+    """The first 1.6 s of every new match (WelcomeLightMatch.exitDuration):
+    the helix's strands are pulled apart, out to either side, leaving room
+    for the heart. The mirror image of the arrival."""
+    pull = lambda t: np.sin(np.pi * np.minimum(t * 1.15, 1)) ** 1.4
+    place(mix, strand(1.55, 1700, 600, -0.1, -0.95, seed, pull), 0.0, 0.6)
+    place(mix, strand(1.55, 1900, 650, 0.1, 0.95, seed + 1, pull), 0.03, 0.6)
+    for i, note in enumerate((D7, B6, A6, Fs6)):
+        place(mix, glass(note, 0.8, decay=0.14, brightness=0.5), 0.12 + i * 0.13, 0.16 - i * 0.02,
+              (0.3 + i * 0.18) * (1 if i % 2 else -1))
+    # A breath gathering where the heart is about to bloom.
+    place(mix, air(0.9, 400, 1400, q=1.2, seed=seed + 2, shape=lambda t: np.sin(np.pi * t * 0.5) ** 2), 0.75, 0.22)
+
+
+def helix_departure() -> np.ndarray:
+    """The departure on its own, for listening only (not bundled): match and
+    no-match start with it, so it stays in time with the heart."""
+    mix = silence(2.6)
+    departure(mix, 121)
+    return finish(reverb(mix, 2.0, 0.4), -8.0)
+
+
+def first_name() -> np.ndarray:
+    """A first name is saved: a quick sweep of stardust, as if the name were
+    written in light."""
+    mix = silence(1.8)
+    rng = np.random.default_rng(131)
+    scale = [D6, E6, Fs6, A6, B6, D7, E7, Fs7, A7]
+    for i in range(16):
+        x = i / 15
+        note = scale[min(len(scale) - 1, int(x * len(scale)))]
+        place(mix, glass(note, 0.7, decay=rng.uniform(0.1, 0.2), brightness=0.5, attack=0.002),
+              0.42 * x ** 0.9 + rng.uniform(0, 0.012), 0.22 + 0.12 * math.sin(math.pi * x), -0.7 + 1.4 * x)
+    place(mix, air(0.6, 1200, 4200, q=1.6, seed=132), 0.0, 0.18)
+    place(mix, glass(A6, 1.4, decay=0.5, brightness=0.8), 0.46, 0.3, 0.2)
+    return finish(reverb(mix, 1.9, 0.4), -9.0)
+
+
+AMBIENCE_SECONDS = 24
+
+
+def ambience() -> np.ndarray:
+    """The landing page's bed under the turning heart: a breathing, open D
+    chord with a whisper of air and the odd far-off star.
+
+    Everything is periodic in exactly 24 s (sine frequencies on whole cycles,
+    air and reverb made circularly), so it loops without a seam."""
+    n = AMBIENCE_SECONDS * SR
+    t = np.arange(n) / SR
+    out = np.zeros((n, 2))
+    period = AMBIENCE_SECONDS
+
+    def whole(f: float) -> float:
+        return round(f * period) / period
+
+    # Slow swells; every LFO completes whole cycles within the loop.
+    voices = [(D4, 0.5, 1, 0.0), (A4, 0.42, 2, 1.3), (E5, 0.28, 3, 2.1), (Fs5, 0.18, 1, 4.0),
+              (A5, 0.16, 2, 0.7), (Cs6, 0.07, 3, 3.3)]
+    rng = np.random.default_rng(141)
+    for note, amp, cycles, offset in voices:
+        swell = 0.55 + 0.45 * np.sin(2 * math.pi * cycles * t / period + offset)
+        for detune, pan in ((-0.0035, -0.5), (0.0035, 0.5)):
+            f = whole(midi(note) * (1 + detune))
+            phase = 2 * math.pi * f * t + rng.random() * 6
+            tone = np.sin(phase) + 0.08 * np.sin(2 * phase)
+            left = math.cos((pan + 1) * math.pi / 4)
+            right = math.sin((pan + 1) * math.pi / 4)
+            out[:, 0] += tone * swell * amp * left
+            out[:, 1] += tone * swell * amp * right
+
+    # Air: noise shaped in the frequency domain, so it is periodic by design.
+    freqs = np.fft.rfftfreq(n, 1 / SR)
+    shape = np.exp(-0.5 * ((np.log(np.maximum(freqs, 1)) - math.log(1600)) / 0.5) ** 2)
+    breathe = 0.6 + 0.4 * np.sin(2 * math.pi * 2 * t / period + 1.0)
+    for ch in range(2):
+        spectrum = shape * np.exp(2j * math.pi * rng.random(len(freqs)))
+        noise = np.fft.irfft(spectrum, n)
+        out[:, ch] += noise / np.std(noise) * 0.035 * breathe
+
+    # A few distant stars, wrapping around the loop point.
+    stars = silence(AMBIENCE_SECONDS + 2)
+    for at, note, pan in ((2.7, A6, -0.6), (7.9, Fs6, 0.5), (11.4, D7, -0.2), (16.3, E6, 0.65),
+                          (19.8, B6, -0.45), (22.6, A6, 0.3)):
+        place(stars, glass(note, 1.6, decay=0.5, brightness=0.5), at, 0.09, pan)
+    out += stars[:n]
+    out[: len(stars) - n] += stars[n:]
+
+    # Circular reverb, so the tail also wraps into the start.
+    wet = np.zeros_like(out)
+    tail = int(3.5 * SR)
+    for ch in range(2):
+        noise = rng.standard_normal(tail)
+        ir = np.convolve(noise, np.ones(10) / 10, mode="same") * np.exp(-6.9 * np.arange(tail) / tail)
+        ir /= np.sqrt(np.sum(ir ** 2))
+        padded = np.zeros(n)
+        padded[:tail] = ir
+        wet[:, ch] = np.fft.irfft(np.fft.rfft(out[:, ch]) * np.fft.rfft(padded), n)
+    out = out * 0.7 + wet * 0.5
+    out -= out.mean(axis=0)
+    return out / np.max(np.abs(out)) * 10 ** (-6 / 20)
 
 
 def match() -> np.ndarray:
     """A match: the heart blooms in a luminous chord and keeps glittering."""
     mix = silence(5.6)
-    intro(mix, 31)
+    departure(mix, 31)
     place(mix, pad([D4, A4, Fs5, Cs6], 3.6, attack=0.4, release=1.6, level=0.42), 1.5)
     for note, at, pan in ((D5, 1.58, -0.2), (A5, 1.62, 0.2), (Fs6, 1.68, -0.35), (A6, 1.74, 0.35), (E7, 1.86, 0.0)):
         place(mix, glass(note, 3.0, decay=1.1), at, 0.34, pan)
@@ -277,7 +417,7 @@ def no_match() -> np.ndarray:
     """No match: an open, unresolved chord that drifts gently down as the
     heart lets go. Kind, never a 'fail' sound."""
     mix = silence(7.0)
-    intro(mix, 41)
+    departure(mix, 41)
     place(mix, pad([D4, A4, E5], 3.2, attack=0.5, release=1.6, level=0.36), 1.5)
     for note, at, pan in ((D5, 1.6, -0.2), (A5, 1.66, 0.2), (E6, 1.74, 0.0)):
         place(mix, glass(note, 2.6, decay=0.9, brightness=0.7), at, 0.3, pan)
@@ -399,10 +539,16 @@ CUES = {
     "close": close,
     "success": success,
     "notification-chime": notification,
+    "helix-arrival": helix_arrival,
+    "name": first_name,
+    "ambience": ambience,
 }
 
 
 NOTIFICATION = "notification-chime"
+# Looped sample-accurately, so kept in a CAF whose packet table records the
+# AAC priming exactly.
+AMBIENCE = "ambience"
 
 
 def write(name: str, sound: np.ndarray) -> None:
@@ -418,6 +564,9 @@ def write(name: str, sound: np.ndarray) -> None:
             # Notification sounds must be linear PCM (or IMA4/aLaw/µLaw).
             target = os.path.join(OUT, f"{name}.caf")
             command = ["afconvert", "-f", "caff", "-d", f"LEI16@{SR}", wav, target]
+        elif name == AMBIENCE:
+            target = os.path.join(OUT, f"{name}.caf")
+            command = ["afconvert", "-f", "caff", "-d", "aac", "-b", "128000", "-q", "127", wav, target]
         else:
             target = os.path.join(OUT, f"{name}.m4a")
             command = ["afconvert", "-f", "m4af", "-d", "aac", "-b", "160000", "-q", "127", wav, target]

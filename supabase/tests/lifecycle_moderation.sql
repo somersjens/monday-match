@@ -45,7 +45,7 @@ select jsonb_build_object(
             'alcohol',jsonb_build_object('ownLevel',0,'partnerMaximumLevel',5),
             'smoking',jsonb_build_object('ownLevel',0,'partnerMaximumLevel',5),
             'drugs',jsonb_build_object('ownLevel',0,'partnerMaximumLevel',5)))),
-    '{"state":{"profilePrivacyConsent":{"version":"2026-11-14.v1"},"storedAutoMatching":{"privacyConsent":{"version":"2026-11-14.v1"}}}}'::jsonb;
+    '{"state":{"profilePrivacyConsent":{"version":"2026-11-15.v2"},"storedAutoMatching":{"privacyConsent":{"version":"2026-11-15.v2"}}}}'::jsonb;
 create function pg_temp.join(n integer) returns void language sql as $$
     insert into public.profiles(id, profile, backup) select pg_temp.id(n), p, b from v3_fixture $$;
 create function pg_temp.pause(n integer) returns void language sql as $$

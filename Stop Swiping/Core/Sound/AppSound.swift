@@ -17,9 +17,15 @@ enum AppSound: String, CaseIterable {
     case rejection
     /// The finished questionnaire seals with its checkmark.
     case seal
-    /// The completed profile: the helix arrives.
+    /// The completed profile: the helix flies in for the first time and
+    /// settles into a chord.
     case complete
-    /// A new match: the heart blooms.
+    /// The helix flying in on the home screen: two strands drawn in from the
+    /// sides, then the base pairs clicking into place.
+    case helixArrival = "helix-arrival"
+    /// A first name is saved: a sweep of stardust.
+    case name
+    /// A new match: the helix's strands are pulled apart, then the heart blooms.
     case match
     /// A new result without a match: the heart lets go, gently.
     case noMatch = "no-match"
@@ -55,12 +61,20 @@ enum AppSound: String, CaseIterable {
     var volume: Float {
         switch self {
         case .select, .open, .close: 0.5
-        case .step1, .step2, .step3, .step4, .step5, .lock, .messageSent: 0.55
+        case .step1, .step2, .step3, .step4, .step5, .lock, .messageSent, .name: 0.55
         case .rejection, .messageReceived, .seal, .success, .exchange, .chatOpen: 0.6
+        case .helixArrival: 0.65
         case .entrance, .complete, .match, .noMatch, .unfold: 0.7
         case .notification: 0.6
         }
     }
+
+    /// The looping bed under the turning heart, carried from the landing page
+    /// into the questionnaire.
+    static var ambienceURL: URL? { Bundle.main.url(forResource: "ambience", withExtension: "caf") }
+    /// The bed at full level, on the landing page. Far behind everything
+    /// else: felt more than heard. Later screens play a share of this.
+    static let ambienceVolume: Float = 0.14
 
     /// The chime for local notifications, from the app bundle.
     static var notificationSound: UNNotificationSound {
@@ -73,24 +87,17 @@ enum AppSound: String, CaseIterable {
 @MainActor
 final class SoundPlayer {
     static let shared = SoundPlayer()
-    static let enabledKey = "sounds.enabled"
 
-    private let defaults: UserDefaults
     private let cues = CuePlayers()
+    private let ambience = AmbientBed()
+    /// The bed's requested level, as a share of its full volume.
+    private var ambienceLevel: Float = 0
     private var isSessionConfigured = false
     private var sessionObservers: [NSObjectProtocol] = []
 
     init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
-    }
-
-    /// On unless turned off in the profile overview.
-    var isEnabled: Bool {
-        get { defaults.object(forKey: Self.enabledKey) as? Bool ?? true }
-        set {
-            defaults.set(newValue, forKey: Self.enabledKey)
-            if !newValue { cues.stopAll() }
-        }
+        // Sounds are always on now; drop the old profile overview switch.
+        defaults.removeObject(forKey: "sounds.enabled")
     }
 
     /// Loads every cue up front so the first of each plays without delay.
@@ -101,7 +108,7 @@ final class SoundPlayer {
     }
 
     func play(_ sound: AppSound) {
-        guard isEnabled, !Self.isRunningTests, let url = sound.url else { return }
+        guard !Self.isRunningTests, let url = sound.url else { return }
         startSession()
         cues.play(sound.rawValue, url: url, volume: sound.volume)
     }
@@ -110,6 +117,31 @@ final class SoundPlayer {
     /// match closes before its sound has finished.
     func fadeOut(_ sounds: AppSound..., duration: TimeInterval = 0.35) {
         cues.fadeOut(sounds.map(\.rawValue), duration: duration)
+    }
+
+    /// Sets the bed's level as a share of its full volume; zero fades it out.
+    /// From silence it waits a moment and then fades in slowly. Between two
+    /// levels it glides, slower than the screen's own transition, so moving
+    /// on feels like the room growing quieter rather than a step. It stays
+    /// silent while another app plays audio, so it never sits under
+    /// someone's music.
+    func setAmbience(_ level: Float) {
+        guard level != ambienceLevel else { return }
+        let previous = ambienceLevel
+        ambienceLevel = level
+        guard !Self.isRunningTests else { return }
+        guard level > 0 else {
+            ambience.stop(fadeOut: 1.5)
+            return
+        }
+        guard let url = AppSound.ambienceURL else { return }
+        startSession()
+        let volume = AppSound.ambienceVolume * level
+        if previous == 0 {
+            ambience.start(url: url, volume: volume, fadeIn: 4, delay: 1.5)
+        } else {
+            ambience.start(url: url, volume: volume, fadeIn: level < previous ? 2.5 : 2, delay: 0)
+        }
     }
 
     /// Sets the ambient category and activates the session ahead of the first
@@ -187,6 +219,106 @@ nonisolated private final class CuePlayers: @unchecked Sendable {
         player.prepareToPlay()
         players[name] = player
         return player
+    }
+}
+
+/// The ambient bed: one decoded buffer looped sample-accurately by
+/// an audio engine (an AVAudioPlayer leaves a gap at the loop point), with
+/// volume ramps for the fades. Everything runs on one serial queue.
+nonisolated private final class AmbientBed: @unchecked Sendable {
+    private let queue = DispatchQueue(label: "SoundPlayer.ambience", qos: .utility)
+    /// Only touched on `queue`.
+    private var engine: AVAudioEngine?
+    private var node: AVAudioPlayerNode?
+    private var buffer: AVAudioPCMBuffer?
+    private var targetVolume: Float = 0
+    /// Bumped by every start and stop, so an older fade gives way.
+    private var generation = 0
+    private var wantsPlaying = false
+    private var configurationObserver: NSObjectProtocol?
+
+    func start(url: URL, volume: Float, fadeIn: TimeInterval, delay: TimeInterval) {
+        queue.async {
+            self.generation += 1
+            self.wantsPlaying = true
+            self.targetVolume = volume
+            guard !AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint,
+                  self.prepare(url), self.resume() else { return }
+            self.ramp(to: volume, over: fadeIn, after: delay, generation: self.generation)
+        }
+    }
+
+    func stop(fadeOut: TimeInterval) {
+        queue.async {
+            self.generation += 1
+            self.wantsPlaying = false
+            guard let node = self.node, node.isPlaying else { return }
+            self.ramp(to: 0, over: fadeOut, after: 0, generation: self.generation) {
+                node.stop()
+                self.engine?.stop()
+            }
+        }
+    }
+
+    private func prepare(_ url: URL) -> Bool {
+        if engine != nil { return true }
+        guard let file = try? AVAudioFile(forReading: url),
+              let buffer = AVAudioPCMBuffer(pcmFormat: file.processingFormat,
+                                            frameCapacity: AVAudioFrameCount(file.length)),
+              (try? file.read(into: buffer)) != nil else { return false }
+        let engine = AVAudioEngine()
+        let node = AVAudioPlayerNode()
+        engine.attach(node)
+        engine.connect(node, to: engine.mainMixerNode, format: buffer.format)
+        node.volume = 0
+        self.engine = engine
+        self.node = node
+        self.buffer = buffer
+        // A new route (headphones, Bluetooth) stops the engine; pick the bed
+        // up again where it should still be playing.
+        configurationObserver = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil
+        ) { [weak self] _ in
+            guard let self else { return }
+            self.queue.async {
+                guard self.wantsPlaying else { return }
+                self.node?.stop()
+                _ = self.resume()
+                self.node?.volume = self.targetVolume
+            }
+        }
+        return true
+    }
+
+    /// Starts the engine and the loop if they aren't running.
+    private func resume() -> Bool {
+        guard let engine, let node, let buffer else { return false }
+        if !engine.isRunning {
+            do { try engine.start() } catch { return false }
+        }
+        if !node.isPlaying {
+            node.volume = 0
+            node.scheduleBuffer(buffer, at: nil, options: .loops)
+            node.play()
+        }
+        return true
+    }
+
+    private func ramp(to volume: Float, over duration: TimeInterval, after delay: TimeInterval,
+                      generation: Int, then completion: (() -> Void)? = nil) {
+        let step = 0.05
+        let steps = max(1, Int(duration / step))
+        let start = node?.volume ?? 0
+        for index in 1...steps {
+            queue.asyncAfter(deadline: .now() + delay + step * Double(index)) {
+                guard self.generation == generation, let node = self.node else { return }
+                let progress = Float(index) / Float(steps)
+                // Equal-power curve, so the fade sounds even.
+                let eased = sin(progress * .pi / 2)
+                node.volume = start + (volume - start) * (volume > start ? eased : 1 - cos(progress * .pi / 2))
+                if index == steps { completion?() }
+            }
+        }
     }
 }
 

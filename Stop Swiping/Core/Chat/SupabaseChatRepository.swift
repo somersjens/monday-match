@@ -1,7 +1,7 @@
 import Foundation
 import Supabase
 
-struct CloudChatMatch: Decodable, Identifiable, Equatable {
+struct CloudChatMatch: Codable, Identifiable, Equatable {
     let id: UUID
     let partnerID: UUID
     let partnerName: String
@@ -21,6 +21,10 @@ struct CloudChatMatch: Decodable, Identifiable, Equatable {
     var endReason: EndReason? = nil
     /// This account broke the match (or reported and broke it).
     var endedByMe = false
+    /// The partner's matching photo in Storage, only while the match is active.
+    var partnerPhotoPath: String? = nil
+    /// The server attested that photo with a live scan.
+    var partnerPhotoVerified = false
 
     /// Why a match ended, as the server records it.
     enum EndReason: String, Codable {
@@ -39,16 +43,19 @@ struct CloudChatMatch: Decodable, Identifiable, Equatable {
         case matchedAt = "matched_at", partnerCard = "partner_card", unreadCount = "unread_count"
         case lastMessageAt = "last_message_at", partnerReadAt = "partner_read_at"
         case endedAt = "ended_at", endReason = "end_reason", endedByMe = "ended_by_me"
+        case partnerPhotoPath = "partner_photo", partnerPhotoVerified = "partner_photo_verified"
     }
     init(id: UUID, partnerID: UUID, partnerName: String, ownScore: Int, partnerScore: Int,
          matchedAt: Date? = nil, partnerCard: String? = nil, unreadCount: Int = 0,
          lastMessageAt: Date? = nil, partnerReadAt: Date? = nil,
-         endedAt: Date? = nil, endReason: EndReason? = nil, endedByMe: Bool = false) {
+         endedAt: Date? = nil, endReason: EndReason? = nil, endedByMe: Bool = false,
+         partnerPhotoPath: String? = nil, partnerPhotoVerified: Bool = false) {
         self.id = id; self.partnerID = partnerID; self.partnerName = partnerName
         self.ownScore = ownScore; self.partnerScore = partnerScore; self.matchedAt = matchedAt
         self.partnerCard = partnerCard; self.unreadCount = unreadCount
         self.lastMessageAt = lastMessageAt; self.partnerReadAt = partnerReadAt
         self.endedAt = endedAt; self.endReason = endReason; self.endedByMe = endedByMe
+        self.partnerPhotoPath = partnerPhotoPath; self.partnerPhotoVerified = partnerPhotoVerified
     }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -65,6 +72,27 @@ struct CloudChatMatch: Decodable, Identifiable, Equatable {
         endedAt = try? c.decodeIfPresent(Date.self, forKey: .endedAt)
         endReason = try? c.decodeIfPresent(EndReason.self, forKey: .endReason)
         endedByMe = (try? c.decodeIfPresent(Bool.self, forKey: .endedByMe)) ?? false
+        partnerPhotoPath = try? c.decodeIfPresent(String.self, forKey: .partnerPhotoPath)
+        partnerPhotoVerified = (try? c.decodeIfPresent(Bool.self, forKey: .partnerPhotoVerified)) ?? false
+    }
+    /// Only for the copy kept on this phone between launches.
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(partnerID, forKey: .partnerID)
+        try c.encode(partnerName, forKey: .partnerName)
+        try c.encode(ownScore, forKey: .ownScore)
+        try c.encode(partnerScore, forKey: .partnerScore)
+        try c.encodeIfPresent(matchedAt, forKey: .matchedAt)
+        try c.encodeIfPresent(partnerCard, forKey: .partnerCard)
+        try c.encode(unreadCount, forKey: .unreadCount)
+        try c.encodeIfPresent(lastMessageAt, forKey: .lastMessageAt)
+        try c.encodeIfPresent(partnerReadAt, forKey: .partnerReadAt)
+        try c.encodeIfPresent(endedAt, forKey: .endedAt)
+        try c.encodeIfPresent(endReason, forKey: .endReason)
+        try c.encode(endedByMe, forKey: .endedByMe)
+        try c.encodeIfPresent(partnerPhotoPath, forKey: .partnerPhotoPath)
+        try c.encode(partnerPhotoVerified, forKey: .partnerPhotoVerified)
     }
 
     var isActive: Bool { endedAt == nil }
@@ -151,6 +179,8 @@ protocol SecureChatRepository {
     func matchHistory() async throws -> [CloudChatMatch]
     func moderation() async throws -> ModerationStatus
     func acknowledgeModeration() async throws
+    /// The partner's matching photo; Storage only allows it during an active match.
+    func partnerPhoto(path: String) async throws -> Data
 }
 
 extension SecureChatRepository {
@@ -163,6 +193,7 @@ extension SecureChatRepository {
     func matchHistory() async throws -> [CloudChatMatch] { [] }
     func moderation() async throws -> ModerationStatus { .init(strikes: 0, strikesSeen: 0, suspendedUntil: nil, banned: false) }
     func acknowledgeModeration() async throws {}
+    func partnerPhoto(path: String) async throws -> Data { throw CancellationError() }
 }
 
 @MainActor
@@ -232,5 +263,8 @@ final class SupabaseChatRepository: SecureChatRepository {
     func markRead(_ matchID: UUID, upTo messageID: Int64) async throws {
         struct Params: Encodable { let p_match_id: UUID; let p_message_id: Int64 }
         try await client.rpc("mark_chat_read",params:Params(p_match_id:matchID,p_message_id:messageID)).execute()
+    }
+    func partnerPhoto(path: String) async throws -> Data {
+        try await client.storage.from(SupabaseProfilePhotoUploader.bucket).download(path: path)
     }
 }

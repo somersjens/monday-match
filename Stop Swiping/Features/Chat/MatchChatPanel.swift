@@ -31,7 +31,8 @@ struct MatchChatPanel: View {
     @FocusState private var composerFocused: Bool
     @State private var showsSecurityCode = false
     @State private var showsDeviceReplacement = false
-    @State private var composerFrame: CGRect = .zero
+    /// Read only when the keyboard opens, so scrolling never redraws the panel.
+    @State private var scrollEdge = ScrollEdgeTracker()
 
     private var visibleMessages: [ChatMessage] { chat.conversation.messages }
 
@@ -123,14 +124,21 @@ struct MatchChatPanel: View {
                     }
                 }
             }
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                geometry.visibleRect.maxY >= geometry.contentSize.height - 24
+            } action: { _, atBottom in
+                scrollEdge.isAtBottom = atBottom
+            }
             .onChange(of: visibleMessages.last?.id) { _, _ in scrollToBottom(proxy) }
             .onChange(of: chat.isPartnerTyping) { _, _ in scrollToBottom(proxy) }
             .onChange(of: composerFocused) { _, focused in
-                if focused {
-                    Task {
-                        try? await Task.sleep(for: .milliseconds(300))
-                        scrollToBottom(proxy)
-                    }
+                // At the bottom, the bottom anchor already keeps the newest
+                // message above the rising keyboard. A second, animated scroll
+                // started halfway through the keyboard's slide made it stutter.
+                guard focused, !scrollEdge.isAtBottom else { return }
+                Task {
+                    try? await Task.sleep(for: .milliseconds(450))
+                    scrollToBottom(proxy)
                 }
             }
         }
@@ -230,11 +238,13 @@ struct MatchChatPanel: View {
 
     private var composer: some View {
         MatchChatComposer(chat: chat, draft: chat.draft, isFocused: $composerFocused)
-            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { composerFrame = $0 }
             .background {
                 // A tap anywhere else on the screen — the gear, the header,
                 // the messages — closes the keyboard and still does its job.
-                KeyboardDismissTap(isActive: composerFocused, excluded: composerFrame) {
+                // It measures the composer itself: a frame kept in state
+                // changed as the keyboard pushed the composer up and redrew
+                // the whole conversation during the keyboard's slide.
+                KeyboardDismissTap(isActive: composerFocused) {
                     composerFocused = false
                 }
                 .allowsHitTesting(false)
@@ -352,12 +362,17 @@ private struct MatchChatComposer: View {
     }
 }
 
+/// Whether the conversation is scrolled to its newest message. A reference,
+/// so updating it while scrolling never redraws the panel.
+private final class ScrollEdgeTracker {
+    var isAtBottom = true
+}
+
 /// Watches every tap in the window while the keyboard is up and calls
-/// `dismiss` for those outside `excluded` (in window coordinates). It never
-/// cancels the touch, so the button or gear that was tapped still works.
+/// `dismiss` for those outside the view it sits behind. It never cancels
+/// the touch, so the button or gear that was tapped still works.
 private struct KeyboardDismissTap: UIViewRepresentable {
     var isActive: Bool
-    var excluded: CGRect
     var dismiss: () -> Void
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -366,12 +381,12 @@ private struct KeyboardDismissTap: UIViewRepresentable {
         let view = WindowAnchor()
         view.isUserInteractionEnabled = false
         view.coordinator = context.coordinator
+        context.coordinator.anchor = view
         return view
     }
 
     func updateUIView(_ view: WindowAnchor, context: Context) {
         context.coordinator.isActive = isActive
-        context.coordinator.excluded = excluded
         context.coordinator.dismiss = dismiss
     }
 
@@ -389,8 +404,9 @@ private struct KeyboardDismissTap: UIViewRepresentable {
 
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
         var isActive = false
-        var excluded: CGRect = .zero
         var dismiss: () -> Void = {}
+        /// Sized to the composer, so its bounds are the area left alone.
+        weak var anchor: UIView?
 
         private lazy var recognizer: UITapGestureRecognizer = {
             let recognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
@@ -411,7 +427,8 @@ private struct KeyboardDismissTap: UIViewRepresentable {
         }
 
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-            isActive && !excluded.contains(touch.location(in: gestureRecognizer.view))
+            guard isActive, let anchor else { return false }
+            return !anchor.bounds.contains(touch.location(in: anchor))
         }
 
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
