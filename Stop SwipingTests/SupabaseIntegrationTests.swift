@@ -321,6 +321,74 @@ final class SupabaseIntegrationTests: XCTestCase {
         XCTAssertEqual(profileSaves(), 3)
     }
 
+    func testMatchingProfileIsConfirmedAgainAfterFourWeeks() async throws {
+        let response = try sessionData()
+        let requests = SupabaseTestRequests()
+        SupabaseTestURLProtocol.handler = { request in
+            requests.append(request)
+            if request.url!.path == "/auth/v1/token" { return (200, response) }
+            return request.httpMethod == "GET" ? (200, Data("[]".utf8)) : (201, Data())
+        }
+        let (client, _) = makeClient()
+        let suite = "supabase-test.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let state = matchingState()
+        let store = InMemoryProfileCreationStore(state: state)
+        var draft = ProfileDraft()
+        draft.displayName = state.displayName
+        draft.profileCreationCompletedAt = state.completedAt
+        let repository = InMemoryProfileRepository(profile: draft)
+        _ = try await SupabaseAuthService(client: client, profileSync: SupabaseProfileSync(
+            client: client, projectURL: projectURL, repository: repository, store: store, defaults: defaults))
+            .signInWithApple(payload: .init(identityToken: "apple-id-token", rawNonce: "nonce", fullName: nil))
+        func profileSaves() -> Int {
+            requests.all.filter { $0.url?.path == "/rest/v1/profiles" && $0.httpMethod == "POST" }.count
+        }
+        XCTAssertEqual(profileSaves(), 1)
+
+        func sync(after days: Double) -> SupabaseProfileSync {
+            SupabaseProfileSync(client: client, projectURL: projectURL, repository: repository, store: store,
+                                defaults: defaults, now: { Date().addingTimeInterval(days * 86_400) })
+        }
+        try await sync(after: 27).synchronizeMatchingProfile()
+        XCTAssertEqual(profileSaves(), 1, "Within four weeks the server's copy is trusted.")
+        // After that the server may have cleaned up, and it should hear that
+        // the profile is still in use.
+        try await sync(after: 29).synchronizeMatchingProfile()
+        XCTAssertEqual(profileSaves(), 2)
+        try await sync(after: 29).synchronizeMatchingProfile()
+        XCTAssertEqual(profileSaves(), 2, "Confirmed again, so not sent a third time.")
+    }
+
+    func testProfileOutsideMatchingIsNotConfirmedAgain() async throws {
+        let response = try sessionData()
+        let requests = SupabaseTestRequests()
+        SupabaseTestURLProtocol.handler = { request in
+            requests.append(request)
+            if request.url!.path == "/auth/v1/token" { return (200, response) }
+            return request.httpMethod == "GET" ? (200, Data("[]".utf8)) : (201, Data())
+        }
+        let (client, _) = makeClient()
+        let suite = "supabase-test.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let state = completedState()
+        let store = InMemoryProfileCreationStore(state: state)
+        var draft = ProfileDraft()
+        draft.displayName = state.displayName
+        draft.profileCreationCompletedAt = state.completedAt
+        let repository = InMemoryProfileRepository(profile: draft)
+        _ = try await SupabaseAuthService(client: client, profileSync: SupabaseProfileSync(
+            client: client, projectURL: projectURL, repository: repository, store: store, defaults: defaults))
+            .signInWithApple(payload: .init(identityToken: "apple-id-token", rawNonce: "nonce", fullName: nil))
+        let saves = requests.all.filter { $0.url?.path == "/rest/v1/profiles" && $0.httpMethod == "POST" }.count
+        try await SupabaseProfileSync(client: client, projectURL: projectURL, repository: repository, store: store,
+            defaults: defaults, now: { Date().addingTimeInterval(60 * 86_400) }).synchronizeMatchingProfile()
+        XCTAssertEqual(requests.all.filter { $0.url?.path == "/rest/v1/profiles" && $0.httpMethod == "POST" }.count,
+                       saves, "A profile outside matching stays on the phone.")
+    }
+
     /// A profile that takes part in automatic matching, as it survives storage.
     private func matchingState() -> ProfileCreationState {
         var state = completedState()

@@ -64,6 +64,10 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
     private var conversation: NotificationContext.Conversation?
     private var lastMatchAt: Date?
     private var knownActiveMatch: UUID?
+    /// The active match's name, for the Notification Service Extension.
+    private var activeMatchName: String?
+    /// The app group the extension reads (`PushPreview`); nil in tests.
+    private let previewDefaults: UserDefaults?
     private var pushToken: String?
     private var registeredFingerprint: String?
 
@@ -78,7 +82,10 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
          policy: NotificationPolicy? = nil,
          calendar: Calendar = .autoupdatingCurrent,
          language: (() -> AppLanguage)? = nil,
+         previewDefaults: UserDefaults? = nil,
          now: @escaping () -> Date = Date.init) {
+        self.previewDefaults = previewDefaults
+            ?? (defaults === UserDefaults.standard ? UserDefaults(suiteName: PushPreview.appGroup) : nil)
         self.language = language ?? { AppLanguageSettings.shared.language }
         self.center = center ?? SystemNotificationCenter()
         self.loadProfile = loadProfile
@@ -133,7 +140,7 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
         guard hasAccount != self.hasAccount || earlyAccessReminderAt != self.earlyAccessReminderAt else { return }
         self.hasAccount = hasAccount
         self.earlyAccessReminderAt = earlyAccessReminderAt
-        if !hasAccount { conversation = nil; knownActiveMatch = nil }
+        if !hasAccount { conversation = nil; knownActiveMatch = nil; activeMatchName = nil }
         scheduleSync()
     }
 
@@ -152,6 +159,7 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
                 ledgerStore.save(ledger)
             }
             knownActiveMatch = match.id
+            activeMatchName = match.partnerName
             let fromPartner = messages.filter { $0.sender == .match }
             let fromMe = messages.filter { $0.sender == .currentUser }
             let last = messages.filter { $0.sender != .system }.max { $0.sentAt < $1.sentAt }
@@ -169,6 +177,7 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
                 matchEnded(record)
             }
             knownActiveMatch = nil
+            activeMatchName = nil
             conversation = nil
         }
         scheduleSync()
@@ -312,7 +321,22 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
             needsAnotherSync = false
             await syncOnce()
         } while needsAnotherSync
+        PushPreview.save(pushPreviewSnapshot(), to: previewDefaults)
         await syncPushDevice()
+    }
+
+    /// What the Notification Service Extension may put on the lock screen:
+    /// the active match's name, only with an account and previews on.
+    func pushPreviewSnapshot() -> PushPreview.Snapshot? {
+        guard hasAccount, preferences.messagePreviews, let match = knownActiveMatch,
+              let name = activeMatchName?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty
+        else { return nil }
+        func templates(_ flavor: String) -> [PushPreview.Template] {
+            NotificationCopy.templates(for: .init(.messageNew, flavor), language: language())
+                .map { PushPreview.Template(id: $0.id, title: $0.title, body: $0.body) }
+        }
+        return PushPreview.Snapshot(names: [match.uuidString.lowercased(): name],
+                                    single: templates("preview"), batch: templates("preview_batch"))
     }
 
     private func syncOnce() async {

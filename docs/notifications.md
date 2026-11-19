@@ -31,7 +31,7 @@ goal: make people smile and tap, without making them want to mute the app.
                                                                                       ▼
  matches / encrypted_messages / match_read_states ─► triggers ─► notification_private.outbox
                                                                      │ (coalesced per thread)
-                                       pg_cron (15 s) ─► push-dispatch edge function ─► APNs
+                                       pg_cron (15 s) ─► push-dispatch edge function ─► APNs (iOS) / FCM (Android)
 ```
 
 * **One planner, one place for rules.** Every local notification comes out of
@@ -134,7 +134,7 @@ and errors, where clarity matters more than surprise.
 | Compatibility result ready | **Unsupported / unnecessary.** The result shows on both phones the moment the exchange completes. |
 | Auto-matching paused / reactivated / disabled | Partly covered: paused by outdated consent (#7) or missing preferences (A1). Switching it off or on is the user's own action, so it is not notified. Suspension is shown in the app's existing moderation alert, never pushed. |
 | Recoverable error | Covered where it helps: unsent messages (A2). Profile sync failures already show on the home screen with a retry; a push would not fix them. |
-| Real message text in pushes | **Optional, needs a Notification Service Extension** that shares the chat keys through a Keychain access group and decrypts on the device. Server pushes already set `mutable-content`, so the extension can be added later without server changes. |
+| Real message text in pushes | **Optional.** The Notification Service Extension (`Stop Swiping Notifications`) exists and adds the name; to show text too, the sender's phone would seal a short preview to the recipient's device key (the chat's HPKE), the server would pass that opaque blob along, and the extension would open it with the chat key shared through a Keychain access group. Android's data-message handler would do the same. |
 
 ## 4. Flow
 
@@ -211,6 +211,14 @@ kept when two would land together.
 ### Privacy on the lock screen
 
 * Names appear only in message notifications, and only with previews on.
+* **No name ever travels in a push** (since 19 November 2026,
+  `202611190010_push_platforms.sql`). Apple (APNs) and Google (FCM) can read
+  every payload, so the server sends only kind, match, count and whether
+  previews are on. The phone fills in the name itself: on iOS the
+  Notification Service Extension reads the active match's name that
+  `NotificationEngine` leaves in the app group `group.Hakketjak.monday-match`
+  (`PushPreview`); Android will do the same in its data-message handler. If
+  the extension doesn't know the match, the plain "New message" stays.
 * No reminder mentions a score, a name, a coworker, a reason or who ended
   anything. Copy says "a match" and "someone", never "likes".
 * Message text never reaches the server; even with previews on, a server push
@@ -231,10 +239,11 @@ kept when two would land together.
 | Rules | `Core/Notifications/NotificationPlanner.swift` |
 | Deep links | `Core/Notifications/NotificationDestination.swift` |
 | Orchestration, UN sync, delegate, push token | `Core/Notifications/NotificationEngine.swift`, `PushDeviceRegistration.swift` |
+| Names on the lock screen (shared with the extension) | `Core/Notifications/PushPreview.swift`, `Stop Swiping Notifications/NotificationService.swift` |
 | Settings screen and in-app banner | `Features/Notifications/` |
-| Server tables, coalescing, RPCs | `supabase/migrations/202611160002_push_notifications.sql` |
-| APNs sender | `supabase/functions/push-dispatch/` |
-| Tests | `Stop SwipingTests/NotificationPlannerTests.swift`, `NotificationEngineTests.swift`, `supabase/tests/push_notifications.sql` |
+| Server tables, coalescing, RPCs | `supabase/migrations/202611160002_push_notifications.sql`, `202611190010_push_platforms.sql` (platform, no names) |
+| APNs and FCM sender | `supabase/functions/push-dispatch/` |
+| Tests | `Stop SwipingTests/NotificationPlannerTests.swift`, `NotificationEngineTests.swift`, `PushPreviewTests.swift`, `supabase/tests/push_notifications.sql`, `supabase/functions/push-dispatch/policy_test.ts` |
 
 Copy for the three server-sent kinds lives in
 `supabase/functions/push-dispatch/copy.json`; `NotificationCopyTests` fails if
@@ -264,22 +273,34 @@ Done on 18 November 2026:
   once the Vault secret exists and a push is due, so an idle project makes no
   calls. A daily `push-prune` job clears old outbox rows and pg_cron's run log.
 
-Still to do, by hand (secrets never go through Claude):
+Set up by hand (secrets never go through Claude). Checked 19 November 2026:
 
-1. Create an APNs auth key (Apple Developer → Keys → Apple Push Notifications
-   service). Add Supabase function secrets `APNS_KEY_ID`, `APNS_PRIVATE_KEY`
-   (the .p8 contents) and `PUSH_DISPATCH_SECRET` (a long random string).
-   `APPLE_TEAM_ID` is already set for `apple-revoke`.
-2. Store the same dispatch secret in Vault from the SQL Editor:
+1. Done 18 November 2026: APNs auth key "Stop Swiping Push"; function secrets
+   `APNS_KEY_ID`, `APNS_PRIVATE_KEY` and `PUSH_DISPATCH_SECRET`
+   (`APPLE_TEAM_ID` was already set for `apple-revoke`).
+2. Done 18 November 2026: the same dispatch secret is in Vault as
+   `push_dispatch_secret` (its SHA-256 matches the function secret's digest).
+   To replace it later, change both:
 
    ```sql
-   select vault.create_secret('<PUSH_DISPATCH_SECRET>', 'push_dispatch_secret');
+   select vault.update_secret((select id from vault.secrets where name = 'push_dispatch_secret'), '<PUSH_DISPATCH_SECRET>');
    ```
-3. Turn "Verify JWT with legacy secret" **off** for `push-dispatch`
-   (Edge Functions → push-dispatch → Settings). pg_cron sends no JWT; the
-   function checks `PUSH_DISPATCH_SECRET` itself.
-4. Switch `aps-environment` to `production` for App Store builds (the app sends
-   `sandbox` from debug builds and `production` otherwise).
+3. Done: "Verify JWT with legacy secret" is **off** for `push-dispatch`.
+   pg_cron sends no JWT; the function checks `PUSH_DISPATCH_SECRET` itself.
+4. `aps-environment` is in `Account.entitlements` as `development` (it was
+   missing from the entitlements file the app actually uses until 19 November
+   2026, so no device could get a token). Xcode switches it to `production`
+   when exporting for the App Store; the app sends `sandbox` from debug
+   builds and `production` otherwise.
+5. Done 19 November 2026: `202611190010_push_platforms.sql` and the new
+   `push-dispatch` are live; `supabase/tests/push_notifications.sql` passed
+   again (38 checks). Older app builds keep working: they register as iOS and
+   show the plain copy until updated.
+6. Android, later: create a Firebase project for the Android app and add its
+   service-account JSON as the function secret `FCM_SERVICE_ACCOUNT` (role
+   "Firebase Cloud Messaging API Admin"). Without it, Android rows end as
+   `fcm_not_configured` and iOS is unaffected.
 
-Until then the app's local notifications work on their own; new matches and
-messages are noticed when the app is opened, as before.
+No device had registered on 19 November 2026 (no token was possible before
+the `aps-environment` fix), so the first real push needs a build with that
+entitlement on an iPhone.

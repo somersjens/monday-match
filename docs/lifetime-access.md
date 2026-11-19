@@ -75,3 +75,26 @@ across app accounts/devices requires a server to verify Apple's signed transacti
 store the first claim by authenticated user and original transaction ID, record
 profile completion against server time, and return that entitlement to every device.
 Do not use client-writable profile fields as a trusted entitlement ledger.
+
+## Server record (19 November 2026)
+
+Lifetime access is now also recorded per account on the server, so it can
+follow the person to another phone or, later, to the Android app.
+
+- After sign-in, and after any purchase, restore or refund, the app sends
+  StoreKit's signed transactions (`jwsRepresentation`) to the
+  `store-entitlement` edge function (`StoreEntitlementSync`). It sends nothing
+  when the set of transactions is unchanged since the last accepted upload.
+- The function verifies the signature itself: the x5c chain must end in Apple
+  Root CA - G3 (pinned by SHA-256), each certificate must be valid when Apple
+  signed, the leaf must carry Apple's receipt-signing OID, and the bundle ID,
+  product and type (non-consumable) must match. Local Xcode StoreKit test
+  transactions are refused (they aren't signed by Apple).
+- `public.store_entitlements` keeps one row per store purchase. The first
+  account that records a purchase owns it; another account gets
+  `other_account`. Refunds only ever move forward (`revoked_at`).
+- `my_store_entitlements()` returns what the signed-in account owns. The iPhone
+  still decides access from StoreKit; the Android app will read this.
+- Google Play purchases will go into the same table with `store = 'play'`,
+  verified with the Play Developer API. Play has no free in-app products, so
+  the early-adopter offer needs a promo code or a server-side grant there.

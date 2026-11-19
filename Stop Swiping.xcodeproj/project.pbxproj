@@ -8,9 +8,17 @@
 
 /* Begin PBXBuildFile section */
 		CD8820010000000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = CD8820010000000000000002 /* Supabase */; };
+		CD8820020000000000000001 /* Stop Swiping Notifications.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CD8820020000000000000003 /* Stop Swiping Notifications.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		CD8820020000000000000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F9D98B632FE9028200B20CE0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CD8820020000000000000009;
+			remoteInfo = "Stop Swiping Notifications";
+		};
 		F9D98B7D2FE9028300B20CE0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F9D98B632FE9028200B20CE0 /* Project object */;
@@ -27,13 +35,42 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		CD882002000000000000000B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				CD8820020000000000000001 /* Stop Swiping Notifications.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		CD8820020000000000000003 /* Stop Swiping Notifications.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Stop Swiping Notifications.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9D98B6B2FE9028200B20CE0 /* Stop Swiping.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Stop Swiping.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9D98B7C2FE9028300B20CE0 /* Stop SwipingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Stop SwipingTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9D98B862FE9028300B20CE0 /* Stop SwipingUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Stop SwipingUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		CD8820020000000000000004 /* Exceptions for "Stop Swiping Notifications" folder in "Stop Swiping Notifications" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CD8820020000000000000009 /* Stop Swiping Notifications */;
+		};
+		CD882002000000000000000F /* Exceptions for "Stop Swiping" folder in "Stop Swiping Notifications" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Core/Notifications/PushPreview.swift,
+			);
+			target = CD8820020000000000000009 /* Stop Swiping Notifications */;
+		};
 		F9D98B8E2FE9028300B20CE0 /* Exceptions for "Stop Swiping" folder in "Stop Swiping" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -44,10 +81,19 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		CD8820020000000000000005 /* Stop Swiping Notifications */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CD8820020000000000000004 /* Exceptions for "Stop Swiping Notifications" folder in "Stop Swiping Notifications" target */,
+			);
+			path = "Stop Swiping Notifications";
+			sourceTree = "<group>";
+		};
 		F9D98B6D2FE9028200B20CE0 /* Stop Swiping */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				F9D98B8E2FE9028300B20CE0 /* Exceptions for "Stop Swiping" folder in "Stop Swiping" target */,
+				CD882002000000000000000F /* Exceptions for "Stop Swiping" folder in "Stop Swiping Notifications" target */,
 			);
 			path = "Stop Swiping";
 			sourceTree = "<group>";
@@ -65,6 +111,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		CD8820020000000000000006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F9D98B682FE9028200B20CE0 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -96,6 +149,7 @@
 				F9D98B6D2FE9028200B20CE0 /* Stop Swiping */,
 				F9D98B7F2FE9028300B20CE0 /* Stop SwipingTests */,
 				F9D98B892FE9028300B20CE0 /* Stop SwipingUITests */,
+				CD8820020000000000000005 /* Stop Swiping Notifications */,
 				F9D98B6C2FE9028200B20CE0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -106,6 +160,7 @@
 				F9D98B6B2FE9028200B20CE0 /* Stop Swiping.app */,
 				F9D98B7C2FE9028300B20CE0 /* Stop SwipingTests.xctest */,
 				F9D98B862FE9028300B20CE0 /* Stop SwipingUITests.xctest */,
+				CD8820020000000000000003 /* Stop Swiping Notifications.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -113,6 +168,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		CD8820020000000000000009 /* Stop Swiping Notifications */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CD882002000000000000000E /* Build configuration list for PBXNativeTarget "Stop Swiping Notifications" */;
+			buildPhases = (
+				CD8820020000000000000007 /* Sources */,
+				CD8820020000000000000006 /* Frameworks */,
+				CD8820020000000000000008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CD8820020000000000000005 /* Stop Swiping Notifications */,
+			);
+			name = "Stop Swiping Notifications";
+			packageProductDependencies = (
+			);
+			productName = "Stop Swiping Notifications";
+			productReference = CD8820020000000000000003 /* Stop Swiping Notifications.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		F9D98B6A2FE9028200B20CE0 /* Stop Swiping */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F9D98B8F2FE9028300B20CE0 /* Build configuration list for PBXNativeTarget "Stop Swiping" */;
@@ -120,10 +197,12 @@
 				F9D98B672FE9028200B20CE0 /* Sources */,
 				F9D98B682FE9028200B20CE0 /* Frameworks */,
 				F9D98B692FE9028200B20CE0 /* Resources */,
+				CD882002000000000000000B /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				CD882002000000000000000A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F9D98B6D2FE9028200B20CE0 /* Stop Swiping */,
@@ -192,6 +271,9 @@
 				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
+					CD8820020000000000000009 = {
+						CreatedOnToolsVersion = 26.1.1;
+					};
 					F9D98B6A2FE9028200B20CE0 = {
 						CreatedOnToolsVersion = 26.1.1;
 					};
@@ -226,11 +308,19 @@
 				F9D98B6A2FE9028200B20CE0 /* Stop Swiping */,
 				F9D98B7B2FE9028300B20CE0 /* Stop SwipingTests */,
 				F9D98B852FE9028300B20CE0 /* Stop SwipingUITests */,
+				CD8820020000000000000009 /* Stop Swiping Notifications */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		CD8820020000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F9D98B692FE9028200B20CE0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -255,6 +345,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		CD8820020000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F9D98B672FE9028200B20CE0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -279,6 +376,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		CD882002000000000000000A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CD8820020000000000000009 /* Stop Swiping Notifications */;
+			targetProxy = CD8820020000000000000002 /* PBXContainerItemProxy */;
+		};
 		F9D98B7E2FE9028300B20CE0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F9D98B6A2FE9028200B20CE0 /* Stop Swiping */;
@@ -292,6 +394,68 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		CD882002000000000000000C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "Stop Swiping Notifications/Notifications.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4283ACUG4Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Stop Swiping Notifications/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Stop Swiping Notifications";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Hakketjak.monday-match.notifications";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CD882002000000000000000D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "Stop Swiping Notifications/Notifications.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4283ACUG4Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Stop Swiping Notifications/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Stop Swiping Notifications";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Hakketjak.monday-match.notifications";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		F9D98B902FE9028300B20CE0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -627,6 +791,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		CD882002000000000000000E /* Build configuration list for PBXNativeTarget "Stop Swiping Notifications" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CD882002000000000000000C /* Debug */,
+				CD882002000000000000000D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		F9D98B662FE9028200B20CE0 /* Build configuration list for PBXProject "Stop Swiping" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -60,6 +60,15 @@ struct SupabaseProfilePhotoUploader: ProfilePhotoUploading {
         _ = try await client.storage.from(Self.bucket).remove(paths: stale.map { "\(userID.lowercased())/\($0.name)" })
     }
 
+    /// The photo IDs this account has in Storage right now.
+    func storedPhotoIDs(userID: String) async throws -> Set<UUID> {
+        let files = try await client.storage.from(Self.bucket).list(path: userID.lowercased(),
+                                                                   options: SearchOptions(limit: 1000))
+        return Set(files.compactMap { file in
+            file.id == nil ? nil : UUID(uuidString: String(file.name.dropLast(file.name.hasSuffix(".jpg") ? 4 : 0)))
+        })
+    }
+
     enum PhotoUploadError: LocalizedError {
         case changedIdentity
         var errorDescription: String? { L10n("This photo changed on another device. Select it again to upload a new photo.") }

@@ -115,10 +115,13 @@ struct ChatView: View {
         .sheet(isPresented: $showsSecurityCode) { securitySheet }
         .task(id: scenePhase == .active) {
             guard viewModel.isLive, scenePhase == .active else { return }
+            viewModel.isOnScreen = true
+            viewModel.noteActivity()
+            defer { viewModel.isOnScreen = false }
             while !Task.isCancelled {
                 await viewModel.refresh()
                 if viewModel.conversation.isClosed { return }
-                do { try await Task.sleep(for: .seconds(3)) } catch { return }
+                do { try await Task.sleep(for: viewModel.pollInterval) } catch { return }
             }
         }
         .sheet(

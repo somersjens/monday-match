@@ -7,3 +7,15 @@ verify_jwt = false
 # check rejects. The function verifies the caller itself with auth.getUser.
 [functions.apple-revoke]
 verify_jwt = false
+
+# Called by pg_cron only, with the X-Retention-Secret header.
+[functions.retention-purge]
+verify_jwt = false
+
+# Called by the app with the user's ECC-signed token; checked with auth.getUser.
+[functions.store-entitlement]
+verify_jwt = false
+
+# Called by the app with the user's ECC-signed token; checked with auth.getUser.
+[functions.app-attest]
+verify_jwt = false

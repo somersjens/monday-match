@@ -76,8 +76,9 @@ struct AppCoordinatorView: View {
             codeInbox.open(url, isProfileReady: dependencies.profileCreationStore.load()?.canShareProfile == true)
         }
         .task {
-            appState.willSignOut = { [notifications] in
-                LiveMatchCenter.clearCache()
+            appState.willSignOut = { [notifications, access] in
+                LiveMatchCenter.clearAccountCache()
+                access.disconnectServer()
                 await notifications.accountSignedOut()
             }
         }
@@ -88,6 +89,11 @@ struct AppCoordinatorView: View {
         .task(id: notificationAccountState) {
             notifications.update(hasAccount: notificationAccountState.hasAccount,
                                  earlyAccessReminderAt: notificationAccountState.earlyAccessReminderAt)
+        }
+        .task(id: notificationAccountState.hasAccount) {
+            // Lifetime access then belongs to the account, not only this iPhone.
+            guard notificationAccountState.hasAccount else { return }
+            await access.connectServer(dependencies.storeEntitlements)
         }
         .task {
             guard appState.sessionState == .loading else { return }

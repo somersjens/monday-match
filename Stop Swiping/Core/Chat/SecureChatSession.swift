@@ -14,6 +14,10 @@ final class SecureChatSession {
     private var cursor: Int64?
     private var received: [UUID: ChatMessage] = [:]
     private var isBusy = false
+    /// The key bundles' fingerprint when they were last read in full.
+    private var bundleFingerprint: String?
+    /// When the newest message the partner has read was sent, from the last poll.
+    private(set) var partnerReadAt: Date?
     private(set) var needsDeviceReplacement = false
     private(set) var needsKeyConfirmation = false
     private(set) var isClosed = false
@@ -103,21 +107,30 @@ final class SecureChatSession {
         guard !isBusy else { return received.values.sorted { $0.sentAt < $1.sentAt } }
         isBusy=true; defer { isBusy=false }
         try await identity()
-        isClosed=try await repository.isClosed(match.id)
+        // One request: match state, key fingerprint, read receipt and the
+        // first page of new messages.
+        let poll=try await repository.poll(match.id,after:cursor)
+        isClosed=poll.closed
+        if let read=poll.partnerReadAt { partnerReadAt=read }
         if !isClosed {
-            if currentPeer==nil { try await prepare() } else { try await refreshBundles() }
+            if currentPeer==nil { try await prepare() }
+            else if poll.keys==nil || poll.keys != bundleFingerprint { try await refreshBundles() }
+            // Only once the bundles were read successfully.
+            bundleFingerprint=poll.keys
         }
         guard let ownID, let state else { return [] }
+        var sent=false
         if !isClosed && isReady {
             for pending in state.pending {
                 // Never silently redirect a queued ciphertext after device rotation.
                 guard pending.senderDeviceID==self.state?.deviceID, pending.recipientDeviceID==currentPeer?.deviceID else { throw SecureChatError.keyChanged }
                 try await repository.send(match.id,pending:pending)
                 self.state?.pending.removeAll { $0.id==pending.id }; try save()
+                sent=true
             }
         }
         // Fetch only the latest page on first open, then drain new pages in order.
-        var page=try await repository.messages(match.id,after:cursor)
+        var page=poll.messages
         repeat {
             for row in page {
                 let message: ChatMessage
@@ -130,7 +143,10 @@ final class SecureChatSession {
             }
             let next=page.map(\.id).max()
             if let next { cursor=max(cursor ?? 0,next) }
-            guard page.count==100, next != nil else { break }
+            // A full page means more are waiting; a message just sent is
+            // fetched straight away, so it shows as delivered.
+            guard page.count==100 || sent else { break }
+            sent=false
             page=try await repository.messages(match.id,after:cursor)
         } while !page.isEmpty
         return received.values.sorted { $0.sentAt < $1.sentAt }

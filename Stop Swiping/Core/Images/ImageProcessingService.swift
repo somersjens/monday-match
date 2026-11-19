@@ -26,8 +26,11 @@ nonisolated struct ImageProcessingService: Sendable {
     let compressionQuality: CGFloat
 
     init(
-        maximumDimension: CGFloat = 1600,
-        compressionQuality: CGFloat = 0.82
+        // A matching photo is shown on a phone-sized card: 1080 px is sharp
+        // there at about half the bytes of 1600 px, in Storage and on every
+        // download by a match.
+        maximumDimension: CGFloat = 1080,
+        compressionQuality: CGFloat = 0.78
     ) {
         self.maximumDimension = maximumDimension
         self.compressionQuality = compressionQuality

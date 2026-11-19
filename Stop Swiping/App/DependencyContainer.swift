@@ -11,6 +11,8 @@ struct DependencyContainer {
     var photoVerification: PhotoVerificationService?
     /// Registers this phone for pushes about matches and messages.
     var pushRegistration: PushDeviceRegistering?
+    /// Records lifetime access against the account, verified by the server.
+    var storeEntitlements: StoreEntitlementRecording?
 
     @MainActor
     var profileDeletion: ProfileDeletionService {
@@ -40,6 +42,7 @@ struct DependencyContainer {
                                    profileRepository: repository, profileCreationStore: store, profileSync: sync,
                                    chatRepository: SupabaseChatRepository(client: client, projectURL: configuration.url),
                                    photoVerification: PhotoVerificationService(client: client, profileSync: sync),
-                                   pushRegistration: SupabasePushDeviceRegistration(client: client))
+                                   pushRegistration: SupabasePushDeviceRegistration(client: client),
+                                   storeEntitlements: SupabaseStoreEntitlementRecorder(client: client))
     }
 }

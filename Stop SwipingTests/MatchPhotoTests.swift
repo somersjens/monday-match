@@ -108,15 +108,120 @@ final class MatchPhotoTests: XCTestCase {
         state.completedAt = Date()
         return state
     }
+
+    func testPushAsksTheServerAtOnceInsteadOfWaitingForTheNextPoll() async throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "MatchPhotoTests-\(UUID())"))
+        let repository = PhotoRepository()
+        let center = LiveMatchCenter(repository: repository, defaults: defaults,
+                                     pushesArePermitted: { true }, serverPushDelivered: { _ in false })
+        let you = Self.profile("Emma")
+        let polling = Task { await center.run { you } }
+        defer { polling.cancel() }
+        try await Self.waitFor(1) { repository.currentMatchCalls }
+        // A push: asked at once. Pushes now count as working, so there is
+        // no timer at all without a match.
+        center.wake()
+        try await Self.waitFor(2) { repository.currentMatchCalls }
+        try await Task.sleep(for: .milliseconds(200))
+        XCTAssertEqual(repository.currentMatchCalls, 2, "No polling in between")
+    }
+
+    func testComingBackToTheAppAsksOnlyWhenSomethingArrived() async throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "MatchPhotoTests-\(UUID())"))
+        let repository = PhotoRepository()
+        var delivered = false
+        func open() async throws {
+            let center = LiveMatchCenter(repository: repository, defaults: defaults,
+                                         pushesArePermitted: { true }, serverPushDelivered: { _ in delivered })
+            let polling = Task { await center.run { Self.profile("Emma") } }
+            try await Task.sleep(for: .milliseconds(100))
+            center.wake()   // marks pushes as working
+            try await Task.sleep(for: .milliseconds(100))
+            polling.cancel()
+            _ = await polling.value
+        }
+        try await open()
+        let afterFirst = repository.currentMatchCalls
+        XCTAssertEqual(afterFirst, 2, "First launch asks; the push asks again")
+        // Back within six hours, nothing new on the lock screen: no request.
+        let quiet = LiveMatchCenter(repository: repository, defaults: defaults,
+                                    pushesArePermitted: { true }, serverPushDelivered: { _ in delivered })
+        let polling = Task { await quiet.run { Self.profile("Emma") } }
+        try await Task.sleep(for: .milliseconds(150))
+        polling.cancel(); _ = await polling.value
+        XCTAssertEqual(repository.currentMatchCalls, afterFirst)
+        // A server notification was delivered while the app was closed: ask.
+        delivered = true
+        let told = LiveMatchCenter(repository: repository, defaults: defaults,
+                                   pushesArePermitted: { true }, serverPushDelivered: { _ in delivered })
+        let again = Task { await told.run { Self.profile("Emma") } }
+        try await Self.waitFor(afterFirst + 1) { repository.currentMatchCalls }
+        again.cancel(); _ = await again.value
+    }
+
+    func testActiveMatchListensInsteadOfPolling() async throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "MatchPhotoTests-\(UUID())"))
+        let repository = PhotoRepository()
+        let partner = UUID()
+        repository.current = CloudChatMatch(id: UUID(), partnerID: partner, partnerName: "Mila", ownScore: 80,
+                                            partnerScore: 84, matchedAt: Date())
+        let center = LiveMatchCenter(repository: repository, defaults: defaults,
+                                     pushesArePermitted: { false }, serverPushDelivered: { _ in false })
+        let polling = Task { await center.run { Self.profile("Emma") } }
+        defer { polling.cancel() }
+        try await Self.waitFor(1) { repository.follows }
+        XCTAssertTrue(center.chat?.isFollowedLive == true)
+        let asked = repository.currentMatchCalls
+        let polled = repository.polls
+
+        // The partner wrote: only the conversation is fetched.
+        repository.signal?(MatchSignal(kind: .message, by: partner))
+        try await Self.waitFor(polled + 1) { repository.polls }
+        // This phone's own message needs no news.
+        repository.signal?(MatchSignal(kind: .message, by: UUID()))
+        try await Task.sleep(for: .milliseconds(150))
+        XCTAssertEqual(repository.polls, polled + 1)
+        XCTAssertEqual(repository.currentMatchCalls, asked, "No current_match for a message")
+
+        // The match ended: asked once, and the line is closed.
+        repository.current = nil
+        repository.signal?(MatchSignal(kind: .ended, by: nil))
+        try await Self.waitFor(asked + 1) { repository.currentMatchCalls }
+        try await Self.waitFor(1) { repository.stops }
+        XCTAssertNil(center.match)
+    }
+
+    private static func waitFor(_ value: Int, _ read: () -> Int) async throws {
+        for _ in 0..<300 where read() < value { try await Task.sleep(for: .milliseconds(10)) }
+        XCTAssertEqual(read(), value)
+    }
 }
 
 @MainActor
 private final class PhotoRepository: SecureChatRepository {
+    var currentMatchCalls = 0
+    var polls = 0, follows = 0, stops = 0
+    var signal: (@MainActor (MatchSignal) -> Void)?
+    private final class Line: MatchFollowing {
+        let onStop: () -> Void
+        init(onStop: @escaping () -> Void) { self.onStop = onStop }
+        func stop() async { onStop() }
+    }
+    func follow(_ matchID: UUID, onSignal: @escaping @MainActor (MatchSignal) -> Void) async throws -> MatchFollowing? {
+        follows += 1
+        signal = onSignal
+        return Line { [weak self] in self?.stops += 1 }
+    }
+    func poll(_ matchID: UUID, after: Int64?) async throws -> ChatPoll {
+        polls += 1
+        return ChatPoll(closed: current?.id != matchID, keys: "k", partnerReadAt: nil, messages: [])
+    }
     let scope = "photo-test-" + UUID().uuidString
     var current: CloudChatMatch?
     var downloads: [String] = []
-    func userID() async throws -> UUID { UUID() }
-    func currentMatch() async throws -> CloudChatMatch? { current }
+    let ownID = UUID()
+    func userID() async throws -> UUID { ownID }
+    func currentMatch() async throws -> CloudChatMatch? { currentMatchCalls += 1; return current }
     func isClosed(_ matchID: UUID) async throws -> Bool { current?.id != matchID }
     func bundles(_ matchID: UUID) async throws -> [CloudChatBundle] { [] }
     func register(_ matchID: UUID, deviceID: UUID, key: Data, replace: Bool) async throws {}

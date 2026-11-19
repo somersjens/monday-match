@@ -316,7 +316,9 @@ struct MatchResultOverlay: View {
                 // A broken server match can still be reported, whoever broke it.
                 BrokenMatchMenu(onReport: { reportReason = $0 }, onClose: onClose)
                     .transition(.opacity)
-            } else if match.isBroken || (isSaved && !match.isLive) {
+            } else if (match.isBroken || (isSaved && !match.isLive)) && onRestartDemo != nil {
+                // Elsewhere a saved match has its Close button at the bottom;
+                // only the demo's own buttons offer no way out.
                 Button(action: onClose) {
                     Image(systemName: "xmark")
                         .font(.system(size: 18, weight: .semibold))

@@ -23,6 +23,8 @@ final class LifetimeAccessStore: ObservableObject {
     private var deadlineTask: Task<Void, Never>?
     private var refreshTask: Task<Void, Never>?
     private var profileCompletedAt: Date?
+    /// Records purchases against the signed-in account; nil without one.
+    private var serverSync: StoreEntitlementSync?
     @Published private(set) var isEarlyAccessRevealed = false
 
     init(purchasing: LifetimePurchasing? = nil,
@@ -105,6 +107,20 @@ final class LifetimeAccessStore: ObservableObject {
         catch { products = []; errorMessage = error.localizedDescription }
         await updateReminder()
         scheduleDeadlineCheck()
+        await serverSync?.syncIfNeeded()
+    }
+
+    /// Once there is an account, its purchases are recorded on the server
+    /// (only when something changed since the last time).
+    func connectServer(_ recorder: StoreEntitlementRecording?) async {
+        guard let recorder else { return }
+        if serverSync == nil { serverSync = StoreEntitlementSync(recorder: recorder, purchasing: purchasing) }
+        await serverSync?.syncIfNeeded()
+    }
+
+    func disconnectServer() {
+        serverSync?.accountSignedOut()
+        serverSync = nil
     }
 
     /// Called both on profile completion and on launch, before exposing the app.

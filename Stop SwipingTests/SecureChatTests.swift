@@ -120,10 +120,45 @@ final class SecureChatTests: XCTestCase {
         XCTAssertThrowsError(try session.queue("must not send"))
         try session.confirmSecurityCode(); XCTAssertTrue(session.isReady); XCTAssertTrue(session.codeIsVerified)
     }
+    func testUnchangedKeyFingerprintSkipsBundleDownloads() async throws {
+        let repository=FakeSecureChatRepository()
+        repository.keysFingerprint="first"
+        repository.partnerReadAt=Date(timeIntervalSince1970:1_800_000_000)
+        let match=CloudChatMatch(id:UUID(),partnerID:repository.partnerID,partnerName:"Test",ownScore:90,partnerScore:90)
+        let keyStore=ChatKeyStore(scope:repository.scope+"/"+repository.identity.uuidString.lowercased()+"/"+match.id.uuidString.lowercased())
+        defer { try? keyStore.remove() }
+        let model=ChatViewModel(conversation:ChatConversation(matchID:match.id,participantName:"Test",messages:[]),
+            secureSession:SecureChatSession(match:match,repository:repository))
+        await model.refresh()
+        XCTAssertTrue(model.isReady)
+        XCTAssertEqual(model.partnerReadAt,repository.partnerReadAt,"The read receipt comes with the poll.")
+        let afterOpen=repository.bundleReads
+        await model.refresh(); await model.refresh()
+        XCTAssertEqual(repository.bundleReads,afterOpen,"Unchanged keys must not be downloaded again.")
+        repository.keysFingerprint="second"
+        await model.refresh()
+        XCTAssertEqual(repository.bundleReads,afterOpen+1)
+        XCTAssertEqual(repository.polls,4)
+    }
+    func testQuietChatPollsLessOften() {
+        let model=ChatViewModel(conversation:ChatConversation(matchID:UUID(),participantName:"Test",
+            messages:[ChatMessage(sender:.match,text:"Hi",sentAt:Date().addingTimeInterval(-600))]))
+        XCTAssertEqual(model.pollInterval,.seconds(10))
+        model.noteActivity()
+        XCTAssertEqual(model.pollInterval,.seconds(3))
+    }
 }
 
 @MainActor
 private final class FakeSecureChatRepository: SecureChatRepository {
+    /// Nil: behaves like a server without chat_poll's key fingerprint.
+    var keysFingerprint: String?
+    var partnerReadAt: Date?
+    var bundleReads=0, polls=0
+    func poll(_ matchID:UUID,after:Int64?) async throws -> ChatPoll {
+        polls+=1
+        return ChatPoll(closed:false,keys:keysFingerprint,partnerReadAt:partnerReadAt,messages:try await messages(matchID,after:after))
+    }
     let scope="test-repository-"+UUID().uuidString
     var identity=UUID(), partnerID=UUID(), peerDevice=UUID()
     var peerKey=Curve25519.KeyAgreement.PrivateKey().publicKey.rawRepresentation
@@ -134,7 +169,8 @@ private final class FakeSecureChatRepository: SecureChatRepository {
     func currentMatch() async throws -> CloudChatMatch? { nil }
     func isClosed(_ matchID:UUID) async throws -> Bool { false }
     func bundles(_ matchID:UUID) async throws -> [CloudChatBundle] {
-        [CloudChatBundle(userID:partnerID,deviceID:peerDevice,bundle:.init(protocol:ChatCryptography.protocolVersion,key:peerKey),revokedAt:nil)] + (ownBundle.map { [$0] } ?? [])
+        bundleReads+=1
+        return [CloudChatBundle(userID:partnerID,deviceID:peerDevice,bundle:.init(protocol:ChatCryptography.protocolVersion,key:peerKey),revokedAt:nil)] + (ownBundle.map { [$0] } ?? [])
     }
     func register(_ matchID:UUID,deviceID:UUID,key:Data,replace:Bool) async throws {
         ownBundle=CloudChatBundle(userID:identity,deviceID:deviceID,bundle:.init(protocol:ChatCryptography.protocolVersion,key:key),revokedAt:nil)

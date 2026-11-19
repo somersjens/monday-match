@@ -40,18 +40,26 @@ final class SupabasePushDeviceRegistration: PushDeviceRegistering {
             let p_quiet_start: Int?
             let p_quiet_end: Int?
             let p_language: String
+            /// The server keeps APNs and FCM tokens apart; Android sends "android".
+            let p_platform: String
         }
         let quiet = QuietHours(preferences)
         try await client.rpc("register_push_device", params: Params(
             p_device_id: deviceID, p_token: token, p_environment: Self.environment, p_time_zone: timeZone,
             p_transactional: preferences.matchesAndMessages, p_previews: preferences.messagePreviews,
             p_match_ended_alerts: preferences.matchEndedAlerts,
-            p_quiet_start: quiet?.start, p_quiet_end: quiet?.end, p_language: language.rawValue)).execute()
+            p_quiet_start: quiet?.start, p_quiet_end: quiet?.end, p_language: language.rawValue,
+            p_platform: "ios")).execute()
     }
 
     func unregister(deviceID: UUID) async throws {
         try await client.rpc("unregister_push_device", params: ["p_device_id": deviceID.uuidString]).execute()
     }
+}
+
+extension Notification.Name {
+    /// A push from the server: a match was made or ended, or a message arrived.
+    static let serverDataChanged = Notification.Name("stopSwiping.serverDataChanged")
 }
 
 /// Receives the APNs device token, which SwiftUI has no hook for.
@@ -74,6 +82,11 @@ final class PushAppDelegate: NSObject, UIApplicationDelegate {
         async -> UIBackgroundFetchResult {
         let payload = NotificationEngine.strings(userInfo)
         await Self.handleBackgroundPush(payload)
+        // Every server push carries content-available, so this runs in the
+        // foreground too: the match screen asks the server now.
+        await MainActor.run {
+            NotificationCenter.default.post(name: .serverDataChanged, object: nil, userInfo: payload)
+        }
         return .newData
     }
 

@@ -124,5 +124,6 @@ private struct PhotoVerificationFlow: ViewModifier {
     /// day; the sixth is refused with this message.
     private static func isDailyLimit(_ error: Error) -> Bool {
         (error as? PostgrestError)?.message.contains("Daily verification limit") == true
+            || (error as? PhotoVerificationServiceError) == .dailyLimit
     }
 }

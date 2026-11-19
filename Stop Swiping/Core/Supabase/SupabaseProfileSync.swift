@@ -11,6 +11,9 @@ protocol ProfileCloudSyncing {
     /// one that just stopped; otherwise the profile stays on the phone and the
     /// account keeps the copy it last received.
     func synchronizeMatchingProfile() async throws
+    /// Profiles the server accepted from this object so far. A change means
+    /// the server may have searched for a partner just now.
+    var completedUploads: Int { get }
 }
 
 /// Photos live in private Storage, not as base64 data in the profile JSON.
@@ -59,6 +62,7 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     private let store: ProfileCreationStateStoring
     private let defaults: UserDefaults
     private let ownerKey: String
+    private let now: () -> Date
     private let uploadsKey: String
     private var worker: Task<Void, Error>?
     private var needsSync = false
@@ -67,6 +71,7 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     private var needsUploadOutsideMatching = false
     /// Set while a profile is being deleted, so no upload can bring it back.
     private var isDeleting = false
+    private(set) var completedUploads = 0
 
     struct Row: Codable, Equatable {
         let id: String
@@ -88,11 +93,24 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     struct Upload: Codable {
         var row: Row
         var photoHashes: [UUID: Data]
+        /// When the server last accepted or returned this. Missing in
+        /// copies saved before the field existed: those count as expired.
+        var confirmedAt: Date?
     }
 
+    /// How long what the server last accepted is trusted without asking.
+    /// The server removes the photo of a profile outside matching after 30
+    /// days without a save, and a whole profile after 12 months without any
+    /// sign of the app (202611190002_traffic_and_retention.sql); checking
+    /// again before that means this phone never relies on something gone.
+    /// Saving a matching profile again also tells the server it is in use.
+    static let confirmationLifetime: TimeInterval = 28 * 24 * 60 * 60
+
     init(client: SupabaseClient, projectURL: URL, repository: ProfileRepository,
-         store: ProfileCreationStateStoring, defaults: UserDefaults = .standard) {
+         store: ProfileCreationStateStoring, defaults: UserDefaults = .standard,
+         now: @escaping () -> Date = Date.init) {
         self.client = client
+        self.now = now
         uploader = SupabaseProfilePhotoUploader(client: client, projectURL: projectURL)
         self.repository = repository
         self.store = store
@@ -162,9 +180,18 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         guard outsideMatching || state.autoMatching.isEnabled || wasMatching else { return }
         let row = Self.row(userID: userID, state: state, draft: draft, uploader: uploader)
         let photoHashes = Self.photoHashes(draft.photos)
-        if let previous, previous.photoHashes == photoHashes,
+        let isConfirmed = previous?.confirmedAt.map { now().timeIntervalSince($0) < Self.confirmationLifetime } ?? false
+        if isConfirmed, let previous, previous.photoHashes == photoHashes,
            previous.row.hasSameContent(as: Self.roundTripped(row)) { return }
-        let changedPhotos = draft.photos.filter { previous?.photoHashes[$0.id] != photoHashes[$0.id] }
+        var changedPhotos = draft.photos.filter { previous?.photoHashes[$0.id] != photoHashes[$0.id] }
+        if previous != nil, !isConfirmed {
+            // The server may have removed a photo it no longer needed: send
+            // whatever it lacks. Without a listing, every photo is offered
+            // and an existing one is kept (uploadPhotos compares its bytes).
+            let stored = try? await uploader.storedPhotoIDs(userID: userID)
+            let changedIDs = Set(changedPhotos.map(\.id))
+            changedPhotos += draft.photos.filter { !changedIDs.contains($0.id) && stored?.contains($0.id) != true }
+        }
         let currentIDs = Set(draft.photos.map(\.id))
         let previousIDs = Set(previous?.row.backup.photos.map(\.id) ?? [])
         if !changedPhotos.isEmpty {
@@ -175,7 +202,8 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         }
         _ = try await uploader.uploadPhotos(changedPhotos, userID: userID)
         try await client.from("profiles").upsert(row, onConflict: "id").execute()
-        uploads[userID] = Upload(row: row, photoHashes: photoHashes)
+        uploads[userID] = Upload(row: row, photoHashes: photoHashes, confirmedAt: now())
+        completedUploads += 1
         // A replaced photo is no longer named anywhere on the server.
         try? await uploader.removePhotos(previousIDs.subtracting(currentIDs), userID: userID)
     }
@@ -268,6 +296,6 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         defaults.set(row.id, forKey: ownerKey)
         // The phone now holds what the server has: nothing to send back.
         uploads[row.id] = Upload(row: Self.row(userID: row.id, state: row.backup.state, draft: draft, uploader: uploader),
-                                 photoHashes: Self.photoHashes(draft.photos))
+                                 photoHashes: Self.photoHashes(draft.photos), confirmedAt: now())
     }
 }

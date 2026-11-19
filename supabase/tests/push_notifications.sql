@@ -1,7 +1,7 @@
 -- Push notifications: device registration, the outbox triggers, message
 -- batching, cancellation by reading and by breaking, and dispatch claims.
 -- Run as postgres in the Supabase SQL Editor after
--- 202611160002_push_notifications.sql ("Run without RLS" is fine):
+-- 202611160002_push_notifications.sql and 202611190010_push_platforms.sql ("Run without RLS" is fine):
 -- everything rolls back.
 --
 -- now() is fixed for a whole transaction, so time passing is simulated by
@@ -124,8 +124,10 @@ update notification_private.outbox set not_before = now() - interval '1 second' 
 create temporary table push_claimed as select jsonb_array_elements(public.push_claim_due(100)) as entry;
 select pg_temp.ok(exists (select 1 from push_claimed where entry->>'kind' = 'message_new'
     and entry->>'token' = repeat('cd', 32) and (entry->>'count')::integer = 1), 'A due message push is claimed with its unread count');
-select pg_temp.ok((select entry->>'partner_name' from push_claimed where entry->>'kind' = 'message_new') = 'Alex',
-    'With previews on, the sender''s name is included');
+select pg_temp.ok((select (entry->>'previews')::boolean and entry->>'platform' = 'ios' from push_claimed
+    where entry->>'kind' = 'message_new'), 'The claim carries the previews switch and the platform');
+select pg_temp.ok(not exists (select 1 from push_claimed where entry::text like '%Alex%' or entry ? 'partner_name'),
+    'No name leaves the server in a push: the phone fills it in');
 select pg_temp.ok((select entry->>'language' from push_claimed where entry->>'kind' = 'message_new') = 'nl',
     'The claim carries the device''s language');
 select pg_temp.ok((select (entry->>'quiet')::boolean from push_claimed where entry->>'kind' = 'message_new'),
@@ -164,10 +166,43 @@ select pg_temp.ok(not has_function_privilege('authenticated', 'public.push_claim
     and not has_function_privilege('authenticated', 'public.push_revoke_token(text)', 'execute'),
     'Only the service role dispatches');
 select pg_temp.ok(has_function_privilege('authenticated',
-    'public.register_push_device(uuid,text,text,text,boolean,boolean,boolean,integer,integer,text)', 'execute')
+    'public.register_push_device(uuid,text,text,text,boolean,boolean,boolean,integer,integer,text,text)', 'execute')
     and not has_function_privilege('anon',
-    'public.register_push_device(uuid,text,text,text,boolean,boolean,boolean,integer,integer,text)', 'execute'),
+    'public.register_push_device(uuid,text,text,text,boolean,boolean,boolean,integer,integer,text,text)', 'execute'),
     'Signed-in users register their own phone');
+
+-- ===== Android ============================================================
+-- FCM tokens are case-sensitive, have no sandbox, and are revoked exactly.
+select pg_temp.as_user(4);
+select public.register_push_device(pg_temp.id(204), 'fAbC:APA91b' || repeat('Xy_-', 30), 'sandbox', 'UTC',
+    true, true, false, null, null, 'en', 'android');
+select pg_temp.as_admin();
+select pg_temp.ok((select token = 'fAbC:APA91b' || repeat('Xy_-', 30) and environment = 'production' and platform = 'android'
+    from public.push_devices where device_id = pg_temp.id(204)),
+    'An Android token is stored exactly as received, always for production');
+select public.push_revoke_token(lower('fAbC:APA91b' || repeat('Xy_-', 30)));
+select pg_temp.ok((select revoked_at is null from public.push_devices where device_id = pg_temp.id(204)),
+    'A differently cased FCM token is another token');
+select public.push_revoke_token('fAbC:APA91b' || repeat('Xy_-', 30));
+select pg_temp.ok((select revoked_at is not null from public.push_devices where device_id = pg_temp.id(204)),
+    'An FCM token Google rejects is revoked');
+select pg_temp.as_user(4);
+do $$ begin
+    perform public.register_push_device(pg_temp.id(205), repeat('ab', 32), 'production', 'UTC',
+        true, true, false, null, null, 'en', 'windows');
+    raise exception 'unexpected';
+exception when others then
+    if sqlerrm = 'unexpected' then raise exception 'FAILED: unknown platform accepted'; end if;
+end $$;
+do $$ begin
+    perform public.register_push_device(pg_temp.id(206), 'not hex', 'production', 'UTC',
+        true, true, false, null, null, 'en', 'ios');
+    raise exception 'unexpected';
+exception when others then
+    if sqlerrm = 'unexpected' then raise exception 'FAILED: malformed APNs token accepted'; end if;
+end $$;
+select pg_temp.as_admin();
+select pg_temp.ok(true, 'Unknown platforms and malformed tokens are refused');
 select pg_temp.ok(not has_table_privilege('authenticated', 'public.push_devices', 'select')
     and not has_table_privilege('anon', 'public.push_devices', 'select'), 'Nobody reads device tokens directly');
 select pg_temp.ok((select relrowsecurity from pg_class where oid = 'public.push_devices'::regclass), 'push_devices has RLS');

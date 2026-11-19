@@ -34,6 +34,23 @@ final class ChatViewModel: ObservableObject {
     /// The last message from the partner seen on this phone.
     @Published private(set) var lastReadAt: Date
     let secureSession: SecureChatSession?
+    /// Set by a chat view while it polls, so the home screen polls less.
+    var isOnScreen = false
+    /// The last time this person opened the chat or sent something.
+    private var lastActivity = Date.distantPast
+    /// The match's live line is open (`LiveMatchCenter`): it refreshes this
+    /// conversation whenever the server signals a change.
+    var isFollowedLive = false
+    /// How long an open chat waits before asking the server again. With a
+    /// live line only a rare safety check; without one quick while messages
+    /// go back and forth, slower once it has been quiet for a minute.
+    var pollInterval: Duration {
+        if isFollowedLive { return .seconds(5 * 60) }
+        let newest = max(lastActivity, conversation.messages.last?.sentAt ?? .distantPast)
+        return Date().timeIntervalSince(newest) < 60 ? .seconds(3) : .seconds(10)
+    }
+    /// The chat was opened or brought back to the front.
+    func noteActivity() { lastActivity = Date() }
     /// Before launch: every message gets this answer back.
     let autoReply: String?
     private let defaults: UserDefaults
@@ -128,6 +145,7 @@ final class ChatViewModel: ObservableObject {
             let pending=conversation.messages.filter { !serverIDs.contains($0.id) && $0.sender == .currentUser && !$0.isRead }
             conversation.messages=(messages+pending).sorted { $0.sentAt < $1.sentAt }
             pendingIDs=Set(pending.map(\.id))
+            if let read=secureSession.partnerReadAt, read > (partnerReadAt ?? .distantPast) { partnerReadAt=read }
             errorMessage=nil
         } catch SupabaseSetupError.wrongAccount {
             conversation.messages=[]; draftMessage=""; isReady=false; conversation.isClosed=true
@@ -151,6 +169,7 @@ final class ChatViewModel: ObservableObject {
             if let secureSession { message=try secureSession.queue(trimmed) }
             else { message=ChatMessage(sender:.currentUser,text:trimmed,isRead:true) }
             conversation.messages.append(message); draftMessage=""; updateSecurityState()
+            noteActivity()
             if isLive { pendingIDs.insert(message.id); Task { await refresh() } }
             if let autoReply { replyLater(autoReply) }
         } catch { errorMessage=error.localizedDescription }

@@ -76,7 +76,8 @@ The project URL and anon key ship in the app, so anyone with an Apple or Google
 account can call the API with their own token. RLS keeps them inside their own
 data; `202611190001_abuse_limits.sql` keeps one account from filling the
 project's quotas (on the Free plan a full quota restricts the project for
-everyone). Tests: `supabase/tests/abuse_limits.sql`.
+everyone). Tests: `supabase/tests/abuse_limits.sql` (live since 19 November
+2026, 32 checks pass).
 
 | What | Limit | Refused with |
 | --- | --- | --- |

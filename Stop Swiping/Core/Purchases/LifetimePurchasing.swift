@@ -30,6 +30,21 @@ protocol LifetimePurchasing {
     func purchase(_ id: LifetimeProductID) async throws -> LifetimePurchaseResult
     func restore() async throws
     func finish(_ transaction: LifetimeStoreTransaction) async
+    /// Every verified transaction of these products as the store signed it,
+    /// refunded ones included, so the server can record (or revoke) access.
+    func signedTransactions() async -> [SignedStoreTransaction]
+}
+
+/// A store transaction in the form the server can verify itself: for the
+/// App Store, StoreKit 2's JWS signed by Apple.
+struct SignedStoreTransaction: Equatable {
+    let originalID: String
+    let isRevoked: Bool
+    let jws: String
+}
+
+extension LifetimePurchasing {
+    func signedTransactions() async -> [SignedStoreTransaction] { [] }
 }
 
 @MainActor
@@ -85,6 +100,20 @@ final class StoreKitLifetimePurchases: LifetimePurchasing {
     }
 
     func restore() async throws { try await AppStore.sync() }
+
+    func signedTransactions() async -> [SignedStoreTransaction] {
+        var latest: [String: SignedStoreTransaction] = [:]
+        for await result in StoreKit.Transaction.all {
+            guard case .verified(let transaction) = result,
+                  LifetimeProductID(rawValue: transaction.productID) != nil else { continue }
+            let id = transaction.originalID.description
+            // A refund shows up as a revoked transaction; that one wins.
+            if latest[id]?.isRevoked == true { continue }
+            latest[id] = SignedStoreTransaction(originalID: id, isRevoked: transaction.revocationDate != nil,
+                                                jws: result.jwsRepresentation)
+        }
+        return latest.values.sorted { $0.originalID < $1.originalID }
+    }
 
     func finish(_ value: LifetimeStoreTransaction) async {
         for await result in StoreKit.Transaction.unfinished {

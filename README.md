@@ -181,3 +181,11 @@ out on 18 November 2026 and is parked: Git tag `aws-liveness-v1`, the Swift file
 in `archive/aws-face-liveness/`, and the Supabase function and AWS template still
 in `supabase/`. See [AWS photo verification](docs/aws-photo-verification.md) to
 turn it back on.
+
+## Android
+
+The Android version will be built later with Skip, from this Swift code.
+What is already prepared (push for both platforms without names through
+Apple or Google, lifetime access per account, App Attest for photo scans,
+the cross-platform exchange channel and interop vectors) and what is left is
+in [ready for Android](docs/android-readiness.md).

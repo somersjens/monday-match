@@ -51,11 +51,14 @@ struct MatchChatPanel: View {
         .readableColumn()
         .task(id: scenePhase == .active) {
             guard chat.isLive, scenePhase == .active else { return }
+            chat.isOnScreen = true
+            chat.noteActivity()
+            defer { chat.isOnScreen = false }
             while !Task.isCancelled {
                 await chat.refresh()
                 chat.markAllRead()
                 if chat.conversation.isClosed { return }
-                do { try await Task.sleep(for: .seconds(3)) } catch { return }
+                do { try await Task.sleep(for: chat.pollInterval) } catch { return }
             }
         }
         .onChange(of: chat.conversation.messages.count) { old, new in

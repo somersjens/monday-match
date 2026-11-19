@@ -133,6 +133,49 @@ struct CloudChatMessage: Decodable {
     }
 }
 
+/// One look at an open chat: whether it ended, a fingerprint of the key
+/// bundles (fetched in full only when it changes), the partner's read
+/// receipt and the messages after the cursor.
+struct ChatPoll: Decodable {
+    let closed: Bool
+    /// Nil when unknown: the bundles are then fetched every time.
+    let keys: String?
+    let partnerReadAt: Date?
+    let messages: [CloudChatMessage]
+    enum CodingKeys: String, CodingKey {
+        case closed, keys, partnerReadAt = "partner_read_at", messages
+    }
+    init(closed: Bool, keys: String?, partnerReadAt: Date?, messages: [CloudChatMessage]) {
+        self.closed = closed; self.keys = keys; self.partnerReadAt = partnerReadAt; self.messages = messages
+    }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        closed = try c.decode(Bool.self, forKey: .closed)
+        keys = try c.decodeIfPresent(String.self, forKey: .keys)
+        partnerReadAt = try? c.decodeIfPresent(Date.self, forKey: .partnerReadAt)
+        messages = try c.decodeIfPresent([CloudChatMessage].self, forKey: .messages) ?? []
+    }
+}
+
+/// Something changed in a match, as the database announces it on the
+/// match's private Realtime channel. Never content: the app fetches that.
+struct MatchSignal: Equatable, Sendable {
+    enum Kind: String, Sendable {
+        case message, read, keys, card, ended
+        /// The channel (re)joined: anything may have changed while it was down.
+        case connected
+    }
+    let kind: Kind
+    /// Who did it; nil for the server itself (a moderation end).
+    let by: UUID?
+}
+
+/// A live line to one match, held while the app is open on it.
+@MainActor
+protocol MatchFollowing: AnyObject {
+    func stop() async
+}
+
 /// Reports against this account: 1 is a warning, 2 blocks matching and chat
 /// for 7 days, 3 bans the account.
 nonisolated struct ModerationStatus: Decodable, Equatable {
@@ -164,6 +207,14 @@ protocol SecureChatRepository {
     var scope: String { get }
     func userID() async throws -> UUID
     func currentMatch() async throws -> CloudChatMatch?
+    /// The same, leaving out the partner's card when `knownCard` is the
+    /// match whose card this phone already keeps.
+    func currentMatch(knownCard: UUID?) async throws -> CloudChatMatch?
+    /// What an open chat needs on each refresh, in one request.
+    func poll(_ matchID: UUID, after: Int64?) async throws -> ChatPoll
+    /// Listens for changes to a match until stopped. Nil when this
+    /// repository cannot listen; the caller then asks on a timer.
+    func follow(_ matchID: UUID, onSignal: @escaping @MainActor (MatchSignal) -> Void) async throws -> MatchFollowing?
     func isClosed(_ matchID: UUID) async throws -> Bool
     func bundles(_ matchID: UUID) async throws -> [CloudChatBundle]
     func register(_ matchID: UUID, deviceID: UUID, key: Data, replace: Bool) async throws
@@ -184,6 +235,12 @@ protocol SecureChatRepository {
 }
 
 extension SecureChatRepository {
+    func follow(_ matchID: UUID, onSignal: @escaping @MainActor (MatchSignal) -> Void) async throws -> MatchFollowing? { nil }
+    func currentMatch(knownCard: UUID?) async throws -> CloudChatMatch? { try await currentMatch() }
+    func poll(_ matchID: UUID, after: Int64?) async throws -> ChatPoll {
+        let closed = try await isClosed(matchID)
+        return ChatPoll(closed: closed, keys: nil, partnerReadAt: nil, messages: try await messages(matchID, after: after))
+    }
     func report(_ matchID: UUID, reason: String, details: String, breakMatch: Bool) async throws {
         try await report(matchID, reason: reason, details: details)
         if breakMatch { try await self.breakMatch(matchID) }
@@ -208,6 +265,48 @@ final class SupabaseChatRepository: SecureChatRepository {
     func currentMatch() async throws -> CloudChatMatch? {
         try await client.rpc("current_match").execute().value
     }
+    func currentMatch(knownCard: UUID?) async throws -> CloudChatMatch? {
+        guard let knownCard else { return try await currentMatch() }
+        do {
+            return try await client.rpc("current_match", params: ["p_known_card": knownCard.uuidString]).execute().value
+        } catch let error as PostgrestError where Self.isMissingFunction(error) {
+            // A server without 202611190002 yet.
+            return try await currentMatch()
+        }
+    }
+    func poll(_ matchID: UUID, after: Int64?) async throws -> ChatPoll {
+        struct Params: Encodable { let p_match_id: UUID; let p_after: Int64? }
+        do {
+            return try await client.rpc("chat_poll", params: Params(p_match_id: matchID, p_after: after)).execute().value
+        } catch let error as PostgrestError where Self.isMissingFunction(error) {
+            let closed = try await isClosed(matchID)
+            return ChatPoll(closed: closed, keys: nil, partnerReadAt: nil, messages: try await messages(matchID, after: after))
+        }
+    }
+    func follow(_ matchID: UUID, onSignal: @escaping @MainActor (MatchSignal) -> Void) async throws -> MatchFollowing? {
+        let channel = client.channel("match:\(matchID.uuidString.lowercased())") { $0.isPrivate = true }
+        let changes = channel.onBroadcast(event: "changed") { message in
+            // The broadcast's own payload sits under "payload".
+            let body = message["payload"]?.objectValue ?? message
+            guard let kind = body["what"]?.stringValue.flatMap(MatchSignal.Kind.init(rawValue:)) else { return }
+            let signal = MatchSignal(kind: kind, by: body["by"]?.stringValue.flatMap(UUID.init(uuidString:)))
+            Task { @MainActor in onSignal(signal) }
+        }
+        let status = channel.onStatusChange { status in
+            guard status == .subscribed else { return }
+            Task { @MainActor in onSignal(MatchSignal(kind: .connected, by: nil)) }
+        }
+        do {
+            try await channel.subscribeWithError()
+        } catch {
+            changes.cancel(); status.cancel()
+            await client.removeChannel(channel)
+            throw error
+        }
+        return SupabaseMatchFollow(client: client, channel: channel, subscriptions: [changes, status])
+    }
+    /// PostgREST's answer for a function the database does not have.
+    private static func isMissingFunction(_ error: PostgrestError) -> Bool { error.code == "PGRST202" }
     func isClosed(_ matchID: UUID) async throws -> Bool {
         struct Row: Decodable { let ended_at: Date? }
         let rows: [Row] = try await client.from("matches").select("ended_at").eq("id",value:matchID)
@@ -272,5 +371,20 @@ final class SupabaseChatRepository: SecureChatRepository {
     }
     func partnerPhoto(path: String) async throws -> Data {
         try await client.storage.from(SupabaseProfilePhotoUploader.bucket).download(path: path)
+    }
+}
+
+@MainActor
+private final class SupabaseMatchFollow: MatchFollowing {
+    private let client: SupabaseClient
+    private let channel: RealtimeChannelV2
+    private var subscriptions: [RealtimeSubscription]
+    init(client: SupabaseClient, channel: RealtimeChannelV2, subscriptions: [RealtimeSubscription]) {
+        self.client = client; self.channel = channel; self.subscriptions = subscriptions
+    }
+    func stop() async {
+        subscriptions.forEach { $0.cancel() }
+        subscriptions = []
+        await client.removeChannel(channel)
     }
 }

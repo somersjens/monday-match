@@ -1,5 +1,13 @@
 # Local photo verification
 
+> **19 November 2026:** where the iPhone supports App Attest, the scan report
+> is signed with a Secure Enclave key that Apple certified for this app, and
+> the server records it as `attested` (`app-attest` edge function,
+> `202611190012_app_attest.sql`). Unsupported devices, the simulator, and the
+> time before the function is deployed fall back to the unproven route. The
+> migration's header says how to require proof once Android (Play Integrity)
+> does the same.
+>
 > **Status (18 November 2026):** this on-device scan is the app's photo
 > verification again during the beta. It was removed on 16 November in favour of
 > AWS Face Liveness and restored from Git (`feb4c9e^`). AWS is parked; see

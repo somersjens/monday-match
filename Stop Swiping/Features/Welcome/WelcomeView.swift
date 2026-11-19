@@ -43,6 +43,9 @@ struct WelcomeView: View {
     @State private var lockPulse = 0
     /// The welcome light's entrance sounds once per screen, like the light.
     @State private var hasPlayedEntrance = false
+    /// How many times the personality test has been switched; each switch
+    /// plays the next note of the climbing scale, whichever test was chosen.
+    @State private var personalitySwitchCount = 0
     @State private var resetTapCount = 0
     @State private var lastResetTap: Date?
     @State private var showsOverview = false
@@ -550,9 +553,12 @@ struct WelcomeView: View {
             await notifications.refresh()
             hasLoadedNotifications = true
         }
-        .task(id: hasAccount && scenePhase == .active && chatRepository != nil) {
-            guard hasAccount, scenePhase == .active, chatRepository != nil else { return }
+        .task(id: pollsLiveMatches) {
+            guard pollsLiveMatches else { return }
             await liveMatches.run { [profileCreation] in profileCreation.state }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .serverDataChanged)) { _ in
+            liveMatches.wake()
         }
         .onChange(of: activeMatch == nil) { _, isGone in
             // Leaving the match leaves its personality view too, so the main light runs again.
@@ -845,11 +851,22 @@ struct WelcomeView: View {
         return L10n("Someone you matched with reported you. This is a warning: a second report blocks you for 7 days, a third bans your account.")
     }
 
+    /// The server is asked about matches only while one can exist: with
+    /// automatic matching on, or while a match from before is still active.
+    private var pollsLiveMatches: Bool {
+        hasAccount && scenePhase == .active && chatRepository != nil
+            && (profileCreation.state.autoMatching.isEnabled || liveMatches.match != nil)
+    }
+
     private func syncProfile() async {
         guard hasAccount, let profileSync else { return }
         do {
+            let uploads = profileSync.completedUploads
             try await profileSync.synchronizeMatchingProfile()
             profileSyncFailed = false
+            // Saving searches for a partner on the server: ask once now
+            // rather than wait for the match's push.
+            if profileSync.completedUploads != uploads { liveMatches.serverMayHaveChanged() }
         } catch {
             if !Task.isCancelled { profileSyncFailed = true }
         }
@@ -1064,11 +1081,13 @@ struct WelcomeView: View {
         }
     }
 
-    /// Each personality test has its own note, like tuning to another
-    /// instrument, carried in on a light breath as the chart turns over.
-    private func playPersonalityNote(for test: PersonalityTest) {
+    /// Every switch climbs one note up the scale and starts over after the
+    /// top, regardless of which test was picked, carried in on a light breath
+    /// as the chart turns over.
+    private func playPersonalityNote() {
+        personalitySwitchCount += 1
         SoundPlayer.shared.play(.swish)
-        SoundPlayer.shared.play(.step((PersonalityTest.allCases.firstIndex(of: test) ?? 0) + 1))
+        SoundPlayer.shared.play(.step(personalitySwitchCount))
     }
 
     // MARK: - Account
@@ -1301,7 +1320,7 @@ struct WelcomeView: View {
     }
 
     private func selectPersonalityTest(_ test: PersonalityTest) {
-        if test != personalityTest { playPersonalityNote(for: test) }
+        if test != personalityTest { playPersonalityNote() }
         lastPersonalityTest = test
         withAnimation(.easeInOut(duration: 0.3)) { personalityTest = test }
     }
@@ -1348,7 +1367,7 @@ struct WelcomeView: View {
     }
 
     private func selectMatchPersonalityTest(_ test: PersonalityTest) {
-        if test != matchPersonalityTest { playPersonalityNote(for: test) }
+        if test != matchPersonalityTest { playPersonalityNote() }
         lastPersonalityTest = test
         withAnimation(.easeInOut(duration: 0.3)) { matchPersonalityTest = test }
     }
