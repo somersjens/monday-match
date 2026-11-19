@@ -587,6 +587,7 @@ struct WelcomeView: View {
         .onChange(of: access.hasAccess) { _, allowed in
             if !allowed { checkAccess() }
         }
+        .modifier(CancelSubscriptionReminder(access: access))
         .sheet(isPresented: $showsProfilePrivacy) {
             PrivacyConsentView(kind: .profile) { profileCreation.acceptPrivacy(.profile) }
         }
@@ -736,17 +737,18 @@ struct WelcomeView: View {
                         .disabled(signIn.isSigningIn)
                         .transition(.landingSwap(index: 3, reduceMotion: reduceMotion))
                 } else {
+                    // Locked, the main button says why instead, in the red
+                    // of irreversible actions; its taps still count towards
+                    // the hidden restart.
                     if profileCreation.isUnderageLocked {
-                        Label(L10n("Minors not allowed."), systemImage: "lock.fill")
-                            .font(.system(.footnote, weight: .medium))
-                            .foregroundStyle(OnboardingTheme.secondaryText)
-                            .padding(.bottom, 4)
-                            .transition(.onboardingReveal(reduceMotion: reduceMotion))
+                        Button(L10n("Minors not allowed."), action: handleGetStarted)
+                            .buttonStyle(DestructiveGlowButtonStyle())
+                            .transition(.landingSwap(index: 0, reduceMotion: reduceMotion))
+                    } else {
+                        Button(L10n("Get started"), action: handleGetStarted)
+                            .buttonStyle(GlowButtonStyle())
+                            .transition(.landingSwap(index: 0, reduceMotion: reduceMotion))
                     }
-
-                    Button(L10n("Get started"), action: handleGetStarted)
-                        .buttonStyle(GlowButtonStyle())
-                        .transition(.landingSwap(index: 0, reduceMotion: reduceMotion))
 
                     Button(L10n("I already have an account"), action: openSignIn)
                         .buttonStyle(QuietButtonStyle())
@@ -919,6 +921,13 @@ struct WelcomeView: View {
                 Task { await notifications.requestAuthorization() }
             }
         case .matching:
+            if access.remindsToCancelSubscription {
+                CancelSubscriptionCard(access: access)
+                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+            } else if profileCreation.state.autoMatching.isEnabled && access.offersSubscriberLifetime {
+                SubscriberLifetimeOfferCard(access: access)
+                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+            }
             AutoMatchingCard(viewModel: profileCreation) {
                 guard !isTransitioning else { return }
                 showsAutoMatching = true
@@ -1880,7 +1889,11 @@ struct WelcomeView: View {
     /// on its renderer's clock, passing behind the controls.
     private func checkAccess() {
         access.updateCompletion(profileCreation.state.completedAt)
-        guard access.isReady, access.ledger.effectiveStartedAt != nil, !access.hasAccess else { return }
+        // Someone who started the free plan here, or whose free plan is used
+        // up (also on another device): losing access, for instance when the
+        // monthly plan ends, brings back the plans.
+        guard access.isReady, access.ledger.effectiveStartedAt != nil || !access.canOfferEarlyAccess,
+              !access.hasAccess else { return }
         cancelDemo()
         showsOverview = false
         showsAutoMatching = false

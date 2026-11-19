@@ -112,8 +112,8 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
         case .languages: L10n("Which languages do you speak comfortably?")
         case .location: L10n("Where would you like to meet people?")
         case .hasChildren: L10n("Do you have children?")
-        case .partnerHasChildren: L10n("Are you open to a partner who already has children?")
-        case .futureChildren: L10n("Do you want children in the future with a new partner?")
+        case .partnerHasChildren: L10n("Open to a partner with children?")
+        case .futureChildren: L10n("Do you want children with a new partner?")
         case .alcohol, .smoking, .drugs: substance?.ownPrompt ?? ""
         default: compatibilityQuestion?.title ?? ""
         }
@@ -152,17 +152,17 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
     var subtitle: String? {
         switch self {
         case .dateOfBirth: L10n("Only your age appears on your profile.")
-        case .partnerAgeRange: L10n("We suggested a range around your age. Adjust it freely.")
+        case .partnerAgeRange: L10n("A range around your age. Drag the white dots to adjust it.")
         case .height: L10n("Scroll the ruler to set your height.")
-        case .partnerHeightRange: L10n("Leave it wide open if height doesn’t matter to you.")
+        case .partnerHeightRange: L10n("Drag the white dots, or leave it wide open if height doesn’t matter.")
         case .gender: nil
-        case .partnerGenders: L10n("Select everyone you’re open to.")
-        case .sexualArrangement: L10n("Choose the option that fits you best.")
-        case .religion: ReligionQuestionPhase.own.subtitle
+        case .partnerGenders: L10n("Select every option you’re open to.")
+        case .sexualArrangement: nil
+        case .religion: nil
         case .languages: L10n("Tap a language to change it.")
         case .location: L10n("Drop a pin on the map or use your location.")
         case .hasChildren, .partnerHasChildren, .futureChildren: nil
-        case .alcohol, .smoking, .drugs: L10n("And how often may a partner, at most? Less often is fine too.")
+        case .alcohol, .smoking, .drugs: L10n("And how often may a partner, at most?")
         default: compatibilityQuestion?.subtitle
         }
     }

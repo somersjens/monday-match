@@ -137,7 +137,6 @@ private struct LanguagePickerSheet: View {
     let excludedCodes: Set<String>
     let onSelect: (String) -> Void
 
-    @Environment(\.dismiss) private var dismiss
     @State private var query = ""
 
     private var available: [LanguageOption] {
@@ -161,7 +160,18 @@ private struct LanguagePickerSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(title)
+                    .font(.system(.title3, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .accessibilityAddTraits(.isHeader)
+                searchField
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 28)
+            .padding(.bottom, 4)
+
             List {
                 if query.isEmpty && !suggested.isEmpty {
                     Section(L10n("Suggested")) {
@@ -173,40 +183,100 @@ private struct LanguagePickerSheet: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.immediately)
             .overlay {
                 if results.isEmpty {
                     ContentUnavailableView.search(text: query)
                 }
             }
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: L10n("Search languages"))
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(L10n("Cancel")) { dismiss() }
-                }
-            }
         }
+        .tint(OnboardingTheme.cyan)
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .presentationBackground(OnboardingTheme.background)
         .preferredColorScheme(.dark)
+    }
+
+    private var searchField: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(OnboardingTheme.accentGradient)
+                .accessibilityHidden(true)
+            TextField(
+                L10n("Search languages"),
+                text: $query,
+                prompt: Text(L10n("Search languages")).foregroundStyle(OnboardingTheme.tertiaryText)
+            )
+            .foregroundStyle(OnboardingTheme.primaryText)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .submitLabel(.search)
+            if !query.isEmpty {
+                Button { query = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(OnboardingTheme.tertiaryText)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n("Clear search"))
+            }
+        }
+        .padding(.leading, 14)
+        .padding(.trailing, 6)
+        .frame(minHeight: 46)
+        .background {
+            Capsule(style: .continuous)
+                .fill(.white.opacity(0.07))
+                .overlay {
+                    Capsule(style: .continuous)
+                        .strokeBorder(OnboardingTheme.accentGradient.opacity(0.5), lineWidth: 1)
+                }
+        }
     }
 
     private func row(_ option: LanguageOption) -> some View {
         Button {
             onSelect(option.code)
         } label: {
-            HStack {
+            HStack(spacing: 14) {
+                LanguageFlag(code: option.code)
                 Text(option.name)
-                    .foregroundStyle(.primary)
-                Spacer()
+                    .font(.system(.body, weight: .medium))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                Spacer(minLength: 8)
                 if let endonym = option.endonym {
                     Text(endonym)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(OnboardingTheme.secondaryText)
                 }
             }
+            .lineLimit(1)
             .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .listRowBackground(Color.white.opacity(0.06))
         .accessibilityLabel(option.name)
+    }
+}
+
+/// The flag of the country most associated with a language, or a globe for
+/// languages that belong to no one country.
+private struct LanguageFlag: View {
+    let code: String
+
+    var body: some View {
+        Group {
+            if let flag = LanguageCatalog.flag(for: code) {
+                Text(flag)
+                    .font(.system(size: 22))
+            } else {
+                Image(systemName: "globe")
+                    .font(.system(size: 18))
+                    .foregroundStyle(OnboardingTheme.tertiaryText)
+            }
+        }
+        .frame(width: 28)
+        .accessibilityHidden(true)
     }
 }

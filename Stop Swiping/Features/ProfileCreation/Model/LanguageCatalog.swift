@@ -54,6 +54,21 @@ enum LanguageCatalog {
             .filter { seen.insert($0).inserted }
     }
 
+    /// Where a language's likely country is not the one people picture.
+    private static let flagRegions: [String: String] = [
+        "en": "GB", "ar": "SA", "fa": "IR", "sw": "TZ", "ms": "MY", "hi": "IN", "ur": "PK"
+    ]
+
+    /// A flag emoji for the language's most likely country; nil for
+    /// languages without one, such as Esperanto or Latin.
+    static func flag(for code: String) -> String? {
+        let region = flagRegions[code]
+            ?? Locale.Language(identifier: Locale.Language(identifier: code).maximalIdentifier).region?.identifier
+        guard let region, region.count == 2, region.allSatisfy({ $0.isASCII && $0.isLetter }) else { return nil }
+        let scalars = region.uppercased().unicodeScalars.compactMap { Unicode.Scalar(0x1F1E6 + $0.value - 0x41) }
+        return String(String.UnicodeScalarView(scalars))
+    }
+
     private static func option(code: String, name: String) -> LanguageOption {
         let endonym = Locale(identifier: code).localizedString(forLanguageCode: code)
         let distinctEndonym = endonym.flatMap {

@@ -1,46 +1,91 @@
 {
-  "identifier": "88B7E7C9-953B-4D84-8C5C-E10C0A409816",
-  "nonRenewingSubscriptions": [],
-  "products": [
+  "identifier" : "88B7E7C9-953B-4D84-8C5C-E10C0A409816",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
     {
-      "displayPrice": "0.00",
-      "familyShareable": false,
-      "internalID": "1",
-      "localizations": [
+      "displayPrice" : "0.00",
+      "familyShareable" : false,
+      "internalID" : "1",
+      "localizations" : [
         {
-          "description": "Early Adopter Benefits",
-          "displayName": "Early Adopter Benefits",
-          "locale": "en_US"
+          "description" : "Early Adopter Benefits",
+          "displayName" : "Early Adopter Benefits",
+          "locale" : "en_US"
         }
       ],
-      "productID": "lifetime_access_early_adopter",
-      "referenceName": "Early Adopter Benefits",
-      "type": "NonConsumable"
+      "productID" : "lifetime_access_early_adopter",
+      "referenceName" : "Early Adopter Benefits",
+      "type" : "NonConsumable"
     },
     {
-      "displayPrice": "49.99",
-      "familyShareable": false,
-      "internalID": "2",
-      "localizations": [
+      "displayPrice" : "49.99",
+      "familyShareable" : false,
+      "internalID" : "2",
+      "localizations" : [
         {
-          "description": "Lifetime Access",
-          "displayName": "Lifetime Access",
-          "locale": "en_US"
+          "description" : "Lifetime Access",
+          "displayName" : "Lifetime Access",
+          "locale" : "en_US"
         }
       ],
-      "productID": "lifetime_access",
-      "referenceName": "Lifetime Access",
-      "type": "NonConsumable"
+      "productID" : "lifetime_access",
+      "referenceName" : "Lifetime Access",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "24.99",
+      "familyShareable" : false,
+      "internalID" : "3",
+      "localizations" : [
+        {
+          "description" : "Lifetime Access at half price for monthly subscribers",
+          "displayName" : "Lifetime Access",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "lifetime_access_subscriber",
+      "referenceName" : "Lifetime Access (subscriber)",
+      "type" : "NonConsumable"
     }
   ],
-  "settings": {
-    "_failTransactionsEnabled": false,
-    "_locale": "en_US",
-    "_storefront": "USA"
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA"
   },
-  "subscriptionGroups": [],
-  "version": {
-    "major": 3,
-    "minor": 0
+  "subscriptionGroups" : [
+    {
+      "id" : "21F5C2B1",
+      "localizations" : [],
+      "name" : "Stop Swiping Access",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "0.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "4",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "All features, billed monthly",
+              "displayName" : "Monthly Access",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "monthly_access",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly Access",
+          "subscriptionGroupID" : "21F5C2B1",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : []
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
   }
 }

@@ -45,7 +45,7 @@ enum Substance: String, Codable, CaseIterable, Hashable {
         switch self {
         case .alcohol: L10n("How often do you drink alcohol?")
         case .smoking: L10n("How often do you smoke or vape?")
-        case .drugs: L10n("How often do you use cannabis or other recreational drugs?")
+        case .drugs: L10n("How often do you use cannabis or other drugs?")
         }
     }
 }

@@ -57,6 +57,175 @@ struct AutoMatchingCard: View {
     }
 }
 
+/// Half-price lifetime access for monthly subscribers, as tall as the auto
+/// matching card it sits above. Closing it hides it for a month.
+struct SubscriberLifetimeOfferCard: View {
+    @ObservedObject var access: LifetimeAccessStore
+
+    /// Why the last purchase didn't go through, shown under the offer.
+    @State private var failure: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 6) {
+                Button(action: buy) {
+                    HStack(spacing: 8) {
+                        // Two short lines rather than one long one, so the
+                        // offer reads in full on the narrowest iPhone too.
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(L10n("Lifetime Access"))
+                                .font(.system(.body, weight: .semibold))
+                            Text(L10n("50% off for subscribers"))
+                                .font(.system(.footnote, weight: .medium))
+                                .foregroundStyle(OnboardingTheme.cyan)
+                        }
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        if access.isBusy {
+                            ProgressView().tint(.white)
+                        } else if let price = access.product(.subscriberLifetime)?.displayPrice {
+                            VStack(alignment: .trailing, spacing: 1) {
+                                Text(price)
+                                    .font(.system(.body, weight: .semibold))
+                                if let full = access.product(.lifetime)?.displayPrice {
+                                    Text(full)
+                                        .font(.system(size: 12))
+                                        .strikethrough()
+                                        .foregroundStyle(OnboardingTheme.tertiaryText)
+                                }
+                            }
+                            .fixedSize()
+                        }
+                    }
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(access.isBusy)
+                .accessibilityIdentifier("offer.subscriberLifetime")
+
+                Button(action: close) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(OnboardingTheme.secondaryText)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(access.isBusy)
+                .accessibilityLabel(L10n("Close offer"))
+            }
+            .padding(.leading, 16)
+            .padding(.trailing, 4)
+            .frame(minHeight: OnboardingTheme.buttonHeight)
+
+            if let message = failure {
+                Text(message)
+                    .font(.footnote)
+                    .foregroundStyle(OnboardingTheme.pink)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
+            }
+        }
+        .modifier(MatchingActionSurface(isOn: true))
+    }
+
+    private func buy() {
+        Task {
+            // The store then asks to cancel the monthly plan (CancelSubscriptionReminder).
+            failure = nil
+            if await !access.continueWith(.subscriberLifetime) {
+                failure = access.errorMessage ?? access.notice
+            }
+        }
+    }
+
+    private func close() {
+        SoundPlayer.shared.play(.close)
+        withAnimation(.easeInOut(duration: 0.25)) { access.dismissSubscriberOffer() }
+    }
+}
+
+/// The sentence the app uses wherever it asks to cancel the monthly plan.
+enum CancelSubscriptionCopy {
+    static var message: String {
+        L10n("Now that you have lifetime access, you can cancel your subscription; otherwise you’ll keep paying.")
+    }
+}
+
+/// Right after lifetime access was bought on top of a monthly plan. No app
+/// can cancel a plan (Apple and Google both leave that to the person), so
+/// ask at once; the home screen's card keeps asking until it is cancelled.
+struct CancelSubscriptionReminder: ViewModifier {
+    @ObservedObject var access: LifetimeAccessStore
+
+    func body(content: Content) -> some View {
+        content
+            .alert(L10n("Lifetime access unlocked"), isPresented: $access.asksToCancelSubscription) {
+                if !access.cancelsOnAnotherAppleID {
+                    Button(L10n("Cancel subscription")) { Task { await access.manageSubscription() } }
+                }
+                Button(L10n("Not now"), role: .cancel) {}
+            } message: {
+                Text(CancelSubscriptionCopy.message)
+            }
+    }
+}
+
+/// Lifetime access while a monthly plan will still be charged: stays on the
+/// home screen until the store says the plan no longer renews. The whole
+/// sentence always shows, on every screen width and text size.
+struct CancelSubscriptionCard: View {
+    @ObservedObject var access: LifetimeAccessStore
+    @State private var isOpening = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(CancelSubscriptionCopy.message)
+                .font(.system(.subheadline, weight: .medium))
+                .foregroundStyle(OnboardingTheme.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            if access.cancelsOnAnotherAppleID {
+                // This phone's Apple ID isn't the one being charged.
+                Text(L10n("Your subscription runs on another Apple ID. Cancel it in Settings on the iPhone or iPad you subscribed with."))
+                    .font(.footnote)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Button(action: open) {
+                    HStack(spacing: 8) {
+                        Text(L10n("Cancel subscription"))
+                        if isOpening { ProgressView().tint(OnboardingTheme.cyan) }
+                    }
+                    .font(.system(.body, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.cyan)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(isOpening)
+                .accessibilityIdentifier("offer.cancelMonthly")
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 14)
+        .padding(.bottom, access.cancelsOnAnotherAppleID ? 14 : 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .modifier(MatchingActionSurface(isOn: true))
+        .accessibilityElement(children: .contain)
+    }
+
+    private func open() {
+        isOpening = true
+        Task {
+            await access.manageSubscription()
+            isOpening = false
+        }
+    }
+}
+
 /// The account step of the home screen. Its switch slides on and the card
 /// opens in place into Apple and Google sign-in, so the helix stays on
 /// screen. Once signed in the card keeps its height and confirms it where the

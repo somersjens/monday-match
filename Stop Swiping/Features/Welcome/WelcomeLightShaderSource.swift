@@ -133,8 +133,9 @@ float2 lockOpening(float u) {
 float2 lockKeyhole(float u) {
     float angle = fract(u)*tau;
     float s = sin(angle), c = cos(angle);
-    float tail = pow(max(0.0, -c), 6.0);
-    return float2(-s*0.085*(1 - 0.55*tail), 0.22 - c*0.085 + tail*0.20);
+    float tail = smoothstep(0.1, 1.0, -c);
+    float squared = mix(s, s*sqrt(1.64)/sqrt(s*s + 0.64), tail);
+    return float2(-squared*0.085*(1 - 0.4*tail), 0.22 - c*0.085 + tail*0.20);
 }
 
 float2 lockOutline(float u, uint ring, uint sheet) {
@@ -155,8 +156,9 @@ float3 lockPoint(float u, uint instance, constant WelcomeUniforms &p) {
     float seconds = p.shape.w;
     float phase = float(sheet)*2.1 + float(ring)*1.3;
     float width = detail ? 0.010 : 0.020;
-    float weave = (detail ? 0.005 : 0.016)*sin(4*a + phase - seconds*0.9)
-                + (detail ? 0.002 : 0.006)*sin(7*a - phase + seconds*1.4);
+    float calm = (detail && ring == 1) ? 0.4 : 1.0;
+    float weave = calm*(detail ? 0.005 : 0.016)*sin(4*a + phase - seconds*0.9)
+                + calm*(detail ? 0.002 : 0.006)*sin(7*a - phase + seconds*1.4);
     float offset = lane*width + weave + (detail ? 0.0 : (float(sheet) - 1)*0.010);
     float2 q = base + normal*offset;
     // Only the shackle lifts and floats; the body stays put.
@@ -1062,6 +1064,14 @@ RibbonVertex lightVertex(float u, float3 point, float2 previous, float2 next,
     float tint = pow(0.5 + 0.5*sin(u*tau + lightClock + phase), 3.0);
     float3 color = sheet == 0 ? mix(cyan, float3(0.27,0.62,1), tint*0.3)
                  : (sheet == 1 ? mix(blue, cyan, tint) : mix(float3(0.34,0.11,0.75), pink, tint));
+    // The lock's opening and keyhole wear its outline's own cyan and violet,
+    // split across the thread like the outer sheets, not the heart's deep blue.
+    float lockForm = (p.lock.w > 0.5 ? 0.0 : p.lock.x)*(1 - matchHeart);
+    if (sheet == 1 && lockForm > 0) {
+        float across = smoothstep(0.2, 0.8, float(strand % 20)/19.0);
+        float3 detail = mix(cyan, mix(float3(0.34,0.11,0.75), pink, 0.6), across);
+        color = mix(color, mix(detail, float3(0.47,0.84,1), tint*0.3), lockForm);
+    }
     // The helix leans deep blue and violet, with cyan carried by its crests.
     float3 helixColor = sheet == 0 ? mix(float3(0.10,0.32,1.0), float3(0.28,0.80,1.0), tint)
                       : (sheet == 1 ? mix(float3(0.40,0.22,0.95), float3(0.30,0.74,1.0), tint)

@@ -21,7 +21,7 @@ struct RelationshipPreferenceQuestion: Identifiable, Hashable {
     static var sexualArrangement: RelationshipPreferenceQuestion {
         RelationshipPreferenceQuestion(
             id: "sexualArrangement",
-            prompt: L10n("What sexual arrangement are you comfortable with?"),
+            prompt: L10n("Which sexual arrangement suits you?"),
             selectionMode: .single,
             options: [
                 Option(id: "partnerOnly", title: L10n("Only with my partner")),

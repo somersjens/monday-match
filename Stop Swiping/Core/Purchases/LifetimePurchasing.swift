@@ -1,5 +1,6 @@
 import Foundation
 import StoreKit
+import UIKit
 
 struct LifetimeStoreProduct: Equatable {
     let id: LifetimeProductID
@@ -10,6 +11,14 @@ struct LifetimeStoreTransaction: Equatable {
     let productID: LifetimeProductID
     let originalID: String
     let originalPurchaseDate: Date
+    /// When a subscription's current period ends; nil for one-time purchases.
+    var expiresAt: Date? = nil
+
+    /// Lifetime purchases never lapse; a subscription only within its period.
+    func isActive(at now: Date) -> Bool {
+        guard productID.isSubscription else { return true }
+        return expiresAt.map { now < $0 } ?? false
+    }
 }
 
 struct LifetimeStoreSnapshot {
@@ -33,6 +42,13 @@ protocol LifetimePurchasing {
     /// Every verified transaction of these products as the store signed it,
     /// refunded ones included, so the server can record (or revoke) access.
     func signedTransactions() async -> [SignedStoreTransaction]
+    /// Whether this Apple ID's monthly plan will renew at the end of its
+    /// period. Apple never lets an app cancel it, so the app keeps asking
+    /// someone with lifetime access to do so while this is true.
+    func monthlyWillRenew() async -> Bool
+    /// Opens the store's own page for cancelling a plan. No app can cancel
+    /// one itself, on iOS or Android. Returns when that page is closed.
+    func manageSubscriptions(in store: SubscriptionStore) async
 }
 
 /// A store transaction in the form the server can verify itself: for the
@@ -41,10 +57,23 @@ struct SignedStoreTransaction: Equatable {
     let originalID: String
     let isRevoked: Bool
     let jws: String
+    /// A subscription's period end, so a renewal counts as a change to send.
+    var expiresAt: Date? = nil
+    /// A subscription's signed renewal info (whether it will be charged
+    /// again), so the account's other devices know too.
+    var renewalJWS: String? = nil
+    var willAutoRenew: Bool? = nil
+}
+
+/// Where a monthly plan is billed, and so where it can be cancelled.
+enum SubscriptionStore: Equatable {
+    case appStore, googlePlay
 }
 
 extension LifetimePurchasing {
     func signedTransactions() async -> [SignedStoreTransaction] { [] }
+    func monthlyWillRenew() async -> Bool { false }
+    func manageSubscriptions(in store: SubscriptionStore) async {}
 }
 
 @MainActor
@@ -54,9 +83,12 @@ final class StoreKitLifetimePurchases: LifetimePurchasing {
     func products() async throws -> [LifetimeStoreProduct] {
         let products = try await Product.products(for: LifetimeProductID.allCases.map(\.rawValue))
         // A misconfigured paid early-adopter product must never charge someone
-        // who selected a free offer. Both products must be non-consumables.
-        let valid = products.filter {
-            $0.type == .nonConsumable && ($0.id != LifetimeProductID.earlyAdopter.rawValue || $0.price == 0)
+        // who selected a free offer. Lifetime products must be non-consumables,
+        // the monthly plan an auto-renewing subscription.
+        let valid = products.filter { product in
+            guard let id = LifetimeProductID(rawValue: product.id) else { return false }
+            if id.isSubscription { return product.type == .autoRenewable }
+            return product.type == .nonConsumable && (id != .earlyAdopter || product.price == 0)
         }
         loadedProducts = Dictionary(uniqueKeysWithValues: valid.map { ($0.id, $0) })
         return valid.compactMap { product in
@@ -67,6 +99,8 @@ final class StoreKitLifetimePurchases: LifetimePurchasing {
     func snapshot() async -> LifetimeStoreSnapshot {
         var snapshot = LifetimeStoreSnapshot()
         for await result in StoreKit.Transaction.currentEntitlements {
+            // A subscription is listed here only while it is active (or in
+            // Apple's billing grace period).
             guard case .verified(let transaction) = result,
                   transaction.revocationDate == nil, !transaction.isUpgraded,
                   let value = value(transaction) else { continue }
@@ -103,16 +137,59 @@ final class StoreKitLifetimePurchases: LifetimePurchasing {
 
     func signedTransactions() async -> [SignedStoreTransaction] {
         var latest: [String: SignedStoreTransaction] = [:]
+        var subscriptions: [String: StoreKit.Transaction] = [:]
         for await result in StoreKit.Transaction.all {
             guard case .verified(let transaction) = result,
                   LifetimeProductID(rawValue: transaction.productID) != nil else { continue }
             let id = transaction.originalID.description
-            // A refund shows up as a revoked transaction; that one wins.
-            if latest[id]?.isRevoked == true { continue }
-            latest[id] = SignedStoreTransaction(originalID: id, isRevoked: transaction.revocationDate != nil,
-                                                jws: result.jwsRepresentation)
+            let signed = SignedStoreTransaction(originalID: id, isRevoked: transaction.revocationDate != nil,
+                                                jws: result.jwsRepresentation, expiresAt: transaction.expirationDate)
+            if let existing = latest[id] {
+                if let expiresAt = signed.expiresAt {
+                    // A subscription renews under the same original ID: the
+                    // period that ends last is the current one.
+                    if let current = existing.expiresAt, current > expiresAt { continue }
+                } else if existing.isRevoked {
+                    // A refund shows up as a revoked transaction; that one wins.
+                    continue
+                }
+            }
+            latest[id] = signed
+            if signed.expiresAt != nil { subscriptions[id] = transaction }
+        }
+        // Whether each plan will renew, signed by Apple like the transaction.
+        for (id, transaction) in subscriptions {
+            guard let status = await transaction.subscriptionStatus,
+                  case .verified(let renewal) = status.renewalInfo else { continue }
+            latest[id]?.renewalJWS = status.renewalInfo.jwsRepresentation
+            latest[id]?.willAutoRenew = renewal.willAutoRenew
         }
         return latest.values.sorted { $0.originalID < $1.originalID }
+    }
+
+    func monthlyWillRenew() async -> Bool {
+        for await result in StoreKit.Transaction.currentEntitlements {
+            guard case .verified(let transaction) = result,
+                  transaction.productID == LifetimeProductID.monthly.rawValue,
+                  let status = await transaction.subscriptionStatus,
+                  case .verified(let renewal) = status.renewalInfo else { continue }
+            return renewal.willAutoRenew
+        }
+        return false
+    }
+
+    func manageSubscriptions(in store: SubscriptionStore) async {
+        switch store {
+        case .appStore:
+            guard let scene = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .first(where: { $0.activationState == .foregroundActive }) else { return }
+            try? await AppStore.showManageSubscriptions(in: scene)
+        case .googlePlay:
+            // A plan bought on Android: Google Play's page, in the browser.
+            guard let url = URL(string: "https://play.google.com/store/account/subscriptions") else { return }
+            await UIApplication.shared.open(url)
+        }
     }
 
     func finish(_ value: LifetimeStoreTransaction) async {
@@ -126,7 +203,8 @@ final class StoreKitLifetimePurchases: LifetimePurchasing {
     private func value(_ transaction: StoreKit.Transaction) -> LifetimeStoreTransaction? {
         guard let productID = LifetimeProductID(rawValue: transaction.productID) else { return nil }
         return LifetimeStoreTransaction(productID: productID, originalID: transaction.originalID.description,
-                                        originalPurchaseDate: transaction.originalPurchaseDate)
+                                        originalPurchaseDate: transaction.originalPurchaseDate,
+                                        expiresAt: transaction.expirationDate)
     }
 
     enum PurchaseError: LocalizedError {

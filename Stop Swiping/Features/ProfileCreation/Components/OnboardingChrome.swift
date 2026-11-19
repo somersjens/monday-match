@@ -39,12 +39,19 @@ struct OnboardingStepHeader: View {
     let subtitle: String?
     var titleFocus: AccessibilityFocusState<Bool>.Binding
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            // At most two lines, so every question starts at the same
+            // height; a longer one shrinks a little rather than wrapping.
+            // Accessibility sizes keep wrapping instead of shrinking.
             Text(title)
                 .font(.system(.title, design: .default, weight: .semibold))
                 .tracking(-0.4)
                 .foregroundStyle(OnboardingTheme.primaryText)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                .minimumScaleFactor(0.75)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityFocused(titleFocus)

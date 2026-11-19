@@ -12,13 +12,19 @@ struct EarlyAccessView: View {
     let onContinue: () -> Void
     var onBack: (() -> Void)?
     var usesSharedLight = false
-    /// An unfinished questionnaire's progress, shown above the plans.
+    /// An unfinished questionnaire's progress, shown above the plans once the
+    /// free early-adopter plan is gone. That plan is claimed only once, before
+    /// any answer counts, so while it is offered there is no progress to show.
     var questionnaireProgress: Double?
 
     @State private var selection = LifetimeProductID.lifetime
     @State private var hasAppeared = false
     /// The reminder above the footer, which the plans scroll clear of.
     @State private var reminderHeight: CGFloat = 0
+    /// How much of the extra room of a wide window (iPad, iPhone Duo open)
+    /// the plans use, from 0 on an iPhone to 1 on an iPad, continuously.
+    @State private var roominess: CGFloat = 0
+    @State private var showsPrivacyPolicy = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
 
@@ -29,30 +35,41 @@ struct EarlyAccessView: View {
         return access.product(selection) != nil && (selection != .earlyAdopter || access.product(.lifetime) != nil)
     }
 
+    /// The plan next to lifetime access: the free one while it lasts, and
+    /// only after that the monthly plan, so nobody pays monthly for what
+    /// they could have had free.
+    private var secondPlan: LifetimeProductID {
+        access.canOfferEarlyAccess ? .earlyAdopter : .monthly
+    }
+
     var body: some View {
         ZStack {
             if !usesSharedLight {
                 Color("WelcomeBackground").ignoresSafeArea()
             }
             ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    if let questionnaireProgress {
+                VStack(alignment: .leading, spacing: spaced(12, 20)) {
+                    if let questionnaireProgress, !access.canOfferEarlyAccess {
                         OnboardingProgressCard(progress: questionnaireProgress)
                             .padding(.bottom, 6)
                             .accessArrival(visible: hasAppeared, delay: 0.12)
                     }
                     lifetimeCard
                         .accessArrival(visible: hasAppeared, delay: 0.22)
-                    if access.canOfferEarlyAccess {
-                        planCard(.earlyAdopter)
-                            .accessArrival(visible: hasAppeared, delay: 0.34)
-                            .transition(.opacity.combined(with: .offset(y: 16)))
-                    } else {
-                        Text(L10n("Your early-adopter deadline has passed. Continue with lifetime access to finish your profile."))
-                            .font(.footnote)
-                            .foregroundStyle(OnboardingTheme.secondaryText)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .accessArrival(visible: hasAppeared, delay: 0.34)
+                    planCard(secondPlan)
+                        .id(secondPlan)
+                        .accessArrival(visible: hasAppeared, delay: 0.34)
+                        .transition(.opacity.combined(with: .offset(y: 16)))
+                    if secondPlan == .monthly {
+                        if access.ledger.effectiveStartedAt != nil {
+                            Text(L10n("Your early-adopter deadline has passed. Choose a plan to finish your profile."))
+                                .font(.footnote)
+                                .foregroundStyle(OnboardingTheme.secondaryText)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessArrival(visible: hasAppeared, delay: 0.4)
+                        }
+                        subscriptionTerms
+                            .accessArrival(visible: hasAppeared, delay: 0.4)
                     }
                     if access.products.isEmpty {
                         VStack(spacing: 8) {
@@ -74,9 +91,12 @@ struct EarlyAccessView: View {
                 }
                 .frame(maxWidth: OnboardingTheme.contentWidth)
                 .padding(.horizontal, 20)
-                .padding(.top, 8)
-                .padding(.bottom, 12 + (showsReminder ? reminderHeight : 0))
+                .padding(.top, spaced(8, 24))
+                .padding(.bottom, spaced(12, 20) + (showsReminder ? reminderHeight : 0))
                 .frame(maxWidth: .infinity)
+            }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
+                roominess = min(1, max(0, (width - 440) / (744 - 440)))
             }
             .safeAreaInset(edge: .top, spacing: 0) { lightNavigation }
             .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -92,6 +112,7 @@ struct EarlyAccessView: View {
             await access.start()
             keepSelectionAvailable()
         }
+        .sheet(isPresented: $showsPrivacyPolicy) { PrivacyPolicyView() }
         .sensoryFeedback(.selection, trigger: selection)
         // A purchase or a restore that went through.
         .sensoryFeedback(.success, trigger: access.hasPaidAccess) { _, paid in paid }
@@ -146,6 +167,53 @@ struct EarlyAccessView: View {
             })
     }
 
+    /// What Apple asks to show with a subscription: that it renews, how to
+    /// cancel, and the terms and privacy policy.
+    private var subscriptionTerms: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(L10n("The monthly plan renews automatically until you cancel it. Cancel anytime in your Apple Account settings, at least 24 hours before the next renewal."))
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 14) {
+                Link(L10n("Terms of Use"), destination: Self.termsOfUse)
+                Button(L10n("Privacy Policy")) { showsPrivacyPolicy = true }
+                    .buttonStyle(.plain)
+            }
+            .font(.system(size: 11.5, weight: .semibold))
+            .foregroundStyle(OnboardingTheme.cyan)
+        }
+        .font(.system(size: 11.5))
+        .foregroundStyle(OnboardingTheme.tertiaryText)
+    }
+
+    /// Apple's standard licence agreement, which the app uses.
+    private static let termsOfUse = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
+
+    private func title(_ id: LifetimeProductID) -> String {
+        switch id {
+        case .earlyAdopter: L10n("Early Adopter Benefits")
+        case .monthly: L10n("Monthly Access")
+        case .lifetime, .subscriberLifetime: L10n("Lifetime Access")
+        }
+    }
+
+    @ViewBuilder
+    private func benefits(_ id: LifetimeProductID) -> some View {
+        switch id {
+        case .earlyAdopter:
+            benefit(L10n("Be among the first to join"))
+            benefit(L10n("Free forever:"), detail: L10n("You'll never have to pay"))
+            benefit(L10n("Ad-free forever:"), detail: L10n("Enjoy the app without ads"))
+        case .monthly:
+            benefit(L10n("Low monthly cost:"), detail: L10n("Still includes all features"))
+            benefit(L10n("Cancel anytime:"), detail: L10n("No long-term commitment"))
+            benefit(L10n("No big upfront cost:"), detail: L10n("See if you like it first"))
+        case .lifetime, .subscriberLifetime:
+            benefit(L10n("One-time payment:"), detail: L10n("No subscription, ever"))
+            benefit(L10n("All features included:"), detail: L10n("Now and in the future"))
+            benefit(L10n("Support us:"), detail: L10n("Help improve the app"))
+        }
+    }
+
     private func planCard(_ id: LifetimeProductID) -> some View {
         let early = id == .earlyAdopter
         let selected = selection == id
@@ -155,14 +223,14 @@ struct EarlyAccessView: View {
                 selection = id
             }
         } label: {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: spaced(10, 14)) {
                 HStack(alignment: .center, spacing: 10) {
                     Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                         .font(.system(size: 21, weight: .light))
                         .foregroundStyle(selected ? OnboardingTheme.cyan : OnboardingTheme.tertiaryText)
                         .frame(width: Self.selectorWidth)
                         .accessibilityHidden(true)
-                    Text(early ? L10n("Early Adopter Benefits") : L10n("Lifetime Access"))
+                    Text(title(id))
                         .font(.system(size: 17, weight: .semibold))
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -175,21 +243,16 @@ struct EarlyAccessView: View {
                         if early, let price = access.product(.lifetime)?.displayPrice {
                             Text(price).font(.system(size: 12)).strikethrough()
                                 .foregroundStyle(OnboardingTheme.tertiaryText)
+                        } else if id.isSubscription {
+                            Text(L10n("per month")).font(.system(size: 12))
+                                .foregroundStyle(OnboardingTheme.tertiaryText)
                         }
                     }
                     .layoutPriority(1)
                 }
                 Rectangle().fill(OnboardingTheme.hairline).frame(height: 1)
-                VStack(alignment: .leading, spacing: 7) {
-                    if early {
-                        benefit(L10n("Be among the first to join"))
-                        benefit(L10n("Free forever:"), detail: L10n("You'll never have to pay"))
-                        benefit(L10n("Ad-free forever:"), detail: L10n("Enjoy the app without ads"))
-                    } else {
-                        benefit(L10n("One-time payment:"), detail: L10n("No subscription, ever"))
-                        benefit(L10n("All features included:"), detail: L10n("Now and in the future"))
-                        benefit(L10n("Support us:"), detail: L10n("Help improve the app"))
-                    }
+                VStack(alignment: .leading, spacing: spaced(7, 10)) {
+                    benefits(id)
                 }
                 if early {
                     Text(L10n("To unlock these benefits, complete your profile within 7 days of signing up."))
@@ -204,7 +267,7 @@ struct EarlyAccessView: View {
                 }
             }
             .foregroundStyle(OnboardingTheme.primaryText)
-            .padding(16)
+            .padding(spaced(16, 22))
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
                 RoundedRectangle(cornerRadius: 22)
@@ -225,7 +288,7 @@ struct EarlyAccessView: View {
         .buttonStyle(.plain)
         .disabled(access.isBusy)
         .accessibilityAddTraits(selected ? [.isSelected] : [])
-        .accessibilityIdentifier(early ? "access.earlyAdopter" : "access.lifetime")
+        .accessibilityIdentifier(early ? "access.earlyAdopter" : id.isSubscription ? "access.monthly" : "access.lifetime")
     }
 
     private func benefit(_ title: String, detail: String? = nil) -> some View {
@@ -243,6 +306,12 @@ struct EarlyAccessView: View {
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// `compact` on an iPhone, `roomy` on an iPad, in between while a window
+    /// is resized or an iPhone Duo unfolds.
+    private func spaced(_ compact: CGFloat, _ roomy: CGFloat) -> CGFloat {
+        compact + (roomy - compact) * roominess
     }
 
     private var showsReminder: Bool {
@@ -311,13 +380,14 @@ struct EarlyAccessView: View {
     }
 
     /// Progress is worth showing once the questionnaire has begun: after a
-    /// first answer, or once an early-adopter window was started.
+    /// first answer, or once an early-adopter window was started. The view
+    /// still hides it while the free plan is offered.
     static func questionnaireProgress(_ progress: Double, hasStartedEarlyAccess: Bool) -> Double? {
         return progress > 0 || hasStartedEarlyAccess ? progress : nil
     }
 
     private func keepSelectionAvailable() {
-        if selection == .earlyAdopter && !access.canOfferEarlyAccess {
+        if selection != .lifetime && selection != secondPlan {
             selection = .lifetime
         }
     }

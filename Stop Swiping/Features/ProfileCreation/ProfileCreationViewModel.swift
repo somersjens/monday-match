@@ -33,6 +33,8 @@ enum ProfileCreationFeedback: Equatable {
 enum ProfileCreationSubmission: Equatable {
     case advanced
     case rejected
+    /// The birthday makes the user a minor; they confirm it before the lock.
+    case confirmAge(Int)
     case underage
     case completed
 }
@@ -300,9 +302,10 @@ final class ProfileCreationViewModel: ObservableObject {
         case .nonexistent, .future:
             reject(birthDateHint ?? .futureDate)
             return .rejected
-        case .minor:
-            lockForUnderage()
-            return .underage
+        case .minor(let age):
+            // A mistyped year must not lock anyone out: the user confirms
+            // the age first, and only then is everything discarded.
+            return .confirmAge(age)
         case .adult(let age):
             state.dateOfBirth = state.birthDateSelection
             if state.partnerAgeRange?.isCustomized != true {
@@ -314,6 +317,14 @@ final class ProfileCreationViewModel: ObservableObject {
     }
 
     // MARK: - Underage lock
+
+    /// The user confirmed the minor birthday they entered.
+    func confirmUnderage() -> ProfileCreationSubmission {
+        guard state.currentStep == .dateOfBirth,
+              case .minor = birthDateEvaluation else { return .rejected }
+        lockForUnderage()
+        return .underage
+    }
 
     /// Every answer is discarded; nothing a minor entered is kept.
     private func lockForUnderage() {

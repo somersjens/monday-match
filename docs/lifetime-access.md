@@ -98,3 +98,102 @@ follow the person to another phone or, later, to the Android app.
 - Google Play purchases will go into the same table with `store = 'play'`,
   verified with the Play Developer API. Play has no free in-app products, so
   the early-adopter offer needs a promo code or a server-side grant there.
+
+## Plans, accounts and devices (19 November 2026)
+
+There are four App Store products, all recorded per account by the
+`store-entitlement` function:
+
+| Product ID | Type | Shown |
+| --- | --- | --- |
+| `lifetime_access_early_adopter` | non-consumable, free | while the free plan can still be claimed |
+| `lifetime_access` | non-consumable | always |
+| `monthly_access` | auto-renewable, 1 month, group "Stop Swiping Access" | only once the free plan is gone |
+| `lifetime_access_subscriber` | non-consumable, half of `lifetime_access` | home screen, monthly subscribers with auto matching on |
+
+The access screen always shows Lifetime Access, plus exactly one other plan:
+the free one while it lasts, the monthly plan after that. Nobody is offered
+a monthly fee while they could still have the app for free. The monthly card
+carries Apple's subscription terms (auto-renewal, how to cancel, Terms of Use
+and Privacy Policy links).
+
+**Who owns access.** Before an account exists, access belongs to the Apple ID
+(StoreKit on the device), exactly as before. Once an account exists (Apple or
+Google sign-in), every purchase is also recorded on the server for that
+account, and the app grants access when *either* says so:
+
+- StoreKit on this device (this Apple ID), or
+- `my_store_entitlements()` for the signed-in account: lifetime and subscriber
+  lifetime forever unless refunded; the monthly plan while `expires_at` is in
+  the future; the free plan with the same seven-day rule, counted from the
+  server's purchase date and the profile's completion date.
+
+So someone who bought (or claimed the free plan) on one iPhone can sign in
+with Google on another iPhone with another Apple ID, and later on Android,
+and keeps access. Signing in waits up to five seconds for the account's
+entitlements before the screens decide; they are kept on the phone (cleared
+on sign-out and account deletion) so a later launch opens straight away,
+also offline. They are read again on every return to the app while they are
+the only source of access, otherwise twice a day.
+
+A free plan the account already claimed elsewhere counts as claimed here too,
+so a second device can't start a second free week.
+
+**Renewals.** A subscription keeps one original transaction ID, so it is one
+row whose `expires_at` moves forward. The app sends each renewal it sees
+(the sync fingerprint includes the period end). App Store Server
+Notifications V2 post to the same `store-entitlement` URL and update a row
+an account already recorded, so a plan bought on an iPhone stays current for
+the account's other devices even when that iPhone is never opened.
+
+**Half-price lifetime for subscribers.** A separate non-consumable, because
+Apple has no offers for one-time purchases. The card sits above the auto
+matching card, as tall as it, while auto matching is on. Closing it hides it
+for a calendar month. Apple can't end a subscription for the app (nor can
+the server): after the purchase the app asks the person to cancel the
+monthly plan and opens the store's own cancel page. While a plan will still
+be charged and lifetime access exists, a card with the full sentence
+("Now that you have lifetime access, you can cancel your subscription;
+otherwise you'll keep paying.") replaces the offer on the home screen,
+checked again after the store's page closes and on every return to the app.
+
+Where the plan is billed decides the button (`SubscriptionStore`,
+`LifetimePurchasing.manageSubscriptions(in:)`):
+
+| Plan billed to | Known from | Button |
+| --- | --- | --- |
+| this phone's Apple ID | StoreKit `renewalInfo.willAutoRenew` | Apple's sheet (`AppStore.showManageSubscriptions`) |
+| another Apple ID | server `auto_renews` | none: a line says to cancel on that iPhone/iPad |
+| Google Play | server `auto_renews` | Google Play's subscriptions page |
+
+The server learns `auto_renews` from Apple's signed renewal info, sent by the
+app with its transactions (`appStoreRenewals`) and by App Store Server
+Notifications (`signedRenewalInfo`), via `set_store_auto_renew`
+(202611190014). Unknown (`null`) never shows the card. On Android the
+purchasing layer implements the same two calls with Play Billing:
+`monthlyWillRenew` from `Purchase.isAutoRenewing`, and
+`manageSubscriptions(in: .googlePlay)` opening
+`https://play.google.com/store/account/subscriptions?sku=monthly_access&package=<package>`
+(for `.appStore` it shows the "cancel on your iPhone" line); Play's real-time
+developer notifications should call `set_store_auto_renew` with `store = 'play'`.
+
+**Known limits.**
+- The offer needs an account and the notification step done (the auto
+  matching card only shows after both), auto matching on, an active plan, no
+  lifetime access, and the `lifetime_access_subscriber` price from the App
+  Store. Until that product is approved (it goes to review with an app
+  version), the card stays hidden.
+- A plan bought on another Apple ID can't be read from this one: the cancel
+  card only shows for this Apple ID's own plan (the one-time alert still
+  shows).
+- Billing grace period is off in App Store Connect. If it's turned on, a
+  plan in grace keeps its old `expiresDate`, so the app and server would end
+  access early: extend `expiresAt` with `gracePeriodExpirationDate` first.
+- The closed offer is remembered per device (UserDefaults); a reinstall
+  shows it again.
+
+**Android (later).** Play has no free products. The free plan there needs a
+server-side grant (a `store_entitlements` row the server writes when the
+account claims it), with the same one-per-account rule; Play purchases and
+subscriptions go into the same table with `store = 'play'`. The app already
+reads the account's entitlements without caring which store wrote them.

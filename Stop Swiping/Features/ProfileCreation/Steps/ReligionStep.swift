@@ -102,8 +102,8 @@ struct ReligionStep: View {
                         .foregroundStyle(OnboardingTheme.primaryText.opacity(isSelected ? 1 : 0.86))
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(.vertical, 12)
-                .frame(minHeight: 52)
+                .padding(.vertical, 11)
+                .frame(minHeight: 47)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -131,7 +131,7 @@ struct ReligionStep: View {
                     Spacer(minLength: 14)
                     OwnMarker(isSelected: isAccepted, isActive: phase == .partner)
                 }
-                .frame(minWidth: 44, maxWidth: .infinity, minHeight: 52)
+                .frame(minWidth: 44, maxWidth: .infinity, minHeight: 47)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)

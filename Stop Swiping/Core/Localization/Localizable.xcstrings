@@ -1134,6 +1134,23 @@
         }
       }
     },
+    "50% off for subscribers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "50% off for subscribers"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "50% abonneekorting"
+          }
+        }
+      }
+    },
     "A clear, recent photo with only your face. Follow the guidelines below." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1232,6 +1249,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Een plek op de kaart"
+          }
+        }
+      }
+    },
+    "A range around your age. Drag the white dots to adjust it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A range around your age. Drag the white dots to adjust it."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een bereik rond je leeftijd. Sleep de witte bolletjes om het aan te passen."
           }
         }
       }
@@ -2749,19 +2783,19 @@
         }
       }
     },
-    "And how often may a partner, at most? Less often is fine too." : {
+    "And how often may a partner, at most?" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "And how often may a partner, at most? Less often is fine too."
+            "value" : "And how often may a partner, at most?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "En hoe vaak mag een partner dit maximaal doen? Minder vaak is ook goed."
+            "value" : "En hoe vaak mag een partner dit maximaal doen?"
           }
         }
       }
@@ -3038,19 +3072,19 @@
         }
       }
     },
-    "Are you open to a partner who already has children?" : {
+    "Are you really {0}?" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Are you open to a partner who already has children?"
+            "value" : "Are you really {0}?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sta je open voor een partner die al kinderen heeft?"
+            "value" : "Ben je echt {0}?"
           }
         }
       }
@@ -3888,6 +3922,23 @@
         }
       }
     },
+    "Cancel anytime:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel anytime:"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Altijd opzegbaar:"
+          }
+        }
+      }
+    },
     "Cancel exchanging with {0}" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3901,6 +3952,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uitwisselen met {0} annuleren"
+          }
+        }
+      }
+    },
+    "Cancel subscription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel subscription"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abonnement stopzetten"
           }
         }
       }
@@ -4347,23 +4415,6 @@
         }
       }
     },
-    "Choose all that apply. No selection means open to all." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose all that apply. No selection means open to all."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies alle passende opties. Zonder selectie sta je voor iedereen open."
-          }
-        }
-      }
-    },
     "Choose another photo" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4398,23 +4449,6 @@
         }
       }
     },
-    "Choose one, or skip this question. Tap a selected answer to clear it." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose one, or skip this question. Tap a selected answer to clear it."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies één optie, of sla deze vraag over. Tik op een geselecteerde optie om die te wissen."
-          }
-        }
-      }
-    },
     "Choose the language used throughout the app." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4428,23 +4462,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kies de taal voor de hele app."
-          }
-        }
-      }
-    },
-    "Choose the option that fits you best." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose the option that fits you best."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies de optie die het beste bij je past."
           }
         }
       }
@@ -4551,6 +4568,23 @@
         }
       }
     },
+    "Clear search" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear search"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoekopdracht wissen"
+          }
+        }
+      }
+    },
     "Clearly divided" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4581,6 +4615,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sluiten"
+          }
+        }
+      }
+    },
+    "Close offer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close offer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aanbod sluiten"
           }
         }
       }
@@ -6424,19 +6475,19 @@
         }
       }
     },
-    "Do you want children in the future with a new partner?" : {
+    "Do you want children with a new partner?" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Do you want children in the future with a new partner?"
+            "value" : "Do you want children with a new partner?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wil je in de toekomst kinderen met een nieuwe partner?"
+            "value" : "Wil je kinderen met een nieuwe partner?"
           }
         }
       }
@@ -6624,6 +6675,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chatgesprek en profiel downloaden als pdf"
+          }
+        }
+      }
+    },
+    "Drag the white dots, or leave it wide open if height doesn’t matter." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag the white dots, or leave it wide open if height doesn’t matter."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep de witte bolletjes, of laat het ruim als lengte je niet uitmaakt."
           }
         }
       }
@@ -8459,7 +8527,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Houd jullie telefoons tegen elkaar"
+            "value" : "Houd twee telefoons tegen elkaar"
           }
         }
       }
@@ -8702,19 +8770,19 @@
         }
       }
     },
-    "How often do you use cannabis or other recreational drugs?" : {
+    "How often do you use cannabis or other drugs?" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "How often do you use cannabis or other recreational drugs?"
+            "value" : "How often do you use cannabis or other drugs?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hoe vaak gebruik je cannabis of andere recreatieve drugs?"
+            "value" : "Hoe vaak gebruik je cannabis of andere drugs?"
           }
         }
       }
@@ -9827,23 +9895,6 @@
         }
       }
     },
-    "Leave it wide open if height doesn’t matter to you." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Leave it wide open if height doesn’t matter to you."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Laat het bereik ruim als lengte je niet uitmaakt."
-          }
-        }
-      }
-    },
     "Less swiping.\nMore intention." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9958,7 +10009,24 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Levenslange toegang"
+            "value" : "Lifetime-toegang"
+          }
+        }
+      }
+    },
+    "Lifetime access unlocked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lifetime access unlocked"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lifetime-toegang ontgrendeld"
           }
         }
       }
@@ -10384,6 +10452,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Veel eigen tijd"
+          }
+        }
+      }
+    },
+    "Low monthly cost:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Low monthly cost:"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lage maandprijs:"
           }
         }
       }
@@ -10921,13 +11006,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Minors not allowed."
+            "value" : "Minors not allowed"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minderjarigen niet toegestaan."
+            "state" : "needs_review",
+            "value" : "Minderjarigen niet toegestaan"
           }
         }
       }
@@ -10979,6 +11064,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Maand"
+          }
+        }
+      }
+    },
+    "Monthly Access" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monthly Access"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maandabonnement"
           }
         }
       }
@@ -11408,6 +11510,40 @@
         }
       }
     },
+    "No big upfront cost:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No big upfront cost:"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen grote aankoop vooraf:"
+          }
+        }
+      }
+    },
+    "No long-term commitment" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No long-term commitment"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen lange verplichting"
+          }
+        }
+      }
+    },
     "No longer active" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11646,6 +11782,23 @@
         }
       }
     },
+    "No, change my birthday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No, change my birthday"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nee, geboortedatum aanpassen"
+          }
+        }
+      }
+    },
     "Not answered" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11846,6 +11999,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Af en toe"
+          }
+        }
+      }
+    },
+    "Now that you have lifetime access, you can cancel your subscription; otherwise you’ll keep paying." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now that you have lifetime access, you can cancel your subscription; otherwise you’ll keep paying."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu je lifetime-toegang hebt, kan je je abonnement stopzetten; anders blijf je doorbetalen."
           }
         }
       }
@@ -12254,6 +12424,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Instellingen openen"
+          }
+        }
+      }
+    },
+    "Open to a partner with children?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open to a partner with children?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open voor een partner met kinderen?"
           }
         }
       }
@@ -12781,6 +12968,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vredestichter"
+          }
+        }
+      }
+    },
+    "per month" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "per month"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "per maand"
           }
         }
       }
@@ -14485,6 +14689,23 @@
         }
       }
     },
+    "See if you like it first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "See if you like it first"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kijk eerst of het je bevalt"
+          }
+        }
+      }
+    },
     "Seek contact" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14502,19 +14723,19 @@
         }
       }
     },
-    "Select everyone you’re open to." : {
+    "Select every option you’re open to." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select everyone you’re open to."
+            "value" : "Select every option you’re open to."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Selecteer iedereen voor wie je openstaat."
+            "value" : "Selecteer elke optie waarvoor je openstaat."
           }
         }
       }
@@ -16049,6 +16270,23 @@
         }
       }
     },
+    "Still includes all features" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still includes all features"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toch alle functies inbegrepen"
+          }
+        }
+      }
+    },
     "Stop anytime or join without a photo. Up to five checks a day." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16593,6 +16831,23 @@
         }
       }
     },
+    "Terms of Use" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terms of Use"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruiksvoorwaarden"
+          }
+        }
+      }
+    },
     "Texting" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16946,6 +17201,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "De beveiligde sleutelopslag van de iPhone is niet beschikbaar ({0})."
+          }
+        }
+      }
+    },
+    "The monthly plan renews automatically until you cancel it. Cancel anytime in your Apple Account settings, at least 24 hours before the next renewal." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The monthly plan renews automatically until you cancel it. Cancel anytime in your Apple Account settings, at least 24 hours before the next renewal."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het maandabonnement wordt automatisch verlengd tot je het opzegt. Opzeggen kan altijd in je Apple-accountinstellingen, uiterlijk 24 uur voor de volgende verlenging."
           }
         }
       }
@@ -18633,23 +18905,6 @@
         }
       }
     },
-    "We suggested a range around your age. Adjust it freely." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "We suggested a range around your age. Adjust it freely."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "We hebben een bereik rond je leeftijd voorgesteld. Pas het gerust aan."
-          }
-        }
-      }
-    },
     "We’ll text you when we’ve found the one." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18782,40 +19037,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wat is je gender?"
-          }
-        }
-      }
-    },
-    "What is your religion or worldview?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What is your religion or worldview?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wat is jouw religie of levensbeschouwing?"
-          }
-        }
-      }
-    },
-    "What sexual arrangement are you comfortable with?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What sexual arrangement are you comfortable with?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Welke relatievorm past bij jou?"
           }
         }
       }
@@ -18990,19 +19211,19 @@
         }
       }
     },
-    "Which religions or worldviews are you open to in a partner?" : {
+    "Which sexual arrangement suits you?" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which religions or worldviews are you open to in a partner?"
+            "value" : "Which sexual arrangement suits you?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voor welke religies of levensbeschouwingen sta je open bij een partner?"
+            "value" : "Welke relatievorm past bij jou?"
           }
         }
       }
@@ -19241,6 +19462,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ja"
+          }
+        }
+      }
+    },
+    "Yes, I am {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yes, I am {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ja, ik ben {0}"
           }
         }
       }
@@ -20316,19 +20554,19 @@
         }
       }
     },
-    "Your early-adopter deadline has passed. Continue with lifetime access to finish your profile." : {
+    "Your early-adopter deadline has passed. Choose a plan to finish your profile." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your early-adopter deadline has passed. Continue with lifetime access to finish your profile."
+            "value" : "Your early-adopter deadline has passed. Choose a plan to finish your profile."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Je termijn als early adopter is verstreken. Ga verder met levenslange toegang om je profiel af te ronden."
+            "value" : "Je termijn als early adopter is verstreken. Kies een optie om je profiel af te ronden."
           }
         }
       }
@@ -20788,6 +21026,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je herinnering kon niet worden gepland. Probeer deze opnieuw aan te zetten."
+          }
+        }
+      }
+    },
+    "Your subscription runs on another Apple ID. Cancel it in Settings on the iPhone or iPad you subscribed with." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your subscription runs on another Apple ID. Cancel it in Settings on the iPhone or iPad you subscribed with."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je abonnement loopt via een ander Apple ID. Zet het stop via Instellingen op de iPhone of iPad waarmee je het afsloot."
+          }
+        }
+      }
+    },
+    "Your worldview, and what you’re open to?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your worldview, and what you’re open to?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je levensvisie, en waar sta je voor open?"
           }
         }
       }

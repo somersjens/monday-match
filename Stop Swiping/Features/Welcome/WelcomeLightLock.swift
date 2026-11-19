@@ -69,13 +69,19 @@ enum WelcomeLightLock {
     /// The space enclosed by the shackle and the top of the body.
     static func opening(_ u: Double) -> CGPoint { evaluate(openingSegments, at: u) }
 
-    /// A circle drawn down into a tapering slot, smooth all the way round.
+    /// A circle flowing down into a tapering slot with a round foot, without
+    /// a shoulder or corner anywhere. Along the slot the circle's sideways
+    /// reach saturates, so the foot keeps its width instead of closing to a
+    /// point, while staying smooth enough to sample evenly.
     static func keyhole(_ u: Double) -> CGPoint {
         let angle = wrap(u) * WelcomeLightGeometry.tau
         let s = sin(angle), c = cos(angle)
-        let tail = pow(max(0, -c), 6)
+        let t = min(max((-c - 0.1) / 0.9, 0), 1)
+        let tail = t * t * (3 - 2 * t)
+        let saturated = s * (1 + 0.64).squareRoot() / (s * s + 0.64).squareRoot()
+        let squared = s + (saturated - s) * tail
         return CGPoint(
-            x: keyholeCenter.x - s * keyholeRadius * (1 - 0.55 * tail),
+            x: keyholeCenter.x - squared * keyholeRadius * (1 - 0.4 * tail),
             y: keyholeCenter.y - c * keyholeRadius + tail * keyholeTail
         )
     }
@@ -103,8 +109,10 @@ enum WelcomeLightLock {
         let angle = u * WelcomeLightGeometry.tau
         let phase = Double(sheet) * 2.1 + Double(ring) * 1.3
         let width = detail ? 0.010 : 0.020
-        let weave = (detail ? 0.005 : 0.016) * sin(4 * angle + phase - seconds * 0.9)
-            + (detail ? 0.002 : 0.006) * sin(7 * angle - phase + seconds * 1.4)
+        // The keyhole is small enough that a full weave squares its curves off.
+        let calm = detail && ring == 1 ? 0.4 : 1.0
+        let weave = calm * (detail ? 0.005 : 0.016) * sin(4 * angle + phase - seconds * 0.9)
+            + calm * (detail ? 0.002 : 0.006) * sin(7 * angle - phase + seconds * 1.4)
         let offset = lane * width + weave + (detail ? 0 : (Double(sheet) - 1) * 0.010)
         var x = base.x + normal.dx * offset
         var y = base.y + normal.dy * offset

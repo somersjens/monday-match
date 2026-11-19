@@ -36,19 +36,9 @@ enum Religion: String, Codable, CaseIterable, Hashable {
 enum ReligionQuestionPhase: String, Codable {
     case own, partner
 
-    var title: String {
-        switch self {
-        case .own: L10n("What is your religion or worldview?")
-        case .partner: L10n("Which religions or worldviews are you open to in a partner?")
-        }
-    }
-
-    var subtitle: String {
-        switch self {
-        case .own: L10n("Choose one, or skip this question. Tap a selected answer to clear it.")
-        case .partner: L10n("Choose all that apply. No selection means open to all.")
-        }
-    }
+    /// One question for both parts: the You and Partner tabs say which
+    /// one is being answered.
+    var title: String { L10n("Your worldview, and what you’re open to?") }
 }
 
 struct ReligionAnswers: Codable, Equatable {

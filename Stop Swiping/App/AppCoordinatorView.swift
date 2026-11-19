@@ -120,6 +120,14 @@ struct AppCoordinatorView: View {
             // Session restoration can restore a profile from Supabase too.
             access.updateCompletion(savedCompletionDate)
         }
+        .onChange(of: access.accountAccessArrivals) { _, _ in
+            // Access bought on another device arrived after the welcome
+            // screen chose its stage (a reinstall keeps the session but not
+            // the cached entitlements): start it over on the right stage.
+            guard screen == .welcome else { return }
+            access.updateCompletion(savedCompletionDate)
+            welcomeGeneration += 1
+        }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
             case .active:
@@ -173,13 +181,14 @@ struct AppCoordinatorView: View {
                 codeInbox: codeInbox,
                 onDeleteProfile: deleteProfile,
                 onProfileDeleted: {
+                    // The account is gone, and with it what it owned elsewhere.
+                    access.disconnectServer()
                     access.updateCompletion(nil)
                     appState.showWelcomeAfterProfileDeletion()
                 },
                 onAccountCreated: appState.showSignedInApp,
                 onSignedIn: { session in
-                    welcomeGeneration += 1
-                    handleAuthenticatedSession(session)
+                    handleAuthenticatedSession(session, rebuildsWelcome: true)
                 }
             )
             .navigationDestination(for: AppRoute.self) { route in
@@ -219,7 +228,7 @@ struct AppCoordinatorView: View {
         case .signIn:
             SignInPlaceholderView(
                 authService: dependencies.authService,
-                onAuthenticated: handleAuthenticatedSession
+                onAuthenticated: { handleAuthenticatedSession($0) }
             )
 
         case .onboarding:
@@ -256,20 +265,30 @@ struct AppCoordinatorView: View {
     }
 
     private func handleAuthenticatedSession(
-        _ session: RestoredSession
+        _ session: RestoredSession, rebuildsWelcome: Bool = false
     ) {
-        access.updateCompletion(savedCompletionDate)
-        switch session {
-        case .signedOut:
-            break
-        case .onboarding:
-            if savedCompletionDate != nil {
+        guard session != .signedOut else {
+            access.updateCompletion(savedCompletionDate)
+            return
+        }
+        Task {
+            // What the account bought on another phone, another Apple ID or
+            // Android counts before the screens decide (a few seconds at most).
+            await access.connectServer(dependencies.storeEntitlements)
+            access.updateCompletion(savedCompletionDate)
+            if rebuildsWelcome { welcomeGeneration += 1 }
+            switch session {
+            case .signedOut:
+                break
+            case .onboarding:
+                if savedCompletionDate != nil {
+                    appState.showSignedInApp()
+                } else {
+                    appState.showOnboarding()
+                }
+            case .signedIn:
                 appState.showSignedInApp()
-            } else {
-                appState.showOnboarding()
             }
-        case .signedIn:
-            appState.showSignedInApp()
         }
     }
 }

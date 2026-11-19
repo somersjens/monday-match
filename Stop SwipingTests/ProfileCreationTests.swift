@@ -207,7 +207,9 @@ final class ProfileCreationViewModelTests: XCTestCase {
         let store = InMemoryProfileCreationStore()
         let viewModel = makeViewModel(store: store)
         viewModel.updateBirthDate(.init(year: 2010, month: 6, day: 1))
-        XCTAssertEqual(viewModel.submitCurrentStep(), .underage)
+        XCTAssertEqual(viewModel.submitCurrentStep(), .confirmAge(16))
+        XCTAssertFalse(viewModel.isUnderageLocked, "Nothing locks before the age is confirmed.")
+        XCTAssertEqual(viewModel.confirmUnderage(), .underage)
         XCTAssertTrue(viewModel.isUnderageLocked)
         XCTAssertNil(viewModel.state.dateOfBirth)
         XCTAssertEqual(store.state?.isUnderageLocked, true, "The lock survives relaunch.")
@@ -220,7 +222,8 @@ final class ProfileCreationViewModelTests: XCTestCase {
     func testRestartingAfterTheLockOnlyReopensValidation() {
         let viewModel = makeViewModel()
         viewModel.updateBirthDate(.init(year: 2012, month: 1, day: 1))
-        XCTAssertEqual(viewModel.submitCurrentStep(), .underage)
+        XCTAssertEqual(viewModel.submitCurrentStep(), .confirmAge(14))
+        XCTAssertEqual(viewModel.confirmUnderage(), .underage)
 
         viewModel.restartAfterUnderageLock()
         XCTAssertFalse(viewModel.isUnderageLocked)
@@ -229,7 +232,22 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.isComplete(.dateOfBirth), "Restarting grants nothing.")
 
         viewModel.updateBirthDate(.init(year: 2012, month: 1, day: 1))
-        XCTAssertEqual(viewModel.submitCurrentStep(), .underage, "The same minor date is rejected again.")
+        XCTAssertEqual(viewModel.submitCurrentStep(), .confirmAge(14), "The same minor date is questioned again.")
+    }
+
+    func testCorrectingAMinorBirthdayLocksNothing() {
+        let store = InMemoryProfileCreationStore()
+        let viewModel = makeViewModel(store: store)
+        viewModel.updateBirthDate(.init(year: 2012, month: 1, day: 1))
+        XCTAssertEqual(viewModel.submitCurrentStep(), .confirmAge(14))
+
+        // The user answers No and fixes the year instead.
+        viewModel.updateBirthDate(.init(year: 1992, month: 1, day: 1))
+        XCTAssertEqual(viewModel.confirmUnderage(), .rejected, "An adult date can no longer be confirmed as a minor.")
+        XCTAssertFalse(viewModel.isUnderageLocked)
+        XCTAssertNotEqual(store.state?.isUnderageLocked, true)
+        XCTAssertEqual(viewModel.submitCurrentStep(), .advanced)
+        XCTAssertEqual(viewModel.currentStep, .partnerAgeRange)
     }
 
     func testBackPreservesAnswersAndContinueRequiresInput() {
@@ -607,7 +625,9 @@ final class ProfileCreationViewModelTests: XCTestCase {
 
         viewModel.beginEditing(.dateOfBirth)
         viewModel.updateBirthDate(.init(year: 2012, month: 4, day: 21))
-        XCTAssertEqual(viewModel.submitCurrentStep(), .underage)
+        XCTAssertEqual(viewModel.submitCurrentStep(), .confirmAge(14))
+        XCTAssertEqual(viewModel.editingStep, .dateOfBirth, "Still editing until the age is confirmed.")
+        XCTAssertEqual(viewModel.confirmUnderage(), .underage)
         XCTAssertTrue(viewModel.isUnderageLocked)
         XCTAssertFalse(viewModel.isCompleted, "Editing cannot keep a minor's profile complete.")
         XCTAssertNil(viewModel.editingStep)

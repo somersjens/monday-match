@@ -1,9 +1,19 @@
 import Foundation
 import Security
 
-enum LifetimeProductID: String, CaseIterable {
+/// Every product that unlocks the app. The raw values are the App Store
+/// product IDs, and the server's `store_entitlements.product_id`.
+enum LifetimeProductID: String, CaseIterable, Codable {
     case earlyAdopter = "lifetime_access_early_adopter"
     case lifetime = "lifetime_access"
+    /// The auto-renewing monthly plan, offered once the free plan is gone.
+    case monthly = "monthly_access"
+    /// Lifetime access at half price, offered only to monthly subscribers.
+    case subscriberLifetime = "lifetime_access_subscriber"
+
+    /// Paid once, kept forever.
+    var isLifetime: Bool { self == .lifetime || self == .subscriberLifetime }
+    var isSubscription: Bool { self == .monthly }
 }
 
 /// Dates are absolute instants: a day means 86,400 elapsed seconds, including

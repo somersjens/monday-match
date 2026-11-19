@@ -31,6 +31,11 @@ struct ProfileCreationFlowView: View {
     @State private var ignoresNextContinue = false
     /// A Continue on the untouched height step brought up the honesty notice.
     @State private var hasRevealedHeightNotice = false
+    /// The notice is on screen. It leaves with the height step and rises
+    /// again on every return, so it is never just already there.
+    @State private var isHeightNoticeShown = false
+    /// A minor birthday waiting for the user to confirm it.
+    @State private var ageToConfirm: Int?
     @AccessibilityFocusState private var isTitleFocused: Bool
 
     init(
@@ -101,6 +106,19 @@ struct ProfileCreationFlowView: View {
                 .blur(radius: finish == .none || reduceMotion ? 0 : 8)
                 .allowsHitTesting(finish == .none)
         }
+        // The question steps back while the age is being confirmed.
+        .blur(radius: ageToConfirm == nil || reduceMotion ? 0 : 12)
+        .opacity(ageToConfirm == nil ? 1 : 0.25)
+        .allowsHitTesting(ageToConfirm == nil)
+        .accessibilityHidden(ageToConfirm != nil)
+        .overlay {
+            if let age = ageToConfirm {
+                AgeConfirmationCard(age: age, onConfirm: confirmUnderage, onCorrect: correctBirthday)
+                    .padding(.horizontal, 24)
+                    .frame(maxWidth: OnboardingTheme.contentWidth)
+                    .transition(.underageNotice(reduceMotion: reduceMotion))
+            }
+        }
         // On iPad the questionnaire stays one composition, its buttons near
         // the question, at the height the landing controls use.
         .adaptiveStageHeight()
@@ -110,6 +128,10 @@ struct ProfileCreationFlowView: View {
             withAnimation(OnboardingMotion.resolved(OnboardingMotion.stage, reduceMotion: reduceMotion).delay(reduceMotion ? 0 : 0.12)) {
                 hasEntered = true
             }
+            revealHeightNoticeIfSeen(after: .milliseconds(700))
+        }
+        .onChange(of: viewModel.state.hasAdjustedHeight) { _, adjusted in
+            if adjusted, displayedStep == .height { isHeightNoticeShown = true }
         }
         .onChange(of: viewModel.currentStep) { _, step in
             show(step)
@@ -123,6 +145,7 @@ struct ProfileCreationFlowView: View {
             isTitleFocused = true
         }
         .sensoryFeedback(.warning, trigger: viewModel.rejectionCount)
+        .sensoryFeedback(.warning, trigger: ageToConfirm) { _, age in age != nil }
         .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: displayedStep)
         .sensoryFeedback(.success, trigger: finish) { _, phase in phase == .filled }
         .sensoryFeedback(.success, trigger: randomFills)
@@ -198,7 +221,7 @@ struct ProfileCreationFlowView: View {
                 VStack(alignment: .leading, spacing: 30) {
                     OnboardingStepHeader(
                         title: step == .religion ? viewModel.state.religionPhase.title : step.title,
-                        subtitle: step == .religion ? viewModel.state.religionPhase.subtitle : step.subtitle,
+                        subtitle: step == .religion ? nil : step.subtitle,
                         titleFocus: $isTitleFocused
                     )
                     stepContent(step)
@@ -296,28 +319,51 @@ struct ProfileCreationFlowView: View {
     /// Appears once a height has been chosen, or after a first Continue on
     /// the untouched default, so nobody skips past it unseen.
     private var showsHeightHonestyNotice: Bool {
-        displayedStep == .height && (viewModel.state.hasAdjustedHeight || hasRevealedHeightNotice)
+        displayedStep == .height && isHeightNoticeShown
+    }
+
+    /// Back on the height step, a notice seen before rises again once the
+    /// page has settled.
+    private func revealHeightNoticeIfSeen(after delay: Duration) {
+        guard displayedStep == .height,
+              viewModel.state.hasAdjustedHeight || hasRevealedHeightNotice else { return }
+        Task {
+            try? await Task.sleep(for: delay)
+            guard displayedStep == .height else { return }
+            isHeightNoticeShown = true
+        }
     }
 
     private var heightHonestyNotice: some View {
-        Text(L10n("False information can lead to account termination."))
-            .foregroundStyle(OnboardingTheme.primaryText.opacity(0.85))
-            .multilineTextAlignment(.center)
-            .lineLimit(2)
-            .minimumScaleFactor(0.8)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .font(.footnote)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-            .background {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(.white.opacity(0.06))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(.white.opacity(0.1), lineWidth: 1)
-                    }
-            }
+        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+        return HStack(spacing: 10) {
+            Image(systemName: "checkmark.shield.fill")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(OnboardingTheme.accentGradient)
+                .accessibilityHidden(true)
+            Text(L10n("False information can lead to account termination."))
+                .foregroundStyle(OnboardingTheme.primaryText.opacity(0.9))
+                .multilineTextAlignment(.leading)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .font(.system(.footnote, weight: .medium))
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background {
+            shape
+                .fill(LinearGradient(
+                    colors: [OnboardingTheme.blue.opacity(0.16), OnboardingTheme.violet.opacity(0.10)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                ))
+                .overlay {
+                    shape.strokeBorder(OnboardingTheme.accentGradient.opacity(0.55), lineWidth: 1)
+                }
+                .shadow(color: OnboardingTheme.blue.opacity(0.25), radius: 14, y: 4)
+        }
     }
 
     // MARK: - Testing shortcut
@@ -347,11 +393,12 @@ struct ProfileCreationFlowView: View {
             ignoresNextContinue = false
             return
         }
-        guard !isNavigating else { return }
+        guard !isNavigating, ageToConfirm == nil else { return }
         // The first Continue on an untouched height only reveals the notice;
         // the next one moves on.
         if displayedStep == .height, !showsHeightHonestyNotice {
             hasRevealedHeightNotice = true
+            isHeightNoticeShown = true
             AccessibilityNotification.Announcement(L10n("False information can lead to account termination.")).post()
             return
         }
@@ -364,6 +411,10 @@ struct ProfileCreationFlowView: View {
             isNavigating = viewModel.currentStep != displayedStep
         case .rejected:
             break
+        case .confirmAge(let age):
+            withAnimation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion)) {
+                ageToConfirm = age
+            }
         case .underage:
             isNavigating = true
             onUnderage()
@@ -373,8 +424,25 @@ struct ProfileCreationFlowView: View {
         }
     }
 
+    /// The user stands by the minor birthday: the lock follows.
+    private func confirmUnderage() {
+        // The card gives way to the landing's own Minors notice.
+        withAnimation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion)) {
+            ageToConfirm = nil
+        }
+        handleSubmission(viewModel.confirmUnderage())
+    }
+
+    /// Back to the wheels, with the entered date still set.
+    private func correctBirthday() {
+        withAnimation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion)) {
+            ageToConfirm = nil
+        }
+        isTitleFocused = true
+    }
+
     private func handleBack() {
-        guard !isNavigating else { return }
+        guard !isNavigating, ageToConfirm == nil else { return }
         if isEditing {
             isNavigating = true
             viewModel.cancelEditing()
@@ -413,6 +481,7 @@ struct ProfileCreationFlowView: View {
     private func show(_ step: ProfileCreationStep) {
         guard step != displayedStep else { return }
         pendingAutoAdvance?.cancel()
+        isHeightNoticeShown = false
         direction = step > displayedStep ? .forward : .backward
         isNavigating = true
         navigationToken += 1
@@ -428,7 +497,69 @@ struct ProfileCreationFlowView: View {
             guard token == navigationToken else { return }
             isNavigating = false
             isTitleFocused = true
+            revealHeightNoticeIfSeen(after: .milliseconds(120))
         }
+    }
+}
+
+/// Asks a user whose birthday makes them a minor whether that is right,
+/// before anything is locked or discarded.
+private struct AgeConfirmationCard: View {
+    let age: Int
+    let onConfirm: () -> Void
+    let onCorrect: () -> Void
+
+    @AccessibilityFocusState private var isTitleFocused: Bool
+
+    var body: some View {
+        VStack(spacing: 22) {
+            VStack(spacing: 6) {
+                Text("\(age)")
+                    .font(.system(size: 64, weight: .light, design: .rounded).monospacedDigit())
+                    .foregroundStyle(OnboardingTheme.accentGradient)
+                    .shadow(color: OnboardingTheme.blue.opacity(0.5), radius: 18)
+                    .accessibilityHidden(true)
+                Text(L10n("Are you really \(age)?"))
+                    .font(.system(.title2, weight: .semibold))
+                    .tracking(-0.3)
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityFocused($isTitleFocused)
+            }
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+
+            VStack(spacing: 6) {
+                Button(L10n("Yes, I am \(age)"), action: onConfirm)
+                    .buttonStyle(GlowButtonStyle())
+                Button(L10n("No, change my birthday"), action: onCorrect)
+                    .buttonStyle(QuietButtonStyle())
+            }
+        }
+        .padding(.horizontal, 22)
+        .padding(.top, 26)
+        .padding(.bottom, 12)
+        .frame(maxWidth: OnboardingTheme.controlWidth)
+        .background {
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .fill(OnboardingTheme.background.opacity(0.72))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .fill(LinearGradient(
+                            colors: [OnboardingTheme.blue.opacity(0.14), OnboardingTheme.violet.opacity(0.10)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .strokeBorder(OnboardingTheme.accentGradient.opacity(0.5), lineWidth: 1)
+                }
+                .shadow(color: OnboardingTheme.blue.opacity(0.3), radius: 30, y: 10)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityAddTraits(.isModal)
+        .onAppear { isTitleFocused = true }
     }
 }
 
