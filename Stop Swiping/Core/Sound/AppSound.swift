@@ -41,6 +41,12 @@ enum AppSound: String, CaseIterable {
     case lock
     /// Something opens or comes forward, and its counterpart.
     case open, close
+    /// Turning from one personality test to the next, under its note.
+    case swish
+    /// A switch sliding on or off.
+    case toggleOn = "toggle-on", toggleOff = "toggle-off"
+    /// One notch of a wheel, ruler or slider. Can fire many times a second.
+    case tick
     /// Signed in, or another moment of success.
     case success
     /// The app's signature, also used for its notifications.
@@ -57,15 +63,42 @@ enum AppSound: String, CaseIterable {
     var url: URL? { Bundle.main.url(forResource: rawValue, withExtension: fileExtension) }
 
     /// Playback level. The files are mastered close together; this sets how
-    /// far each one sits behind the interface.
+    /// far each one sits behind the interface. `SoundPlayer` scales all of
+    /// them by `masterVolume`.
     var volume: Float {
         switch self {
+        case .tick, .swish, .toggleOn, .toggleOff: 0.5
         case .select, .open, .close: 0.5
-        case .step1, .step2, .step3, .step4, .step5, .lock, .messageSent, .name: 0.55
+        case .step1, .step2, .step3, .step4, .step5: 0.5
+        case .lock, .messageSent, .name: 0.55
         case .rejection, .messageReceived, .seal, .success, .exchange, .chatOpen: 0.6
         case .helixArrival: 0.65
         case .entrance, .complete, .match, .noMatch, .unfold: 0.7
-        case .notification: 0.6
+        case .notification: 0.55
+        }
+    }
+
+    /// The whole palette's level on top of `volume`: the cues sit about
+    /// 4 dB lower than they were first mastered, behind the interface.
+    static let masterVolume: Float = 0.62
+
+    /// Players kept for a cue that can follow itself quickly, so a new one
+    /// never cuts the previous one off mid-note (which clicks).
+    var voices: Int {
+        switch self {
+        case .tick: 3
+        case .select, .toggleOn, .toggleOff: 2
+        default: 1
+        }
+    }
+
+    /// The shortest time between two of the same cue. Scrubbing a wheel or
+    /// a slider changes its value far faster than ticks should sound.
+    var minimumInterval: TimeInterval {
+        switch self {
+        case .tick: 0.045
+        case .select: 0.05
+        default: 0
         }
     }
 
@@ -94,6 +127,7 @@ final class SoundPlayer {
     private var ambienceLevel: Float = 0
     private var isSessionConfigured = false
     private var sessionObservers: [NSObjectProtocol] = []
+    private var lastPlayed: [AppSound: Date] = [:]
 
     init(defaults: UserDefaults = .standard) {
         // Sounds are always on now; drop the old profile overview switch.
@@ -104,13 +138,17 @@ final class SoundPlayer {
     func prepare() {
         guard !Self.isRunningTests else { return }
         startSession()
-        cues.load(AppSound.allCases.compactMap { sound in sound.url.map { (sound.rawValue, $0) } })
+        cues.load(AppSound.allCases.compactMap { sound in sound.url.map { (sound.rawValue, $0, sound.voices) } })
     }
 
     func play(_ sound: AppSound) {
         guard !Self.isRunningTests, let url = sound.url else { return }
+        let now = Date()
+        if sound.minimumInterval > 0, let last = lastPlayed[sound],
+           now.timeIntervalSince(last) < sound.minimumInterval { return }
+        lastPlayed[sound] = now
         startSession()
-        cues.play(sound.rawValue, url: url, volume: sound.volume)
+        cues.play(sound.rawValue, url: url, voices: sound.voices, volume: sound.volume * AppSound.masterVolume)
     }
 
     /// Fades a cue that no longer matches the screen, for instance when a
@@ -179,21 +217,32 @@ final class SoundPlayer {
 nonisolated private final class CuePlayers: @unchecked Sendable {
     private let queue = DispatchQueue(label: "SoundPlayer.cues", qos: .userInitiated)
     /// Only touched on `queue`.
-    private var players: [String: AVAudioPlayer] = [:]
+    private var players: [String: [AVAudioPlayer]] = [:]
+    private var nextVoice: [String: Int] = [:]
 
     func activateSession() {
         queue.async { try? AVAudioSession.sharedInstance().setActive(true) }
     }
 
-    func load(_ cues: [(name: String, url: URL)]) {
+    func load(_ cues: [(name: String, url: URL, voices: Int)]) {
         queue.async {
-            for cue in cues { _ = self.player(cue.name, url: cue.url) }
+            for cue in cues { _ = self.players(cue.name, url: cue.url, voices: cue.voices) }
         }
     }
 
-    func play(_ name: String, url: URL, volume: Float) {
+    /// Plays on a free voice, or else on the one that started longest ago.
+    func play(_ name: String, url: URL, voices: Int, volume: Float) {
         queue.async {
-            guard let player = self.player(name, url: url) else { return }
+            let voices = self.players(name, url: url, voices: voices)
+            guard !voices.isEmpty else { return }
+            let index: Int
+            if let free = voices.firstIndex(where: { !$0.isPlaying }) {
+                index = free
+            } else {
+                index = (self.nextVoice[name] ?? 0) % voices.count
+            }
+            self.nextVoice[name] = index + 1
+            let player = voices[index]
             player.volume = volume
             player.currentTime = 0
             player.play()
@@ -203,22 +252,26 @@ nonisolated private final class CuePlayers: @unchecked Sendable {
     func fadeOut(_ names: [String], duration: TimeInterval) {
         queue.async {
             for name in names {
-                guard let player = self.players[name], player.isPlaying else { continue }
-                player.setVolume(0, fadeDuration: duration)
+                for player in self.players[name] ?? [] where player.isPlaying {
+                    player.setVolume(0, fadeDuration: duration)
+                }
             }
         }
     }
 
     func stopAll() {
-        queue.async { self.players.values.forEach { $0.stop() } }
+        queue.async { self.players.values.joined().forEach { $0.stop() } }
     }
 
-    private func player(_ name: String, url: URL) -> AVAudioPlayer? {
-        if let player = players[name] { return player }
-        guard let player = try? AVAudioPlayer(contentsOf: url) else { return nil }
-        player.prepareToPlay()
-        players[name] = player
-        return player
+    private func players(_ name: String, url: URL, voices: Int) -> [AVAudioPlayer] {
+        if let players = players[name] { return players }
+        let created: [AVAudioPlayer] = (0..<max(1, voices)).compactMap { _ in
+            guard let player = try? AVAudioPlayer(contentsOf: url) else { return nil }
+            player.prepareToPlay()
+            return player
+        }
+        players[name] = created
+        return created
     }
 }
 

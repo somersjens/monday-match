@@ -106,7 +106,9 @@ struct AccountCreationCard: View {
                 .buttonStyle(.plain)
                 .accessibilityHidden(true)
 
-                GlowToggle(isOn: phase != .closed, label: L10n("Create your account"), action: onToggle)
+                // The card's opening and closing already sound.
+                GlowToggle(isOn: phase != .closed, label: L10n("Create your account"), playsSound: false,
+                           action: onToggle)
             }
             .padding(.horizontal, 16)
             .frame(minHeight: OnboardingTheme.buttonHeight)

@@ -29,7 +29,7 @@ struct MatchSettingsMenu: View {
         .accessibilityLabel(L10n("Match settings"))
         .accessibilityIdentifier("chat.settings")
         .popover(isPresented: $isOpen, attachmentAnchor: .point(.bottom), arrowEdge: .top) {
-            MatchSettingsPanel(name: name, canBreak: canBreak) { choice in
+            MatchSettingsPanel(kind: .settings(name: name, canBreak: canBreak)) { choice in
                 isOpen = false
                 switch choice {
                 case .personality, .scores:
@@ -49,12 +49,55 @@ struct MatchSettingsMenu: View {
                     case .scores(let perspective): onShowScores(perspective)
                     case .report(let reason): onReport(reason)
                     case .breakMatch: onBreak()
+                    case .close: break
                     }
                 }
             }
             .presentationCompactAdaptation(.popover)
             // The system's own glass: a custom material here covered the body
             // but not the arrow, so the corner by the gear looked different.
+            .preferredColorScheme(.dark)
+        }
+    }
+}
+
+/// A broken match's top right, where a live match has no way out: the
+/// warning triangle. Whoever broke the match, the other person can still be
+/// reported from here, and the match is left from here too.
+struct BrokenMatchMenu: View {
+    let onReport: (ReportReason) -> Void
+    let onClose: () -> Void
+
+    @State private var isOpen = false
+
+    var body: some View {
+        Button { isOpen = true } label: {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(OnboardingTheme.accentGradient)
+                .frame(width: 44, height: 44)
+                .background { Circle().fill(.white.opacity(0.08)) }
+                .overlay { Circle().strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5) }
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(L10n("Report or close"))
+        .accessibilityIdentifier("match.brokenMenu")
+        .popover(isPresented: $isOpen, attachmentAnchor: .point(.bottom), arrowEdge: .top) {
+            MatchSettingsPanel(kind: .broken) { choice in
+                isOpen = false
+                Task {
+                    // Let the panel close before the report sheet or the
+                    // way back takes over.
+                    try? await Task.sleep(for: .milliseconds(380))
+                    switch choice {
+                    case .report(let reason): onReport(reason)
+                    case .close: onClose()
+                    default: break
+                    }
+                }
+            }
+            .presentationCompactAdaptation(.popover)
             .preferredColorScheme(.dark)
         }
     }
@@ -67,10 +110,18 @@ private struct MatchSettingsPanel: View {
         case scores(MatchReport.Perspective)
         case report(ReportReason)
         case breakMatch
+        case close
     }
 
-    let name: String
-    let canBreak: Bool
+    enum Kind {
+        /// The gear: your profile, both scores and the ways out of a match.
+        /// `canBreak` is false once the match is broken.
+        case settings(name: String, canBreak: Bool)
+        /// A broken match's warning triangle: reporting and leaving.
+        case broken
+    }
+
+    let kind: Kind
     let onChoose: (Choice) -> Void
 
     @State private var showsReasons = false
@@ -91,7 +142,23 @@ private struct MatchSettingsPanel: View {
         .animation(.spring(duration: 0.32, bounce: 0.1), value: showsReasons)
     }
 
+    @ViewBuilder
     private var options: some View {
+        switch kind {
+        case .settings(let name, let canBreak): settingsOptions(name: name, canBreak: canBreak)
+        case .broken: brokenOptions
+        }
+    }
+
+    private var brokenOptions: some View {
+        VStack(spacing: 0) {
+            row(L10n("Report your match"), symbol: "exclamationmark.triangle", showsChevron: true) { showsReasons = true }
+            divider
+            row(L10n("Close"), symbol: "xmark") { onChoose(.close) }
+        }
+    }
+
+    private func settingsOptions(name: String, canBreak: Bool) -> some View {
         VStack(spacing: 0) {
             row(L10n("View your profile"), symbol: "person.crop.circle") { onChoose(.profile) }
             row(L10n("Your personality tests"), symbol: "brain.head.profile") { onChoose(.personality) }
@@ -237,19 +304,8 @@ struct MatchReportSheet: View {
                         }
                 }
 
-                Toggle(isOn: $alsoBreak) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L10n("Also break the match"))
-                            .foregroundStyle(OnboardingTheme.primaryText)
-                        Text(L10n("\(name) can no longer send you messages."))
-                            .font(.footnote)
-                            .foregroundStyle(OnboardingTheme.secondaryText)
-                    }
-                }
-                .tint(OnboardingTheme.violet)
-                .padding(14)
-                .onboardingSurface(cornerRadius: 16)
-                .onChange(of: alsoBreak) { detailsFocused = false }
+                // Once the match is broken there is nothing left to break.
+                if !match.isBroken { breakToggle }
 
                 policeCard
 
@@ -321,6 +377,22 @@ struct MatchReportSheet: View {
             .buttonStyle(.plain)
             .accessibilityLabel(L10n("Back"))
         }
+    }
+
+    private var breakToggle: some View {
+        Toggle(isOn: $alsoBreak) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L10n("Also break the match"))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                Text(L10n("\(name) can no longer send you messages."))
+                    .font(.footnote)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+            }
+        }
+        .tint(OnboardingTheme.violet)
+        .padding(14)
+        .onboardingSurface(cornerRadius: 16)
+        .onChange(of: alsoBreak) { detailsFocused = false }
     }
 
     /// For anything criminal: the police, with the conversation and profile in hand.

@@ -160,8 +160,9 @@ struct MatchChatPanel: View {
     private var notice: some View {
         // The same for a demo and a live match: how long the server keeps
         // the conversation (see 202611180003_retention_and_identity_hmac.sql).
-        Label(L10n("Chat history is kept for up to 12 months, even after the match is broken."),
-              systemImage: "clock")
+        // The icon sits inline in the text so the whole notice centres,
+        // including when it wraps onto a second line.
+        Text("\(Image(systemName: "clock.arrow.circlepath")) \(L10n("Chat history is kept for up to 12 months, even after the match is broken."))")
             .font(.caption2)
             .foregroundStyle(OnboardingTheme.secondaryText)
             .multilineTextAlignment(.center)

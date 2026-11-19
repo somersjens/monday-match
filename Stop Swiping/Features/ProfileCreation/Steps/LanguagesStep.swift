@@ -37,6 +37,7 @@ struct LanguagesStep: View {
         .frame(maxWidth: OnboardingTheme.controlWidth, alignment: .leading)
         .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: languages)
         .sensoryFeedback(.selection, trigger: languages)
+        .soundFeedback(.select, trigger: languages)
         .sheet(item: $pickerMode) { mode in
             LanguagePickerSheet(
                 title: { if case .replace = mode { L10n("Change language") } else { L10n("Add a language") } }(),

@@ -2,9 +2,13 @@ import SwiftUI
 
 /// An on/off switch in the onboarding palette. It reports taps instead of
 /// owning its value, so turning it on can first ask for what it needs.
+/// It clicks when its value actually changes, not on the tap, so a switch
+/// that first opens a sheet stays quiet until it really slides.
 struct GlowToggle: View {
     let isOn: Bool
     let label: String
+    /// Off where the switch opens something that sounds its own opening.
+    var playsSound = true
     let action: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -40,6 +44,8 @@ struct GlowToggle: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: isOn) { _, _ in playsSound }
+        .soundFeedback(trigger: isOn) { _, on in playsSound ? (on ? .toggleOn : .toggleOff) : nil }
         .accessibilityLabel(label)
         .accessibilityValue(isOn ? L10n("On") : L10n("Off"))
         .accessibilityAddTraits(.isToggle)

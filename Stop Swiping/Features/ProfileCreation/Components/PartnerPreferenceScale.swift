@@ -61,6 +61,8 @@ struct PartnerPreferenceScale: View {
         .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion), value: mode)
         .sensoryFeedback(.selection, trigger: ownIndex)
         .sensoryFeedback(.selection, trigger: partnerLimitIndex)
+        .soundFeedback(.select, trigger: ownIndex)
+        .soundFeedback(.select, trigger: partnerLimitIndex)
     }
 
     // MARK: - Tabs
@@ -68,7 +70,10 @@ struct PartnerPreferenceScale: View {
     private func tab(_ tabMode: Mode, title: String, value: String?, placeholder: String) -> some View {
         let isActive = mode == tabMode
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
-        return Button { mode = tabMode } label: {
+        return Button {
+            if !isActive { SoundPlayer.shared.play(.select) }
+            mode = tabMode
+        } label: {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.system(.caption, weight: .semibold))

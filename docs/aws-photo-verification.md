@@ -13,7 +13,7 @@
 | Swift files (flow + consent screen, service, tests) | `archive/aws-face-liveness/` (outside the Xcode targets, so not compiled) |
 | Swift package | `https://github.com/aws-amplify/amplify-ui-swift-liveness`, exact version **1.6.0**, product `FaceLiveness`, app target only |
 | Edge Function | `supabase/functions/aws-face-verification` (still deployed; unused while parked) |
-| Database | Tables/functions in `202611160001_baseline.sql` + `begin_photo_verification` in `202611160004_privacy_consent_v2.sql` (still live) |
+| Database | Tables/functions in `202611160001_baseline.sql` + `begin_photo_verification` in `202611160004_privacy_consent_v2.sql` (still live, but no longer executable by `authenticated` since `202611190001_abuse_limits.sql`, so the deployed function cannot create paid sessions) |
 | AWS infrastructure | `supabase/aws/liveness.yaml`, stack `stop-swiping-face-verification` in eu-west-1; Supabase secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_LIVENESS_STREAM_ROLE_ARN` |
 | Localized strings (consent screen, errors) | Still in `Localizable.xcstrings` |
 
@@ -44,8 +44,10 @@ worker key still exists; deactivate it in IAM if it should not stay usable.
    `delete from matching_private.photo_verifications where method = 'device';`
    Also add `method = 'aws'` to the `on conflict … do update` in
    `complete_photo_verification`, so an AWS result replaces a device one's method.
-5. Check that `begin_photo_verification` still requires the current privacy
-   consent version (it is hard-coded there).
+5. Let the app start AWS checks again:
+   `grant execute on function public.begin_photo_verification(uuid, text) to authenticated;`
+   and check that it still requires the current privacy consent version (it
+   is hard-coded there).
 6. Test on a physical iPhone (the simulator cannot run Face Liveness).
 
 The integration uses **Rekognition Face Liveness in eu-west-1 (Ireland)**, the

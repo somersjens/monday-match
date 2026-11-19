@@ -30,6 +30,7 @@ struct AppLanguagePicker: View {
                 ForEach(AppLanguage.allCases) { language in
                     let isSelected = AppLanguageSettings.shared.language == language
                     Button {
+                        if !isSelected { SoundPlayer.shared.play(.select) }
                         AppLanguageSettings.shared.language = language
                         dismiss()
                     } label: {

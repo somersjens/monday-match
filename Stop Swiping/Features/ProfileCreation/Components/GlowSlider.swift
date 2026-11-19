@@ -109,6 +109,8 @@ struct DualRangeSlider: View {
         .frame(height: SliderMetrics.height)
         .sensoryFeedback(.selection, trigger: lower)
         .sensoryFeedback(.selection, trigger: upper)
+        .soundFeedback(.tick, trigger: lower)
+        .soundFeedback(.tick, trigger: upper)
         .accessibilityElement(children: .contain)
     }
 
@@ -223,6 +225,7 @@ struct GlowSlider: View {
         .onKeyPress(.leftArrow) { update(value - 1); return .handled }
         .onKeyPress(.rightArrow) { update(value + 1); return .handled }
         .sensoryFeedback(.selection, trigger: value)
+        .soundFeedback(.tick, trigger: value)
         .accessibilityElement()
         .accessibilityLabel(label)
         .accessibilityValue(valueDescription(value))

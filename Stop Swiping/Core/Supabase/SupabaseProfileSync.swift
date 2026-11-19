@@ -165,9 +165,19 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         if let previous, previous.photoHashes == photoHashes,
            previous.row.hasSameContent(as: Self.roundTripped(row)) { return }
         let changedPhotos = draft.photos.filter { previous?.photoHashes[$0.id] != photoHashes[$0.id] }
+        let currentIDs = Set(draft.photos.map(\.id))
+        let previousIDs = Set(previous?.row.backup.photos.map(\.id) ?? [])
+        if !changedPhotos.isEmpty {
+            // Make room first: the server keeps at most twelve photos per
+            // account. The photos the server's row still names stay until
+            // the new row replaces it. Cleanup never blocks a save.
+            try? await uploader.removePhotos(otherThan: currentIDs.union(previousIDs), userID: userID)
+        }
         _ = try await uploader.uploadPhotos(changedPhotos, userID: userID)
         try await client.from("profiles").upsert(row, onConflict: "id").execute()
         uploads[userID] = Upload(row: row, photoHashes: photoHashes)
+        // A replaced photo is no longer named anywhere on the server.
+        try? await uploader.removePhotos(previousIDs.subtracting(currentIDs), userID: userID)
     }
 
     private static func row(userID: String, state: ProfileCreationState, draft: ProfileDraft,

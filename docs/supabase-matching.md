@@ -70,6 +70,42 @@ later. SQL tests switch the limit off with
 `set local stop_swiping.matching_throttle = 'off'`, which only works in a
 session opened as `postgres`.
 
+### Limits against scripted use
+
+The project URL and anon key ship in the app, so anyone with an Apple or Google
+account can call the API with their own token. RLS keeps them inside their own
+data; `202611190001_abuse_limits.sql` keeps one account from filling the
+project's quotas (on the Free plan a full quota restricts the project for
+everyone). Tests: `supabase/tests/abuse_limits.sql`.
+
+| What | Limit | Refused with |
+| --- | --- | --- |
+| Photos in `profile-photos` | 12 per account, `<account>/<uuid>.jpg` only, 2 MB each | Storage 403 (RLS) / 413 |
+| Push devices | 5 per account; the oldest registrations are deleted | — |
+| Chat envelope | 32 kB (8,000 bytes of text sealed twice is ~22 kB) | `Message too large` |
+| Chat messages | 60 per minute and 5 MB per day per sender; a retry of a delivered message always passes | HTTP 429 `Message limit reached` |
+| Chat devices | 10 per person per match, revoked ones included | HTTP 429 `Too many chat devices` |
+| Any write through the Data API | 120 per account per minute | HTTP 429 `Too many requests` |
+
+The last row is a PostgREST pre-request function, `api_guard.check_request()`,
+set with `alter role authenticator set pgrst.db_pre_request`. It counts in the
+unlogged table `matching_private.api_writes` (pruned daily by pg_cron job
+`api-writes-prune`). It skips read-only requests: GET, and the STABLE polling
+functions (`current_match`, `matching_status`, `my_matches`), which PostgREST
+runs read-only. A request that fails anyway rolls its count back with it, so
+only writes that succeed are counted. The service role is never limited. To
+switch it off without a migration:
+
+    alter role authenticator reset pgrst.db_pre_request;
+    notify pgrst, 'reload config';
+
+The app removes a replaced photo after saving the new profile row, and before
+uploading a new photo it removes any photo older than 10 minutes that neither
+the phone nor the server's row still names (photos replaced by older app
+versions were never removed). Storage, Edge Function invocations and Auth are
+outside the guard: Storage relies on the limits above, and Auth on Supabase's
+own rate limits.
+
 ### Retention
 
 The pg_cron job `purge-expired-data` (daily, 03:17 UTC) runs

@@ -35,6 +35,7 @@ struct ReligionStep: View {
         .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion), value: answers)
         .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion), value: phase)
         .sensoryFeedback(.selection, trigger: answers)
+        .soundFeedback(.select, trigger: answers)
     }
 
     private var partnerTabValue: String {
@@ -47,7 +48,10 @@ struct ReligionStep: View {
     private func tab(_ tabPhase: ReligionQuestionPhase, title: String, value: String) -> some View {
         let isActive = phase == tabPhase
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
-        return Button { viewModel.setReligionPhase(tabPhase) } label: {
+        return Button {
+            if !isActive { SoundPlayer.shared.play(.select) }
+            viewModel.setReligionPhase(tabPhase)
+        } label: {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.system(.caption, weight: .semibold))

@@ -196,6 +196,7 @@ struct MatchResultOverlay: View {
 
     private func openPhoto(from origin: CGPoint) {
         guard photoCard != nil, photoOrigin == nil else { return }
+        SoundPlayer.shared.play(.open)
         withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.5, bounce: 0.32)) {
             photoOrigin = origin
         }
@@ -203,6 +204,7 @@ struct MatchResultOverlay: View {
 
     private func closePhoto() {
         guard photoOrigin != nil else { return }
+        SoundPlayer.shared.play(.close)
         withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.32, bounce: 0)) {
             photoOrigin = nil
         }
@@ -310,7 +312,11 @@ struct MatchResultOverlay: View {
             .accessibilityIdentifier("match.profile")
 
             // A live match is the only thing the app does until it ends.
-            if match.isBroken || (isSaved && !match.isLive) {
+            if match.isBroken && match.isLive {
+                // A broken server match can still be reported, whoever broke it.
+                BrokenMatchMenu(onReport: { reportReason = $0 }, onClose: onClose)
+                    .transition(.opacity)
+            } else if match.isBroken || (isSaved && !match.isLive) {
                 Button(action: onClose) {
                     Image(systemName: "xmark")
                         .font(.system(size: 18, weight: .semibold))
@@ -356,7 +362,11 @@ struct MatchResultOverlay: View {
                               onReport: { reportReason = $0 }, onBreak: { confirmsBreak = true },
                               canBreak: !match.isBroken)
 
-            if match.isBroken {
+            if match.isBroken && match.isLive {
+                // A broken match is only looked back on, so it can be left,
+                // and the other person can still be reported.
+                BrokenMatchMenu(onReport: { reportReason = $0 }, onClose: onClose)
+            } else if match.isBroken {
                 // A broken match is only looked back on, so it can be left.
                 Button(action: onClose) {
                     Image(systemName: "xmark")

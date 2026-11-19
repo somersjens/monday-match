@@ -79,6 +79,7 @@ struct HeightRuler: View {
             scroll(to: value, animated: true)
         }
         .sensoryFeedback(.selection, trigger: centimeters)
+        .soundFeedback(.tick, trigger: centimeters)
         .focusable()
         .focused($isFocused)
         .focusEffectDisabled()

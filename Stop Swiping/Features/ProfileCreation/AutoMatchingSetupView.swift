@@ -81,6 +81,8 @@ struct AutoMatchingSetupView: View {
                 }
         }
         .preferredColorScheme(.dark)
+        // Each page comes forward and steps back like the app's other panels.
+        .soundFeedback(trigger: path.count) { old, new in new > old ? .open : .close }
         .sheet(isPresented: $showsPrivacy, onDismiss: continueJoiningAfterPrivacy) {
             PrivacyConsentView(kind: .matching) { viewModel.acceptPrivacy(.matching) }
         }
@@ -816,7 +818,12 @@ struct AutoMatchingSetupView: View {
             return
         }
         saveFailed = !viewModel.joinAutoMatching()
-        if !saveFailed { onFinish() }
+        if saveFailed {
+            SoundPlayer.shared.play(.rejection)
+        } else {
+            SoundPlayer.shared.play(.success)
+            onFinish()
+        }
     }
 
     private func continueJoiningAfterPrivacy() {

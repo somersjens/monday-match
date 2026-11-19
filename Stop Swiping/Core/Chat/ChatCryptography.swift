@@ -2,7 +2,7 @@ import CryptoKit
 import Foundation
 
 nonisolated enum SecureChatError: LocalizedError {
-    case invalidEnvelope, keyChanged, replaceDevice, noPeerDevice, unavailableKey, tooLong
+    case invalidEnvelope, keyChanged, replaceDevice, noPeerDevice, unavailableKey, tooLong, sendingTooFast
     var errorDescription: String? {
         switch self {
         case .invalidEnvelope: L10n("This message could not be authenticated.")
@@ -11,6 +11,7 @@ nonisolated enum SecureChatError: LocalizedError {
         case .noPeerDevice: L10n("Your match needs to open the chat on their phone first.")
         case .unavailableKey: L10n("This message belongs to another device. Its private key is unavailable on this iPhone.")
         case .tooLong: L10n("Keep your message under 8,000 characters.")
+        case .sendingTooFast: L10n("You’re sending messages very quickly. The rest will go out in a minute.")
         }
     }
 }

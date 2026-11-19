@@ -98,6 +98,9 @@ struct WelcomeView: View {
     @State private var matchTask: Task<Void, Never>?
     @State private var scoreDetail: MatchReport.Perspective?
     @State private var showsSavedMatches = false
+    /// Set when a cover closes because something else starts at once (a
+    /// match, a scanned code), which then brings its own sound.
+    @State private var coverHandsOver = false
     @State private var demoStarts = 0
     /// Fake matches alternate between a match and no match.
     @State private var nextFakeMatchSucceeds = true
@@ -1000,6 +1003,20 @@ struct WelcomeView: View {
                 .soundFeedback(.exchange, trigger: view.exchanges)
                 // The two phones in the explanation turn toward each other.
                 .soundFeedback(.exchange, trigger: view.demoPhase) { _, phase in phase == .together }
+                // Screens laid over the light come forward and step back,
+                // like the panels on the light itself.
+                .onChange(of: view.coversLight) { _, covers in
+                    if covers {
+                        SoundPlayer.shared.play(.open)
+                    } else if view.coverHandsOver {
+                        view.coverHandsOver = false
+                    } else {
+                        SoundPlayer.shared.play(.close)
+                    }
+                }
+                .soundFeedback(trigger: view.showsMatchProfile || view.scoreDetail != nil) { _, shown in
+                    shown ? .open : .close
+                }
                 .onAppear(perform: view.playEntrance)
                 .onChange(of: view.ambienceLevel, initial: true) { _, level in
                     SoundPlayer.shared.setAmbience(level)
@@ -1047,8 +1064,10 @@ struct WelcomeView: View {
         }
     }
 
-    /// Each personality test has its own note, like tuning to another instrument.
+    /// Each personality test has its own note, like tuning to another
+    /// instrument, carried in on a light breath as the chart turns over.
     private func playPersonalityNote(for test: PersonalityTest) {
+        SoundPlayer.shared.play(.swish)
         SoundPlayer.shared.play(.step((PersonalityTest.allCases.firstIndex(of: test) ?? 0) + 1))
     }
 
@@ -1367,6 +1386,7 @@ struct WelcomeView: View {
     }
 
     private func finishScanning(_ profile: ProfileCreationState) {
+        coverHandsOver = true
         showsScanner = false
         Task {
             // Let the cover finish closing before the match starts.
@@ -1801,6 +1821,7 @@ struct WelcomeView: View {
     /// A broken automatic match: its heart with "Match" struck through, and
     /// its conversation where a non-match would list its reasons.
     private func openBrokenMatch(_ match: CloudChatMatch) {
+        coverHandsOver = showsSavedMatches
         showsSavedMatches = false
         Task {
             try? await Task.sleep(for: .seconds(0.45))
@@ -1814,6 +1835,7 @@ struct WelcomeView: View {
         // A server match opens with its conversation, wherever it stands.
         if snapshot.isLive {
             if liveMatches.match?.id == snapshot.id {
+                coverHandsOver = true
                 showsSavedMatches = false
                 Task {
                     try? await Task.sleep(for: .seconds(0.45))
@@ -1826,6 +1848,7 @@ struct WelcomeView: View {
                 return
             }
         }
+        coverHandsOver = true
         showsSavedMatches = false
         Task {
             // Let the cover finish closing before the in-place morph starts.

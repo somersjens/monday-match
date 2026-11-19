@@ -39,6 +39,35 @@ final class AppSoundTests: XCTestCase {
         XCTAssertEqual(file.processingFormat.channelCount, 2)
     }
 
+    /// A cue that stops while still ringing ends in a click. Every file
+    /// has to fade all the way out.
+    func testEveryCueEndsInSilence() throws {
+        for sound in AppSound.allCases {
+            let file = try AVAudioFile(forReading: try XCTUnwrap(sound.url))
+            let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: file.processingFormat,
+                                                        frameCapacity: AVAudioFrameCount(file.length)))
+            try file.read(into: buffer)
+            let channels = try XCTUnwrap(buffer.floatChannelData)
+            let frames = Int(buffer.frameLength)
+            let tail = Int(file.processingFormat.sampleRate * 0.01)
+            var peak: Float = 0
+            for channel in 0..<Int(buffer.format.channelCount) {
+                for frame in max(0, frames - tail)..<frames { peak = max(peak, abs(channels[channel][frame])) }
+            }
+            XCTAssertLessThan(peak, 0.003, "\(sound.rawValue) still sounds in its last 10 ms")
+        }
+    }
+
+    /// Ticks follow a finger on a wheel or slider; they need spare voices so
+    /// one never cuts the last off, and a limit so they never pile up.
+    func testRapidCuesHaveSpareVoicesAndARateLimit() {
+        XCTAssertGreaterThan(AppSound.tick.voices, 1)
+        XCTAssertGreaterThan(AppSound.tick.minimumInterval, 0)
+        XCTAssertGreaterThan(AppSound.select.minimumInterval, 0)
+        XCTAssertEqual(AppSound.match.minimumInterval, 0)
+        XCTAssertLessThan(AppSound.masterVolume, 1)
+    }
+
     func testQuestionnaireStepsClimbTheScaleAndStartOver() {
         XCTAssertEqual((1...7).map(AppSound.step), [.step1, .step2, .step3, .step4, .step5, .step1, .step2])
         XCTAssertEqual(AppSound.step(0), .step5)

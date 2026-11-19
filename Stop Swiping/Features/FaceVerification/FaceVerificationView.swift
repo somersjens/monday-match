@@ -108,6 +108,23 @@ struct FaceVerificationView: View {
         }
         .interactiveDismissDisabled()
         .sensoryFeedback(.selection, trigger: viewModel.snapshot.collectedSectors.count)
+        .soundFeedback(.select, trigger: viewModel.snapshot.collectedSectors.count) { old, new in new > old }
+        // Verified: the same seal as the finished questionnaire, under the
+        // same checkmark seal. A scan that didn't work leans down instead.
+        .sensoryFeedback(trigger: viewModel.outcome) { _, outcome in
+            switch outcome {
+            case .match: .success
+            case .noMatch, .failed: .warning
+            case nil: nil
+            }
+        }
+        .soundFeedback(trigger: viewModel.outcome) { _, outcome in
+            switch outcome {
+            case .match: .seal
+            case .noMatch, .failed: .rejection
+            case nil: nil
+            }
+        }
         .task { viewModel.start(referenceData: referencePhoto.imageData) }
         .onDisappear { viewModel.stop() }
         .onChange(of: scenePhase) { _, phase in

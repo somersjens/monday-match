@@ -92,6 +92,10 @@ struct EarlyAccessView: View {
             await access.start()
             keepSelectionAvailable()
         }
+        .sensoryFeedback(.selection, trigger: selection)
+        // A purchase or a restore that went through.
+        .sensoryFeedback(.success, trigger: access.hasPaidAccess) { _, paid in paid }
+        .soundFeedback(.success, trigger: access.hasPaidAccess) { _, paid in paid }
         .onChange(of: access.canOfferEarlyAccess) { _, _ in
             withAnimation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion)) {
                 keepSelectionAvailable()
@@ -146,6 +150,7 @@ struct EarlyAccessView: View {
         let early = id == .earlyAdopter
         let selected = selection == id
         return Button {
+            if selection != id { SoundPlayer.shared.play(.select) }
             withAnimation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion)) {
                 selection = id
             }

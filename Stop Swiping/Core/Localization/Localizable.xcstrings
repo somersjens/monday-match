@@ -826,6 +826,16 @@
         }
       }
     },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
     "%@%@" : {
       "localizations" : {
         "en" : {
@@ -13948,6 +13958,23 @@
         }
       }
     },
+    "Report or close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report or close"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapporteren of sluiten"
+          }
+        }
+      }
+    },
     "Report your match" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17671,6 +17698,23 @@
         }
       }
     },
+    "Too many checks today" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many checks today"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vandaag te vaak gecontroleerd"
+          }
+        }
+      }
+    },
     "Travel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18092,40 +18136,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verificatie mislukt"
-          }
-        }
-      }
-    },
-    "Too many checks today" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Too many checks today"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vandaag te vaak gecontroleerd"
-          }
-        }
-      }
-    },
-    "You can verify a photo five times a day. Please try again tomorrow." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You can verify a photo five times a day. Please try again tomorrow."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je kunt een foto vijf keer per dag verifiëren. Probeer het morgen opnieuw."
           }
         }
       }
@@ -19626,6 +19636,23 @@
         }
       }
     },
+    "You can verify a photo five times a day. Please try again tomorrow." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can verify a photo five times a day. Please try again tomorrow."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je kunt een foto vijf keer per dag verifiëren. Probeer het morgen opnieuw."
+          }
+        }
+      }
+    },
     "You don’t speak {0}" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -20115,6 +20142,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je hoeft nooit te betalen"
+          }
+        }
+      }
+    },
+    "You’re sending messages very quickly. The rest will go out in a minute." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’re sending messages very quickly. The rest will go out in a minute."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je stuurt heel snel berichten. De rest gaat over een minuut alsnog weg."
           }
         }
       }

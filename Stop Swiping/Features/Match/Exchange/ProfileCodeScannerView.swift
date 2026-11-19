@@ -262,6 +262,9 @@ struct ProfileCodeScannerView: View {
         .animation(.easeInOut(duration: 0.25), value: model.showsUnknownCode)
         .sensoryFeedback(.success, trigger: model.profile) { _, profile in profile != nil }
         .sensoryFeedback(.warning, trigger: model.showsUnknownCode) { _, shown in shown }
+        // A code that was read; the match it brings sounds its own arrival.
+        .soundFeedback(.select, trigger: model.profile) { _, profile in profile != nil }
+        .soundFeedback(.rejection, trigger: model.showsUnknownCode) { _, shown in shown }
         .onAppear { model.start() }
         .onDisappear { model.close() }
         .onChange(of: scenePhase) { _, phase in

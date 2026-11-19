@@ -106,6 +106,7 @@ struct WheelPicker<Item: Hashable>: View {
             scroll(to: selection, animated: false)
         }
         .sensoryFeedback(.selection, trigger: selection)
+        .soundFeedback(.tick, trigger: selection)
         .focusable()
         .focused($isFocused)
         .focusEffectDisabled()

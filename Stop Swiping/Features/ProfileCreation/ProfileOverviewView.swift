@@ -41,6 +41,9 @@ struct ProfileOverviewView: View {
                 }
         }
         .preferredColorScheme(.dark)
+        // An answer's editor comes forward and steps back, like the app's other panels.
+        .soundFeedback(trigger: path.count) { old, new in new > old ? .open : .close }
+        .soundFeedback(trigger: showsLanguagePicker) { _, shown in shown ? .open : .close }
         .sheet(isPresented: $showsLanguagePicker) {
             AppLanguagePicker()
         }

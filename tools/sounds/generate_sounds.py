@@ -53,7 +53,13 @@ def place(mix: np.ndarray, sound: np.ndarray, at: float, gain: float = 1.0, pan:
         sound = np.stack([sound * left, sound * right], axis=1) * math.sqrt(2)
     end = min(len(mix), start + len(sound))
     if end > start:
-        mix[start:end] += sound[: end - start] * gain
+        part = sound[: end - start] * gain
+        if end - start < len(sound):
+            # The mix ends before the sound does: fade it out at the cut
+            # instead of leaving a click there.
+            r = min(len(part), int(0.04 * SR))
+            part[-r:] *= (0.5 + 0.5 * np.cos(np.linspace(0, math.pi, r)))[:, None]
+        mix[start:end] += part
 
 
 def soft_attack(n: int, attack: float) -> np.ndarray:
@@ -64,10 +70,24 @@ def soft_attack(n: int, attack: float) -> np.ndarray:
     return env
 
 
+def soft_release(n: int, release: float = 0.06) -> np.ndarray:
+    """A short fade at the very end, so a note cut off at `duration` ends at
+    silence. Without it the cut is a step in the waveform: a click that the
+    reverb then smears into a small knock after every note."""
+    env = np.ones(n)
+    r = min(n, max(1, int(release * SR)))
+    env[-r:] = 0.5 + 0.5 * np.cos(np.linspace(0, math.pi, r))
+    return env
+
+
 def glass(note: float, duration: float = 1.2, decay: float = 0.6, brightness: float = 1.0,
           attack: float = 0.004, shimmer: float = 0.0016) -> np.ndarray:
-    """A glass/celesta bell: slightly inharmonic partials, each a detuned
-    pair so it gently beats, the upper ones dying away first."""
+    """A glass/celesta bell: slightly inharmonic partials, each with a quieter
+    detuned twin so it shimmers, the upper ones dying away first.
+
+    The twin is kept well below its partner: two equal voices cancel at every
+    beat, which turned short notes into a tremolo (a D6 dipped ~15 dB about
+    four times a second) and left a second swell at the end of each note."""
     f = midi(note)
     n = int(duration * SR)
     t = np.arange(n) / SR
@@ -80,9 +100,9 @@ def glass(note: float, duration: float = 1.2, decay: float = 0.6, brightness: fl
         if freq > 16_000:
             continue
         env = np.exp(-t / (decay * life))
-        pair = np.sin(2 * math.pi * freq * (1 - shimmer) * t) + np.sin(2 * math.pi * freq * (1 + shimmer) * t + 0.7)
-        out += amp * env * pair * 0.5
-    return out * soft_attack(n, attack)
+        pair = np.sin(2 * math.pi * freq * (1 - shimmer) * t) + 0.3 * np.sin(2 * math.pi * freq * (1 + shimmer) * t + 0.7)
+        out += amp * env * pair / 1.3
+    return out * soft_attack(n, attack) * soft_release(n)
 
 
 def soft_tone(note: float, duration: float, decay: float = 0.3, attack: float = 0.012,
@@ -94,7 +114,7 @@ def soft_tone(note: float, duration: float, decay: float = 0.3, attack: float = 
     freq = 440.0 * 2 ** ((semis - 69) / 12)
     phase = 2 * math.pi * np.cumsum(freq) / SR
     out = np.sin(phase) + 0.12 * np.sin(2 * phase)
-    return out * np.exp(-t / decay) * soft_attack(n, attack)
+    return out * np.exp(-t / decay) * soft_attack(n, attack) * soft_release(n, 0.03)
 
 
 def pad(notes, duration: float, attack: float = 1.0, release: float = 1.0, level: float = 1.0) -> np.ndarray:
@@ -205,7 +225,7 @@ def finish(sound: np.ndarray, peak_db: float) -> np.ndarray:
 
 def entrance() -> np.ndarray:
     """The welcome light threads in: air rising, stars gathering, one chord."""
-    mix = silence(4.0)
+    mix = silence(5.2)
     place(mix, air(3.0, 260, 3400, q=1.6, seed=3, shape=lambda t: np.sin(np.pi * np.minimum(t * 0.62, 1) ** 1.3) ** 2), 0.0, 0.55)
     place(mix, pad([D4, A4, E5], 3.4, attack=1.6, release=1.4, level=0.45), 0.1)
     place(mix, sparkles(1.6, 14, seed=11, density=lambda x: x ** 0.6, level=0.5), 1.25)
@@ -216,16 +236,16 @@ def entrance() -> np.ndarray:
 
 def step(note: int) -> np.ndarray:
     """One questionnaire step: a single soft glass note, a step up the scale."""
-    mix = silence(0.9)
-    place(mix, glass(note, 0.9, decay=0.32, brightness=0.7, attack=0.006), 0.0, 1.0)
-    place(mix, glass(note + 12, 0.6, decay=0.12, brightness=0.4), 0.004, 0.12)
+    mix = silence(1.2)
+    place(mix, glass(note, 1.1, decay=0.32, brightness=0.7, attack=0.006, shimmer=0.0), 0.0, 1.0)
+    place(mix, glass(note + 12, 0.6, decay=0.12, brightness=0.4, shimmer=0.0), 0.004, 0.12)
     return finish(reverb(mix, 1.4, 0.3), -9.0)
 
 
 def select() -> np.ndarray:
     """Choosing an answer: the faintest tick of glass."""
     mix = silence(0.4)
-    place(mix, glass(A6, 0.4, decay=0.07, brightness=0.5, attack=0.002), 0.0, 1.0)
+    place(mix, glass(A6, 0.4, decay=0.07, brightness=0.5, attack=0.002, shimmer=0.0), 0.0, 1.0)
     return finish(reverb(mix, 0.8, 0.2), -14.0)
 
 
@@ -325,7 +345,7 @@ def helix_departure() -> np.ndarray:
 def first_name() -> np.ndarray:
     """A first name is saved: a quick sweep of stardust, as if the name were
     written in light."""
-    mix = silence(1.8)
+    mix = silence(2.0)
     rng = np.random.default_rng(131)
     scale = [D6, E6, Fs6, A6, B6, D7, E7, Fs7, A7]
     for i in range(16):
@@ -428,7 +448,7 @@ def no_match() -> np.ndarray:
 
 def unfold() -> np.ndarray:
     """A saved match unfolds in place from the helix (2.2 s)."""
-    mix = silence(4.0)
+    mix = silence(4.4)
     place(mix, air(2.2, 500, 2200, q=1.6, seed=51, shape=lambda t: np.sin(np.pi * t) ** 2), 0.0, 0.42)
     place(mix, pad([D4, A4, Fs5], 2.6, attack=1.2, release=1.2, level=0.36), 0.2)
     for note, at, pan in ((Fs6, 2.05, -0.25), (A6, 2.12, 0.25)):
@@ -447,7 +467,7 @@ def exchange() -> np.ndarray:
 
 def chat_open() -> np.ndarray:
     """The heart's tip lifts into two rings: air rising, then two chimes."""
-    mix = silence(2.6)
+    mix = silence(3.0)
     place(mix, air(1.6, 380, 2600, q=1.5, seed=71, shape=lambda t: np.sin(np.pi * t * 0.8) ** 2), 0.0, 0.42)
     place(mix, glass(Fs6, 1.6, decay=0.6), 1.0, 0.36, -0.4)
     place(mix, glass(A6, 1.6, decay=0.6), 1.12, 0.36, 0.4)
@@ -480,7 +500,7 @@ def lock() -> np.ndarray:
 
 def open_() -> np.ndarray:
     """Something opens or comes forward: a short breath of air upwards."""
-    mix = silence(0.9)
+    mix = silence(1.1)
     place(mix, air(0.55, 520, 2300, q=1.3, seed=81, shape=lambda t: np.sin(np.pi * t) ** 1.5), 0.0, 0.8)
     place(mix, glass(A6, 0.7, decay=0.16, brightness=0.4), 0.36, 0.12)
     return finish(reverb(mix, 1.2, 0.3), -14.0)
@@ -488,7 +508,7 @@ def open_() -> np.ndarray:
 
 def close() -> np.ndarray:
     """Something closes or steps back: the same breath, falling."""
-    mix = silence(0.9)
+    mix = silence(1.1)
     place(mix, air(0.5, 2200, 480, q=1.3, seed=91, shape=lambda t: np.sin(np.pi * t) ** 1.5), 0.0, 0.8)
     place(mix, glass(D6, 0.7, decay=0.14, brightness=0.35), 0.3, 0.1)
     return finish(reverb(mix, 1.2, 0.3), -15.0)
@@ -501,6 +521,35 @@ def success() -> np.ndarray:
         place(mix, glass(note, 1.2, decay=0.42, brightness=0.8), i * 0.05, 0.5 - i * 0.05, -0.6 + i * 0.3)
     place(mix, sparkles(0.6, 5, seed=101, level=0.3), 0.25)
     return finish(reverb(mix, 1.8, 0.38), -8.0)
+
+
+def swish() -> np.ndarray:
+    """Switching between personality tests: the same breath as `open`, but
+    lighter and passing sideways, as if the chart were turned like a page."""
+    mix = silence(0.8)
+    shape = lambda t: np.sin(np.pi * t) ** 1.8
+    place(mix, strand(0.42, 900, 2600, -0.55, 0.55, 151, shape), 0.0, 0.85)
+    return finish(reverb(mix, 0.9, 0.22), -17.0)
+
+
+def toggle(on: bool) -> np.ndarray:
+    """A switch slides: a soft knock of the thumb and a small glass note,
+    a fifth up when it turns on and back down when it turns off."""
+    mix = silence(0.6)
+    first, second = (A5, E6) if on else (E6, A5)
+    place(mix, soft_tone(D4 + 12, 0.08, decay=0.012, attack=0.001), 0.0, 0.35)
+    place(mix, glass(first, 0.35, decay=0.05, brightness=0.4, attack=0.002, shimmer=0.0004), 0.0, 0.55)
+    place(mix, glass(second, 0.45, decay=0.09, brightness=0.45, attack=0.002, shimmer=0.0004), 0.045, 0.7)
+    return finish(reverb(mix, 0.7, 0.18), -15.0)
+
+
+def tick() -> np.ndarray:
+    """One notch of a wheel, ruler or slider: the faintest dry tick, quieter
+    than `select` because it can fire many times a second."""
+    mix = silence(0.25)
+    place(mix, glass(E7, 0.12, decay=0.012, brightness=0.3, attack=0.0008, shimmer=0.0), 0.0, 1.0)
+    place(mix, soft_tone(A5, 0.05, decay=0.006, attack=0.0008), 0.0, 0.25)
+    return finish(reverb(mix, 0.25, 0.08), -22.0)
 
 
 def notification() -> np.ndarray:
@@ -542,6 +591,10 @@ CUES = {
     "helix-arrival": helix_arrival,
     "name": first_name,
     "ambience": ambience,
+    "swish": swish,
+    "toggle-on": lambda: toggle(True),
+    "toggle-off": lambda: toggle(False),
+    "tick": tick,
 }
 
 

@@ -37,6 +37,29 @@ struct SupabaseProfilePhotoUploader: ProfilePhotoUploading {
         return references
     }
 
+    /// Removes photos this account no longer uses. The server allows twelve
+    /// photos per account (202611190001_abuse_limits.sql).
+    func removePhotos(_ ids: Set<UUID>, userID: String) async throws {
+        guard !ids.isEmpty else { return }
+        _ = try await client.storage.from(Self.bucket).remove(paths: ids.map { Self.path(userID: userID, photoID: $0) })
+    }
+
+    /// Removes every stored photo outside `kept`, such as photos replaced
+    /// before the app removed them itself. Photos younger than `minimumAge`
+    /// stay, in case another device of this account is still saving them.
+    func removePhotos(otherThan kept: Set<UUID>, userID: String, minimumAge: TimeInterval = 600) async throws {
+        let files = try await client.storage.from(Self.bucket).list(path: userID.lowercased(),
+                                                                   options: SearchOptions(limit: 1000))
+        let cutoff = Date().addingTimeInterval(-minimumAge)
+        let stale = files.filter { file in
+            guard file.id != nil, let created = file.createdAt, created < cutoff else { return false }
+            let id = UUID(uuidString: String(file.name.dropLast(file.name.hasSuffix(".jpg") ? 4 : 0)))
+            return id.map { !kept.contains($0) } ?? true
+        }
+        guard !stale.isEmpty else { return }
+        _ = try await client.storage.from(Self.bucket).remove(paths: stale.map { "\(userID.lowercased())/\($0.name)" })
+    }
+
     enum PhotoUploadError: LocalizedError {
         case changedIdentity
         var errorDescription: String? { L10n("This photo changed on another device. Select it again to upload a new photo.") }

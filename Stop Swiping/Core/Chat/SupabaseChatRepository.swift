@@ -231,10 +231,16 @@ final class SupabaseChatRepository: SecureChatRepository {
         return try await request.order("id",ascending:after != nil).limit(100).execute().value
     }
     func send(_ matchID: UUID, pending: ChatPendingMessage) async throws {
-        let _: Int64 = try await client.rpc("send_encrypted_message",params:[
-            "p_match_id":matchID.uuidString,"p_client_message_id":pending.id.uuidString,
-            "p_sender_device_id":pending.senderDeviceID.uuidString,"p_recipient_device_id":pending.recipientDeviceID.uuidString,
-            "p_ciphertext":pending.ciphertext,"p_protocol_version":ChatCryptography.protocolVersion]).execute().value
+        do {
+            let _: Int64 = try await client.rpc("send_encrypted_message",params:[
+                "p_match_id":matchID.uuidString,"p_client_message_id":pending.id.uuidString,
+                "p_sender_device_id":pending.senderDeviceID.uuidString,"p_recipient_device_id":pending.recipientDeviceID.uuidString,
+                "p_ciphertext":pending.ciphertext,"p_protocol_version":ChatCryptography.protocolVersion]).execute().value
+        } catch let error as PostgrestError where error.message.contains("Message limit reached") {
+            // 60 a minute and 5 MB a day per sender (202611190001_abuse_limits.sql).
+            // The message stays queued and goes out on a later refresh.
+            throw SecureChatError.sendingTooFast
+        }
     }
     func breakMatch(_ matchID: UUID) async throws {
         try await client.rpc("break_match",params:["p_match_id":matchID.uuidString]).execute()
