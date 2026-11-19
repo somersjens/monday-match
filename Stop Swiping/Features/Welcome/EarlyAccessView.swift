@@ -16,6 +16,9 @@ struct EarlyAccessView: View {
     /// free early-adopter plan is gone. That plan is claimed only once, before
     /// any answer counts, so while it is offered there is no progress to show.
     var questionnaireProgress: Double?
+    /// The profile is finished: the plans come back because paid access
+    /// ended (a monthly plan that ran out, a refund), not to finish it.
+    var profileIsComplete = false
 
     @State private var selection = LifetimeProductID.lifetime
     @State private var hasAppeared = false
@@ -61,7 +64,13 @@ struct EarlyAccessView: View {
                         .accessArrival(visible: hasAppeared, delay: 0.34)
                         .transition(.opacity.combined(with: .offset(y: 16)))
                     if secondPlan == .monthly {
-                        if access.ledger.effectiveStartedAt != nil {
+                        if profileIsComplete {
+                            Text(L10n("Your access has ended. Choose a plan to keep using Stop Swiping. Your profile and answers are still here."))
+                                .font(.footnote)
+                                .foregroundStyle(OnboardingTheme.secondaryText)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessArrival(visible: hasAppeared, delay: 0.4)
+                        } else if access.ledger.effectiveStartedAt != nil {
                             Text(L10n("Your early-adopter deadline has passed. Choose a plan to finish your profile."))
                                 .font(.footnote)
                                 .foregroundStyle(OnboardingTheme.secondaryText)

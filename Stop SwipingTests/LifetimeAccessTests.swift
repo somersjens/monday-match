@@ -582,6 +582,43 @@ final class LifetimeAccessTests: XCTestCase {
         XCTAssertFalse(store.remindsToCancelSubscription, "Just cancelled here; the server hears it on the next sync")
     }
 
+    func testACancelledPlanEndsAccessByItselfAndOffersThePlansAgain() async throws {
+        // Real time: the store wakes itself up when the paid month ends.
+        let purchasing = FakePurchases()
+        let early = transaction(at: Date().addingTimeInterval(-10 * 86_400))
+        let plan = LifetimeStoreTransaction(productID: .monthly, originalID: "sub", originalPurchaseDate: Date(),
+                                            expiresAt: Date().addingTimeInterval(1))
+        purchasing.state = LifetimeStoreSnapshot(entitlements: [early, plan], firstEarlyPurchase: early)
+        let store = makeStore(purchasing: purchasing, now: { Date() })
+        await store.start()
+        XCTAssertTrue(store.hasAccess)
+        XCTAssertFalse(store.canOfferEarlyAccess)
+
+        // Cancelled: StoreKit no longer lists it once the period is over.
+        purchasing.state = LifetimeStoreSnapshot(entitlements: [early], firstEarlyPurchase: early)
+        try await Task.sleep(for: .seconds(2.5))
+        XCTAssertFalse(store.hasAccess, "No tap needed: access ends with the paid month")
+        XCTAssertFalse(store.canOfferEarlyAccess, "The plans come back with monthly, not the free plan")
+        XCTAssertFalse(store.remindsToCancelSubscription)
+        XCTAssertFalse(store.offersSubscriberLifetime)
+    }
+
+    func testLapsedAccessScreenRenders() async throws {
+        let purchasing = FakePurchases()
+        let early = transaction(at: start.addingTimeInterval(-40 * 86_400))
+        purchasing.state = LifetimeStoreSnapshot(entitlements: [early], firstEarlyPurchase: early)
+        let store = makeStore(purchasing: purchasing)
+        await store.start()
+        XCTAssertFalse(store.hasAccess)
+        for (name, language) in [("lapsed-en", AppLanguage.english), ("lapsed-nl", AppLanguage.dutch)] {
+            AppLanguageSettings.shared.language = language
+            defer { AppLanguageSettings.shared.language = .english }
+            let screen = EarlyAccessView(access: store, onContinue: {}, onBack: {}, profileIsComplete: true)
+                .environment(\.locale, language.locale)
+            try await render(screen, name: name, width: 393, height: 852)
+        }
+    }
+
     func testMonthlyIsOfferedOnlyOnceTheFreePlanIsGone() async {
         // The access screen shows the free plan or the monthly plan, never both.
         let fresh = makeStore()

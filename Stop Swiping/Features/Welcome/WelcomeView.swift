@@ -349,7 +349,8 @@ struct WelcomeView: View {
                     if showsAccess {
                         EarlyAccessView(access: access, onContinue: continueFromAccess,
                                         onBack: closeAccess, usesSharedLight: true,
-                                        questionnaireProgress: accessProgress)
+                                        questionnaireProgress: accessProgress,
+                                        profileIsComplete: profileCreation.isCompleted)
                             .transition(.asymmetric(insertion: .identity,
                                                     removal: .opacity.animation(.easeOut(duration: 0.2))))
                             .zIndex(2)

@@ -293,6 +293,11 @@ struct ProfileCreationFlowView: View {
                     .transition(.onboardingReveal(reduceMotion: reduceMotion))
             }
 
+            if let text = partnerHeightNoticeText {
+                partnerHeightNotice(text)
+                    .transition(.onboardingReveal(reduceMotion: reduceMotion))
+            }
+
             Button(action: handleContinue) {
                 Text(primaryTitle)
                     .contentTransition(.opacity)
@@ -314,6 +319,7 @@ struct ProfileCreationFlowView: View {
         .controlsBottomPadding()
         .opacity(hasEntered ? 1 : 0)
         .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: showsHeightHonestyNotice)
+        .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: partnerHeightNoticeText)
     }
 
     /// Appears once a height has been chosen, or after a first Continue on
@@ -334,36 +340,53 @@ struct ProfileCreationFlowView: View {
         }
     }
 
+    /// One centred line in a red frame, so it reads as a warning at a glance.
     private var heightHonestyNotice: some View {
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
-        return HStack(spacing: 10) {
-            Image(systemName: "checkmark.shield.fill")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(OnboardingTheme.accentGradient)
-                .accessibilityHidden(true)
-            Text(L10n("False information can lead to account termination."))
-                .foregroundStyle(OnboardingTheme.primaryText.opacity(0.9))
-                .multilineTextAlignment(.leading)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
-                .fixedSize(horizontal: false, vertical: true)
+        return Text(L10n("False information can lead to account termination."))
+            .font(.system(.footnote, weight: .semibold))
+            .foregroundStyle(OnboardingTheme.primaryText)
+            .multilineTextAlignment(.center)
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background {
+                shape
+                    .fill(OnboardingTheme.destructive.opacity(0.12))
+                    .overlay {
+                        shape.strokeBorder(DestructiveGlowButtonStyle.gradient, lineWidth: 1.5)
+                    }
+                    .shadow(color: OnboardingTheme.destructive.opacity(0.35), radius: 14, y: 4)
+            }
+    }
+
+    /// On the partner-height step, when the chosen range leaves out the
+    /// user's own height: allowed, just worth knowing.
+    private var partnerHeightNoticeText: String? {
+        guard displayedStep == .partnerHeightRange else { return nil }
+        let own = viewModel.state.heightCentimeters
+        let range = viewModel.state.partnerHeightRange
+        if range.minimum > own {
+            return L10n("That’s fine. Just know that everyone in this range is taller than you.")
         }
-        .font(.system(.footnote, weight: .medium))
-        .frame(maxWidth: .infinity, alignment: .center)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background {
-            shape
-                .fill(LinearGradient(
-                    colors: [OnboardingTheme.blue.opacity(0.16), OnboardingTheme.violet.opacity(0.10)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                ))
-                .overlay {
-                    shape.strokeBorder(OnboardingTheme.accentGradient.opacity(0.55), lineWidth: 1)
-                }
-                .shadow(color: OnboardingTheme.blue.opacity(0.25), radius: 14, y: 4)
+        if range.maximum < own {
+            return L10n("That’s fine. Just know that everyone in this range is shorter than you.")
         }
+        return nil
+    }
+
+    private func partnerHeightNotice(_ text: String) -> some View {
+        Text(text)
+            .font(.system(.footnote, weight: .medium))
+            .foregroundStyle(OnboardingTheme.secondaryText)
+            .multilineTextAlignment(.center)
+            .lineLimit(3)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.horizontal, 8)
+            .contentTransition(.opacity)
     }
 
     // MARK: - Testing shortcut

@@ -787,7 +787,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "De eigen antwoorden van {0}, zoals met jou gedeeld."
+            "value" : "De antwoorden die {0} met je heeft gedeeld."
           }
         }
       }
@@ -1231,7 +1231,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Er wordt al een locatie opgehaald."
+            "value" : "Je locatie wordt al opgehaald."
           }
         }
       }
@@ -3033,7 +3033,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vind je vriendschappelijk contact met ex-partners prima, of heb je liever zo min mogelijk contact?"
+            "value" : "Vind je het prima om bevriend te blijven met je exen, of heb je liever zo min mogelijk contact?"
           }
         }
       }
@@ -3050,7 +3050,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mogen jullie sociale levens losstaan, of sluit je graag vaak bij elkaars afspraken aan?"
+            "value" : "Heb je liever allebei een eigen sociaal leven, of ga je graag vaak mee naar elkaars afspraken?"
           }
         }
       }
@@ -3713,7 +3713,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verbreken beëindigt je match met {0} voor jullie allebei."
+            "value" : "Hiermee stopt je match met {0}, voor jullie allebei."
           }
         }
       }
@@ -3866,7 +3866,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Camerabeelden en gezichtskenmerken worden lokaal verwerkt en na de scan verwijderd. Je gekozen profielfoto blijft opgeslagen."
+            "value" : "Camerabeelden en gezichtskenmerken blijven op je telefoon en worden na de scan gewist. Je gekozen profielfoto blijft bewaard."
           }
         }
       }
@@ -4070,7 +4070,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Weloverwogen"
+            "value" : "Rustig afwegen"
           }
         }
       }
@@ -4308,7 +4308,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chatgeschiedenis blijft tot 12 maanden bewaard, ook na het verbreken van de match."
+            "value" : "Je chats worden tot 12 maanden bewaard, ook als de match is verbroken."
           }
         }
       }
@@ -4648,7 +4648,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nauw betrokken"
+            "value" : "Hechte band"
           }
         }
       }
@@ -4665,7 +4665,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nabijheid en ruimte"
+            "value" : "Samen en eigen ruimte"
           }
         }
       }
@@ -4923,7 +4923,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vul je profiel één keer in, kies wanneer je meedoet en ontvang maximaal één zorgvuldig gekozen match."
+            "value" : "Vul je profiel één keer in, kies wanneer je meedoet en krijg hooguit één zorgvuldig gekozen match."
           }
         }
       }
@@ -5059,7 +5059,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Contact met ex-partners"
+            "value" : "Contact met exen"
           }
         }
       }
@@ -5909,7 +5909,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kies je eten vooral op smaak en gemak, of maak je vooral bewuste en gezonde keuzes?"
+            "value" : "Eet je vooral wat lekker en makkelijk is, of let je bewust op gezond eten?"
           }
         }
       }
@@ -5926,7 +5926,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Beslis je graag snel en op gevoel, of neem je rustig de tijd om keuzes te overwegen?"
+            "value" : "Beslis je snel op gevoel, of denk je er liever rustig over na?"
           }
         }
       }
@@ -5943,7 +5943,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bespreek je jullie relatie als er iets speelt, of neem je er graag regelmatig bewust de tijd voor?"
+            "value" : "Praat je over jullie relatie als er iets speelt, of maak je daar graag regelmatig tijd voor?"
           }
         }
       }
@@ -5977,7 +5977,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kies je graag voor vertrouwd en comfortabel, of zoek je juist nieuwe en avontuurlijke ervaringen?"
+            "value" : "Houd je van het vertrouwde, of zoek je juist nieuwe avonturen op?"
           }
         }
       }
@@ -6028,7 +6028,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voel je je het prettigst in de avond, of ben je juist vroeg in de ochtend op je best?"
+            "value" : "Ben je 's avonds op je best, of juist vroeg in de ochtend?"
           }
         }
       }
@@ -6062,7 +6062,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Volg je het nieuws en de actualiteit nauwelijks, of elke dag op de voet?"
+            "value" : "Volg je het nieuws nauwelijks, of houd je het elke dag bij?"
           }
         }
       }
@@ -6198,7 +6198,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Laat je waardering vooral zien in wat je doet, of spreek je die graag vaak uit?"
+            "value" : "Laat je waardering vooral zien in wat je doet, of spreek je die ook vaak uit?"
           }
         }
       }
@@ -6215,7 +6215,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "App je je partner vooral als er iets te delen is, of graag regelmatig gedurende de dag?"
+            "value" : "App je je partner vooral als er iets te delen is, of de hele dag door?"
           }
         }
       }
@@ -6266,7 +6266,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bewaar je affectie liever voor thuis, of laat je die ook graag in het openbaar zien?"
+            "value" : "Knuffel en zoen je liever alleen thuis, of ook gewoon waar anderen bij zijn?"
           }
         }
       }
@@ -6334,7 +6334,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Breng je vrije tijd graag thuis of in alle rust door, of ga je liever actief op pad?"
+            "value" : "Ben je in je vrije tijd graag rustig thuis, of ga je liever actief op pad?"
           }
         }
       }
@@ -6368,7 +6368,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bekijk je een relatie graag per fase, of maak je liever plannen voor de verre toekomst?"
+            "value" : "Neem je een relatie liever stap voor stap, of maak je graag plannen voor later?"
           }
         }
       }
@@ -6385,7 +6385,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Breng je dingen voorzichtig en tactvol, of zeg je direct wat je denkt?"
+            "value" : "Verpak je dingen liever voorzichtig, of zeg je gewoon direct wat je denkt?"
           }
         }
       }
@@ -6402,7 +6402,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zie je je familie af en toe, of zijn jullie nauw betrokken bij elkaars dagelijks leven?"
+            "value" : "Zie je je familie af en toe, of hebben jullie een hechte band en zitten jullie veel in elkaars leven?"
           }
         }
       }
@@ -6419,7 +6419,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deel je gevoelens geleidelijk en gedoseerd, of bespreek je ze graag open en uitgebreid?"
+            "value" : "Deel je je gevoelens liever beetje bij beetje, of praat je er graag open en uitgebreid over?"
           }
         }
       }
@@ -6504,7 +6504,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ondersteunt werk vooral je leven, of zijn je carrière en groei een belangrijk doel?"
+            "value" : "Werk je vooral om te kunnen leven, of zijn je carrière en groei een belangrijk doel?"
           }
         }
       }
@@ -6657,7 +6657,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nuchter"
+            "value" : "Geen poespas"
           }
         }
       }
@@ -6963,7 +6963,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gemoedelijk en steunend. Je wilt innerlijke rust en harmonie, en bent bang voor conflict en verwijdering."
+            "value" : "Gemoedelijk en steunend. Je wilt innerlijke rust en harmonie, en bent bang voor ruzie en afstand."
           }
         }
       }
@@ -8187,7 +8187,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geleidelijk"
+            "value" : "Beetje bij beetje"
           }
         }
       }
@@ -8272,7 +8272,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Een andere religie of levensbeschouwing heeft dan jouw geselecteerde voorkeuren ({0})"
+            "value" : "Een religie of levensovertuiging heeft buiten je voorkeuren ({0})"
           }
         }
       }
@@ -8340,7 +8340,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Een andere religie of levensbeschouwing heeft dan jouw geselecteerde voorkeuren ({0})"
+            "value" : "Een religie of levensovertuiging heeft buiten je voorkeuren ({0})"
           }
         }
       }
@@ -8629,7 +8629,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hoe groot is de rol van bewegen, sporten en lichamelijke activiteit in je leven?"
+            "value" : "Hoe belangrijk zijn sporten en bewegen in je leven?"
           }
         }
       }
@@ -8646,7 +8646,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hoe groot is de rol van seks in een relatie voor jou?"
+            "value" : "Hoe belangrijk is seks voor jou in een relatie?"
           }
         }
       }
@@ -8731,7 +8731,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hoeveel behoefte heb je aan aanraking, knuffelen en fysieke nabijheid in een relatie?"
+            "value" : "Hoeveel behoefte heb je in een relatie aan aanraken en knuffelen?"
           }
         }
       }
@@ -8969,7 +8969,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Als je toekomstige match je lengte, leeftijd, naam of foto betwist, loop je het risico je account te verliezen."
+            "value" : "Als je match vindt dat je lengte, leeftijd, naam of foto niet klopt, kun je je account kwijtraken."
           }
         }
       }
@@ -9037,7 +9037,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bij een strafbaar feit, ga naar de politie"
+            "value" : "Gaat het om een strafbaar feit? Stap dan naar de politie"
           }
         }
       }
@@ -9054,7 +9054,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ben je in de liefde eerder nuchter, of houd je van romantische gebaren en verrassingen?"
+            "value" : "Heb je in de liefde weinig met grote gebaren, of houd je van romantische verrassingen?"
           }
         }
       }
@@ -9700,7 +9700,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Houd alleen je eigen gezicht in beeld. Andere gezichten mogen niet in de scan voorkomen."
+            "value" : "Houd alleen je eigen gezicht in beeld. Er mogen geen andere gezichten in beeld komen."
           }
         }
       }
@@ -10298,7 +10298,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Er is geen toestemming voor locatietoegang gegeven."
+            "value" : "Je hebt geen toegang tot je locatie gegeven."
           }
         }
       }
@@ -10315,7 +10315,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Locatievoorzieningen zijn uitgeschakeld op dit apparaat."
+            "value" : "Locatievoorzieningen staan uit op dit apparaat."
           }
         }
       }
@@ -10417,7 +10417,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Veel nabijheid"
+            "value" : "Veel knuffelen"
           }
         }
       }
@@ -10859,7 +10859,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Berichten worden op je telefoon versleuteld. Verloren privésleutels kunnen niet vanuit Supabase worden hersteld."
+            "value" : "Berichten worden op je telefoon versleuteld. Raak je je sleutel kwijt, dan kunnen we die niet herstellen."
           }
         }
       }
@@ -10876,7 +10876,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Er wachten berichten op verzending. Houd de app open om het opnieuw te proberen."
+            "value" : "Er staan nog berichten klaar om te versturen. Houd de app open om het opnieuw te proberen."
           }
         }
       }
@@ -11420,7 +11420,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nieuws en actualiteit"
+            "value" : "Nieuws volgen"
           }
         }
       }
@@ -12015,7 +12015,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nu je lifetime-toegang hebt, kan je je abonnement stopzetten; anders blijf je doorbetalen."
+            "value" : "Nu je lifetime-toegang hebt, kun je je abonnement stopzetten. Anders blijf je doorbetalen."
           }
         }
       }
@@ -12202,7 +12202,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Op zondag hoor je of er een match is gevonden die aan de minimale compatibiliteit voldoet."
+            "value" : "Op zondag hoor je of er een match is die boven je minimale matchpercentage scoort."
           }
         }
       }
@@ -12219,7 +12219,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zodra een match verbroken is, kunnen er geen berichten meer worden verstuurd en kunnen jullie nooit meer met elkaar matchen."
+            "value" : "Na het verbreken kunnen jullie elkaar geen berichten meer sturen en nooit meer met elkaar matchen."
           }
         }
       }
@@ -12253,7 +12253,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Per fase"
+            "value" : "Stap voor stap"
           }
         }
       }
@@ -12593,7 +12593,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kies elke week of je meedoet. Je profiel wordt alleen meegenomen als je deelneemt."
+            "value" : "Kies elke week of je meedoet. Doe je niet mee, dan word je die week ook niet gematcht."
           }
         }
       }
@@ -12933,7 +12933,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geduldig en bestendig. Je werkt rustig en consequent en houdt van een stabiele omgeving."
+            "value" : "Geduldig en stabiel. Je werkt rustig en consequent en houdt van een vaste omgeving."
           }
         }
       }
@@ -13443,7 +13443,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nauwkeurig en bedachtzaam. Je hecht aan kwaliteit en precisie, en doet dingen graag weloverwogen."
+            "value" : "Nauwkeurig en bedachtzaam. Je hecht aan kwaliteit en precisie, en denkt goed na voordat je iets doet."
           }
         }
       }
@@ -13868,7 +13868,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ontvang één zorgvuldig gekozen match per keer"
+            "value" : "Krijg één zorgvuldig gekozen match per keer"
           }
         }
       }
@@ -14208,7 +14208,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rapporteren kan gevolgen hebben voor het account van {0}. Omdat je maar met één persoon tegelijk gematcht kunt zijn, is het rapporteren mogelijk aan jou te linken. Wees je hiervan bewust."
+            "value" : "Rapporteren kan gevolgen hebben voor het account van {0}. Omdat je maar één match tegelijk hebt, is een rapportage mogelijk naar jou te herleiden."
           }
         }
       }
@@ -14395,7 +14395,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Op zaterdagavond worden passende deelnemers vergeleken en gekoppeld, zonder eindeloos bladeren."
+            "value" : "Op zaterdagavond koppelen we mensen die bij elkaar passen. Zonder eindeloos swipen."
           }
         }
       }
@@ -15398,7 +15398,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Waardering tonen"
+            "value" : "Waardering uiten"
           }
         }
       }
@@ -16214,7 +16214,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bestendig"
+            "value" : "Rustig"
           }
         }
       }
@@ -16231,7 +16231,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bestendig en precies. Je bouwt diepgaande kennis op en zorgt dat dingen kloppen."
+            "value" : "Geduldig en precies. Je bouwt diepgaande kennis op en zorgt dat dingen kloppen."
           }
         }
       }
@@ -16316,7 +16316,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "App Store-prijzen zijn momenteel niet beschikbaar."
+            "value" : "App Store-prijzen zijn nu even niet beschikbaar."
           }
         }
       }
@@ -16520,7 +16520,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tactvol"
+            "value" : "Voorzichtig"
           }
         }
       }
@@ -16967,6 +16967,40 @@
         }
       }
     },
+    "That’s fine. Just know that everyone in this range is shorter than you." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That’s fine. Just know that everyone in this range is shorter than you."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je zoekt dus iemand die kleiner is dan jij?"
+          }
+        }
+      }
+    },
+    "That’s fine. Just know that everyone in this range is taller than you." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That’s fine. Just know that everyone in this range is taller than you."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je zoekt dus iemand die langer is dan jij?"
+          }
+        }
+      }
+    },
     "That’s on our side, not yours. Please try again in a few minutes." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17234,7 +17268,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "De Myers-Briggs Type Indicator deelt voorkeuren in op vier schalen, voortbouwend op de typen van Carl Jung. Je vier letters vormen samen een van de 16 types."
+            "value" : "De Myers-Briggs Type Indicator deelt voorkeuren in op vier schalen en bouwt voort op de typen van Carl Jung. Je vier letters vormen samen een van de 16 types."
           }
         }
       }
@@ -17438,7 +17472,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "De Talent Motivatie Analyse, ontwikkeld in Nederland, brengt drijfveren en talenten in kaart. Dit zijn acht drijfveren, afgeleid uit je antwoorden."
+            "value" : "De Talent Motivatie Analyse, ontwikkeld in Nederland, brengt drijfveren en talenten in kaart. Hier zie je acht drijfveren, ingeschat op basis van je antwoorden."
           }
         }
       }
@@ -17659,7 +17693,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deze match is geblokkeerd. Berichten sturen is uitgeschakeld."
+            "value" : "Deze match is geblokkeerd. Je kunt geen berichten meer sturen."
           }
         }
       }
@@ -17693,7 +17727,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deze match is verbroken. Er kunnen geen berichten meer worden verstuurd en jullie kunnen nooit meer met elkaar matchen."
+            "value" : "Deze match is verbroken. Jullie kunnen elkaar geen berichten meer sturen en nooit meer met elkaar matchen."
           }
         }
       }
@@ -17744,7 +17778,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deze foto is op een ander apparaat gewijzigd. Selecteer hem opnieuw om een nieuwe foto te uploaden."
+            "value" : "Deze foto is op een ander apparaat gewijzigd. Kies hem opnieuw om een nieuwe foto te uploaden."
           }
         }
       }
@@ -17795,7 +17829,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deze aankoop is momenteel niet beschikbaar. Probeer het opnieuw."
+            "value" : "Deze aankoop is nu even niet beschikbaar. Probeer het opnieuw."
           }
         }
       }
@@ -17863,7 +17897,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Door de dag heen"
+            "value" : "De hele dag door"
           }
         }
       }
@@ -17948,7 +17982,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rond je profiel binnen 7 dagen na aanmelding af om deze voordelen te ontgrendelen."
+            "value" : "Maak je profiel binnen 7 dagen na aanmelding af om deze voordelen te krijgen."
           }
         }
       }
@@ -19104,7 +19138,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bewaar je bij verschillende meningen liever de vrede, of ga je graag stevig in discussie?"
+            "value" : "Houd je bij een meningsverschil liever de vrede, of ga je graag stevig de discussie aan?"
           }
         }
       }
@@ -19665,7 +19699,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Je zoekt een relatie met afgesproken openheid."
+            "value" : "Je zoekt een open relatie, met duidelijke afspraken."
           }
         }
       }
@@ -19971,7 +20005,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Je voelt dingen intens en zoekt onder stress geruststelling en nabijheid."
+            "value" : "Je voelt dingen intens en zoekt bij stress geruststelling en iemand dichtbij."
           }
         }
       }
@@ -19988,7 +20022,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Je krijgt energie van mensen om je heen en dingen delen."
+            "value" : "Je krijgt energie van mensen om je heen en deelt graag wat je meemaakt."
           }
         }
       }
@@ -20452,6 +20486,23 @@
         }
       }
     },
+    "Your access has ended. Choose a plan to keep using Stop Swiping. Your profile and answers are still here." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your access has ended. Choose a plan to keep using Stop Swiping. Your profile and answers are still here."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je toegang is verlopen. Kies een optie om Stop Swiping te blijven gebruiken. Je profiel en antwoorden zijn bewaard."
+          }
+        }
+      }
+    },
     "Your account is banned" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -20566,7 +20617,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Je termijn als early adopter is verstreken. Kies een optie om je profiel af te ronden."
+            "value" : "Je periode als early adopter is voorbij. Kies een optie om je profiel af te maken."
           }
         }
       }
@@ -21025,7 +21076,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Je herinnering kon niet worden gepland. Probeer deze opnieuw aan te zetten."
+            "value" : "Je herinnering kon niet worden ingepland. Probeer hem opnieuw aan te zetten."
           }
         }
       }
@@ -21053,13 +21104,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your worldview, and what you’re open to?"
+            "value" : "What religion suits you, and what are you looking for in a partner?"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Je levensvisie, en waar sta je voor open?"
+            "state" : "needs_review",
+            "value" : "Wat is jouw religie, en wat zoek je daarin bij een partner?"
           }
         }
       }

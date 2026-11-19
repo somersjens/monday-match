@@ -461,6 +461,45 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.shouldAutoAdvanceAfterAnswerSelection)
     }
 
+    func testAutoAdvanceHappensOncePerQuestionNotAfterGoingBack() {
+        let viewModel = makeViewModel()
+        advancePastBirthday(viewModel)
+        for _ in 0..<3 { viewModel.submitCurrentStep() }
+        XCTAssertEqual(viewModel.currentStep, .gender)
+        viewModel.selectGender(.woman)
+        XCTAssertTrue(viewModel.shouldAutoAdvanceAfterAnswerSelection)
+        XCTAssertEqual(viewModel.submitCurrentStep(), .advanced)
+        XCTAssertEqual(viewModel.currentStep, .partnerGenders)
+
+        XCTAssertTrue(viewModel.goBack())
+        XCTAssertEqual(viewModel.currentStep, .gender)
+        viewModel.selectGender(.man)
+        XCTAssertFalse(viewModel.shouldAutoAdvanceAfterAnswerSelection,
+                       "A question revisited with Back waits for Continue.")
+        XCTAssertEqual(viewModel.submitCurrentStep(), .advanced)
+        XCTAssertEqual(viewModel.currentStep, .partnerGenders)
+        for gender in GenderIdentity.onboardingOptions { viewModel.togglePartnerGender(gender) }
+        XCTAssertTrue(viewModel.shouldAutoAdvanceAfterAnswerSelection,
+                      "The question not passed yet still moves on by itself.")
+    }
+
+    func testLastQuestionNeverAutoAdvances() throws {
+        let viewModel = makeViewModel()
+        answerUpToCompatibilitySteps(viewModel)
+        let last = try XCTUnwrap(CompatibilityScaleQuestion.all.last)
+        for question in CompatibilityScaleQuestion.all.dropLast() {
+            viewModel.setCompatibilityOwn(3, for: question)
+            viewModel.setCompatibilityImportance(4, for: question)
+            XCTAssertEqual(viewModel.submitCurrentStep(), .advanced)
+        }
+        XCTAssertEqual(viewModel.currentStep, last.step)
+        XCTAssertNil(viewModel.currentStep.next)
+        viewModel.setCompatibilityOwn(1, for: last)
+        viewModel.setCompatibilityPartner(5, for: last)
+        viewModel.setCompatibilityImportance(5, for: last)
+        XCTAssertFalse(viewModel.shouldAutoAdvanceAfterAnswerSelection, "The last question waits for Continue.")
+    }
+
     func testDataDrivenMultipleChoicesAlsoWaitForEveryOption() {
         let question = RelationshipPreferenceQuestion(
             id: "multiple", prompt: "Choose", selectionMode: .multiple,
@@ -478,8 +517,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
 
     func testThreePillarsOnlyAutoAdvanceWithDifferentPartnerAndNonDefaultImportance() {
         let viewModel = makeViewModel()
-        completeProfile(viewModel)
-        while viewModel.currentStep != .aloneTime { XCTAssertTrue(viewModel.goBack()) }
+        answerUpToCompatibilitySteps(viewModel)
         XCTAssertEqual(viewModel.currentStep, .aloneTime)
         viewModel.setAloneTimeImportance(3)
         XCTAssertFalse(viewModel.shouldAutoAdvanceAfterAnswerSelection)
@@ -1265,6 +1303,11 @@ final class ProfileCreationViewModelTests: XCTestCase {
     }
 
     private func completeProfile(_ viewModel: ProfileCreationViewModel) {
+        answerUpToCompatibilitySteps(viewModel)
+        answerCompatibilitySteps(viewModel)
+    }
+
+    private func answerUpToCompatibilitySteps(_ viewModel: ProfileCreationViewModel) {
         advancePastBirthday(viewModel)
         viewModel.updatePartnerAgeRange(minimum: 25, maximum: 40)
         viewModel.submitCurrentStep()
@@ -1284,7 +1327,6 @@ final class ProfileCreationViewModelTests: XCTestCase {
         viewModel.updateSearchRadius(60)
         viewModel.submitCurrentStep()
         answerLifestyleSteps(viewModel)
-        answerCompatibilitySteps(viewModel)
     }
 
     private func answerCompatibilitySteps(_ viewModel: ProfileCreationViewModel) {

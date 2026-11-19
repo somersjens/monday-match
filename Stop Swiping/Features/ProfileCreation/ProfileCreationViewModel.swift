@@ -152,9 +152,20 @@ final class ProfileCreationViewModel: ObservableObject {
 
     var isCompleted: Bool { state.completedAt != nil && !state.isUnderageLocked }
 
+    /// Moving on by itself happens once per question: only on the furthest
+    /// question reached, so a question revisited with Back waits for
+    /// Continue and can be changed in peace. The last question never moves
+    /// on by itself either.
+    private var allowsAutoAdvance: Bool {
+        editingStep == nil
+            && !state.isUnderageLocked
+            && state.currentStep == state.furthestStep
+            && state.currentStep.next != nil
+    }
+
     /// Evaluated after a deliberate answer selection, never on entering a page.
     var shouldAutoAdvanceAfterAnswerSelection: Bool {
-        guard editingStep == nil, !state.isUnderageLocked else { return false }
+        guard allowsAutoAdvance else { return false }
         switch currentStep {
         case .gender, .hasChildren, .partnerHasChildren, .futureChildren:
             return isComplete(currentStep)
@@ -270,11 +281,11 @@ final class ProfileCreationViewModel: ObservableObject {
     }
 
     /// Automatic progression only applies once all three fields were changed,
-    /// and only once per accepted selection.
+    /// and only the first time through; a birthday revisited with Back waits
+    /// for Continue.
     var shouldAutoAdvanceFromBirthDate: Bool {
         guard state.currentStep == .dateOfBirth,
-              editingStep == nil,
-              !state.isUnderageLocked,
+              allowsAutoAdvance,
               birthDateChangedFields.count == BirthDateField.allCases.count,
               state.birthDateSelection != state.dateOfBirth,
               case .adult = birthDateEvaluation else { return false }

@@ -57,7 +57,8 @@ struct AppCoordinatorView: View {
             case .accessRequired:
                 EarlyAccessView(access: access, onContinue: {}, onBack: {
                     showsWelcomeFromAccess = true
-                }, questionnaireProgress: savedQuestionnaireProgress)
+                }, questionnaireProgress: savedQuestionnaireProgress,
+                profileIsComplete: savedCompletionDate != nil)
             }
         }
         .background(Color("WelcomeBackground").ignoresSafeArea())
