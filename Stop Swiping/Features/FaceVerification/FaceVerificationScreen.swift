@@ -124,7 +124,7 @@ struct FaceVerificationScreen<CameraContent: View>: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             } else if outcome == nil, snapshot.phase == .circling {
-                Text("\(Int((snapshot.progress * 100).rounded()))%")
+                Text(verbatim: L10nPercent(Int((snapshot.progress * 100).rounded())))
                     .font(.system(size: 14, weight: .medium, design: .rounded).monospacedDigit())
                     .foregroundStyle(OnboardingTheme.secondaryText)
                     .accessibilityLabel(L10n("\(Int((snapshot.progress * 100).rounded())) percent captured"))

@@ -114,37 +114,28 @@ enum PersonalityEstimator {
 
     /// Extraversion against introversion: where energy comes from.
     static func extraversion(_ a: PersonalityAnswers) -> Double {
-        a.score([
-            .talkativeness: 1.0, .socialPlans: 1.0, .aloneTime: -1.0, .nightlife: 0.8,
-            .leisureTime: 0.7, .hostingGuests: 0.7, .partnerSocializing: 0.5, .celebrations: 0.5,
-            .calling: 0.3, .publicAffection: 0.3, .stressContact: 0.3, .socialMediaSharing: 0.3,
-        ])
+        a.score([.talkativeness: 1.0, .socialPlans: 1.0, .aloneTime: -0.8, .nightlife: 0.8, .hostingGuests: 0.6,
+                 .celebrations: 0.4, .humor: 0.4, .emotionalExpression: 0.4, .partnerSocializing: 0.3,
+                 .pride: 0.3, .publicAffection: 0.2, .texting: 0.2])
     }
 
     /// Intuition against sensing: possibilities and meaning over the concrete.
     static func intuition(_ a: PersonalityAnswers) -> Double {
-        a.score([
-            .conversationDepth: 1.0, .newExperiences: 0.9, .spirituality: 0.6, .travel: 0.3,
-            .currentAffairs: 0.3, .futurePlanning: 0.3, .personalStyle: -0.2, .exercise: -0.2,
-        ])
+        a.score([.newExperiences: 1.0, .spirituality: 0.7, .rules: 0.6, .currentAffairs: 0.4, .headOrHeart: 0.2,
+                 .personalStyle: -0.2, .exercise: -0.2, .travelStyle: -0.2])
     }
 
     /// Feeling against thinking: harmony and values over logic and directness.
     static func feeling(_ a: PersonalityAnswers) -> Double {
-        a.score([
-            .listeningAndSolutions: 1.0, .discussingFeelings: 0.9, .communicationStyle: -0.9,
-            .debating: -0.8, .romanticGestures: 0.6, .expressingAppreciation: 0.5,
-            .relationshipConversations: 0.4, .physicalAffection: 0.3, .spirituality: 0.3,
-            .workAmbition: -0.2,
-        ])
+        a.score([.headOrHeart: 1.0, .listeningAndSolutions: 0.9, .communicationStyle: -0.8, .debating: -0.7,
+                 .romanticGestures: 0.5, .emotionalExpression: 0.4, .competitiveness: -0.4, .makingUp: 0.3,
+                 .physicalAffection: 0.2, .workAmbition: -0.2])
     }
 
     /// Judging against perceiving: structure and plans over keeping options open.
     static func judging(_ a: PersonalityAnswers) -> Double {
-        a.score([
-            .weeklyPlanning: 1.0, .punctuality: 0.9, .homeTidiness: 0.6, .spendingMoney: 0.6,
-            .futurePlanning: 0.6, .decisionMaking: 0.3, .sharedResponsibilities: -0.2,
-        ])
+        a.score([.weeklyPlanning: 1.0, .punctuality: 0.9, .perfectionism: 0.6, .homeTidiness: 0.6,
+                 .spendingMoney: 0.6, .rules: -0.5, .decisionMaking: 0.3])
     }
 
     static func mbtiType(_ a: PersonalityAnswers) -> String {
@@ -199,11 +190,8 @@ enum PersonalityEstimator {
 
     /// Assertive against turbulent: calm self-assurance against self-critical drive.
     static func assertiveness(_ a: PersonalityAnswers) -> Double {
-        a.score([
-            .takingInitiative: 0.5, .decisionMaking: -0.4, .stressContact: -0.5,
-            .exPartnerContact: -0.4, .relationshipConversations: -0.3, .texting: -0.3,
-            .relationshipPrivacy: -0.3,
-        ])
+        a.score([.setbacks: -0.9, .optimism: 0.8, .othersOpinion: -0.7, .boundaries: 0.5,
+                 .takingInitiative: 0.4, .stressContact: -0.3, .decisionMaking: -0.2, .texting: -0.2])
     }
 
     static func sixteenPersonalities(_ a: PersonalityAnswers) -> PersonalityResult {
@@ -264,15 +252,16 @@ enum PersonalityEstimator {
     /// DISC's vertical axis: outgoing, assertive and fast-paced against
     /// reserved and deliberate.
     static func discPace(_ a: PersonalityAnswers) -> Double {
-        a.score([.takingInitiative: 0.8, .talkativeness: 0.8, .decisionMaking: -0.6, .debating: 0.5,
-                 .leisureTime: 0.4, .newExperiences: 0.4, .socialPlans: 0.4, .communicationStyle: 0.4])
+        a.score([.takingInitiative: 0.8, .talkativeness: 0.8, .decisionMaking: -0.6, .competitiveness: 0.6,
+                 .patience: 0.5, .debating: 0.5, .communicationStyle: 0.4, .newExperiences: 0.3,
+                 .socialPlans: 0.3])
     }
 
     /// DISC's horizontal axis: people-oriented against task-oriented.
     static func discPeople(_ a: PersonalityAnswers) -> Double {
-        a.score([.listeningAndSolutions: 0.8, .discussingFeelings: 0.6, .expressingAppreciation: 0.5,
-                 .workAmbition: -0.5, .communicationStyle: -0.4, .relationshipConversations: 0.4,
-                 .familyRole: 0.3, .punctuality: -0.3, .homeTidiness: -0.3])
+        a.score([.listeningAndSolutions: 0.8, .headOrHeart: 0.6, .workAmbition: -0.5, .emotionalExpression: 0.4,
+                 .competitiveness: -0.4, .perfectionism: -0.4, .communicationStyle: -0.3, .familyRole: 0.3,
+                 .punctuality: -0.2, .homeTidiness: -0.2])
     }
 
     static func disc(_ a: PersonalityAnswers) -> PersonalityResult {
@@ -329,27 +318,27 @@ enum PersonalityEstimator {
     // MARK: - Big Five and HEXACO
 
     static func openness(_ a: PersonalityAnswers) -> Double {
-        a.score([.newExperiences: 1.0, .conversationDepth: 0.8, .travel: 0.5, .currentAffairs: 0.4,
-                 .spirituality: 0.3])
+        a.score([.newExperiences: 1.0, .rules: 0.6, .currentAffairs: 0.5, .spirituality: 0.4, .headOrHeart: 0.2,
+                 .travelStyle: -0.3])
     }
 
     static func conscientiousness(_ a: PersonalityAnswers) -> Double {
-        a.score([.punctuality: 1.0, .weeklyPlanning: 0.9, .homeTidiness: 0.8, .spendingMoney: 0.7,
-                 .decisionMaking: 0.5, .futurePlanning: 0.4, .workAmbition: 0.4, .foodChoices: 0.3,
-                 .exercise: 0.3, .screenTime: -0.4])
+        a.score([.punctuality: 1.0, .weeklyPlanning: 0.8, .perfectionism: 0.8, .homeTidiness: 0.7,
+                 .spendingMoney: 0.6, .decisionMaking: 0.4, .workAmbition: 0.4, .rules: -0.4, .screenTime: -0.4,
+                 .foodChoices: 0.3, .exercise: 0.3])
     }
 
     static func agreeableness(_ a: PersonalityAnswers) -> Double {
-        a.score([.debating: -0.8, .listeningAndSolutions: 0.7, .communicationStyle: -0.6,
-                 .expressingAppreciation: 0.4, .familyRole: 0.3, .hostingGuests: 0.3,
-                 .exPartnerContact: -0.3, .sharedResponsibilities: 0.3])
+        a.score([.debating: -0.7, .listeningAndSolutions: 0.6, .communicationStyle: -0.6, .patience: -0.5,
+                 .makingUp: 0.5, .competitiveness: -0.5, .boundaries: -0.3, .pride: -0.2, .familyRole: 0.2,
+                 .hostingGuests: 0.2])
     }
 
-    /// The questions only touch neuroticism through reassurance and jealousy
-    /// in relationships, so this trait is held closer to the middle.
+    /// Setbacks, optimism and caring what others think measure it directly;
+    /// the need for reassurance in relationships adds to it.
     static func neuroticism(_ a: PersonalityAnswers) -> Double {
-        0.75 * a.score([.texting: 0.5, .exPartnerContact: 0.5, .relationshipPrivacy: 0.4, .stressContact: 0.3,
-                        .relationshipConversations: 0.3, .disagreements: 0.3, .aloneTime: -0.2])
+        a.score([.setbacks: 1.0, .optimism: -0.8, .othersOpinion: 0.6, .stressContact: 0.3, .texting: 0.3,
+                 .relationshipPrivacy: 0.2, .patience: 0.2, .boundaries: -0.2])
     }
 
     struct TraitText {
@@ -417,13 +406,13 @@ enum PersonalityEstimator {
             TraitText(name: L10n("Extraversion"), letter: "X", high: extraversionText.high, low: extraversionText.low),
             agreeablenessText, conscientiousnessText, opennessText,
         ]
-        let honesty = a.score([.personalStyle: -0.7, .travelStyle: -0.6, .socialMediaSharing: -0.5,
-                               .relationshipPrivacy: 0.3, .workAmbition: -0.3, .celebrations: -0.3,
-                               .diningOut: -0.3])
-        let emotionality = a.score([.stressContact: 0.6, .discussingFeelings: 0.5, .familyRole: 0.4,
-                                    .physicalAffection: 0.3, .texting: 0.3, .newExperiences: -0.3])
-        let patience = a.score([.debating: -0.7, .communicationStyle: -0.5, .disagreements: -0.4,
-                                .exPartnerContact: -0.4, .listeningAndSolutions: 0.3])
+        let honesty = a.score([.pride: -0.8, .personalStyle: -0.6, .travelStyle: -0.6, .othersOpinion: -0.5,
+                               .rules: -0.4, .celebrations: -0.3, .workAmbition: -0.3, .relationshipPrivacy: 0.2])
+        let emotionality = a.score([.stressContact: 0.6, .setbacks: 0.6, .emotionalExpression: 0.4,
+                                    .familyRole: 0.4, .othersOpinion: 0.3, .physicalAffection: 0.3,
+                                    .texting: 0.3, .optimism: -0.3, .newExperiences: -0.3])
+        let patience = a.score([.patience: -0.8, .debating: -0.7, .communicationStyle: -0.5, .makingUp: 0.5,
+                                .competitiveness: -0.4, .setbacks: -0.3, .listeningAndSolutions: 0.3])
         let values = [honesty, emotionality, extraversion(a), patience, conscientiousness(a), openness(a)]
             .map(absolute)
         return traitResult(.hexaco, texts: texts, values: values)
@@ -433,24 +422,25 @@ enum PersonalityEstimator {
 
     static func enneagram(_ a: PersonalityAnswers) -> PersonalityResult {
         let scores = [
-            a.score([.homeTidiness: 0.9, .punctuality: 0.9, .weeklyPlanning: 0.6, .communicationStyle: 0.5,
-                     .foodChoices: 0.4, .spendingMoney: 0.3]),
-            a.score([.listeningAndSolutions: 0.8, .expressingAppreciation: 0.7, .romanticGestures: 0.6,
-                     .familyRole: 0.6, .hostingGuests: 0.5, .physicalAffection: 0.4, .aloneTime: -0.4]),
-            a.score([.workAmbition: 1.0, .personalStyle: 0.7, .socialMediaSharing: 0.5, .takingInitiative: 0.5,
-                     .exercise: 0.3]),
-            a.score([.discussingFeelings: 0.8, .conversationDepth: 0.8, .spirituality: 0.5,
-                     .romanticGestures: 0.4, .aloneTime: 0.4, .personalStyle: 0.3]),
-            a.score([.aloneTime: 0.9, .conversationDepth: 0.6, .currentAffairs: 0.6, .decisionMaking: 0.6,
-                     .talkativeness: -0.6, .socialPlans: -0.6]),
-            a.score([.futurePlanning: 0.7, .spendingMoney: 0.6, .familyRole: 0.5, .relationshipConversations: 0.5,
-                     .stressContact: 0.5, .newExperiences: -0.6]),
-            a.score([.newExperiences: 1.0, .travel: 0.8, .nightlife: 0.7, .socialPlans: 0.5,
-                     .weeklyPlanning: -0.6, .decisionMaking: -0.4]),
-            a.score([.takingInitiative: 1.0, .communicationStyle: 0.8, .debating: 0.7, .workAmbition: 0.4,
-                     .discussingFeelings: -0.3]),
-            a.score([.debating: -0.9, .communicationStyle: -0.6, .disagreements: -0.5, .leisureTime: -0.4,
-                     .listeningAndSolutions: 0.4, .takingInitiative: -0.4]),
+            a.score([.perfectionism: 1.0, .homeTidiness: 0.8, .punctuality: 0.8, .rules: -0.6,
+                     .weeklyPlanning: 0.5, .communicationStyle: 0.4, .foodChoices: 0.3, .spendingMoney: 0.3]),
+            a.score([.listeningAndSolutions: 0.8, .boundaries: -0.7, .romanticGestures: 0.5, .familyRole: 0.5,
+                     .hostingGuests: 0.5, .aloneTime: -0.4, .cooking: 0.3, .physicalAffection: 0.3,
+                     .makingUp: 0.3]),
+            a.score([.workAmbition: 1.0, .pride: 0.7, .personalStyle: 0.6, .competitiveness: 0.6,
+                     .othersOpinion: 0.5, .takingInitiative: 0.4, .exercise: 0.3]),
+            a.score([.headOrHeart: 0.7, .emotionalExpression: 0.6, .setbacks: 0.6, .spirituality: 0.5,
+                     .romanticGestures: 0.4, .aloneTime: 0.4, .rules: 0.3, .personalStyle: 0.3]),
+            a.score([.aloneTime: 0.9, .headOrHeart: -0.6, .currentAffairs: 0.6, .decisionMaking: 0.6,
+                     .talkativeness: -0.6, .socialPlans: -0.6, .emotionalExpression: -0.3]),
+            a.score([.optimism: -0.7, .newExperiences: -0.6, .spendingMoney: 0.6, .rules: -0.5,
+                     .familyRole: 0.5, .stressContact: 0.5, .punctuality: 0.3]),
+            a.score([.newExperiences: 1.0, .optimism: 0.7, .nightlife: 0.7, .weeklyPlanning: -0.6,
+                     .socialPlans: 0.5, .humor: 0.4, .patience: 0.4, .decisionMaking: -0.3]),
+            a.score([.takingInitiative: 1.0, .communicationStyle: 0.8, .debating: 0.7, .boundaries: 0.6,
+                     .competitiveness: 0.6, .workAmbition: 0.4, .emotionalExpression: -0.2]),
+            a.score([.debating: -0.9, .communicationStyle: -0.6, .makingUp: 0.5, .competitiveness: -0.5,
+                     .boundaries: -0.5, .listeningAndSolutions: 0.4, .takingInitiative: -0.4, .patience: -0.3]),
         ]
         let names = [
             L10n("Reformer"), L10n("Helper"), L10n("Achiever"), L10n("Individualist"), L10n("Investigator"),
@@ -483,24 +473,24 @@ enum PersonalityEstimator {
 
     static func belbin(_ a: PersonalityAnswers) -> PersonalityResult {
         let scores = [
-            a.score([.newExperiences: 0.8, .conversationDepth: 0.6, .spirituality: 0.4, .aloneTime: 0.4,
-                     .weeklyPlanning: -0.5, .punctuality: -0.3, .talkativeness: -0.2]),
-            a.score([.talkativeness: 0.8, .socialPlans: 0.8, .newExperiences: 0.5, .travel: 0.5, .calling: 0.4,
+            a.score([.newExperiences: 0.8, .rules: 0.6, .weeklyPlanning: -0.5, .spirituality: 0.4,
+                     .aloneTime: 0.4, .punctuality: -0.3, .talkativeness: -0.2]),
+            a.score([.talkativeness: 0.8, .socialPlans: 0.8, .newExperiences: 0.5, .optimism: 0.5, .humor: 0.4,
                      .nightlife: 0.3, .weeklyPlanning: -0.3]),
-            a.score([.takingInitiative: 0.5, .listeningAndSolutions: 0.5, .relationshipConversations: 0.4,
-                     .futurePlanning: 0.4, .debating: -0.4, .decisionMaking: 0.3]),
+            a.score([.takingInitiative: 0.5, .listeningAndSolutions: 0.5, .makingUp: 0.4, .setbacks: -0.4,
+                     .debating: -0.4, .decisionMaking: 0.3, .patience: -0.3]),
             a.score([.takingInitiative: 0.9, .communicationStyle: 0.8, .debating: 0.8, .workAmbition: 0.6,
-                     .disagreements: 0.4, .listeningAndSolutions: -0.4]),
-            a.score([.decisionMaking: 1.0, .currentAffairs: 0.5, .conversationDepth: 0.4, .romanticGestures: -0.4,
-                     .spirituality: -0.4, .talkativeness: -0.3, .newExperiences: -0.2]),
-            a.score([.debating: -0.9, .listeningAndSolutions: 0.8, .communicationStyle: -0.6,
-                     .sharedResponsibilities: 0.5, .familyRole: 0.3, .takingInitiative: -0.3]),
+                     .competitiveness: 0.6, .patience: 0.4, .listeningAndSolutions: -0.4]),
+            a.score([.decisionMaking: 1.0, .headOrHeart: -0.7, .currentAffairs: 0.5, .spirituality: -0.4,
+                     .romanticGestures: -0.3, .talkativeness: -0.3, .emotionalExpression: -0.3]),
+            a.score([.debating: -0.9, .listeningAndSolutions: 0.8, .communicationStyle: -0.6, .makingUp: 0.4,
+                     .patience: -0.4, .boundaries: -0.3, .familyRole: 0.3, .takingInitiative: -0.3]),
             a.score([.weeklyPlanning: 0.9, .punctuality: 0.8, .spendingMoney: 0.6, .newExperiences: -0.5,
-                     .homeTidiness: 0.3, .spirituality: -0.3]),
-            a.score([.homeTidiness: 0.9, .punctuality: 0.7, .decisionMaking: 0.7, .foodChoices: 0.3,
-                     .personalStyle: 0.3]),
-            a.score([.workAmbition: 0.7, .aloneTime: 0.6, .conversationDepth: 0.5, .currentAffairs: 0.4,
-                     .socialPlans: -0.5, .sharedHobbies: -0.3]),
+                     .rules: -0.4, .homeTidiness: 0.3, .spirituality: -0.3]),
+            a.score([.perfectionism: 1.0, .homeTidiness: 0.8, .punctuality: 0.7, .decisionMaking: 0.6,
+                     .foodChoices: 0.3, .personalStyle: 0.3]),
+            a.score([.workAmbition: 0.7, .aloneTime: 0.6, .perfectionism: 0.5, .socialPlans: -0.5,
+                     .currentAffairs: 0.4]),
         ]
         let names = [
             L10n("Plant"), L10n("Resource Investigator"), L10n("Co-ordinator"), L10n("Shaper"),
@@ -533,12 +523,11 @@ enum PersonalityEstimator {
     static func predictiveIndex(_ a: PersonalityAnswers) -> PersonalityResult {
         let factors = [
             a.score([.takingInitiative: 1.0, .communicationStyle: 0.7, .debating: 0.6, .workAmbition: 0.5,
-                     .listeningAndSolutions: -0.3, .decisionMaking: -0.3]),
+                     .boundaries: 0.4, .listeningAndSolutions: -0.3, .decisionMaking: -0.3]),
             extraversion(a),
-            a.score([.decisionMaking: 0.6, .newExperiences: -0.6, .disagreements: -0.5, .leisureTime: -0.4,
-                     .travel: -0.3, .familyRole: 0.3]),
-            a.score([.punctuality: 1.0, .weeklyPlanning: 0.8, .homeTidiness: 0.7, .spendingMoney: 0.4,
-                     .decisionMaking: 0.4, .personalStyle: 0.3]),
+            a.score([.patience: -0.7, .decisionMaking: 0.6, .newExperiences: -0.6, .familyRole: 0.3]),
+            a.score([.punctuality: 1.0, .perfectionism: 0.7, .weeklyPlanning: 0.7, .homeTidiness: 0.6,
+                     .spendingMoney: 0.4, .decisionMaking: 0.4, .rules: -0.4, .personalStyle: 0.3]),
         ]
         let dimensions = [
             PersonalityDimension(low: PersonalityPole(letter: "A", name: L10n("Collaborative")),
@@ -561,17 +550,21 @@ enum PersonalityEstimator {
 
     static func tma(_ a: PersonalityAnswers) -> PersonalityResult {
         let scores = [
-            a.score([.workAmbition: 1.0, .takingInitiative: 0.4, .exercise: 0.3, .futurePlanning: 0.3]),
-            a.score([.personalStyle: 1.0, .socialMediaSharing: 0.7, .travelStyle: 0.6, .celebrations: 0.4,
-                     .diningOut: 0.3]),
-            a.score([.takingInitiative: 1.0, .communicationStyle: 0.6, .debating: 0.5, .workAmbition: 0.3]),
-            a.score([.socialPlans: 1.0, .talkativeness: 0.8, .hostingGuests: 0.6, .nightlife: 0.5, .aloneTime: -0.6]),
-            a.score([.listeningAndSolutions: 0.9, .familyRole: 0.6, .expressingAppreciation: 0.4,
-                     .sharedResponsibilities: 0.4, .hostingGuests: 0.3, .workAmbition: -0.2]),
-            a.score([.weeklyPlanning: 1.0, .punctuality: 0.8, .homeTidiness: 0.7, .spendingMoney: 0.5,
-                     .sharedResponsibilities: -0.3]),
-            a.score([.newExperiences: 1.0, .travel: 0.8, .nightlife: 0.3, .weeklyPlanning: -0.5]),
-            a.score([.aloneTime: 0.8, .relationshipPrivacy: -0.7, .sharedHobbies: -0.6, .partnerSocializing: -0.4,
+            a.score([.workAmbition: 1.0, .competitiveness: 0.6, .takingInitiative: 0.4, .perfectionism: 0.3,
+                     .exercise: 0.3]),
+            a.score([.personalStyle: 1.0, .pride: 0.7, .travelStyle: 0.6, .othersOpinion: 0.5,
+                     .celebrations: 0.4]),
+            a.score([.takingInitiative: 1.0, .communicationStyle: 0.6, .debating: 0.5, .boundaries: 0.4,
+                     .workAmbition: 0.3]),
+            a.score([.socialPlans: 1.0, .talkativeness: 0.8, .hostingGuests: 0.6, .aloneTime: -0.6,
+                     .nightlife: 0.5]),
+            a.score([.listeningAndSolutions: 0.9, .familyRole: 0.6, .boundaries: -0.4, .cooking: 0.3,
+                     .hostingGuests: 0.3, .makingUp: 0.3, .workAmbition: -0.2]),
+            a.score([.weeklyPlanning: 1.0, .punctuality: 0.8, .homeTidiness: 0.7, .rules: -0.6,
+                     .spendingMoney: 0.5]),
+            a.score([.newExperiences: 1.0, .rules: 0.5, .weeklyPlanning: -0.5, .travelStyle: -0.3,
+                     .nightlife: 0.3]),
+            a.score([.aloneTime: 0.8, .relationshipPrivacy: -0.7, .boundaries: 0.5, .partnerSocializing: -0.4,
                      .takingInitiative: 0.2]),
         ]
         let names = [

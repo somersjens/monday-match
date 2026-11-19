@@ -17,7 +17,7 @@ final class AppPerformanceTests: XCTestCase {
     func testCompatibilityAnswerAndScreenReadsPerformance() {
         var state = ProfileCreationState(today: .today(), applicationLanguage: "nl")
         state.dateOfBirth = .init(year: 1996, month: 4, day: 21)
-        state.currentStep = .discussingFeelings
+        state.currentStep = .setbacks
         let model = ProfileCreationViewModel(store: InMemoryProfileCreationStore(state: state), repository: nil)
         let question = state.currentStep.compatibilityQuestion!
         var reads = 0

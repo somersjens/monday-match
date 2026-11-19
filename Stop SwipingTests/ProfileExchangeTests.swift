@@ -25,8 +25,8 @@ final class ProfileExchangeTests: XCTestCase {
         let rows = [
             MatchReport.Row(step: .aloneTime, value: 1, wanted: 5, importance: 5),
             MatchReport.Row(step: .texting, value: 3, wanted: 3, importance: 3),
-            MatchReport.Row(step: .calling, value: 3, wanted: 3, importance: 3),
-            MatchReport.Row(step: .travel, value: 3, wanted: 3, importance: 3),
+            MatchReport.Row(step: .humor, value: 3, wanted: 3, importance: 3),
+            MatchReport.Row(step: .patience, value: 3, wanted: 3, importance: 3),
             MatchReport.Row(step: .pets, value: 1, wanted: 5, importance: 1)
         ]
         let expected: Double = 6.0 / 14 * 100

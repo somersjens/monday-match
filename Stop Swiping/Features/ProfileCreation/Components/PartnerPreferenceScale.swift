@@ -30,6 +30,7 @@ struct PartnerPreferenceScale: View {
     var subject: Subject = .frequency
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private static let tabSpacing: CGFloat = 6
 
     private var limitLabel: String { subject == .appearance ? L10n("Min") : L10n("Max") }
 
@@ -39,9 +40,13 @@ struct PartnerPreferenceScale: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 6) {
+            HStack(spacing: Self.tabSpacing) {
                 tab(.own, title: subject == .appearance ? L10n("Your own appearance") : L10n("You"), value: ownIndex.map { levels[$0] }, placeholder: L10n("Choose one"))
                 tab(.partner, title: subject == .appearance ? L10n("Partner, at least") : L10n("Partner, at most"), value: partnerLimitIndex.map { levels[$0] }, placeholder: L10n("Set a limit"))
+            }
+            .background {
+                TabRing(progress: mode == .partner ? 1 : 0, spacing: Self.tabSpacing, fill: selectedFill)
+                    .animation(OnboardingMotion.resolved(OnboardingMotion.ringHandoff, reduceMotion: reduceMotion), value: mode)
             }
             .padding(6)
 
@@ -58,7 +63,7 @@ struct PartnerPreferenceScale: View {
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion), value: ownIndex)
         .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion), value: partnerLimitIndex)
-        .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion), value: mode)
+        .animation(OnboardingMotion.resolved(OnboardingMotion.sideHandoff, reduceMotion: reduceMotion), value: mode)
         .sensoryFeedback(.selection, trigger: ownIndex)
         .sensoryFeedback(.selection, trigger: partnerLimitIndex)
         .soundFeedback(.select, trigger: ownIndex)
@@ -89,14 +94,6 @@ struct PartnerPreferenceScale: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background {
-                shape
-                    .fill(isActive ? AnyShapeStyle(selectedFill) : AnyShapeStyle(Color.clear))
-                    .overlay {
-                        shape.strokeBorder(isActive ? AnyShapeStyle(OnboardingTheme.accentGradient) : AnyShapeStyle(Color.clear),
-                                           lineWidth: 1.2)
-                    }
-            }
             .contentShape(shape)
         }
         .buttonStyle(.plain)

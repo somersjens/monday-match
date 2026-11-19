@@ -188,6 +188,11 @@ struct WelcomeView: View {
     private let skipsEntrance: Bool
     private var isOnboarding: Bool { lightStage == .onboarding }
     private var canShowCode: Bool { WelcomeLightMetalView.isAvailable }
+    /// The QR code is offered once the demo's explanation is understood;
+    /// before that the button would only lead back to the next step.
+    private var codeIsUnlocked: Bool {
+        profileCreation.state.canShareProfile && profileCreation.state.hasUnderstoodExplanation == true
+    }
 
     /// Profiles are only offered while the code is on screen and nothing
     /// else is: the profile can't change underneath an exchange.
@@ -322,28 +327,30 @@ struct WelcomeView: View {
                                     removal: .opacity.animation(.easeOut(duration: 0.2))))
                         }
 
-                        // Next to the close button while the code is shown. It
-                        // slides out from under that button, so it is drawn
-                        // first and animated before it is positioned: a scale
-                        // after `position` grows from the middle of the screen.
-                        CodeScanButton(size: corner.size, action: openScanner)
-                            .scaleEffect(showsCode || reduceMotion ? 1 : 0.6)
-                            .offset(x: showsCode || reduceMotion ? 0 : corner.size + corner.spacing)
-                            .opacity(showsCode ? 1 : 0)
-                            .animation(showsCode ? .spring(duration: 0.42, bounce: 0.18) : .easeIn(duration: 0.18),
-                                       value: showsCode)
-                            .position(corner.center(slot: 1))
-                            .disabled(isTransitioning)
-                            .allowsHitTesting(showsCode)
-                            .accessibilityHidden(!showsCode)
-                            .transition(.opacity)
+                        if codeIsUnlocked {
+                            // Next to the close button while the code is shown. It
+                            // slides out from under that button, so it is drawn
+                            // first and animated before it is positioned: a scale
+                            // after `position` grows from the middle of the screen.
+                            CodeScanButton(size: corner.size, action: openScanner)
+                                .scaleEffect(showsCode || reduceMotion ? 1 : 0.6)
+                                .offset(x: showsCode || reduceMotion ? 0 : corner.size + corner.spacing)
+                                .opacity(showsCode ? 1 : 0)
+                                .animation(showsCode ? .spring(duration: 0.42, bounce: 0.18) : .easeIn(duration: 0.18),
+                                           value: showsCode)
+                                .position(corner.center(slot: 1))
+                                .disabled(isTransitioning)
+                                .allowsHitTesting(showsCode)
+                                .accessibilityHidden(!showsCode)
+                                .transition(.opacity)
 
-                        // Fixed to the screen's safe top-right corner.
-                        HelixCodeButton(showsCode: showsCode, size: corner.size, action: toggleCode)
-                            .position(corner.center(slot: 0))
-                            .disabled(isTransitioning)
-                            .opacity(demoPhase == nil ? 1 : 0)
-                            .transition(.opacity)
+                            // Fixed to the screen's safe top-right corner.
+                            HelixCodeButton(showsCode: showsCode, size: corner.size, action: toggleCode)
+                                .position(corner.center(slot: 0))
+                                .disabled(isTransitioning)
+                                .opacity(demoPhase == nil ? 1 : 0)
+                                .transition(.opacity)
+                        }
                     }
 
                     if showsAccess {
@@ -579,6 +586,7 @@ struct WelcomeView: View {
         }
         .onChange(of: profileCreation.state) { _, _ in
             if personalityTest != nil || matchPersonalityTest != nil { refreshPersonalityResults() }
+            if showsCode && !codeIsUnlocked { showsCode = false }
             notificationEngine?.profileChanged()
         }
         .modifier(NotificationWiring(view: self))
@@ -1390,11 +1398,8 @@ struct WelcomeView: View {
 
     private func toggleCode() {
         guard !isTransitioning, activeMatch == nil, closeAccountCard() else { return }
+        guard showsCode || codeIsUnlocked else { return }
         personalityTest = nil
-        guard profileCreation.state.canShareProfile else {
-            if profileCreation.hasDisplayName { showsProfilePrivacy = true }
-            return
-        }
         guard showsCode || refreshShareCode() else { return }
         SoundPlayer.shared.play(showsCode ? .close : .open)
         withAnimation(.easeInOut(duration: 0.25)) { showsCode.toggle() }

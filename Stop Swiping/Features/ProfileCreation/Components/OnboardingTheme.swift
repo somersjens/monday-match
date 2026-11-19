@@ -81,9 +81,18 @@ enum OnboardingMotion {
     /// How long navigation stays locked while a step transition plays.
     static let stepLock: Duration = .milliseconds(580)
     /// The pause between tapping a deciding answer and the page moving on:
-    /// long enough to see the selection land (and a mirrored partner value
-    /// follow), short enough that it still feels like one gesture.
-    static let answerSettle: Duration = .milliseconds(450)
+    /// just the selection landing (and a mirrored partner value following),
+    /// so the tap and the page change read as one gesture.
+    static let answerSettle: Duration = .milliseconds(240)
+    /// After a first own answer, how long before the partner side takes over:
+    /// the check lands, then the ring travels across.
+    static let partnerHandoff: Duration = .milliseconds(200)
+    /// The ring travelling between the own and partner tabs; its overshoot
+    /// gives the landing squeeze.
+    static let ringHandoff = Animation.spring(duration: 0.5, bounce: 0.22)
+    /// Everything that follows the ring (rows, tab labels, the rail), so the
+    /// whole card changes sides as one motion instead of snapping ahead.
+    static let sideHandoff = Animation.spring(duration: 0.42, bounce: 0)
 
     static func resolved(_ animation: Animation, reduceMotion: Bool) -> Animation {
         reduceMotion ? .easeInOut(duration: 0.2) : animation

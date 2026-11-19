@@ -151,9 +151,9 @@ struct MatchDealbreakers: Equatable {
     /// English pronoun into its own grammar.
     var heading: String {
         switch pronoun {
-        case .he: L10n("Even if your potential partner matches 100% on personality, you will not be matched if he:")
-        case .she: L10n("Even if your potential partner matches 100% on personality, you will not be matched if she:")
-        case .they: L10n("Even if your potential partner matches 100% on personality, you will not be matched if they:")
+        case .he: L10n("Even if your potential partner matches \(L10nPercent(100)) on personality, you will not be matched if he:")
+        case .she: L10n("Even if your potential partner matches \(L10nPercent(100)) on personality, you will not be matched if she:")
+        case .they: L10n("Even if your potential partner matches \(L10nPercent(100)) on personality, you will not be matched if they:")
         }
     }
 

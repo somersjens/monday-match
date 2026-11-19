@@ -707,7 +707,7 @@ private struct ChatHeaderSubtitle: View {
                 Text(L10n("typing…"))
                     .foregroundStyle(OnboardingTheme.cyan)
             } else {
-                Text(L10n("\(average)% match · \(matchedAt.formatted(.dateTime.day().month(.abbreviated).locale(AppLocale.current)))"))
+                Text(L10n("\(L10nPercent(average)) match · \(matchedAt.formatted(.dateTime.day().month(.abbreviated).locale(AppLocale.current)))"))
                     .foregroundStyle(OnboardingTheme.secondaryText)
             }
         }

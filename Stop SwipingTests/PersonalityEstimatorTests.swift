@@ -11,20 +11,20 @@ final class PersonalityEstimatorTests: XCTestCase {
 
     private var outgoingPlanner: PersonalityAnswers {
         answers([
-            .talkativeness: 1, .socialPlans: 1, .aloneTime: -1, .nightlife: 1, .leisureTime: 1, .hostingGuests: 1,
-            .conversationDepth: -1, .newExperiences: -1, .spirituality: -1,
-            .communicationStyle: 1, .debating: 1, .listeningAndSolutions: -1, .discussingFeelings: -1,
-            .weeklyPlanning: 1, .punctuality: 1, .homeTidiness: 1, .spendingMoney: 1, .futurePlanning: 1,
+            .talkativeness: 1, .socialPlans: 1, .aloneTime: -1, .nightlife: 1, .competitiveness: 1, .hostingGuests: 1,
+            .rules: -1, .newExperiences: -1, .spirituality: -1, .headOrHeart: -1, .perfectionism: 1,
+            .communicationStyle: 1, .debating: 1, .listeningAndSolutions: -1, .setbacks: -1,
+            .weeklyPlanning: 1, .punctuality: 1, .homeTidiness: 1, .spendingMoney: 1, .boundaries: 1,
             .takingInitiative: 1, .workAmbition: 1,
         ])
     }
 
     private var quietDreamer: PersonalityAnswers {
         answers([
-            .talkativeness: -1, .socialPlans: -1, .aloneTime: 1, .nightlife: -1, .leisureTime: -1, .hostingGuests: -1,
-            .conversationDepth: 1, .newExperiences: 1, .spirituality: 1,
-            .communicationStyle: -1, .debating: -1, .listeningAndSolutions: 1, .discussingFeelings: 1,
-            .weeklyPlanning: -1, .punctuality: -1, .homeTidiness: -1, .spendingMoney: -1, .futurePlanning: -1,
+            .talkativeness: -1, .socialPlans: -1, .aloneTime: 1, .nightlife: -1, .competitiveness: -1, .hostingGuests: -1,
+            .rules: 1, .newExperiences: 1, .spirituality: 1, .headOrHeart: 1, .perfectionism: -1,
+            .communicationStyle: -1, .debating: -1, .listeningAndSolutions: 1, .setbacks: 1,
+            .weeklyPlanning: -1, .punctuality: -1, .homeTidiness: -1, .spendingMoney: -1, .boundaries: -1,
         ])
     }
 

@@ -380,7 +380,7 @@ struct MatchReportSheet: View {
     }
 
     private var breakToggle: some View {
-        Toggle(isOn: $alsoBreak) {
+        HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(L10n("Also break the match"))
                     .foregroundStyle(OnboardingTheme.primaryText)
@@ -388,8 +388,12 @@ struct MatchReportSheet: View {
                     .font(.footnote)
                     .foregroundStyle(OnboardingTheme.secondaryText)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityHidden(true)
+            GlowToggle(isOn: alsoBreak, label: L10n("Also break the match")) {
+                alsoBreak.toggle()
+            }
         }
-        .tint(OnboardingTheme.violet)
         .padding(14)
         .onboardingSurface(cornerRadius: 16)
         .onChange(of: alsoBreak) { detailsFocused = false }

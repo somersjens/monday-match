@@ -101,8 +101,8 @@ final class AppLocalizationTests: XCTestCase {
         XCTAssertEqual(english.count, 50)
         XCTAssertEqual(Set(english.map(\.id)).count, english.count)
         XCTAssertEqual(english.map(\.step), Array(ProfileCreationStep.allCases.suffix(english.count)))
-        XCTAssertEqual(english.first?.step, .aloneTime)
-        XCTAssertEqual(english.last?.step, .spendingMoney)
+        XCTAssertEqual(english.first?.step, .dailyRhythm)
+        XCTAssertEqual(english.last?.step, .romanticGestures)
 
         AppLanguageSettings.shared.language = .dutch
         let dutch = CompatibilityScaleQuestion.all

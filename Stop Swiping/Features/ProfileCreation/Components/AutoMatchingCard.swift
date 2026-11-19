@@ -75,7 +75,7 @@ struct SubscriberLifetimeOfferCard: View {
                         VStack(alignment: .leading, spacing: 1) {
                             Text(L10n("Lifetime Access"))
                                 .font(.system(.body, weight: .semibold))
-                            Text(L10n("50% off for subscribers"))
+                            Text(L10n("\(L10nPercent(50)) off for subscribers"))
                                 .font(.system(.footnote, weight: .medium))
                                 .foregroundStyle(OnboardingTheme.cyan)
                         }

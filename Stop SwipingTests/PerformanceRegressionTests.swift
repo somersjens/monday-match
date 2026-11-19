@@ -43,16 +43,16 @@ final class PerformanceRegressionTests: XCTestCase {
         AppLanguageSettings.shared.language = .english
         let invalidated = expectation(description: "Cached text observes a language change")
         withObservationTracking {
-            XCTAssertEqual(ProfileCreationStep.sharedHobbies.title, "Shared hobbies")
+            XCTAssertEqual(ProfileCreationStep.boundaries.title, "Setting boundaries")
             XCTAssertEqual(CompatibilityScaleQuestion.sections.first?.title, english.first?.title)
         } onChange: {
             invalidated.fulfill()
         }
         AppLanguageSettings.shared.language = .dutch
         wait(for: [invalidated], timeout: 0.1)
-        XCTAssertEqual(ProfileCreationStep.sharedHobbies.title, "Gedeelde hobby’s")
+        XCTAssertEqual(ProfileCreationStep.boundaries.title, "Grenzen aangeven")
         AppLanguageSettings.shared.language = .english
-        XCTAssertEqual(ProfileCreationStep.sharedHobbies.title, "Shared hobbies")
+        XCTAssertEqual(ProfileCreationStep.boundaries.title, "Setting boundaries")
     }
 
     func testFileRepositoryCacheTracksSavesAndDeletionWithoutSharingMutableDrafts() throws {

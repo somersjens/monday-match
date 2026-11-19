@@ -33,6 +33,8 @@ final class ChatViewModel: ObservableObject {
     @Published var partnerReadAt: Date?
     /// The last message from the partner seen on this phone.
     @Published private(set) var lastReadAt: Date
+    /// The meet-in-a-public-place notice at the top, until it is closed.
+    @Published private(set) var showsSafetyNotice: Bool
     let secureSession: SecureChatSession?
     /// Set by a chat view while it polls, so the home screen polls less.
     var isOnScreen = false
@@ -63,6 +65,7 @@ final class ChatViewModel: ObservableObject {
         self.autoReply=autoReply; self.defaults=defaults
         let stored=defaults.object(forKey: Self.readKey(conversation.matchID)) as? Date
         lastReadAt=autoReply == nil ? (stored ?? .distantPast) : .distantPast
+        showsSafetyNotice = !defaults.bool(forKey: Self.safetyNoticeKey(conversation.matchID))
         isReady=secureSession == nil
     }
 
@@ -81,10 +84,20 @@ final class ChatViewModel: ObservableObject {
 
     private nonisolated static let readKeyPrefix = "chat.lastRead."
     private static func readKey(_ matchID: UUID) -> String { readKeyPrefix + matchID.uuidString.lowercased() }
+    private nonisolated static let safetyNoticeKeyPrefix = "chat.safetyNoticeClosed."
+    private static func safetyNoticeKey(_ matchID: UUID) -> String { safetyNoticeKeyPrefix + matchID.uuidString.lowercased() }
 
-    /// Deleting the profile: how far each conversation was read goes too.
+    /// Closed once per match; a new match shows it again.
+    func dismissSafetyNotice() {
+        showsSafetyNotice = false
+        defaults.set(true, forKey: Self.safetyNoticeKey(conversation.matchID))
+    }
+
+    /// Deleting the profile: how far each conversation was read goes too,
+    /// and which safety notices were closed.
     nonisolated static func clearReadPositions(defaults: UserDefaults = .standard) {
-        for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(readKeyPrefix) {
+        for key in defaults.dictionaryRepresentation().keys
+            where key.hasPrefix(readKeyPrefix) || key.hasPrefix(safetyNoticeKeyPrefix) {
             defaults.removeObject(forKey: key)
         }
     }

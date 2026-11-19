@@ -534,13 +534,12 @@ struct AutoMatchingSetupView: View {
         viewModel.setOwnAttractiveness(AppearanceRating.range.upperBound - index)
         guard needsMinimum else { return }
         Task {
-            try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 380))
+            try? await Task.sleep(for: reduceMotion ? .zero : OnboardingMotion.partnerHandoff)
             guard path.last == .appearance,
                   appearanceMode == .own,
                   settings.partnerMinimumAttractiveness == nil else { return }
-            withAnimation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion)) {
-                appearanceMode = .partner
-            }
+            // The scale animates its own ring handoff.
+            appearanceMode = .partner
         }
     }
 

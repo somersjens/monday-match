@@ -206,6 +206,14 @@ final class ProfileCreationViewModel: ObservableObject {
         if editingStep != nil {
             return finishEditing()
         }
+        if state.isAnsweringNewQuestions == true {
+            // Only the new questions are asked; the rest were answered before.
+            if let next = ProfileCreationStep.allCases.first(where: { $0 > state.currentStep && !isComplete($0) }) {
+                move(to: next)
+                return .advanced
+            }
+            return complete() ? .completed : .rejected
+        }
         if let next = state.currentStep.next {
             move(to: next)
             return .advanced
@@ -680,6 +688,7 @@ final class ProfileCreationViewModel: ObservableObject {
             return false
         }
         state.completedAt = completedAt
+        state.isAnsweringNewQuestions = nil
         persist()
         return true
     }

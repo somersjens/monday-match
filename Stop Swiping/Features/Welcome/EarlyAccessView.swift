@@ -236,7 +236,8 @@ struct EarlyAccessView: View {
                 HStack(alignment: .center, spacing: 10) {
                     Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                         .font(.system(size: 21, weight: .light))
-                        .foregroundStyle(selected ? OnboardingTheme.cyan : OnboardingTheme.tertiaryText)
+                        .foregroundStyle(selected ? AnyShapeStyle(OnboardingTheme.accentGradient)
+                                                  : AnyShapeStyle(OnboardingTheme.tertiaryText))
                         .frame(width: Self.selectorWidth)
                         .accessibilityHidden(true)
                     Text(title(id))

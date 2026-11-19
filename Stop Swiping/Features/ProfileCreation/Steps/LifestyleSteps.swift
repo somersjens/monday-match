@@ -48,6 +48,18 @@ struct SubstanceStep: View {
     let substance: Substance
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// This page's own copy of the shared mode. The view model resets the
+    /// mode for the next substance while this page is still leaving, and
+    /// the leaving page must not flip back to its own side on the way out.
+    @State private var mode: PartnerPreferenceScale.Mode
+
+    init(viewModel: ProfileCreationViewModel, substance: Substance) {
+        self.viewModel = viewModel
+        self.substance = substance
+        _mode = State(initialValue: viewModel.substanceMode)
+    }
+
+    private var isCurrent: Bool { viewModel.currentStep.substance == substance }
 
     var body: some View {
         let answer = viewModel.state.lifestyle[substance]
@@ -55,10 +67,19 @@ struct SubstanceStep: View {
             levels: substance.levels,
             ownIndex: answer.ownLevel,
             partnerLimitIndex: answer.partnerMaximumLevel,
-            mode: $viewModel.substanceMode,
+            mode: Binding(
+                get: { mode },
+                set: { newMode in
+                    mode = newMode
+                    if isCurrent { viewModel.substanceMode = newMode }
+                }
+            ),
             onSelectOwn: selectOwn,
             onSelectPartnerLimit: { viewModel.setPartnerMaximumLevel($0, for: substance) }
         )
+        .onChange(of: viewModel.substanceMode) { _, newMode in
+            if isCurrent { mode = newMode }
+        }
     }
 
     /// The first own answer moves on to the partner limit by itself.
@@ -68,13 +89,12 @@ struct SubstanceStep: View {
         viewModel.setOwnLevel(level, for: substance)
         guard needsLimit else { return }
         Task {
-            try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 380))
+            try? await Task.sleep(for: reduceMotion ? .zero : OnboardingMotion.partnerHandoff)
             guard viewModel.currentStep.substance == substance,
                   viewModel.substanceMode == .own,
                   viewModel.state.lifestyle[substance].partnerMaximumLevel == nil else { return }
-            withAnimation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion)) {
-                viewModel.substanceMode = .partner
-            }
+            // The scale animates its own ring handoff.
+            viewModel.substanceMode = .partner
         }
     }
 }
@@ -113,7 +133,7 @@ struct CompatibilityScaleStep: View {
                     highLabel: question.highLabel,
                     // Show the tapped own answer first; its mirrored value follows.
                     selectionAnimation: !answer.isPartnerCustomized && !reduceMotion
-                        ? .easeOut(duration: 0.16).delay(0.12) : nil,
+                        ? .easeOut(duration: 0.14).delay(0.06) : nil,
                     valueDescription: { positionDescription($0) },
                     onSelect: {
                         viewModel.setCompatibilityPartner($0, for: question)

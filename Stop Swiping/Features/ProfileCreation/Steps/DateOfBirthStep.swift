@@ -87,10 +87,15 @@ struct DateOfBirthStep: View {
         .onboardingSurface(cornerRadius: 28)
     }
 
+    /// The birthday note sits above Continue instead, with the flow's notices.
+    private var slotFeedback: ProfileCreationFeedback? {
+        viewModel.feedback == .birthday ? nil : viewModel.feedback
+    }
+
     /// One reserved slot for age and messages, so nothing below it moves.
     private var status: some View {
         ZStack {
-            if let feedback = viewModel.feedback {
+            if let feedback = slotFeedback {
                 OnboardingFeedbackLabel(feedback: feedback)
                     .modifier(ShakeEffect(animatableData: reduceMotion ? 0 : CGFloat(viewModel.rejectionCount)))
                     .transition(.onboardingReveal(reduceMotion: reduceMotion))
@@ -109,7 +114,7 @@ struct DateOfBirthStep: View {
     }
 
     private var statusIdentity: String {
-        if let feedback = viewModel.feedback { return "feedback-\(feedback.message)" }
+        if let feedback = slotFeedback { return "feedback-\(feedback.message)" }
         if let hint = viewModel.birthDateHint { return "hint-\(hint.message)" }
         return viewModel.visibleAge == nil ? "empty" : "age"
     }

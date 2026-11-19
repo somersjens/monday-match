@@ -44,20 +44,26 @@ final class LocationService: NSObject, ObservableObject {
     }
 
     func requestCurrentLocation() async throws -> CLLocation {
-        guard CLLocationManager.locationServicesEnabled() else {
-            throw LocationServiceError.servicesDisabled
-        }
-
         // A previous request is still running; do not overwrite its continuation.
         guard locationContinuation == nil else {
             throw LocationServiceError.requestAlreadyInProgress
         }
 
+        // `authorizationStatus` is cheap and already reports `.denied` when
+        // location services are switched off system-wide, so check it first
+        // instead of calling the blocking `locationServicesEnabled()` here.
         let status = manager.authorizationStatus
 
         switch status {
         case .denied, .restricted:
-            throw LocationServiceError.permissionDenied
+            // Only now find out *why* access is unavailable. This call can block,
+            // so it must stay off the main thread.
+            let servicesEnabled = await Task.detached(priority: .userInitiated) {
+                CLLocationManager.locationServicesEnabled()
+            }.value
+            throw servicesEnabled
+                ? LocationServiceError.permissionDenied
+                : LocationServiceError.servicesDisabled
 
         case .notDetermined, .authorizedAlways, .authorizedWhenInUse:
             break

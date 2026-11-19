@@ -62,6 +62,9 @@ struct AppCoordinatorView: View {
             }
         }
         .background(Color("WelcomeBackground").ignoresSafeArea())
+        #if DEBUG
+        .modifier(TempSheetProbe()) // TEMP probe
+        #endif
         .overlay(alignment: .top) {
             ProfileCodeNoticeBanner(inbox: codeInbox)
         }

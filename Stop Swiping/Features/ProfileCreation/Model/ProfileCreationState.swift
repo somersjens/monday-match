@@ -21,43 +21,31 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
     // Append storage IDs so older saved steps retain their meaning.
     case religion
     // Explicit numbers follow retired questions, so the remaining saved
-    // steps keep their meaning. Never reuse 17, 18, 24, 39, 40, 48, 53, 60, 61, 65, 66, 67 or 69.
+    // steps keep their meaning. Never reuse 17, 18, 20, 21, 23, 24, 26, 27, 28,
+    // 29, 34, 37, 39, 40, 44, 46, 48, 53, 54, 59, 60, 61, 65, 66, 67, 69, 74 or 82.
     case physicalAffection = 19
-    case sharedHobbies
-    case futurePlanning
-    case texting
-    case calling
+    case texting = 22
     case communicationStyle = 25
-    case discussingFeelings
-    case expressingAppreciation
-    case relationshipConversations
-    case disagreements
-    case stressContact
+    case stressContact = 30
     case listeningAndSolutions
     case dailyRhythm
     case weeklyPlanning
-    case leisureTime
-    case exercise
+    case exercise = 35
     case foodChoices
-    case travel
-    case newExperiences
+    case newExperiences = 38
     case socialPlans = 41
     case familyRole
     case partnerSocializing
-    case exPartnerContact
-    case relationshipPrivacy
-    case socialMediaSharing
-    case punctuality
+    case relationshipPrivacy = 45
+    case punctuality = 47
     case homeTidiness = 49
     case spendingMoney
     case workAmbition
     case decisionMaking
-    case sharedResponsibilities = 54
-    case romanticGestures
+    case romanticGestures = 55
     case publicAffection
     case sexualIntimacy
     case talkativeness
-    case conversationDepth
     case nightlife = 62
     case takingInitiative
     case spirituality
@@ -66,11 +54,24 @@ enum ProfileCreationStep: Int, CaseIterable, Codable, Identifiable, Comparable {
     case travelStyle
     case celebrations
     case hostingGuests
-    case diningOut
-    case personalStyle
+    case personalStyle = 75
     case currentAffairs
     case screenTime
     case cityOrNature
+    case humor
+    case setbacks
+    case othersOpinion
+    case cooking = 83
+    case competitiveness
+    case headOrHeart
+    case optimism
+    case patience
+    case rules
+    case boundaries
+    case pride
+    case perfectionism
+    case emotionalExpression
+    case makingUp
 
     static let allCases: [Self] = [
         .dateOfBirth, .partnerAgeRange, .height, .partnerHeightRange,
@@ -296,6 +297,8 @@ struct ProfileCreationState: Codable, Equatable {
 
     var isUnderageLocked = false
     var completedAt: Date?
+    /// Set while a finished profile answers questions an app update added.
+    var isAnsweringNewQuestions: Bool?
 
     init(today: CalendarDate, applicationLanguage: String) {
         birthDateBaseline = today
@@ -305,5 +308,20 @@ struct ProfileCreationState: Codable, Equatable {
 
     func age(on today: CalendarDate) -> Int? {
         dateOfBirth.map { BirthDateRules.age(of: $0, on: today) }
+    }
+
+    /// A profile finished before an app update added questions has no
+    /// answers for them, so the server leaves it out of matching. It reopens
+    /// at the first new question; finishing it again completes the profile.
+    /// Returns whether anything changed.
+    mutating func reopenForNewQuestions() -> Bool {
+        guard completedAt != nil, !isUnderageLocked,
+              let first = CompatibilityScaleQuestion.all.first(where: { !lifestyle[$0].isComplete }) else {
+            return false
+        }
+        completedAt = nil
+        isAnsweringNewQuestions = true
+        currentStep = first.step
+        return true
     }
 }

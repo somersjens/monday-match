@@ -80,6 +80,11 @@ struct MatchChatPanel: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
+                    if chat.showsSafetyNotice {
+                        safetyNotice
+                            .padding(.bottom, 10)
+                            .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
+                    }
                     notice
                         .padding(.bottom, 14)
                     ForEach(Array(visibleMessages.enumerated()), id: \.element.id) { index, message in
@@ -110,6 +115,7 @@ struct MatchChatPanel: View {
                 .padding(.top, max(0, ringsBottom - headerHeight))
                 .animation(reduceMotion ? nil : .spring(duration: 0.35, bounce: 0.2), value: visibleMessages.count)
                 .animation(.easeInOut(duration: 0.2), value: chat.isPartnerTyping)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: chat.showsSafetyNotice)
             }
             .defaultScrollAnchor(.bottom)
             .scrollDismissesKeyboard(.interactively)
@@ -158,6 +164,40 @@ struct MatchChatPanel: View {
         withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) {
             proxy.scrollTo("bottom", anchor: .bottom)
         }
+    }
+
+    /// For a live and a demo match alike, until it is closed with the cross.
+    private var safetyNotice: some View {
+        Text(L10n("If you meet in person, it's always best to choose a public place."))
+            .font(.footnote)
+            .foregroundStyle(OnboardingTheme.primaryText)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+            // Room on both sides keeps the text centred clear of the cross.
+            .padding(.horizontal, 36)
+            .padding(.vertical, 12)
+            .background {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(OnboardingTheme.pink.opacity(0.10))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(OnboardingTheme.pink.opacity(0.35), lineWidth: 0.5)
+            }
+            .overlay(alignment: .topTrailing) {
+                Button { chat.dismissSafetyNotice() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(OnboardingTheme.secondaryText)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(2)
+                .accessibilityLabel(L10n("Close"))
+            }
+            .frame(maxWidth: 340)
+            .accessibilityIdentifier("chat.safetyNotice")
     }
 
     private var notice: some View {

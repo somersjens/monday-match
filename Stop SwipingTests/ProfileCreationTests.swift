@@ -331,8 +331,8 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.submitCurrentStep(), .advanced)
 
         answerLifestyleSteps(viewModel)
-        XCTAssertEqual(viewModel.currentStep, .aloneTime)
-        XCTAssertEqual(viewModel.currentStep.next, .sharedHobbies)
+        XCTAssertEqual(viewModel.currentStep, .dailyRhythm)
+        XCTAssertEqual(viewModel.currentStep.next, .cityOrNature)
         answerCompatibilitySteps(viewModel)
         XCTAssertTrue(viewModel.isCompleted)
 
@@ -515,29 +515,68 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertFalse(answers.shouldAutoAdvance(question))
     }
 
-    func testThreePillarsOnlyAutoAdvanceWithDifferentPartnerAndNonDefaultImportance() {
+    func testThreePillarsOnlyAutoAdvanceWithDifferentPartnerAndNonDefaultImportance() throws {
         let viewModel = makeViewModel()
         answerUpToCompatibilitySteps(viewModel)
-        XCTAssertEqual(viewModel.currentStep, .aloneTime)
-        viewModel.setAloneTimeImportance(3)
+        let question = try XCTUnwrap(CompatibilityScaleQuestion.all.first)
+        XCTAssertEqual(viewModel.currentStep, question.step)
+        viewModel.setCompatibilityImportance(3, for: question)
         XCTAssertFalse(viewModel.shouldAutoAdvanceAfterAnswerSelection)
-        viewModel.setAloneTimeOwn(2)
-        XCTAssertEqual(viewModel.state.lifestyle.aloneTime.partner, 2)
+        viewModel.setCompatibilityOwn(2, for: question)
+        XCTAssertEqual(viewModel.state.lifestyle[question].partner, 2)
         XCTAssertFalse(viewModel.shouldAutoAdvanceAfterAnswerSelection)
-        viewModel.setAloneTimePartner(5)
+        viewModel.setCompatibilityPartner(5, for: question)
         XCTAssertFalse(viewModel.shouldAutoAdvanceAfterAnswerSelection, "Importance still has its default value.")
-        viewModel.setAloneTimeImportance(4)
+        viewModel.setCompatibilityImportance(4, for: question)
         XCTAssertTrue(viewModel.shouldAutoAdvanceAfterAnswerSelection)
-        viewModel.setAloneTimePartner(2)
+        viewModel.setCompatibilityPartner(2, for: question)
         XCTAssertFalse(viewModel.shouldAutoAdvanceAfterAnswerSelection, "Equal own and partner values require Continue.")
-        viewModel.setAloneTimeOwn(1)
+        viewModel.setCompatibilityOwn(1, for: question)
         XCTAssertTrue(viewModel.shouldAutoAdvanceAfterAnswerSelection, "The fields can be chosen in any order.")
         XCTAssertEqual(viewModel.submitCurrentStep(), .advanced)
-        XCTAssertEqual(viewModel.currentStep, .sharedHobbies)
+        XCTAssertEqual(viewModel.currentStep, question.step.next)
 
-        viewModel.beginEditing(.aloneTime)
-        viewModel.setAloneTimePartner(5)
+        viewModel.beginEditing(question.step)
+        viewModel.setCompatibilityPartner(5, for: question)
         XCTAssertFalse(viewModel.shouldAutoAdvanceAfterAnswerSelection, "Edits retain the explicit Save action.")
+    }
+
+    func testFinishedProfileReopensAtQuestionsAddedByAnUpdate() throws {
+        let memory = InMemoryProfileCreationStore()
+        let first = makeViewModel(store: memory)
+        answerUpToCompatibilitySteps(first)
+        answerCompatibilitySteps(first)
+        var saved = try XCTUnwrap(memory.load())
+        XCTAssertNotNil(saved.completedAt)
+
+        // An update adds two questions the finished profile never answered.
+        let questions = CompatibilityScaleQuestion.all
+        let added = [questions[3], questions[20]]
+        for question in added { saved.lifestyle[question] = CompatibilityScaleAnswer() }
+        let suite = "reopen-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = UserDefaultsProfileCreationStore(defaults: defaults)
+        store.save(saved)
+
+        let reopened = try XCTUnwrap(store.load())
+        XCTAssertNil(reopened.completedAt, "The app routes back to the questionnaire.")
+        XCTAssertEqual(reopened.isAnsweringNewQuestions, true)
+        XCTAssertEqual(reopened.currentStep, added[0].step)
+        var loadedAgain = try XCTUnwrap(store.load())
+        XCTAssertFalse(loadedAgain.reopenForNewQuestions(), "Reopening happens once.")
+
+        let now = now
+        let viewModel = ProfileCreationViewModel(store: store, repository: InMemoryProfileRepository(),
+                                                 calendar: calendar, now: { now })
+        viewModel.setCompatibilityOwn(2, for: added[0])
+        XCTAssertEqual(viewModel.submitCurrentStep(), .advanced)
+        XCTAssertEqual(viewModel.currentStep, added[1].step, "Answered questions are skipped.")
+        viewModel.setCompatibilityOwn(4, for: added[1])
+        XCTAssertEqual(viewModel.submitCurrentStep(), .completed)
+        let finished = try XCTUnwrap(store.load())
+        XCTAssertNotNil(finished.completedAt)
+        XCTAssertNil(finished.isAnsweringNewQuestions)
     }
 
     func testDefaultImportanceAlsoAppliesToOlderSavedAnswers() throws {
@@ -587,7 +626,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertEqual(answers.aloneTime.own, 2)
         XCTAssertEqual(answers.aloneTime.partner, 4)
         XCTAssertEqual(answers.aloneTime.importance, 5)
-        for question in CompatibilityScaleQuestion.all.dropFirst() {
+        for question in CompatibilityScaleQuestion.all where question.step != .aloneTime {
             XCTAssertFalse(answers[question].isComplete)
             XCTAssertNil(answers[question].own)
             XCTAssertNil(answers[question].partner)
@@ -596,7 +635,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("15".utf8)), .aloneTime)
         XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("16".utf8)), .religion)
         XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("19".utf8)), .physicalAffection)
-        XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("54".utf8)), .sharedResponsibilities)
+        XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("55".utf8)), .romanticGestures)
         XCTAssertEqual(try JSONDecoder().decode(ProfileCreationStep.self, from: Data("17".utf8)), .dateOfBirth,
                        "A retired question reopens the first step.")
     }

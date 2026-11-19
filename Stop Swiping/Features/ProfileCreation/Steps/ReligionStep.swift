@@ -6,6 +6,8 @@ struct ReligionStep: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
+    private static let tabSpacing: CGFloat = 6
+
     private var answers: ReligionAnswers { viewModel.state.religion }
     private var phase: ReligionQuestionPhase { viewModel.state.religionPhase }
     private var selectedFill: LinearGradient {
@@ -15,9 +17,13 @@ struct ReligionStep: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 6) {
+            HStack(spacing: Self.tabSpacing) {
                 tab(.own, title: L10n("You"), value: answers.own?.title ?? L10n("Choose one"))
                 tab(.partner, title: L10n("Partner"), value: partnerTabValue)
+            }
+            .background {
+                TabRing(progress: phase == .partner ? 1 : 0, spacing: Self.tabSpacing, fill: selectedFill)
+                    .animation(OnboardingMotion.resolved(OnboardingMotion.ringHandoff, reduceMotion: reduceMotion), value: phase)
             }
             .padding(6)
 
@@ -33,7 +39,7 @@ struct ReligionStep: View {
         .onboardingSurface(cornerRadius: 24)
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion), value: answers)
-        .animation(OnboardingMotion.resolved(OnboardingMotion.selection, reduceMotion: reduceMotion), value: phase)
+        .animation(OnboardingMotion.resolved(OnboardingMotion.sideHandoff, reduceMotion: reduceMotion), value: phase)
         .sensoryFeedback(.selection, trigger: answers)
         .soundFeedback(.select, trigger: answers)
     }
@@ -66,12 +72,6 @@ struct ReligionStep: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background {
-                shape.fill(isActive ? AnyShapeStyle(selectedFill) : AnyShapeStyle(Color.clear))
-                    .overlay {
-                        shape.strokeBorder(isActive ? AnyShapeStyle(OnboardingTheme.accentGradient) : AnyShapeStyle(Color.clear), lineWidth: 1.2)
-                    }
-            }
             .contentShape(shape)
         }
         .buttonStyle(.plain)
@@ -82,10 +82,19 @@ struct ReligionStep: View {
     }
 
     private func select(_ religion: Religion) {
-        if phase == .own {
-            viewModel.selectOwnReligion(religion)
-        } else {
+        guard phase == .own else {
             viewModel.togglePartnerReligion(religion)
+            return
+        }
+        viewModel.toggleOwnReligion(religion)
+        guard viewModel.state.religion.own != nil else { return }
+        // The check lands first, then the ring carries over to Partner.
+        Task {
+            try? await Task.sleep(for: reduceMotion ? .zero : OnboardingMotion.partnerHandoff)
+            guard viewModel.currentStep == .religion,
+                  viewModel.state.religionPhase == .own,
+                  viewModel.state.religion.own != nil else { return }
+            viewModel.setReligionPhase(.partner)
         }
     }
 

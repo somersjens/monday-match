@@ -118,7 +118,7 @@ struct CloudChatBundle: Decodable {
         case userID = "user_id", deviceID = "device_id", bundle = "public_bundle", revokedAt = "revoked_at"
     }
 }
-struct CloudChatMessage: Decodable {
+nonisolated struct CloudChatMessage: Decodable {
     let id: Int64
     let senderID: UUID
     let messageID: UUID
@@ -136,7 +136,7 @@ struct CloudChatMessage: Decodable {
 /// One look at an open chat: whether it ended, a fingerprint of the key
 /// bundles (fetched in full only when it changes), the partner's read
 /// receipt and the messages after the cursor.
-struct ChatPoll: Decodable {
+nonisolated struct ChatPoll: Decodable {
     let closed: Bool
     /// Nil when unknown: the bundles are then fetched every time.
     let keys: String?

@@ -22,7 +22,11 @@ struct UserDefaultsProfileCreationStore: ProfileCreationStateStoring {
     func load() -> ProfileCreationState? {
         guard let data = defaults.data(forKey: key) else { return nil }
         if let last = Self.lastDecoded, last.data == data { return last.state }
-        guard let state = try? JSONDecoder().decode(ProfileCreationState.self, from: data) else { return nil }
+        guard var state = try? JSONDecoder().decode(ProfileCreationState.self, from: data) else { return nil }
+        if state.reopenForNewQuestions() {
+            save(state)
+            return load()
+        }
         Self.lastDecoded = (data, state)
         return state
     }

@@ -93,6 +93,30 @@ struct OnboardingFeedbackLabel: View {
     }
 }
 
+/// A calm note just above Continue: centred text in a light grey frame.
+struct OnboardingNoticeLabel: View {
+    let text: String
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+        Text(text)
+            .font(.system(.footnote, weight: .medium))
+            .foregroundStyle(OnboardingTheme.primaryText.opacity(0.9))
+            .multilineTextAlignment(.center)
+            .lineLimit(3)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background {
+                shape
+                    .fill(.white.opacity(0.05))
+                    .overlay { shape.strokeBorder(.white.opacity(0.28), lineWidth: 1) }
+            }
+            .contentTransition(.opacity)
+    }
+}
+
 /// Horizontal shake used when a submission is rejected.
 struct ShakeEffect: GeometryEffect {
     var travel: CGFloat = 7

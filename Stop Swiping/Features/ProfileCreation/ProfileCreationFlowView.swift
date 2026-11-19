@@ -203,6 +203,8 @@ struct ProfileCreationFlowView: View {
 
     // MARK: - Steps
 
+    private static let pageTopID = "page.top"
+
     @ViewBuilder
     private func stepPage(_ step: ProfileCreationStep) -> some View {
         if step == .location {
@@ -217,27 +219,37 @@ struct ProfileCreationFlowView: View {
             .frame(maxWidth: OnboardingTheme.contentWidth)
             .frame(maxWidth: .infinity)
         } else {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 30) {
-                    OnboardingStepHeader(
-                        title: step == .religion ? viewModel.state.religionPhase.title : step.title,
-                        subtitle: step == .religion ? nil : step.subtitle,
-                        titleFocus: $isTitleFocused
-                    )
-                    stepContent(step)
-                        .frame(maxWidth: .infinity)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 30) {
+                        OnboardingStepHeader(
+                            title: step == .religion ? viewModel.state.religionPhase.title : step.title,
+                            subtitle: step == .religion ? nil : step.subtitle,
+                            titleFocus: $isTitleFocused
+                        )
+                        .id(Self.pageTopID)
+                        stepContent(step)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 10)
+                    .padding(.bottom, 24)
+                    .frame(maxWidth: OnboardingTheme.contentWidth)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 10)
-                .padding(.bottom, 24)
-                .frame(maxWidth: OnboardingTheme.contentWidth)
-                .frame(maxWidth: .infinity)
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicators(.hidden)
+                // Each religion part starts at its question, even if the list was
+                // scrolled down to the last option. The page itself stays, so
+                // the ring can carry over to Partner instead of the list being
+                // replaced.
+                .onChange(of: viewModel.state.religionPhase) {
+                    guard step == .religion else { return }
+                    withAnimation(OnboardingMotion.resolved(OnboardingMotion.sideHandoff, reduceMotion: reduceMotion)) {
+                        proxy.scrollTo(Self.pageTopID, anchor: .top)
+                    }
+                }
             }
-            .scrollBounceBehavior(.basedOnSize)
-            .scrollIndicators(.hidden)
-            // Each part starts at its question, even if the previous list
-            // was scrolled down to the last option.
-            .id(step == .religion ? viewModel.state.religionPhase : .own)
         }
     }
 
@@ -288,13 +300,25 @@ struct ProfileCreationFlowView: View {
                     .transition(.onboardingReveal(reduceMotion: reduceMotion))
             }
 
+            if viewModel.state.isAnsweringNewQuestions == true {
+                OnboardingNoticeLabel(text: L10n("There are a few new questions. Answer them to keep getting matched."))
+                    .transition(.onboardingReveal(reduceMotion: reduceMotion))
+            }
+
             if showsHeightHonestyNotice {
                 heightHonestyNotice
                     .transition(.onboardingReveal(reduceMotion: reduceMotion))
             }
 
+            if displayedStep == .dateOfBirth, viewModel.feedback == .birthday {
+                OnboardingNoticeLabel(text: ProfileCreationFeedback.birthday.message)
+                    .modifier(ShakeEffect(animatableData: reduceMotion ? 0 : CGFloat(viewModel.rejectionCount)))
+                    .animation(.linear(duration: 0.4), value: viewModel.rejectionCount)
+                    .transition(.onboardingReveal(reduceMotion: reduceMotion))
+            }
+
             if let text = partnerHeightNoticeText {
-                partnerHeightNotice(text)
+                OnboardingNoticeLabel(text: text)
                     .transition(.onboardingReveal(reduceMotion: reduceMotion))
             }
 
@@ -320,6 +344,7 @@ struct ProfileCreationFlowView: View {
         .opacity(hasEntered ? 1 : 0)
         .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: showsHeightHonestyNotice)
         .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: partnerHeightNoticeText)
+        .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: viewModel.feedback)
     }
 
     /// Appears once a height has been chosen, or after a first Continue on
@@ -340,15 +365,16 @@ struct ProfileCreationFlowView: View {
         }
     }
 
-    /// One centred line in a red frame, so it reads as a warning at a glance.
+    /// Centred in a red frame, so it reads as a warning at a glance.
     private var heightHonestyNotice: some View {
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
         return Text(L10n("False information can lead to account termination."))
             .font(.system(.footnote, weight: .semibold))
             .foregroundStyle(OnboardingTheme.primaryText)
             .multilineTextAlignment(.center)
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
+            .lineLimit(2)
+            .minimumScaleFactor(0.85)
+            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
@@ -377,17 +403,6 @@ struct ProfileCreationFlowView: View {
         return nil
     }
 
-    private func partnerHeightNotice(_ text: String) -> some View {
-        Text(text)
-            .font(.system(.footnote, weight: .medium))
-            .foregroundStyle(OnboardingTheme.secondaryText)
-            .multilineTextAlignment(.center)
-            .lineLimit(3)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.horizontal, 8)
-            .contentTransition(.opacity)
-    }
 
     // MARK: - Testing shortcut
 
