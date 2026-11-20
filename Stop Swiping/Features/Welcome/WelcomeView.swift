@@ -73,7 +73,7 @@ struct WelcomeView: View {
     /// the chat shows.
     @State private var matchPersonalityTest: PersonalityTest?
     /// A profile read by the in-app scanner, waiting for its match to be shown.
-    @State private var scannedProfile: ProfileCreationState?
+    @State private var scannedProfile: ProfileCode.Received?
 
     @StateObject private var savedMatches = SavedMatchStore()
     /// The account's active server match and its conversation.
@@ -673,8 +673,11 @@ struct WelcomeView: View {
             profileCreation.markProfileExchangeUsed()
             notificationEngine?.recordCompatibilityCheck()
             exchanges += 1
-            if let photo = result.photo { MatchPhotoStore.shared.save(photo, for: result.id) }
-            present(MatchSnapshot(id: result.id, matchedAt: Date(), you: result.you, them: result.them))
+            // Someone exchanged with before today gets the same outcome again.
+            let snapshot = ScannedMatchMemory().resolve(
+                MatchSnapshot(id: result.id, matchedAt: Date(), you: result.you, them: result.them), for: result.holder)
+            if let photo = result.photo { MatchPhotoStore.shared.save(photo, for: snapshot.id) }
+            present(snapshot)
         }
         .onAppear {
             guard lightStage == .complete else { return }
@@ -1409,7 +1412,7 @@ struct WelcomeView: View {
     @discardableResult
     private func refreshShareCode() -> Bool {
         guard let link = ProfileCode.url(for: profileCreation.state),
-              let matrix = WelcomeLightCode.Matrix(message: link.absoluteString) else { return false }
+              let matrix = WelcomeLightCode.Matrix(profileLink: link.absoluteString) else { return false }
         shareCode = matrix
         return true
     }
@@ -1419,7 +1422,7 @@ struct WelcomeView: View {
         showsScanner = true
     }
 
-    private func finishScanning(_ profile: ProfileCreationState) {
+    private func finishScanning(_ profile: ProfileCode.Received) {
         coverHandsOver = true
         showsScanner = false
         Task {
@@ -1437,7 +1440,10 @@ struct WelcomeView: View {
         profileCreation.markProfileExchangeUsed()
         notificationEngine?.recordCompatibilityCheck()
         exchanges += 1
-        present(MatchSnapshot(matchedAt: Date(), you: profileCreation.state.sharedCopy(today: .today()), them: them))
+        // Scanning someone again, even from a fresh code, shows the first outcome.
+        let snapshot = MatchSnapshot(matchedAt: Date(), you: profileCreation.state.sharedCopy(today: .today()),
+                                     them: them.profile)
+        present(ScannedMatchMemory().resolve(snapshot, for: them.holder))
     }
 
     // MARK: - Matches
@@ -1451,7 +1457,7 @@ struct WelcomeView: View {
         let snapshot: MatchSnapshot
         let replaces = activeMatch != nil
         if isDemoPlaying, let current = activeMatch?.snapshot {
-            snapshot = MatchSnapshot(matchedAt: current.matchedAt, you: current.you, them: current.them, isDemo: true)
+            snapshot = current.replayedAsDemo()
         } else {
             snapshot = DemoMatchGenerator.makeExample(for: profileCreation.state, using: &generator)
         }

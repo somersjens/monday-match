@@ -1,5 +1,18 @@
 import Foundation
 
+/// The groups the 1–5 questions are shown and scored in. The raw values are
+/// stored with every match, so they never change; new groups are added.
+enum CompatibilityCategory: String, Codable, CaseIterable, Hashable, Identifiable {
+    case dailyRhythm, homeLife, socialLife, contact, character, feelings, closeness
+
+    var id: String { rawValue }
+
+    /// The section title, in the current language.
+    var title: String {
+        CompatibilityScaleQuestion.sections.first { $0.category == self }?.title ?? rawValue
+    }
+}
+
 /// The ordered catalog drives onboarding, profile editing and answer storage.
 struct CompatibilityScaleQuestion: Hashable, Identifiable {
     let step: ProfileCreationStep
@@ -12,6 +25,7 @@ struct CompatibilityScaleQuestion: Hashable, Identifiable {
     var id: String { String(describing: step) }
 
     struct Section {
+        let category: CompatibilityCategory
         let title: String
         let questions: [CompatibilityScaleQuestion]
     }
@@ -49,12 +63,23 @@ struct CompatibilityScaleQuestion: Hashable, Identifiable {
         catalog.byStep[step]
     }
 
+    /// The category a question belongs to, whatever the display language.
+    static func category(for step: ProfileCreationStep) -> CompatibilityCategory? {
+        categoryByStep[step]
+    }
+
+    private static let categoryByStep: [ProfileCreationStep: CompatibilityCategory] = Dictionary(
+        uniqueKeysWithValues: catalogs[.english]!.sections.flatMap { section in
+            section.questions.map { ($0.step, section.category) }
+        }
+    )
+
     private static func makeSections(language: AppLanguage) -> [Section] {
         func text(_ message: AppLocalizedMessage) -> String {
             AppLocalization.string(message, language: language)
         }
         return [
-        Section(title: text("Daily rhythm and free time"), questions: [
+        Section(category: .dailyRhythm, title: text("Daily rhythm and free time"), questions: [
             Self(
                 step: .dailyRhythm,
                 title: text("Daily rhythm"),
@@ -112,7 +137,7 @@ struct CompatibilityScaleQuestion: Hashable, Identifiable {
                 symbol: "sun.max"
             ),
         ]),
-        Section(title: text("Home life"), questions: [
+        Section(category: .homeLife, title: text("Home life"), questions: [
             Self(
                 step: .hostingGuests,
                 title: text("Guests at home"),
@@ -162,7 +187,7 @@ struct CompatibilityScaleQuestion: Hashable, Identifiable {
                 symbol: "house"
             ),
         ]),
-        Section(title: text("Social life"), questions: [
+        Section(category: .socialLife, title: text("Social life"), questions: [
             Self(
                 step: .familyRole,
                 title: text("Family"),
@@ -204,7 +229,7 @@ struct CompatibilityScaleQuestion: Hashable, Identifiable {
                 symbol: "person.2"
             ),
         ]),
-        Section(title: text("Contact and conversation"), questions: [
+        Section(category: .contact, title: text("Contact and conversation"), questions: [
             Self(
                 step: .talkativeness,
                 title: text("Quiet or talkative"),
@@ -238,7 +263,7 @@ struct CompatibilityScaleQuestion: Hashable, Identifiable {
                 symbol: "bubble.left.and.bubble.right"
             ),
         ]),
-        Section(title: text("Character and choices"), questions: [
+        Section(category: .character, title: text("Character and choices"), questions: [
             Self(
                 step: .punctuality,
                 title: text("Keeping time"),
@@ -352,7 +377,7 @@ struct CompatibilityScaleQuestion: Hashable, Identifiable {
                 symbol: "slider.horizontal.3"
             ),
         ]),
-        Section(title: text("Feelings and conflict"), questions: [
+        Section(category: .feelings, title: text("Feelings and conflict"), questions: [
             Self(
                 step: .optimism,
                 title: text("Optimism"),
@@ -410,7 +435,7 @@ struct CompatibilityScaleQuestion: Hashable, Identifiable {
                 symbol: "bolt.heart"
             ),
         ]),
-        Section(title: text("Closeness and space"), questions: [
+        Section(category: .closeness, title: text("Closeness and space"), questions: [
             Self(
                 step: .aloneTime,
                 title: text("Time for yourself"),

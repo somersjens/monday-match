@@ -37,6 +37,8 @@ struct ProfileDeletionService {
         SavedMatchStore.clear(defaults: defaults)
         MatchPhotoStore.shared.clear()
         OpenDemoChat.clear(defaults: defaults)
+        ScannedMatchMemory.clear(defaults: defaults)
+        ProfileHolder.clear(defaults: defaults)
         LiveMatchCenter.clearLocalData(defaults: defaults)
         ChatViewModel.clearReadPositions(defaults: defaults)
         MatchReportExport.removeTemporaryFiles()

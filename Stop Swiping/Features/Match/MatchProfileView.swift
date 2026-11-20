@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// The other person's own answers, as they were when the profiles crossed.
+/// What the other person shared that may be shown, as it was when the
+/// profiles crossed. Their answers to single questions are never shown: the
+/// scores show per category how well the two fit.
 struct MatchProfileView: View {
     let match: MatchSnapshot
-
-    private var them: ProfileCreationState { match.them }
 
     var body: some View {
         ScrollView {
@@ -14,17 +14,6 @@ struct MatchProfileView: View {
                     let facts = facts
                     ForEach(Array(facts.enumerated()), id: \.offset) { index, fact in
                         factRow(title: fact.title, value: fact.value, isLast: index == facts.count - 1)
-                    }
-                }
-                ForEach(CompatibilityScaleQuestion.sections, id: \.title) { group in
-                    let answered = group.questions.filter { them.lifestyle[$0].own != nil }
-                    if !answered.isEmpty {
-                        section(group.title) {
-                            ForEach(answered) { question in
-                                scaleRow(question, value: them.lifestyle[question].own ?? 0,
-                                         isLast: question.id == answered.last?.id)
-                            }
-                        }
                     }
                 }
             }
@@ -49,7 +38,7 @@ struct MatchProfileView: View {
             Text(match.name)
                 .font(.system(.title2, design: .rounded, weight: .semibold))
                 .foregroundStyle(OnboardingTheme.primaryText)
-            Text(L10n("\(match.name)’s own answers, as shared with you."))
+            Text(L10n("What \(match.name) shared with you. Answers to single questions stay private; the scores show per category how well you fit."))
                 .font(.subheadline)
                 .foregroundStyle(OnboardingTheme.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
@@ -88,39 +77,6 @@ struct MatchProfileView: View {
         .padding(.vertical, 11)
         .overlay(alignment: .bottom) { if !isLast { separator } }
         .accessibilityElement(children: .combine)
-    }
-
-    private func scaleRow(_ question: CompatibilityScaleQuestion, value: Int, isLast: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 7) {
-            Text(question.title)
-                .font(.subheadline)
-                .foregroundStyle(OnboardingTheme.primaryText)
-            HStack(spacing: 8) {
-                Text(question.lowLabel)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                HStack(spacing: 5) {
-                    ForEach(Array(CompatibilityScaleAnswer.range), id: \.self) { position in
-                        Circle()
-                            .fill(position == value ? AnyShapeStyle(OnboardingTheme.cyan)
-                                                    : AnyShapeStyle(.white.opacity(0.14)))
-                            .frame(width: position == value ? 9 : 6, height: position == value ? 9 : 6)
-                    }
-                }
-                .frame(height: 10)
-                Text(question.highLabel)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-            .font(.caption)
-            .foregroundStyle(OnboardingTheme.secondaryText)
-            .lineLimit(1)
-            .minimumScaleFactor(0.75)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 11)
-        .overlay(alignment: .bottom) { if !isLast { separator } }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(question.title)
-        .accessibilityValue(L10n("\(value) of 5, from \(question.lowLabel) to \(question.highLabel)"))
     }
 
     private var separator: some View {

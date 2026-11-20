@@ -46,6 +46,22 @@ enum WelcomeLightCode {
         let size: Int
         let modules: [UInt8]
 
+        /// The most modules a side that still scans from the swaying light.
+        static let largestScannableSize = 61
+
+        /// A profile code: medium error correction, unless that makes the code
+        /// too dense to scan from the light; then low, which keeps a long
+        /// profile as coarse as a usual one.
+        init?(profileLink message: String) {
+            guard let medium = Matrix(message: message) else { return nil }
+            if medium.size > Self.largestScannableSize, let low = Matrix(message: message, correctionLevel: "L"),
+               low.size < medium.size {
+                self = low
+            } else {
+                self = medium
+            }
+        }
+
         /// Nil when the message doesn't fit a QR code.
         init?(message: String, correctionLevel: String = "M") {
             guard let matrix = WelcomeLightCode.modules(message: message, correctionLevel: correctionLevel)

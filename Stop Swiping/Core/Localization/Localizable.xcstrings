@@ -10,6 +10,23 @@
     ", %lld" : {
 
     },
+    "{0} → you" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} → you"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} → jij"
+          }
+        }
+      }
+    },
     "{0} broke this match on {1}" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -516,6 +533,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "{0} procent, geen match met {1}."
+          }
+        }
+      }
+    },
+    "{0} percent, weight {1} percent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} percent, weight {1} percent"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "{0} procent, gewicht {1} procent"
           }
         }
       }
@@ -2895,6 +2929,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Er kwam een ander gezicht in beeld. Houd alleen je eigen gezicht in beeld en probeer opnieuw."
+          }
+        }
+      }
+    },
+    "Answers to single questions are never shown." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Answers to single questions are never shown."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoorden op losse vragen worden nooit getoond."
           }
         }
       }
@@ -6268,6 +6319,23 @@
         }
       }
     },
+    "Doesn’t count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doesn’t count"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telt niet mee"
+          }
+        }
+      }
+    },
     "Doesn’t speak {0}" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6604,6 +6672,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Elk antwoord telt mee naar belang: elke stap hoger telt dubbel, en 1 telt helemaal niet mee."
+          }
+        }
+      }
+    },
+    "Each category weighs as much as its questions matter. Score × weight, added up, gives the total; rounding can make it differ by 1%." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each category weighs as much as its questions matter. Score × weight, added up, gives the total; rounding can make it differ by 1%."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elke categorie weegt zoveel als de vragen erin belangrijk zijn. Score × gewicht, opgeteld, geeft het totaal; door afronding kan dat 1% verschillen."
           }
         }
       }
@@ -8627,6 +8712,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoe lang ben je?"
+          }
+        }
+      }
+    },
+    "How well you and {0} fit each other, both ways." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How well you and {0} fit each other, both ways."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoe goed jij en {0} bij elkaar passen, in beide richtingen."
           }
         }
       }
@@ -14431,6 +14533,23 @@
         }
       }
     },
+    "Score" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Score"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Score"
+          }
+        }
+      }
+    },
     "Scores are kept as they were on the day you matched." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15362,6 +15481,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toont de antwoorden achter deze score."
+          }
+        }
+      }
+    },
+    "Shows the categories behind this score." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the categories behind this score."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toont de categorieën achter deze score."
           }
         }
       }
@@ -17593,6 +17729,23 @@
         }
       }
     },
+    "This code has expired. Ask for a fresh one." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This code has expired. Ask for a fresh one."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze code is verlopen. Vraag om een nieuwe."
+          }
+        }
+      }
+    },
     "This conversation is closed because the match is blocked." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17929,6 +18082,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vandaag"
+          }
+        }
+      }
+    },
+    "Together" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Together"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samen"
           }
         }
       }
@@ -18919,6 +19089,23 @@
         }
       }
     },
+    "Weight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weight"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gewicht"
+          }
+        }
+      }
+    },
     "Welcome back" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18932,6 +19119,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Welkom terug"
+          }
+        }
+      }
+    },
+    "What {0} shared with you. Answers to single questions stay private; the scores show per category how well you fit." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What {0} shared with you. Answers to single questions stay private; the scores show per category how well you fit."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat {0} met je deelde. Antwoorden op losse vragen blijven privé; de scores tonen per categorie hoe goed jullie passen."
           }
         }
       }
@@ -19544,6 +19748,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jij"
+          }
+        }
+      }
+    },
+    "You → {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You → {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jij → {0}"
+          }
+        }
+      }
+    },
+    "You and {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You and {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jij en {0}"
           }
         }
       }

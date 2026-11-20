@@ -471,7 +471,7 @@ struct MatchResultOverlay: View {
         .accessibilityLabel(perspective == .yours
             ? L10n("Your match with \(match.name): \(report.score(perspective)) percent")
             : L10n("\(match.name)’s match with you: \(report.score(perspective)) percent"))
-        .accessibilityHint(L10n("Shows the answers behind this score."))
+        .accessibilityHint(L10n("Shows the categories behind this score."))
     }
 
     /// Their requirements you miss come after yours they miss. Scrolls

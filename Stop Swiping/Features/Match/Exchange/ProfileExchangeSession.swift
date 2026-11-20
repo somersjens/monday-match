@@ -20,11 +20,14 @@ final class ProfileExchangeSession: NSObject, ObservableObject {
         var wantsToExchange: Bool
     }
 
-    /// Both profiles, exactly as they crossed.
+    /// Both profiles, exactly as they crossed. Lives only until the match
+    /// is worked out; `MatchSnapshot` keeps the outcome, not their answers.
     struct Result: Identifiable, Equatable {
         let id: UUID
         let you: ProfileCreationState
         let them: ProfileCreationState
+        /// Who they are, to recognise them on a second exchange.
+        let holder: ProfileHolder
         /// Their photo, when they chose to share it with manual matching.
         var photo: Data? = nil
     }
@@ -163,7 +166,7 @@ final class ProfileExchangeSession: NSObject, ObservableObject {
                 try? link.session.send(data, toPeers: [link.peer], with: .reliable)
             case .completed(_, let profile, let photo):
                 guard let you = negotiation?.profile else { continue }
-                result = Result(id: UUID(), you: you, them: profile, photo: photo)
+                result = Result(id: UUID(), you: you, them: profile.profile, holder: profile.holder, photo: photo)
                 finish()
                 return
             case .declined(let id):

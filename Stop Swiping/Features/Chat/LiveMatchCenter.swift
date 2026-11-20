@@ -330,7 +330,8 @@ final class LiveMatchCenter: ObservableObject {
     }
 
     /// The match as both profiles were when it was made. Scores come from the
-    /// server, which made the match; the cards supply the answers behind them.
+    /// server, which made the match; the cards supply the categories behind
+    /// them, worked out once and then kept as they are.
     func snapshot(fallbackYou: ProfileCreationState) -> MatchSnapshot? {
         match.map { snapshot(of: $0, fallbackYou: fallbackYou) }
     }
@@ -338,10 +339,23 @@ final class LiveMatchCenter: ObservableObject {
     /// Any server match, active or broken. A broken one carries why it ended.
     func snapshot(of match: CloudChatMatch, fallbackYou: ProfileCreationState) -> MatchSnapshot {
         let you = frozenProfile(for: match.id) ?? fallbackYou.sharedCopy(today: .today())
-        var them = partnerProfile(for: match) ?? ProfileCreationState(today: .today(), applicationLanguage: "en")
+        let card = partnerProfile(for: match)
+        var them = card ?? ProfileCreationState(today: .today(), applicationLanguage: "en")
         if them.displayName.isEmpty { them.displayName = match.partnerName }
-        var snapshot = MatchSnapshot(id: match.id, matchedAt: match.matchedAt ?? Date(), you: you, them: them,
-                                     fixedScores: .init(yours: match.ownScore, theirs: match.partnerScore))
+        let matchedAt = match.matchedAt ?? Date()
+        let result: MatchResult
+        if let frozen = frozenResult(for: match.id) {
+            result = frozen
+        } else {
+            var computed = MatchResult(you: you, them: them,
+                                       on: CalendarDate.today(calendar: BirthDateRules.calendar, now: matchedAt))
+            computed.useServerScores(yours: match.ownScore, theirs: match.partnerScore)
+            // Kept from the moment the partner's card is in: an app update
+            // or a changed catalog never changes it afterwards.
+            if card != nil { freeze(computed, for: match.id) }
+            result = computed
+        }
+        var snapshot = MatchSnapshot(id: match.id, matchedAt: matchedAt, you: you, them: them, result: result)
         if let endedAt = match.endedAt {
             snapshot.ended = .init(at: endedAt, reason: match.endReason, byMe: match.endedByMe)
         }
@@ -453,12 +467,21 @@ final class LiveMatchCenter: ObservableObject {
         if let profile = match.partnerProfile { return profile }
         guard let card = defaults.string(forKey: Self.key("them", match.id)),
               let data = Data(base64Encoded: card) else { return nil }
-        return ProfileCode.decoded(data)
+        return ProfileCode.opened(data, expires: false)?.profile
+    }
+
+    private func frozenResult(for id: UUID) -> MatchResult? {
+        defaults.data(forKey: Self.key("result", id)).flatMap { try? JSONDecoder().decode(MatchResult.self, from: $0) }
+    }
+
+    private func freeze(_ result: MatchResult, for id: UUID) {
+        guard let data = try? JSONEncoder().encode(result) else { return }
+        defaults.set(data, forKey: Self.key("result", id))
     }
 
     private func shareCard(for id: UUID) async {
         guard let repository, !sharedCards.contains(id), let you = frozenProfile(for: id),
-              let card = ProfileCode.encoded(you)?.base64EncodedString() else { return }
+              let card = ProfileCode.card(for: you) else { return }
         do {
             try await repository.shareCard(id, card: card)
             sharedCards.insert(id)

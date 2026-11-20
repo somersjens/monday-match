@@ -61,7 +61,7 @@ final class BrokenMatchTests: XCTestCase {
 
     func testBrokenMatchKeepsThePartnersCardAfterItLeavesTheServer() async throws {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: "BrokenMatchTests-\(UUID())"))
-        let card = try XCTUnwrap(ProfileCode.encoded(Self.profile("Mila").sharedCopy(today: .today()))).base64EncodedString()
+        let card = try XCTUnwrap(ProfileCode.card(for: Self.profile("Mila").sharedCopy(today: .today())))
         let id = UUID(), partner = UUID()
         let repository = HistoryRepository()
         repository.history = [CloudChatMatch(id: id, partnerID: partner, partnerName: "Mila", ownScore: 80, partnerScore: 84,

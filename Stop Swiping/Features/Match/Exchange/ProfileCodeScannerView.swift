@@ -84,7 +84,10 @@ final class ProfileCodeScannerModel: ObservableObject {
     @Published private(set) var phase = Phase.starting
     /// Shown while the camera sees a QR code that isn't a profile.
     @Published private(set) var showsUnknownCode = false
-    @Published private(set) var profile: ProfileCreationState?
+    /// The rejected code is a profile code, just not one this phone accepts:
+    /// expired (a screenshot from another day), or from a newer app.
+    @Published private(set) var rejectedIsProfileCode = false
+    @Published private(set) var profile: ProfileCode.Received?
     private(set) var camera: ProfileCodeCamera?
     /// Owned here rather than by SwiftUI: it joins the session before the
     /// session starts and leaves only after it has stopped. Attaching or
@@ -161,12 +164,14 @@ final class ProfileCodeScannerModel: ObservableObject {
             if showsUnknownCode { showUnknownCode() }
             return
         }
-        if let scanned = ProfileCode.profile(fromScanned: text, today: today) {
+        if let scanned = ProfileCode.received(fromScanned: text, today: today) {
             profile = scanned
             showsUnknownCode = false
             pause()
         } else {
             lastRejected = text
+            rejectedIsProfileCode = URL(string: text.trimmingCharacters(in: .whitespacesAndNewlines))
+                .map(ProfileCode.isCode) ?? false
             showUnknownCode()
         }
     }
@@ -185,7 +190,7 @@ final class ProfileCodeScannerModel: ObservableObject {
 
 /// Scans another person's profile code without leaving the app.
 struct ProfileCodeScannerView: View {
-    let onScan: (ProfileCreationState) -> Void
+    let onScan: (ProfileCode.Received) -> Void
     let onClose: () -> Void
 
     @StateObject private var model = ProfileCodeScannerModel()
@@ -336,7 +341,8 @@ struct ProfileCodeScannerView: View {
             .buttonStyle(GlowButtonStyle())
             .frame(maxWidth: OnboardingTheme.controlWidth)
         case .scanning where model.showsUnknownCode:
-            Label(L10n("That isn’t a Stop Swiping code."), systemImage: "qrcode")
+            Label(model.rejectedIsProfileCode ? L10n("This code has expired. Ask for a fresh one.")
+                                              : L10n("That isn’t a Stop Swiping code."), systemImage: "qrcode")
                 .font(.system(.footnote, weight: .medium))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 16)

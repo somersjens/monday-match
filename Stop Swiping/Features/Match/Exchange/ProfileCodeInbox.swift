@@ -13,7 +13,7 @@ final class ProfileCodeInbox: ObservableObject {
         case unreadable
     }
 
-    @Published private(set) var pending: ProfileCreationState?
+    @Published private(set) var pending: ProfileCode.Received?
     @Published private(set) var notice: Notice?
     /// Changes with every notice, so the same one can be shown again.
     @Published private(set) var noticeCount = 0
@@ -24,9 +24,9 @@ final class ProfileCodeInbox: ObservableObject {
     func open(_ url: URL, isProfileReady: Bool, today: CalendarDate? = nil) -> Bool {
         guard ProfileCode.isCode(url) else { return false }
         let today = today ?? .today()
-        if let profile = ProfileCode.profile(from: url, today: today) {
-            pending = profile
-            show(isProfileReady ? nil : .needsProfile(name: profile.displayName))
+        if let received = ProfileCode.received(from: url, today: today) {
+            pending = received
+            show(isProfileReady ? nil : .needsProfile(name: received.profile.displayName))
         } else {
             show(.unreadable)
         }
@@ -34,7 +34,7 @@ final class ProfileCodeInbox: ObservableObject {
     }
 
     /// Hands the waiting profile to whoever shows its match.
-    func take() -> ProfileCreationState? {
+    func take() -> ProfileCode.Received? {
         defer {
             pending = nil
             if case .needsProfile = notice { notice = nil }

@@ -1,7 +1,8 @@
 import UIKit
 
 /// The other person's profile and the whole conversation as an A4 PDF, to
-/// take to the police. Made on the phone from what is stored there.
+/// take to the police. Made on the phone from what is stored there, which
+/// never includes their answers to single questions.
 struct MatchReportExport {
     let match: MatchSnapshot
     let messages: [ChatMessage]
@@ -70,7 +71,6 @@ struct MatchReportExport {
         drawTitle(on: page)
         drawProfileCard(on: page)
         drawFacts(on: page)
-        drawScaleAnswers(on: page)
         drawConversation(on: page)
         page.space(18)
         page.paragraph(L10n("This document was made on your own phone, from the conversation as it is stored there."),
@@ -173,52 +173,6 @@ struct MatchReportExport {
             if index < facts.count - 1 { page.hairline() }
         }
         page.space(22)
-    }
-
-    private func drawScaleAnswers(on page: PDFPage) {
-        let them = match.them
-        for group in CompatibilityScaleQuestion.sections {
-            let answered = group.questions.filter { them.lifestyle[$0].own != nil }
-            guard !answered.isEmpty else { continue }
-            page.sectionTitle(group.title)
-            for (index, question) in answered.enumerated() {
-                drawScaleRow(question, value: them.lifestyle[question].own ?? 0, on: page)
-                if index < answered.count - 1 { page.hairline() }
-            }
-            page.space(22)
-        }
-    }
-
-    private func drawScaleRow(_ question: CompatibilityScaleQuestion, value: Int, on page: PDFPage) {
-        let scaleWidth: CGFloat = 250
-        let dotsWidth: CGFloat = 56
-        let gap: CGFloat = 10
-        let textWidth = page.width - scaleWidth - 16
-        let title = PDFText(question.title, font: PDFStyle.font(10.5, .medium), color: PDFStyle.ink)
-        let low = PDFText(question.lowLabel, font: PDFStyle.font(8), color: PDFStyle.secondary)
-        let high = PDFText(question.highLabel, font: PDFStyle.font(8), color: PDFStyle.secondary, alignment: .right)
-        let labelWidth = (scaleWidth - dotsWidth - gap * 2) / 2
-        let labelHeight = max(low.height(width: labelWidth), high.height(width: labelWidth))
-        let height = max(title.height(width: textWidth), labelHeight, 12) + 16
-        page.ensure(height)
-
-        title.draw(at: CGPoint(x: page.left, y: page.y + 8), width: textWidth)
-
-        let scaleX = page.left + page.width - scaleWidth
-        let midY = page.y + height / 2
-        low.draw(at: CGPoint(x: scaleX, y: midY - labelHeight / 2), width: labelWidth)
-        high.draw(at: CGPoint(x: scaleX + scaleWidth - labelWidth, y: midY - labelHeight / 2), width: labelWidth)
-        let range = Array(CompatibilityScaleAnswer.range)
-        let dotsX = scaleX + labelWidth + gap
-        let step = dotsWidth / CGFloat(max(range.count - 1, 1))
-        for (index, position) in range.enumerated() {
-            let selected = position == value
-            let size: CGFloat = selected ? 9 : 5
-            let center = CGPoint(x: dotsX + CGFloat(index) * step, y: midY)
-            (selected ? PDFStyle.accent : PDFStyle.dot).setFill()
-            UIBezierPath(ovalIn: CGRect(x: center.x - size / 2, y: center.y - size / 2, width: size, height: size)).fill()
-        }
-        page.y += height
     }
 
     private func drawConversation(on page: PDFPage) {

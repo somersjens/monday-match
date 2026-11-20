@@ -6,7 +6,8 @@ import Foundation
 /// evidence: their own measurement that the phones are held together, or
 /// their owner's tap.
 enum ProfileExchangeMessage: Codable, Equatable {
-    static let version = 1
+    /// 2: the profile travels sealed (`ProfileCode.sealed`).
+    static let version = 2
     /// Far above any real profile; anything larger is not read at all.
     static let maximumBytes = 256 * 1024
 
@@ -24,7 +25,9 @@ enum ProfileExchangeMessage: Codable, Equatable {
     /// Sent just before `profile`, only when its owner chose to share it.
     /// Older versions can't read it and simply skip it.
     case photo(Data)
-    case profile(ProfileCreationState)
+    /// The sender's profile, sealed: only this app can read it, and it
+    /// shows the outcome, never the answers.
+    case profile(Data)
     case decline
 
     /// A photo larger than this is not sent or kept; it leaves room for
@@ -96,7 +99,7 @@ struct ProfileExchangeNegotiation {
     enum Effect: Equatable {
         case send(ProfileExchangeMessage, to: String)
         /// Both profiles have crossed, with their photo when they shared one.
-        case completed(peer: String, profile: ProfileCreationState, photo: Data? = nil)
+        case completed(peer: String, profile: ProfileCode.Received, photo: Data? = nil)
         /// The other person said no, or took the offer back.
         case declined(peer: String)
     }
@@ -116,6 +119,8 @@ struct ProfileExchangeNegotiation {
 
     /// The copy of the user's profile that is sent, and matched with.
     let profile: ProfileCreationState
+    /// `profile`, sealed once for everyone this session meets.
+    private let sealedProfile: Data?
     /// Sent with the profile when the user chose to share it.
     let photo: Data?
     let today: CalendarDate
@@ -123,15 +128,18 @@ struct ProfileExchangeNegotiation {
     /// Once ready for one person, everyone else waits.
     private(set) var engagedPeer: String?
 
-    init(profile: ProfileCreationState, today: CalendarDate, photo: Data? = nil) {
+    init(profile: ProfileCreationState, today: CalendarDate, photo: Data? = nil,
+         holder: ProfileHolder = .current, now: Date = Date()) {
         self.profile = profile
         self.today = today
+        sealedProfile = ProfileCode.sealed(profile, holder: holder, today: today, now: now)
         self.photo = photo.flatMap { $0.count <= ProfileExchangeMessage.maximumPhotoBytes ? $0 : nil }
     }
 
     /// The photo first, so it has arrived by the time the profile completes the exchange.
     private func profileMessages(to peer: String) -> [Effect] {
-        (photo.map { [Effect.send(.photo($0), to: peer)] } ?? []) + [.send(.profile(profile), to: peer)]
+        guard let sealedProfile else { return [] }
+        return (photo.map { [Effect.send(.photo($0), to: peer)] } ?? []) + [.send(.profile(sealedProfile), to: peer)]
     }
 
     /// A connection opened: greet, with this phone's token for measuring
@@ -201,7 +209,8 @@ struct ProfileExchangeNegotiation {
             // Only someone this side is ready for may deliver a profile, and
             // only in exchange for this side's own.
             guard state.localReady, state.remoteReady, state.sentProfile, engagedPeer == peer else { return [] }
-            guard let received = theirs.receivedCopy(today: today) else {
+            // Radio exchanges don't expire: both sides are there now.
+            guard let received = ProfileCode.opened(theirs, today: today, expires: false) else {
                 state.localReady = false
                 state.remoteReady = false
                 engagedPeer = nil

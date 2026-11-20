@@ -18,7 +18,7 @@ what is left.
 | Lifetime access per account | The app sends Apple's signed transactions after sign-in (and after a purchase or refund, never otherwise); the server checks Apple's signature itself and keeps one record per purchase and account. Android purchases go into the same table (`store = 'play'`). | `202611190011_store_entitlements.sql`, `supabase/functions/store-entitlement/`, `Core/Purchases/StoreEntitlementSync.swift`, [lifetime access](lifetime-access.md) |
 | Photo scans proven genuine | Where App Attest is available, the scan report is signed with a Secure Enclave key Apple certified for this app; the server records `attested = true`. Not enforced yet; Android will use Play Integrity. | `202611190012_app_attest.sql`, `supabase/functions/app-attest/`, `Core/FaceVerification/AppAttest.swift`, [photo verification](face-verification.md) |
 | Exchange iPhone ↔ Android | Radio-independent channel: handshake, encryption and framing for Bluetooth LE. | `Features/Match/Exchange/ExchangeWire.swift`, [cross-platform exchange](cross-platform-exchange.md) |
-| Interop vectors | Bytes both apps must agree on: exchange channel, profile codes, match scores, chat envelope and safety code. | `interop/vectors.json`, `Stop SwipingTests/InteropVectorsTests.swift` |
+| Interop vectors | Bytes both apps must agree on: exchange channel, sealed profile codes, match scores per category, chat envelope and safety code. | `interop/vectors.json`, `Stop SwipingTests/InteropVectorsTests.swift` |
 | Sounds | The palette in Android resource form; the chime as WAV for a notification channel. | `tools/sounds/export_android.sh` → `platform-assets/android/res/raw/` |
 
 ## Deploying the server half

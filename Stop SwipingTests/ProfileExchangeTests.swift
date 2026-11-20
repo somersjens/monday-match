@@ -52,7 +52,7 @@ final class ProfileExchangeTests: XCTestCase {
             them.lifestyle[.drugs] = SubstanceAnswer(ownLevel: level, partnerMaximumLevel: 5)
             let report = MatchReport(you: you, them: them, on: today)
             XCTAssertEqual(report.yourScore, baseline, "level \(level)")
-            XCTAssertFalse(report.rows(.yours).contains { $0.step.substance != nil })
+            XCTAssertFalse(MatchReport.rows(seeker: you, candidate: them).contains { $0.step.substance != nil })
             // Your limit still decides whether a match is possible at all.
             XCTAssertEqual(report.theirIssues.isEmpty, level <= 3, "level \(level)")
             XCTAssertEqual(report.isMatch, level <= 3, "level \(level)")
@@ -101,12 +101,19 @@ final class ProfileExchangeTests: XCTestCase {
         XCTAssertEqual(shared.partnerAgeRange, state.partnerAgeRange)
         XCTAssertEqual(shared.partnerHeightRange, state.partnerHeightRange)
 
-        let wire = try XCTUnwrap(ProfileExchangeMessage.profile(shared).encoded())
+        let sealed = try XCTUnwrap(ProfileCode.sealed(shared, today: today))
+        let wire = try XCTUnwrap(ProfileExchangeMessage.profile(sealed).encoded())
         let text = try XCTUnwrap(String(data: wire, encoding: .utf8))
-        XCTAssertFalse(text.contains("51.05432"))
-        XCTAssertFalse(text.contains("\"month\":4"), "The real birthday stays on this phone.")
+        // Sealed: nothing in it can be read along the way.
+        for visible in ["51.05", "Gent", shared.displayName, "lifestyle", "partner"] {
+            XCTAssertFalse(text.contains(visible), visible)
+        }
         XCTAssertLessThan(wire.count, ProfileExchangeMessage.maximumBytes / 4)
-        XCTAssertEqual(ProfileExchangeMessage.decoded(wire), .profile(shared))
+        XCTAssertEqual(ProfileExchangeMessage.decoded(wire), .profile(sealed))
+        let opened = try XCTUnwrap(ProfileCode.opened(sealed, today: today, expires: false))
+        XCTAssertEqual(opened.profile.displayName, shared.displayName)
+        XCTAssertEqual(opened.profile.dateOfBirth?.month, 1, "The real birthday stays on this phone.")
+        XCTAssertEqual(opened.profile.location?.latitude, shared.location?.latitude)
     }
 
     func testReceivedProfilesMustBeCompleteNamedAdults() {
@@ -147,12 +154,17 @@ final class ProfileExchangeTests: XCTestCase {
 
     // MARK: - Negotiation
 
+    private static let holderA = ProfileHolder(bytes: Data([1, 1, 1, 1, 1, 1, 1, 1]))
+    private static let holderB = ProfileHolder(bytes: Data([2, 2, 2, 2, 2, 2, 2, 2]))
+
     /// Two phones wired back to back, delivering every message in order.
     @MainActor private struct Pair {
         var a: ProfileExchangeNegotiation
         var b: ProfileExchangeNegotiation
         var completedA: ProfileCreationState?
         var completedB: ProfileCreationState?
+        var holderA: ProfileHolder?
+        var holderB: ProfileHolder?
         var photoA: Data?
         var photoB: Data?
         var declinedA = 0
@@ -171,8 +183,12 @@ final class ProfileExchangeTests: XCTestCase {
                     } else {
                         run(a.received(decoded, from: "b"), fromA: true)
                     }
-                case .completed(_, let profile, let photo):
-                    if fromA { completedA = profile; photoA = photo } else { completedB = profile; photoB = photo }
+                case .completed(_, let received, let photo):
+                    if fromA {
+                        completedA = received.profile; holderA = received.holder; photoA = photo
+                    } else {
+                        completedB = received.profile; holderB = received.holder; photoB = photo
+                    }
                 case .declined:
                     if fromA { declinedA += 1 } else { declinedB += 1 }
                 }
@@ -183,8 +199,10 @@ final class ProfileExchangeTests: XCTestCase {
     private func connectedPair(tokenA: Data? = nil, tokenB: Data? = nil, photoA: Data? = nil) -> Pair {
         let jens = profile(name: "Jens")
         let emma = profile(name: "Emma", gender: .woman, partnerGenders: [.man])
-        var pair = Pair(a: ProfileExchangeNegotiation(profile: jens.sharedCopy(today: today), today: today, photo: photoA),
-                        b: ProfileExchangeNegotiation(profile: emma.sharedCopy(today: today), today: today))
+        var pair = Pair(a: ProfileExchangeNegotiation(profile: jens.sharedCopy(today: today), today: today, photo: photoA,
+                                                      holder: Self.holderA),
+                        b: ProfileExchangeNegotiation(profile: emma.sharedCopy(today: today), today: today,
+                                                      holder: Self.holderB))
         // Both connections are open before either greeting arrives.
         let greetingA = pair.a.connected("b", proximityToken: tokenA)
         let greetingB = pair.b.connected("a", proximityToken: tokenB)
@@ -203,7 +221,7 @@ final class ProfileExchangeTests: XCTestCase {
         XCTAssertNil(pair.completedA)
     }
 
-    func testProfilesCrossOnlyOnceBothSidesAreReady() {
+    func testProfilesCrossOnlyOnceBothSidesAreReady() throws {
         var pair = connectedPair()
         pair.run(pair.a.confirm("b"), fromA: true)
         XCTAssertEqual(pair.profilesSent, 0, "One side being ready moves nothing.")
@@ -214,8 +232,17 @@ final class ProfileExchangeTests: XCTestCase {
         XCTAssertEqual(pair.profilesSent, 2)
         XCTAssertEqual(pair.completedA?.displayName, "Emma")
         XCTAssertEqual(pair.completedB?.displayName, "Jens")
-        XCTAssertEqual(pair.completedA, pair.b.profile)
-        XCTAssertEqual(pair.completedB, pair.a.profile)
+        // Each side gets the other's profile as sealing and opening leave it,
+        // and knows who sent it.
+        // The time it was sealed stands in for when the profile was finished.
+        let completedA = try XCTUnwrap(pair.completedA?.completedAt), completedB = try XCTUnwrap(pair.completedB?.completedAt)
+        XCTAssertLessThan(abs(completedA.timeIntervalSinceNow), 120)
+        XCTAssertEqual(pair.completedA, ProfileCode.decoded(try XCTUnwrap(ProfileCode.encoded(pair.b.profile, today: today)),
+                                                            today: today, completedAt: completedA))
+        XCTAssertEqual(pair.completedB, ProfileCode.decoded(try XCTUnwrap(ProfileCode.encoded(pair.a.profile, today: today)),
+                                                            today: today, completedAt: completedB))
+        XCTAssertEqual(pair.holderA, Self.holderB)
+        XCTAssertEqual(pair.holderB, Self.holderA)
     }
 
     func testASharedPhotoArrivesWithTheProfileOnlyOneWay() {
@@ -240,9 +267,9 @@ final class ProfileExchangeTests: XCTestCase {
             .flatMap(ProfileExchangeMessage.decoded), "The largest photo still fits in one message")
     }
 
-    func testAnUninvitedProfileIsIgnoredAndNothingIsSentBack() {
+    func testAnUninvitedProfileIsIgnoredAndNothingIsSentBack() throws {
         var pair = connectedPair()
-        let theirs = pair.b.profile
+        let theirs = try XCTUnwrap(ProfileCode.sealed(pair.b.profile, today: today))
         XCTAssertTrue(pair.a.received(.profile(theirs), from: "b").isEmpty)
         // Even after they claim to be ready, this side hasn't agreed.
         XCTAssertTrue(pair.a.received(.ready, from: "b").isEmpty)
@@ -292,16 +319,30 @@ final class ProfileExchangeTests: XCTestCase {
         XCTAssertTrue(a.confirm("c").isEmpty)
     }
 
-    func testAnInvalidProfileEndsTheExchangeWithoutAMatch() {
+    func testAnInvalidProfileEndsTheExchangeWithoutAMatch() throws {
         var pair = connectedPair()
         var a = pair.a
         _ = a.confirm("b")
         _ = a.received(.ready, from: "b")
         var minor = pair.b.profile
         minor.dateOfBirth = CalendarDate(year: 2012, month: 1, day: 1)
-        XCTAssertEqual(a.received(.profile(minor), from: "b"), [.declined(peer: "b")])
+        XCTAssertEqual(a.received(.profile(try XCTUnwrap(ProfileCode.sealed(minor, today: today))), from: "b"),
+                       [.declined(peer: "b")])
         XCTAssertNil(a.engagedPeer)
         pair.a = a
+    }
+
+    func testAnAlteredOrUnsealedProfileEndsTheExchangeWithoutAMatch() throws {
+        let unsealed = try XCTUnwrap(ProfileCode.encoded(profile(name: "Emma", gender: .woman, partnerGenders: [.man]), today: today))
+        let tampering: [(inout Data) -> Void] = [{ $0[$0.count - 20] ^= 1 }, { $0 = unsealed }]
+        for tamper in tampering {
+            var a = connectedPair().a
+            _ = a.confirm("b")
+            _ = a.received(.ready, from: "b")
+            var sealed = try XCTUnwrap(ProfileCode.sealed(profile(name: "Emma", gender: .woman, partnerGenders: [.man]), today: today))
+            tamper(&sealed)
+            XCTAssertEqual(a.received(.profile(sealed), from: "b"), [.declined(peer: "b")])
+        }
     }
 
     // MARK: - Held together

@@ -26,9 +26,16 @@ final class ProfileCodeTests: XCTestCase {
         XCTAssertEqual(link.path(), "/stop-swiping/code", "The page that leads to the App Store.")
         XCTAssertFalse(link.absoluteString.contains("Emma"), "The code isn't readable as text.")
         let packed = try XCTUnwrap(link.fragment(), "Answers stay behind the #, which no website receives.")
+        // Sealed: decoding the base64 shows nothing of the profile either.
+        let bytes = try XCTUnwrap(Data(base64Encoded: packed.replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/").padding(toLength: (packed.count + 3) / 4 * 4, withPad: "=", startingAt: 0)))
+        XCTAssertNil(String(data: bytes, encoding: .utf8).flatMap { $0.contains("Emma") ? $0 : nil })
+        XCTAssertNil(bytes.range(of: Data("Emma".utf8)))
+        XCTAssertNil(bytes.range(of: Data("Gent".utf8)))
+        XCTAssertNil(ProfileCode.decoded(bytes, today: today), "The bits inside can't be read without the seal.")
         XCTAssertNil(link.query())
 
-        let scanned = try XCTUnwrap(ProfileCode.profile(from: link, today: today))
+        let scanned = try XCTUnwrap(ProfileCode.received(from: link, today: today)?.profile)
         let shared = try XCTUnwrap(emma.sharedCopy(today: today).receivedCopy(today: today))
         XCTAssertEqual(scanned.displayName, "Emma")
         XCTAssertEqual(scanned.age(on: today), 30)
@@ -45,7 +52,7 @@ final class ProfileCodeTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(scanned.location?.latitude), 51.05, accuracy: 1e-9)
         XCTAssertEqual(try XCTUnwrap(scanned.location?.longitude), 3.72, accuracy: 1e-9)
         XCTAssertEqual(scanned.location?.placeName, "Gent")
-        XCTAssertEqual(scanned.completedAt, shared.completedAt)
+        XCTAssertNotNil(scanned.completedAt, "The time it was sealed stands in for when it was finished.")
         XCTAssertEqual(scanned.autoMatching, AutoMatchingSettings(), "Auto matching never leaves the phone.")
         XCTAssertEqual(scanned.lifestyle.hasChildren, false)
         XCTAssertEqual(scanned.lifestyle.openToPartnerWithChildren, true)
@@ -63,10 +70,10 @@ final class ProfileCodeTests: XCTestCase {
         // Scanning gives exactly the match an exchange between two phones gives.
         let jens = profile(name: "Jens").sharedCopy(today: today)
         XCTAssertEqual(MatchReport(you: jens, them: scanned, on: today), MatchReport(you: jens, them: shared, on: today))
-        XCTAssertEqual(ProfileCode.profile(fromScanned: " \(link.absoluteString)\n", today: today), scanned)
-        // The page hands the same answers on through the app's own scheme.
-        XCTAssertEqual(ProfileCode.profile(fromScanned: "stopswiping://code/\(packed)", today: today), scanned)
-        XCTAssertEqual(ProfileCode.profile(fromScanned: "https://www.hakketjak.com/stop-swiping/code/#\(packed)", today: today), scanned)
+        XCTAssertEqual(ProfileCode.received(fromScanned: " \(link.absoluteString)\n", today: today)?.profile, scanned)
+        // The page hands the same sealed bytes on through the app's own scheme.
+        XCTAssertEqual(ProfileCode.received(fromScanned: "stopswiping://code/\(packed)", today: today)?.profile, scanned)
+        XCTAssertEqual(ProfileCode.received(fromScanned: "https://www.hakketjak.com/stop-swiping/code/#\(packed)", today: today)?.profile, scanned)
     }
 
     func testUnansweredAndUnusualAnswersSurvive() throws {
@@ -103,8 +110,13 @@ final class ProfileCodeTests: XCTestCase {
         state.location?.placeName = "Sint-Lambrechts-Woluwe"
         let data = try XCTUnwrap(ProfileCode.encoded(state, today: today))
         XCTAssertLessThan(data.count, 190)
+        let sealed = try XCTUnwrap(ProfileCode.sealed(state, today: today))
+        XCTAssertEqual(sealed.count, data.count + ProfileCode.timestampBytes + ProfileHolder.byteCount
+                       + ProfileSeal.headerBytes + ProfileSeal.nonceBytes + ProfileSeal.tagBytes)
         let link = try XCTUnwrap(ProfileCode.url(for: state, today: today))
-        let matrix = try XCTUnwrap(WelcomeLightCode.Matrix(message: link.absoluteString))
+        let matrix = try XCTUnwrap(WelcomeLightCode.Matrix(profileLink: link.absoluteString))
+        XCTAssertLessThanOrEqual(matrix.size, WelcomeLightCode.Matrix.largestScannableSize,
+                                 "Even the longest profile stays as coarse as a usual one.")
         // At least three lines of light per module.
         XCTAssertLessThanOrEqual(matrix.size, WelcomeLightCode.lineCount / 3)
     }
@@ -113,31 +125,31 @@ final class ProfileCodeTests: XCTestCase {
         let emma = profile(name: "Emma", gender: .woman, partnerGenders: [.man])
         let link = try XCTUnwrap(ProfileCode.url(for: emma, today: today))
         XCTAssertTrue(ProfileCode.isCode(link))
-        XCTAssertNotNil(ProfileCode.profile(from: link, today: today))
+        XCTAssertNotNil(ProfileCode.received(from: link, today: today))
 
         let callback = try XCTUnwrap(URL(string: "stopswiping://auth/callback?code=abc"))
         XCTAssertFalse(ProfileCode.isCode(callback), "Sign-in links are left alone.")
-        XCTAssertNil(ProfileCode.profile(from: callback, today: today))
-        XCTAssertNil(ProfileCode.profile(fromScanned: "https://example.com/code/abc", today: today))
-        XCTAssertNil(ProfileCode.profile(fromScanned: "Stop Swiping", today: today))
-        XCTAssertNil(ProfileCode.profile(fromScanned: "stopswiping://code/", today: today))
-        XCTAssertNil(ProfileCode.profile(fromScanned: "stopswiping://code/!!!", today: today))
+        XCTAssertNil(ProfileCode.received(from: callback, today: today))
+        XCTAssertNil(ProfileCode.received(fromScanned: "https://example.com/code/abc", today: today))
+        XCTAssertNil(ProfileCode.received(fromScanned: "Stop Swiping", today: today))
+        XCTAssertNil(ProfileCode.received(fromScanned: "stopswiping://code/", today: today))
+        XCTAssertNil(ProfileCode.received(fromScanned: "stopswiping://code/!!!", today: today))
         let packed = try XCTUnwrap(link.fragment())
         for other in ["https://www.hakketjak.com/stop-swiping#\(packed)", "https://www.hakketjak.com/dino-time/code#\(packed)",
                       "https://hakketjak.example.com/stop-swiping/code#\(packed)", "http://www.hakketjak.com/stop-swiping/code#\(packed)"] {
             let url = try XCTUnwrap(URL(string: other))
             XCTAssertFalse(ProfileCode.isCode(url), other)
-            XCTAssertNil(ProfileCode.profile(from: url, today: today), other)
+            XCTAssertNil(ProfileCode.received(from: url, today: today), other)
         }
         let empty = try XCTUnwrap(URL(string: "https://www.hakketjak.com/stop-swiping/code"))
         XCTAssertTrue(ProfileCode.isCode(empty), "A code link without answers is still recognised, and refused.")
-        XCTAssertNil(ProfileCode.profile(from: empty, today: today))
+        XCTAssertNil(ProfileCode.received(from: empty, today: today))
 
         let data = try XCTUnwrap(ProfileCode.encoded(emma, today: today))
         XCTAssertNil(ProfileCode.decoded(data.prefix(data.count / 2), today: today), "A cut-off code is refused.")
         XCTAssertNil(ProfileCode.decoded(Data(), today: today))
         var newer = data
-        newer[0] = UInt8(ProfileCode.formatVersion + 1)
+        newer[0] = UInt8(ProfileCode.packingVersion + 1)
         XCTAssertNil(ProfileCode.decoded(newer, today: today), "A newer format is never guessed at.")
 
         var minor = emma
@@ -154,9 +166,56 @@ final class ProfileCodeTests: XCTestCase {
         var generator = SystemRandomNumberGenerator()
         for length in [1, 7, 40, 160, 400] {
             var bytes = (0..<length).map { _ in UInt8.random(in: 0...255, using: &generator) }
-            bytes[0] = UInt8(ProfileCode.formatVersion)
+            bytes[0] = UInt8(ProfileCode.packingVersion)
             _ = ProfileCode.decoded(Data(bytes), today: today)
+            bytes[0] = UInt8(ProfileCode.formatVersion)
+            XCTAssertNil(ProfileCode.opened(Data(bytes), today: today, expires: false))
         }
+    }
+
+    func testSealedCodesRefuseAnyChangeAndAnUnsealedProfile() throws {
+        let emma = profile(name: "Emma", gender: .woman, partnerGenders: [.man])
+        let sealed = try XCTUnwrap(ProfileCode.sealed(emma, today: today, now: now))
+        XCTAssertNotNil(ProfileCode.opened(sealed, today: today, now: now, expires: true))
+        for index in [0, 1, 2, 20, sealed.count - 1] {
+            var changed = sealed
+            changed[index] ^= 0x01
+            XCTAssertNil(ProfileCode.opened(changed, today: today, now: now, expires: false), "byte \(index)")
+        }
+        XCTAssertNil(ProfileCode.opened(sealed.prefix(sealed.count - 1), today: today, now: now, expires: false))
+        var unknownKey = sealed
+        unknownKey[1] = ProfileSeal.readableKeyNumbers.upperBound + 1
+        XCTAssertNil(ProfileCode.opened(unknownKey, today: today, now: now, expires: false), "A key this build doesn't have")
+        let unsealed = try XCTUnwrap(ProfileCode.encoded(emma, today: today))
+        XCTAssertNil(ProfileCode.opened(unsealed, today: today, now: now, expires: false), "A bare profile is never read")
+    }
+
+    func testScannedCodesLastADayAndRadioAndCardsNever() throws {
+        let emma = profile(name: "Emma", gender: .woman, partnerGenders: [.man])
+        let link = try XCTUnwrap(ProfileCode.url(for: emma, today: today, now: now))
+        let sealed = try XCTUnwrap(ProfileCode.sealed(emma, today: today, now: now))
+        let dayLater = now.addingTimeInterval(ProfileCode.codeLifetime - 60)
+        let tooLate = now.addingTimeInterval(ProfileCode.codeLifetime + 60)
+        XCTAssertNotNil(ProfileCode.received(from: link, today: today, now: dayLater), "A whole event long")
+        XCTAssertNil(ProfileCode.received(from: link, today: today, now: tooLate), "A screenshot stops working")
+        XCTAssertNil(ProfileCode.received(from: link, today: today,
+                                          now: now.addingTimeInterval(-ProfileCode.clockTolerance - 60)),
+                     "A code from far in the future is refused")
+        XCTAssertNotNil(ProfileCode.opened(sealed, today: today, now: tooLate.addingTimeInterval(86_400 * 30), expires: false),
+                        "A match card or radio exchange never expires")
+        XCTAssertEqual(ProfileCode.profile(fromCard: sealed.base64EncodedString(), today: today)?.displayName, "Emma")
+    }
+
+    func testEveryCodeFromOnePhoneNamesTheSameHolder() throws {
+        let holder = ProfileHolder(bytes: Data([9, 8, 7, 6, 5, 4, 3, 2]))
+        let short = profile(name: "Al", gender: .woman, partnerGenders: [.man])
+        let long = profile(name: "Alexandra", gender: .woman, partnerGenders: [.man])
+        let first = try XCTUnwrap(ProfileCode.sealed(short, holder: holder, today: today, now: now))
+        let second = try XCTUnwrap(ProfileCode.sealed(long, holder: holder, today: today, now: now))
+        XCTAssertNotEqual(first, try XCTUnwrap(ProfileCode.sealed(short, holder: holder, today: today, now: now)),
+                          "A fresh nonce every time")
+        XCTAssertEqual(ProfileCode.opened(first, today: today, expires: false)?.holder, holder)
+        XCTAssertEqual(ProfileCode.opened(second, today: today, expires: false)?.holder, holder)
     }
 
     func testBitsRoundTripAtEveryWidth() {
@@ -185,9 +244,21 @@ final class ProfileCodeTests: XCTestCase {
 
     func testRenderedCodeOfLightScansBackToTheProfile() throws {
         let resources = try XCTUnwrap(WelcomeLightMetalRenderer.resources)
-        let emma = detailed(profile(name: "Emma", gender: .woman, partnerGenders: [.man]))
+        // A usual profile, and the largest code a profile can make.
+        var longest = detailed(profile(name: String(repeating: "W", count: ProfileNameRules.maximumLength),
+                                       gender: .woman, partnerGenders: [.man]))
+        longest.languages = ["nl", "en", "fr", "de", "es", "fil"]
+        longest.location?.placeName = "Sint-Lambrechts-Woluwe"
+        for (name, profile) in [("Emma", detailed(profile(name: "Emma", gender: .woman, partnerGenders: [.man]))),
+                                (longest.displayName, longest)] {
+            try assertCodeScans(profile, named: name, resources: resources)
+        }
+    }
+
+    private func assertCodeScans(_ emma: ProfileCreationState, named name: String,
+                                 resources: WelcomeLightMetalResources) throws {
         let link = try XCTUnwrap(ProfileCode.url(for: emma, today: today))
-        let matrix = try XCTUnwrap(WelcomeLightCode.Matrix(message: link.absoluteString))
+        let matrix = try XCTUnwrap(WelcomeLightCode.Matrix(profileLink: link.absoluteString))
 
         // An iPhone screen at 3x, at several moments of the code's slow sway.
         let scale = 3, width = 393 * scale, height = 825 * scale
@@ -221,7 +292,7 @@ final class ProfileCodeTests: XCTestCase {
                 bitmapInfo: CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.noneSkipFirst.rawValue),
                 provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent))
             let attachment = XCTAttachment(image: UIImage(cgImage: image))
-            attachment.name = "Profile code at \(elapsed) s"
+            attachment.name = "Profile code of \(name.prefix(8)) at \(elapsed) s"
             attachment.lifetime = .keepAlways
             add(attachment)
 
@@ -230,8 +301,8 @@ final class ProfileCodeTests: XCTestCase {
                                                     options: [CIDetectorAccuracy: CIDetectorAccuracyHigh]))
             let payloads = detector.features(in: CIImage(cgImage: image))
                 .compactMap { ($0 as? CIQRCodeFeature)?.messageString }
-            XCTAssertEqual(payloads, [link.absoluteString], "The code must scan at \(elapsed) s.")
-            XCTAssertEqual(payloads.first.flatMap { ProfileCode.profile(fromScanned: $0, today: today) }?.displayName, "Emma")
+            XCTAssertEqual(payloads, [link.absoluteString], "The code must scan at \(elapsed) s (\(matrix.size) modules).")
+            XCTAssertEqual(payloads.first.flatMap { ProfileCode.received(fromScanned: $0, today: today) }?.profile.displayName, name)
         }
     }
 
@@ -240,14 +311,21 @@ final class ProfileCodeTests: XCTestCase {
         let model = ProfileCodeScannerModel()
         model.read("https://example.com", today: today)
         XCTAssertTrue(model.showsUnknownCode)
+        XCTAssertFalse(model.rejectedIsProfileCode)
+        XCTAssertNil(model.profile)
+        // A screenshot of a code from two days ago says it expired.
+        let old = try XCTUnwrap(ProfileCode.url(for: profile(name: "Emma", gender: .woman, partnerGenders: [.man]),
+                                                today: today, now: Date().addingTimeInterval(-2 * 86_400)))
+        model.read(old.absoluteString, today: today)
+        XCTAssertTrue(model.rejectedIsProfileCode)
         XCTAssertNil(model.profile)
         model.read(link.absoluteString, today: today)
-        XCTAssertEqual(model.profile?.displayName, "Emma")
+        XCTAssertEqual(model.profile?.profile.displayName, "Emma")
         XCTAssertFalse(model.showsUnknownCode)
 
         let other = try XCTUnwrap(ProfileCode.url(for: profile(name: "Noor", gender: .woman, partnerGenders: [.man]), today: today))
         model.read(other.absoluteString, today: today)
-        XCTAssertEqual(model.profile?.displayName, "Emma", "One scan gives one match.")
+        XCTAssertEqual(model.profile?.profile.displayName, "Emma", "One scan gives one match.")
     }
 
     // MARK: - Opened from outside
@@ -262,10 +340,10 @@ final class ProfileCodeTests: XCTestCase {
 
         XCTAssertTrue(inbox.open(link, isProfileReady: false, today: today))
         XCTAssertEqual(inbox.notice, .needsProfile(name: "Emma"))
-        XCTAssertEqual(inbox.pending?.displayName, "Emma", "The match follows once the profile is finished.")
+        XCTAssertEqual(inbox.pending?.profile.displayName, "Emma", "The match follows once the profile is finished.")
         inbox.dismissNotice()
         XCTAssertNil(inbox.notice)
-        XCTAssertEqual(inbox.take()?.displayName, "Emma")
+        XCTAssertEqual(inbox.take()?.profile.displayName, "Emma")
         XCTAssertNil(inbox.pending)
         XCTAssertNil(inbox.take())
 

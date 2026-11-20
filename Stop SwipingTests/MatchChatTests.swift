@@ -59,7 +59,7 @@ final class MatchChatTests: XCTestCase {
 
     func testLiveMatchDecodesTheServerRowAndTheSharedCard() throws {
         let profile = Self.profile(name: "Mila")
-        let card = try XCTUnwrap(ProfileCode.encoded(profile.sharedCopy(today: .today()))).base64EncodedString()
+        let card = try XCTUnwrap(ProfileCode.card(for: profile.sharedCopy(today: .today())))
         let id = UUID(), partner = UUID()
         let json = """
         {"id":"\(id)","partner_id":"\(partner)","partner_name":"Mila","own_score":88,"partner_score":89,

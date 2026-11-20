@@ -36,8 +36,8 @@ final class MatchReportExportTests: XCTestCase {
         XCTAssertTrue(text.contains("Hoi! Hoe gaat het?"))
         XCTAssertTrue(text.contains("EINDE"), "A message longer than a page must be printed in full.")
         XCTAssertTrue(text.contains("Pagina \(document.pageCount) van \(document.pageCount)"))
-        for question in CompatibilityScaleQuestion.all where match.them.lifestyle[question].own != nil {
-            XCTAssertTrue(text.contains(question.title), "Missing answer: \(question.title)")
+        for question in CompatibilityScaleQuestion.all {
+            XCTAssertFalse(text.contains(question.subtitle), "Single answers are never exported: \(question.title)")
         }
 
         if let folder = ProcessInfo.processInfo.environment["REPORT_EXPORT_DIR"] {

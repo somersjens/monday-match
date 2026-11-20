@@ -99,8 +99,8 @@ struct CloudChatMatch: Codable, Identifiable, Equatable {
 
     /// The partner's profile as they shared it for this match.
     var partnerProfile: ProfileCreationState? {
-        guard let partnerCard, let data = Data(base64Encoded: partnerCard) else { return nil }
-        return ProfileCode.decoded(data)
+        guard let partnerCard else { return nil }
+        return ProfileCode.profile(fromCard: partnerCard)
     }
 
     var average: Int { Int((Double(ownScore + partnerScore) / 2).rounded()) }

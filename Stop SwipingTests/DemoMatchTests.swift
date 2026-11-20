@@ -36,10 +36,11 @@ final class DemoMatchTests: XCTestCase {
         XCTAssertEqual(report.theirScore, Int(theirs.rounded()))
         let average = Double(report.yourScore + report.theirScore) / 2
         XCTAssertEqual(report.average, Int(average.rounded()))
-        XCTAssertEqual(report.rows(.yours).count, CompatibilityScaleQuestion.all.count)
-        let alone = report.rows(.yours).first { $0.step == .aloneTime }
+        let yourRows = MatchReport.rows(seeker: you, candidate: them)
+        XCTAssertEqual(yourRows.count, CompatibilityScaleQuestion.all.count)
+        let alone = yourRows.first { $0.step == .aloneTime }
         XCTAssertEqual(alone, MatchReport.Row(step: .aloneTime, value: 4, wanted: 2, importance: 5))
-        let theirAlone = report.rows(.theirs).first { $0.step == .aloneTime }
+        let theirAlone = MatchReport.rows(seeker: them, candidate: you).first { $0.step == .aloneTime }
         XCTAssertEqual(theirAlone, MatchReport.Row(step: .aloneTime, value: 3, wanted: 1, importance: 5))
     }
 

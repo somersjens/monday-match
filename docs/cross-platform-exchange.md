@@ -45,10 +45,11 @@ Everything in this section is implemented in `ExchangeWire` and pinned in
    the negotiated MTU (at least 20 bytes). Messages above 256 KiB + tag are
    refused before anything is buffered.
 7. **Content.** The same `ProfileExchangeMessage` sequence as today (`hello`,
-   `ready`, `photo`, `profile`, `decline`) and the same rules
+   `ready`, `photo`, `profile`, `decline`, message version 2) and the same rules
    (`ProfileExchangeNegotiation`): a profile only travels after both sides are
-   ready. With Skip the Android app runs this exact Swift, so its JSON is
-   identical. A photo (≤ 180 kB) takes a few seconds over BLE; the screen
+   ready, and only sealed (`ProfileCode.sealed`, the same bytes as a QR code;
+   see [match privacy](match-privacy.md)). With Skip the Android app runs this
+   exact Swift, so its JSON is identical. A photo (≤ 180 kB) takes a few seconds over BLE; the screen
    should say so.
 
 ## What changes on the iPhone
