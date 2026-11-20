@@ -9,6 +9,9 @@ import SwiftUI
 struct AdminObjectionsView: View {
     let load: () async throws -> [AdminObjection]
     let decide: (_ objectionID: UUID, _ approve: Bool) async throws -> Void
+    /// This administrator's own name, for a demo report about themself: the
+    /// server holds no profile while automatic matching is off.
+    var ownName: String = ""
 
     @Environment(\.dismiss) private var dismiss
     @State private var objections: [AdminObjection] = []
@@ -32,7 +35,7 @@ struct AdminObjectionsView: View {
                     emptyState(L10n("No open objections."), symbol: "checkmark.seal")
                 } else {
                     ForEach(objections) { objection in
-                        ObjectionCard(objection: objection, isDeciding: deciding == objection.id) { approve in
+                        ObjectionCard(objection: objection, ownName: ownName, isDeciding: deciding == objection.id) { approve in
                             pending = (objection, approve)
                         }
                         .transition(.opacity.combined(with: .scale(scale: 0.97)))
@@ -126,6 +129,7 @@ struct AdminObjectionsView: View {
 /// One objection: the report, then the objection, then the two decisions.
 private struct ObjectionCard: View {
     let objection: AdminObjection
+    var ownName: String = ""
     let isDeciding: Bool
     let onDecide: (_ approve: Bool) -> Void
 
@@ -133,10 +137,16 @@ private struct ObjectionCard: View {
 
     private var reason: ReportReason { ReportReason(rawValue: objection.report.reason) ?? .other }
 
+    private var name: String {
+        if let name = objection.displayName, !name.isEmpty { return name }
+        if objection.report.isDemo, !ownName.isEmpty { return ownName }
+        return L10n("Unknown name")
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
-                Text(objection.displayName.flatMap { $0.isEmpty ? nil : $0 } ?? L10n("Unknown name"))
+                Text(name)
                     .font(.system(.headline))
                     .foregroundStyle(OnboardingTheme.primaryText)
                 Spacer(minLength: 8)

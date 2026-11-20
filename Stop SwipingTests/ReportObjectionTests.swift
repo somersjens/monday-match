@@ -150,7 +150,10 @@ final class ReportObjectionTests: XCTestCase {
         """.utf8))
         XCTAssertFalse(pending.canObject)
         XCTAssertTrue(pending.awaitsDecision)
-        XCTAssertTrue(ModerationCard.isShown(pending, isUnread: false), "A pending objection stays in view")
+        XCTAssertEqual(ModerationHome.resolve(pending, isUnread: false, result: nil)?.status?.title,
+                       ModerationCopy.status(pending).title, "A pending objection stays in view")
+        XCTAssertNil(ModerationHome.resolve(pending, isUnread: false, result: nil)?.notice,
+                     "Once read, it leaves the profile buttons alone")
     }
 
     func testOldCachedStatusStillDecodes() throws {
@@ -164,11 +167,30 @@ final class ReportObjectionTests: XCTestCase {
     func testNoticesNameTheReasonAndTheNextStep() {
         let report = ModerationStatus.LatestReport(id: UUID(), reason: "harassment", objection: nil)
         let warning = ModerationStatus(strikes: 1, strikesSeen: 0, suspendedUntil: nil, banned: false, latestReport: report)
-        XCTAssertTrue(ModerationCard.message(warning).contains(ReportReason.harassment.title))
-        XCTAssertTrue(ModerationCard.message(warning).contains("7"))
+        let notice = ModerationCopy.strike(warning)
+        XCTAssertEqual(notice.reason, ReportReason.harassment.title)
+        XCTAssertTrue(notice.message.contains("7"))
+        XCTAssertTrue(notice.canObject)
         let blocked = ModerationStatus(strikes: 2, strikesSeen: 1, suspendedUntil: Date().addingTimeInterval(86_400),
                                        banned: false, latestReport: report)
-        XCTAssertTrue(ModerationCard.message(blocked).contains(ReportReason.harassment.title))
-        XCTAssertTrue(ModerationCard.isLocked(blocked))
+        XCTAssertEqual(ModerationCopy.strike(blocked).reason, ReportReason.harassment.title)
+        XCTAssertTrue(ModerationCopy.isLocked(blocked))
+    }
+
+    func testANoticeOverrulesTheHomeScreenUntilItIsRead() {
+        let report = ModerationStatus.LatestReport(id: UUID(), reason: "spam", objection: nil)
+        let warning = ModerationStatus(strikes: 1, strikesSeen: 0, suspendedUntil: nil, banned: false, latestReport: report)
+        XCTAssertNotNil(ModerationHome.resolve(warning, isUnread: true, result: nil)?.notice)
+        XCTAssertNil(ModerationHome.resolve(warning, isUnread: false, result: nil), "A read warning leaves the home screen as it was")
+
+        let blocked = ModerationStatus(strikes: 2, strikesSeen: 2, suspendedUntil: Date().addingTimeInterval(86_400),
+                                       banned: false, latestReport: report)
+        let status = ModerationHome.resolve(blocked, isUnread: false, result: nil)?.status
+        XCTAssertNotNil(status, "A block stays where automatic matching was")
+        XCTAssertEqual(status?.canObject, true)
+
+        let result = ModerationStatus.ObjectionResult(id: UUID(), decision: .rejected, reason: "spam")
+        XCTAssertEqual(ModerationHome.resolve(warning, isUnread: true, result: result)?.notice?.kind, .objectionResult,
+                       "The outcome of the older objection comes before the newer report")
     }
 }

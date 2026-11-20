@@ -93,6 +93,9 @@ struct WelcomeView: View {
     @State private var acknowledgedResultID: UUID?
     /// The report being objected to.
     @State private var objectingReport: ModerationStatus.LatestReport?
+    /// The report this person just sent, thanked for on the home screen
+    /// until "Understood".
+    @State private var sentReport: SentReport?
     /// Administrators: the open objections.
     @State private var showsAdmin = false
     /// The conversation behind the match on screen, live or demo.
@@ -679,6 +682,9 @@ struct WelcomeView: View {
                                      displayName: profileCreation.state.displayName,
                                      birthDate: profileCreation.state.birthDateSelection) { message, idCheck in
                     try await liveMatches.objectToReport(report.id, message: message, idCheck: idCheck)
+                    // Objecting answers the notice: home moves on to
+                    // "Objection under review".
+                    acknowledgeModeration()
                 }
             }
         }
@@ -686,7 +692,8 @@ struct WelcomeView: View {
             Task { await liveMatches.refreshModeration() }
         }) {
             AdminObjectionsView(load: { try await liveMatches.adminObjections() },
-                                decide: { try await liveMatches.decideObjection($0, approve: $1) })
+                                decide: { try await liveMatches.decideObjection($0, approve: $1) },
+                                ownName: profileCreation.state.displayName)
         }
         .onChange(of: canShowScannedMatch && (scannedProfile != nil || codeInbox.pending != nil), initial: true) { _, ready in
             if ready { showScannedMatch() }
@@ -851,8 +858,13 @@ struct WelcomeView: View {
                     .font(.footnote)
                     .foregroundStyle(OnboardingTheme.pink)
                 }
-                if showsCode && profileCreation.state.canShareProfile {
+                if showsExchange {
                     ProfileExchangeCard(session: exchange)
+                } else if let notice = homeModerationNotice {
+                    // A report notice overrules every next step until it is answered.
+                    ModerationNoticeCard(notice: notice)
+                        .id(notice)
+                        .transition(.onboardingReveal(reduceMotion: reduceMotion))
                 } else {
                     switch profileCreation.state.nextAction {
                     case .name:
@@ -872,6 +884,9 @@ struct WelcomeView: View {
 
                 if accountCard != .closed {
                     // Signing in has the controls to itself.
+                } else if let notice = homeModerationNotice {
+                    // Its answers take the place of Adjust profile and My matches.
+                    moderationButtons(for: notice)
                 } else if profileCreation.state.nextAction == .matching {
                     finishedProfileButtons
                 } else if profileCreation.state.nextAction != .explanation {
@@ -889,6 +904,7 @@ struct WelcomeView: View {
             .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion),
                        value: profileCreation.state.nextAction)
             .animation(.easeInOut(duration: 0.3), value: showsCode)
+            .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: moderationHome)
             .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: hasAccount)
             .animation(Self.accountMotion(reduceMotion: reduceMotion), value: accountCard)
             .animation(OnboardingMotion.resolved(OnboardingMotion.reveal, reduceMotion: reduceMotion), value: notifications.state)
@@ -917,6 +933,52 @@ struct WelcomeView: View {
         guard hasAccount, let result = liveMatches.moderation?.objectionResult,
               result.id != acknowledgedResultID else { return nil }
         return result
+    }
+
+    /// The QR code was opened on purpose, so it stays in front of a notice.
+    private var showsExchange: Bool { showsCode && profileCreation.state.canShareProfile }
+
+    /// What the home screen says about reports, if anything. The thanks for
+    /// a report just sent comes first: it answers what the person just did.
+    private var moderationHome: ModerationHome? {
+        if let sentReport {
+            return .notice(ModerationCopy.reportSent(name: sentReport.name, reason: sentReport.reason,
+                                                     endedMatch: sentReport.endedMatch))
+        }
+        guard hasAccount else { return nil }
+        return ModerationHome.resolve(liveMatches.moderation, isUnread: moderationIsUnread, result: unreadObjectionResult)
+    }
+
+    /// A notice waiting for "Understood", unless the QR code is open.
+    private var homeModerationNotice: ModerationNotice? {
+        showsExchange ? nil : moderationHome?.notice
+    }
+
+    /// "Understood" in the main button's place; "Object" in My matches'.
+    @ViewBuilder
+    private func moderationButtons(for notice: ModerationNotice) -> some View {
+        Button(L10n("Understood")) { acknowledge(notice) }
+            .buttonStyle(GlowButtonStyle())
+            .accessibilityIdentifier("moderation.acknowledge")
+        if notice.canObject {
+            Button(L10n("Object"), action: objectToLatestReport)
+                .buttonStyle(QuietButtonStyle())
+                .accessibilityHint(L10n("Explain in a message why this report is wrong."))
+                .accessibilityIdentifier("moderation.object")
+        }
+    }
+
+    private func acknowledge(_ notice: ModerationNotice) {
+        switch notice.kind {
+        case .reportSent:
+            sentReport = nil
+        case .objectionResult where moderationIsUnread:
+            // A newer report waits behind the outcome: show it next, and
+            // tell the server once both were read.
+            acknowledgedResultID = unreadObjectionResult?.id
+        case .objectionResult, .strike:
+            acknowledgeModeration()
+        }
     }
 
     private func acknowledgeModeration() {
@@ -1014,13 +1076,12 @@ struct WelcomeView: View {
                 Task { await notifications.requestAuthorization() }
             }
         case .matching:
-            if let status = liveMatches.moderation,
-               ModerationCard.isShown(status, isUnread: moderationIsUnread, hasResult: unreadObjectionResult != nil) {
-                ModerationCard(status: status, isUnread: moderationIsUnread, result: unreadObjectionResult,
-                               onAcknowledge: acknowledgeModeration, onObject: objectToLatestReport)
+            if let status = moderationHome?.status {
+                // An objection under review, a block or a ban stands where
+                // automatic matching would be, and nothing else competes.
+                ModerationStatusCard(status: status, onObject: objectToLatestReport)
                     .transition(.opacity.combined(with: .scale(scale: 0.96)))
-            }
-            if isSuspendedFromMatching {
+            } else if isSuspendedFromMatching {
                 // Nothing to switch on while blocked or banned.
             } else if access.remindsToCancelSubscription {
                 CancelSubscriptionCard(access: access)
@@ -1029,7 +1090,7 @@ struct WelcomeView: View {
                 SubscriberLifetimeOfferCard(access: access)
                     .transition(.opacity.combined(with: .scale(scale: 0.96)))
             }
-            if !isSuspendedFromMatching {
+            if moderationHome?.status == nil && !isSuspendedFromMatching {
                 AutoMatchingCard(viewModel: profileCreation) {
                     guard !isTransitioning else { return }
                     presentScreen { showsAutoMatching = true }
@@ -2022,21 +2083,27 @@ struct WelcomeView: View {
     }
 
     private func reportMatch(_ report: MatchReportSubmission) {
-        if activeMatch?.snapshot.isDemo == true, liveMatches.moderation?.isAdmin == true {
+        if activeMatch?.snapshot.isDemo == true, hasAccount {
             // An administrator's demo report counts against their own account,
-            // so the warning, the objection and the decision can be tried.
+            // so the warning, the objection and the decision can be tried. The
+            // server decides who is one (the phone's copy can be a day old);
+            // for everyone else the demo report stays on this phone.
             let copy = report.includesChat ? activeChat.map { ReportChatLine.copy(of: $0.conversation.messages) } : nil
+            let isAdmin = liveMatches.moderation?.isAdmin == true
             Task {
                 do {
                     try await liveMatches.reportDemo(reason: report.reason, details: report.details, chatCopy: copy)
                 } catch {
-                    AccessibilityNotification.Announcement(L10n("Could not submit report")).post()
+                    if isAdmin { AccessibilityNotification.Announcement(L10n("Could not submit report")).post() }
                 }
             }
         }
         activeChat?.submitReport(reason: report.reason, details: report.details, endMatch: report.alsoBreak,
                                  includesChat: report.includesChat)
         AccessibilityNotification.Announcement(L10n("Thanks. Your report was sent.")).post()
+        if let name = activeMatch?.snapshot.name {
+            sentReport = SentReport(name: name, reason: report.reason, endedMatch: report.alsoBreak)
+        }
         if report.alsoBreak {
             if activeChat?.isLive == true { liveMatches.forget() }
             if let id = activeMatch?.snapshot.id { savedMatches.markBroken(id) }

@@ -69,6 +69,9 @@ struct BrokenMatchMenu: View {
     /// Asks before deleting the match from My matches.
     let onDelete: () -> Void
     let onClose: () -> Void
+    /// The demo: Close and Delete stay at the bottom, as for a saved match,
+    /// so the triangle opens the reasons straight away.
+    var reportOnly = false
 
     @State private var isOpen = false
 
@@ -83,10 +86,10 @@ struct BrokenMatchMenu: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(L10n("Report or close"))
+        .accessibilityLabel(reportOnly ? L10n("Report your match") : L10n("Report or close"))
         .accessibilityIdentifier("match.brokenMenu")
         .popover(isPresented: $isOpen, attachmentAnchor: .point(.bottom), arrowEdge: .top) {
-            MatchSettingsPanel(kind: .broken) { choice in
+            MatchSettingsPanel(kind: reportOnly ? .reportOnly : .broken) { choice in
                 isOpen = false
                 Task {
                     // Let the panel close before the report sheet or the
@@ -123,13 +126,27 @@ private struct MatchSettingsPanel: View {
         case settings(name: String, canBreak: Bool)
         /// A broken match's warning triangle: reporting, deleting and leaving.
         case broken
+        /// A broken demo match's warning triangle: only the reasons.
+        case reportOnly
     }
 
     let kind: Kind
     let onChoose: (Choice) -> Void
 
-    @State private var showsReasons = false
+    @State private var showsReasons: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(kind: Kind, onChoose: @escaping (Choice) -> Void) {
+        self.kind = kind
+        self.onChoose = onChoose
+        if case .reportOnly = kind { _showsReasons = State(initialValue: true) } else { _showsReasons = State(initialValue: false) }
+    }
+
+    /// The reasons are all there is: no way back to other options.
+    private var isReportOnly: Bool {
+        if case .reportOnly = kind { return true }
+        return false
+    }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -150,7 +167,7 @@ private struct MatchSettingsPanel: View {
     private var options: some View {
         switch kind {
         case .settings(let name, let canBreak): settingsOptions(name: name, canBreak: canBreak)
-        case .broken: brokenOptions
+        case .broken, .reportOnly: brokenOptions
         }
     }
 
@@ -183,9 +200,11 @@ private struct MatchSettingsPanel: View {
         VStack(spacing: 0) {
             Button { showsReasons = false } label: {
                 HStack(spacing: 10) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 14, weight: .semibold))
-                        .frame(width: 24)
+                    if !isReportOnly {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 14, weight: .semibold))
+                            .frame(width: 24)
+                    }
                     Text(L10n("Report your match"))
                         .font(.body.weight(.semibold))
                         .lineLimit(1)
@@ -197,6 +216,8 @@ private struct MatchSettingsPanel: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(MenuRowStyle())
+            .allowsHitTesting(!isReportOnly)
+            .accessibilityAddTraits(isReportOnly ? .isHeader : [])
             divider
             ForEach(ReportReason.allCases) { reason in
                 row(reason.title, symbol: reason.symbol) { onChoose(.report(reason)) }

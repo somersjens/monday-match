@@ -77,12 +77,25 @@ final class AdaptiveLayoutRenderTests: XCTestCase {
         let blocked = ModerationStatus(strikes: 2, strikesSeen: 1, suspendedUntil: Date().addingTimeInterval(5 * 86_400),
                                        banned: false, latestReport: .init(id: UUID(), reason: "harassment", objection: .pending))
         let decided = ModerationStatus.ObjectionResult(id: UUID(), decision: .approved, reason: "spam")
-        let cards = VStack(spacing: 16) {
-            ModerationCard(status: warning, isUnread: true, result: nil, onAcknowledge: {}, onObject: {})
-            ModerationCard(status: blocked, isUnread: false, result: nil, onAcknowledge: {}, onObject: {})
-            ModerationCard(status: ModerationStatus(strikes: 0, strikesSeen: 0, suspendedUntil: nil, banned: false,
-                                                    objectionResult: decided),
-                           isUnread: false, result: decided, onAcknowledge: {}, onObject: {})
+        let cards = VStack(spacing: 12) {
+            ModerationNoticeCard(notice: ModerationCopy.strike(warning))
+            Button(L10n("Understood")) {}.buttonStyle(GlowButtonStyle())
+            Button(L10n("Object")) {}.buttonStyle(QuietButtonStyle())
+            ModerationNoticeCard(notice: ModerationCopy.result(decided))
+            ModerationNoticeCard(notice: ModerationCopy.reportSent(name: "Anna", reason: .harassment, endedMatch: true))
+        }
+        .padding(.horizontal, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(OnboardingTheme.background)
+        // Once read: what still holds, in the automatic matching card's place.
+        let statuses = VStack(spacing: 12) {
+            ModerationStatusCard(status: ModerationCopy.status(blocked), onObject: {})
+            ModerationStatusCard(status: ModerationCopy.status(
+                ModerationStatus(strikes: 2, strikesSeen: 2, suspendedUntil: Date().addingTimeInterval(5 * 86_400),
+                                 banned: false, latestReport: report)), onObject: {})
+            ModerationStatusCard(status: ModerationCopy.status(
+                ModerationStatus(strikes: 1, strikesSeen: 1, suspendedUntil: nil, banned: false,
+                                 latestReport: .init(id: UUID(), reason: "spam", objection: .pending))), onObject: {})
         }
         .padding(.horizontal, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -92,6 +105,7 @@ final class AdaptiveLayoutRenderTests: XCTestCase {
                                              birthDate: .init(year: 1974, month: 8, day: 12)) { _, _ in }
         for device in Self.devices.prefix(4) {
             try await render(cards, screen: "objection-cards", device: device)
+            try await render(statuses, screen: "objection-status", device: device)
             try await render(objection, screen: "objection-sheet", device: device)
             try await render(admin, screen: "objection-admin", device: device)
         }

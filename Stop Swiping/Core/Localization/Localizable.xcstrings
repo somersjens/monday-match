@@ -3851,6 +3851,23 @@
         }
       }
     },
+    "Blocked until {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blocked until {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geblokkeerd tot {0}"
+          }
+        }
+      }
+    },
     "Blue" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12391,6 +12408,23 @@
         }
       }
     },
+    "Not right? Object, and the report will be looked at again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not right? Object, and the report will be looked at again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klopt dit niet? Maak bezwaar, dan wordt de rapportage opnieuw bekeken."
+          }
+        }
+      }
+    },
     "Not selected" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12557,6 +12591,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bezwaar"
+          }
+        }
+      }
+    },
+    "Objection under review" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objection under review"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezwaar in behandeling"
           }
         }
       }
@@ -14512,6 +14563,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reden"
+          }
+        }
+      }
+    },
+    "Reason: {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason: {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reden: {0}"
           }
         }
       }
@@ -17780,6 +17848,23 @@
         }
       }
     },
+    "Thanks for your report" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thanks for your report"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedankt voor je rapportage"
+          }
+        }
+      }
+    },
     "Thanks. Your report was sent." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18324,6 +18409,40 @@
         }
       }
     },
+    "The report was looked at again and stands. It keeps counting towards your account." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The report was looked at again and stands. It keeps counting towards your account."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De rapportage is opnieuw bekeken en blijft staan. Die blijft meetellen voor je account."
+          }
+        }
+      }
+    },
+    "The report was withdrawn and no longer counts against your account." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The report was withdrawn and no longer counts against your account."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De rapportage is ingetrokken en telt niet meer mee voor je account."
+          }
+        }
+      }
+    },
     "The reporter also broke the match." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18762,6 +18881,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dit document is op je eigen telefoon gemaakt, uit het gesprek zoals het daar is opgeslagen."
+          }
+        }
+      }
+    },
+    "This is a warning. After a second report, your account is blocked for 7 days." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is a warning. After a second report, your account is blocked for 7 days."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit is een waarschuwing. Na een tweede rapportage wordt je account 7 dagen geblokkeerd."
           }
         }
       }
@@ -21214,6 +21350,23 @@
         }
       }
     },
+    "You can no longer match or chat. You can still delete your account from your profile." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can no longer match or chat. You can still delete your account from your profile."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je kunt niet meer matchen of chatten. Je account verwijderen kan nog via je profiel."
+          }
+        }
+      }
+    },
     "You can verify a photo five times a day. Please try again tomorrow." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -21227,6 +21380,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je kunt een foto vijf keer per dag verifiëren. Probeer het morgen opnieuw."
+          }
+        }
+      }
+    },
+    "You can’t match or chat until then. You can still view your profile and personality." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can’t match or chat until then. You can still view your profile and personality."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tot dan kun je niet matchen of chatten. Je profiel en persoonlijkheid bekijken kan gewoon."
           }
         }
       }
@@ -21673,6 +21843,23 @@
         }
       }
     },
+    "You were reported again. Until {0} you can’t match or chat. After a third report, your account is blocked permanently." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You were reported again. Until {0} you can’t match or chat. After a third report, your account is blocked permanently."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent opnieuw gerapporteerd. Tot {0} kun je niet matchen of chatten. Na een derde rapportage wordt je account permanent geblokkeerd."
+          }
+        }
+      }
+    },
     "You were reported because of {0}. If this happens again, you can’t use your account for 7 days." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -21703,6 +21890,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je bent drie keer gemeld. Je account kan niet meer matchen of chatten. Je kunt het nog wel verwijderen via je profiel."
+          }
+        }
+      }
+    },
+    "You were reported too often. You can no longer match or chat. You can still delete your account from your profile." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You were reported too often. You can no longer match or chat. You can still delete your account from your profile."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je bent te vaak gerapporteerd. Je kunt niet meer matchen of chatten. Je account verwijderen kan nog via je profiel."
           }
         }
       }
@@ -21754,6 +21958,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je hoeft nooit te betalen"
+          }
+        }
+      }
+    },
+    "You’ll see the outcome here as soon as it has been looked at." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll see the outcome here as soon as it has been looked at."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je ziet de uitkomst hier zodra je bezwaar is bekeken."
           }
         }
       }
@@ -21877,6 +22098,40 @@
         }
       }
     },
+    "Your account is blocked until {0}." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account is blocked until {0}."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je account is geblokkeerd tot {0}."
+          }
+        }
+      }
+    },
+    "Your account is permanently blocked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account is permanently blocked"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je account is permanent geblokkeerd"
+          }
+        }
+      }
+    },
     "Your account is permanently blocked because of {0}. You can no longer match or chat. You can still delete your account from your profile." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -21890,6 +22145,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je account is permanent geblokkeerd vanwege {0}. Je kunt niet meer matchen of chatten. Je kunt je account nog wel verwijderen via je profiel."
+          }
+        }
+      }
+    },
+    "Your account is permanently blocked." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account is permanently blocked."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je account is permanent geblokkeerd."
           }
         }
       }
@@ -22162,6 +22434,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je match kon niet worden bijgewerkt. We proberen het opnieuw zodra er verbinding is."
+          }
+        }
+      }
+    },
+    "Your match has been broken." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your match has been broken."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jullie match is verbroken."
           }
         }
       }
@@ -22553,6 +22842,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je herinnering kon niet worden ingepland. Probeer hem opnieuw aan te zetten."
+          }
+        }
+      }
+    },
+    "Your report about {0} was received. If {1} objects, the report will be looked at again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your report about {0} was received. If {1} objects, the report will be looked at again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je rapportage over {0} is ontvangen. Maakt {1} bezwaar, dan wordt de rapportage opnieuw bekeken."
           }
         }
       }

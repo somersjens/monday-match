@@ -325,7 +325,8 @@ struct MatchResultOverlay: View {
             // A live match is the only thing the app does until it ends.
             if hasBrokenMenu {
                 // A broken server match can still be reported, whoever broke it.
-                BrokenMatchMenu(onReport: { reportReason = $0 }, onDelete: { confirmsDeletion = true }, onClose: onClose)
+                BrokenMatchMenu(onReport: { reportReason = $0 }, onDelete: { confirmsDeletion = true }, onClose: onClose,
+                                reportOnly: !match.isLive)
                     .transition(.opacity)
             } else if (match.isBroken || (isSaved && !match.isLive)) && onRestartDemo != nil {
                 // Elsewhere a saved match has its Close button at the bottom;
@@ -375,7 +376,7 @@ struct MatchResultOverlay: View {
                               onReport: { reportReason = $0 }, onBreak: { confirmsBreak = true },
                               canBreak: !match.isBroken)
 
-            if hasBrokenMenu {
+            if match.isBroken && match.isLive {
                 // A broken match is only looked back on, so it can be left,
                 // and the other person can still be reported.
                 BrokenMatchMenu(onReport: { reportReason = $0 }, onDelete: { confirmsDeletion = true }, onClose: onClose)
@@ -547,7 +548,7 @@ struct MatchResultOverlay: View {
 
     private var controls: some View {
         VStack(spacing: 12) {
-            if match.isBroken && !hasBrokenMenu {
+            if match.isBroken && !match.isLive {
                 // A saved match that was deleted once: only looked back on,
                 // until it is deleted for good.
                 Button(L10n("Close"), action: onClose)

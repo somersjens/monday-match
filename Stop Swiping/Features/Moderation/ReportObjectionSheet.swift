@@ -133,16 +133,13 @@ struct ReportObjectionSheet: View {
 
     /// The report this objection is about, and what it does.
     private var reportCard: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) {
-                Image(systemName: (report.reportReason ?? .other).symbol)
-                    .foregroundStyle(OnboardingTheme.accentGradient)
-                    .frame(width: 24)
-                    .accessibilityHidden(true)
-                Text((report.reportReason ?? .other).title)
-                    .font(.system(.body, weight: .semibold))
-                    .foregroundStyle(OnboardingTheme.primaryText)
-            }
+        VStack(alignment: .leading, spacing: 3) {
+            Text(L10n("Reason"))
+                .font(.system(.footnote, weight: .medium))
+                .foregroundStyle(OnboardingTheme.cyan)
+            Text((report.reportReason ?? .other).title)
+                .font(.system(.body, weight: .semibold))
+                .foregroundStyle(OnboardingTheme.primaryText)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -171,8 +168,7 @@ struct ReportObjectionSheet: View {
                 } else if let zone {
                     documentResult(zone)
                 } else if readFailed {
-                    Label(L10n("Could not read the document. Keep the lines of <<< sharp and fully in view."),
-                          systemImage: "exclamationmark.triangle")
+                    Text(L10n("Could not read the document. Keep the lines of <<< sharp and fully in view."))
                         .font(.footnote)
                         .foregroundStyle(OnboardingTheme.pink)
                         .fixedSize(horizontal: false, vertical: true)
