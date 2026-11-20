@@ -886,7 +886,7 @@ struct WelcomeView: View {
         guard hasAccount, let profileSync else { return }
         do {
             let uploads = profileSync.completedUploads
-            try await profileSync.synchronizeMatchingProfile()
+            try await profileSync.synchronize()
             profileSyncFailed = false
             // Saving searches for a partner on the server: ask once now
             // rather than wait for the match's push.
@@ -1567,17 +1567,22 @@ struct WelcomeView: View {
     /// The labels follow the selected light timeline.
     /// The photo card behind the match on screen; without a photo there is
     /// none, and no button for it. A match the server made shows the other
-    /// person while it is active; a demo shows your own card, as a match
-    /// would see it; an exchange shows the photo they chose to share.
+    /// person, also after it ended (the phone kept the photo it was shown);
+    /// a demo shows your own card, as a match would see it; an exchange
+    /// shows the photo they chose to share.
     private var activePhotoCard: MatchPhotoCard? {
         guard let snapshot = activeMatch?.snapshot else { return nil }
         let today = CalendarDate.today()
         if snapshot.isLive {
-            guard !snapshot.isBroken, let live = liveMatches.match, live.id == snapshot.id,
-                  let photo = liveMatches.partnerPhoto else { return nil }
-            return MatchPhotoCard(name: snapshot.name, age: snapshot.them.age(on: today), photo: photo,
-                                  isVerified: live.partnerPhotoVerified,
-                                  distanceKilometers: snapshot.distanceKilometers)
+            if !snapshot.isBroken, let live = liveMatches.match, live.id == snapshot.id,
+               let photo = liveMatches.partnerPhoto {
+                return MatchPhotoCard(name: snapshot.name, age: snapshot.them.age(on: today), photo: photo,
+                                      isVerified: live.partnerPhotoVerified,
+                                      distanceKilometers: snapshot.distanceKilometers)
+            }
+            guard let matchPhoto else { return nil }
+            return MatchPhotoCard(name: snapshot.name, age: snapshot.them.age(on: today), photo: matchPhoto,
+                                  isVerified: matchPhotoIsVerified, distanceKilometers: snapshot.distanceKilometers)
         }
         guard let matchPhoto else { return nil }
         if snapshot.isDemo {
@@ -1596,21 +1601,23 @@ struct WelcomeView: View {
     /// demo. Unlike the photo card, also after a live match is broken.
     private var activeReportPhoto: UIImage? {
         guard let snapshot = activeMatch?.snapshot else { return nil }
-        if snapshot.isLive {
-            guard liveMatches.match?.id == snapshot.id else { return nil }
-            return liveMatches.partnerPhoto
+        if snapshot.isLive, liveMatches.match?.id == snapshot.id, let photo = liveMatches.partnerPhoto {
+            return photo
         }
         return matchPhoto
     }
 
-    /// Reads the photo for a demo or exchanged match once, decoding it off
-    /// the main actor. A live match's photo comes from the server instead.
+    /// Reads the photo for a match once, decoding it off the main actor. A
+    /// live match's current photo comes from the server; this is the copy
+    /// the phone kept of it, for when the match has ended.
     private func loadMatchPhoto(for snapshot: MatchSnapshot) {
         matchPhoto = nil
         matchPhotoIsVerified = false
-        guard !snapshot.isLive else { return }
         let data: Data?
-        if snapshot.isDemo, let own = profileCreation.matchCardPhoto {
+        if snapshot.isLive {
+            matchPhotoIsVerified = liveMatches.keptPartnerPhotoWasVerified(snapshot.id)
+            data = liveMatches.keptPartnerPhoto(for: snapshot.id)
+        } else if snapshot.isDemo, let own = profileCreation.matchCardPhoto {
             matchPhotoIsVerified = own.isVerified
             data = own.imageData
         } else {
@@ -1707,8 +1714,15 @@ struct WelcomeView: View {
     }
 
     /// A saved match is first kept as broken; a broken or unsaved one goes for good.
+    /// An ended automatic match leaves My matches, this phone and the
+    /// account's list on the server; the other person keeps theirs.
     private func deleteMatch(_ snapshot: MatchSnapshot) {
-        if savedMatches.contains(snapshot.id) && !snapshot.isBroken {
+        if snapshot.isLive {
+            guard snapshot.isBroken else { return }
+            savedMatches.delete(snapshot.id)
+            Task { await liveMatches.delete(snapshot.id) }
+            AccessibilityNotification.Announcement(L10n("Match deleted.")).post()
+        } else if savedMatches.contains(snapshot.id) && !snapshot.isBroken {
             savedMatches.markBroken(snapshot.id)
             AccessibilityNotification.Announcement(L10n("Match broken.")).post()
         } else {
@@ -1729,8 +1743,9 @@ struct WelcomeView: View {
         SoundPlayer.shared.fadeOut(.match, .noMatch, .unfold, .chatOpen)
         // Without motion nothing flies back in; the panel just closes.
         if reduceMotion { SoundPlayer.shared.play(.close) }
-        // Photos of matches that weren't kept go with them.
-        MatchPhotoStore.shared.prune(keeping: Set(savedMatches.matches.map(\.id)))
+        // Photos of matches that weren't kept go with them. Automatic
+        // matches keep theirs until they are deleted.
+        MatchPhotoStore.shared.prune(keeping: Set(savedMatches.matches.map(\.id)).union(liveMatches.matchIDsWithPhotos))
         Task {
             withAnimation(.easeOut(duration: 0.3)) {
                 pinsDemoControls = false
@@ -1764,6 +1779,9 @@ struct WelcomeView: View {
               let snapshot = liveMatches.snapshot(fallbackYou: profileCreation.state) else { return }
         let transition: WelcomeLightMatch.Transition = liveMatches.hasBeenSeen(snapshot.id) ? .savedMatch : .newMatch
         liveMatches.markSeen(snapshot.id)
+        // Kept under My matches, and with it in the person's own iCloud,
+        // the other person's photo included, once their card is in.
+        if liveMatches.match?.partnerCard != nil, !snapshot.isBroken { savedMatches.save(snapshot) }
         showsCode = false
         activeChat = liveMatches.chat
         present(snapshot, transition: transition,

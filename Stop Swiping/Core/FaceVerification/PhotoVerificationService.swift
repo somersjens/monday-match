@@ -1,9 +1,35 @@
 import Foundation
 import Supabase
 
-/// Tells the server that this phone's own live scan matched the selected
-/// photo, so matching treats that photo version as verified. The scan, its
-/// frames and face features never leave the phone: only the photo ID is sent.
+/// The matching photo is verified by a live scan on this phone; the scan,
+/// its frames and face features never leave it. The phone remembers that the
+/// photo passed. The server only hears of it once the photo is uploaded with
+/// a profile in automatic matching (`SupabaseProfileSync` then calls
+/// `DevicePhotoScanReporter`), and again after switching matching back on,
+/// because the server removes the photo whenever matching goes off.
+@MainActor
+final class PhotoVerificationService {
+    private let client: SupabaseClient
+    private let profileSync: ProfileCloudSyncing
+
+    init(client: SupabaseClient, profileSync: ProfileCloudSyncing) {
+        self.client = client
+        self.profileSync = profileSync
+    }
+
+    /// Whether the server already has this account's current matching photo
+    /// as verified, for example after a reinstall. Only a profile in
+    /// automatic matching is on the server; without one there is nothing to ask.
+    func photoIsVerified() async throws -> Bool {
+        guard profileSync.hasMatchingProfileOnServer else { return false }
+        let status: MatchingStatus = try await client.rpc("matching_status").execute().value
+        return status.photo_verified
+    }
+}
+
+/// Tells the server that this phone's own live scan matched the stored
+/// matching photo, so matching treats that photo version as verified. Only
+/// the photo ID is sent.
 ///
 /// Where the device supports it, the report is signed with an Apple App
 /// Attest key (`AppAttestPhotoReporter`), so the server records it as coming
@@ -11,29 +37,16 @@ import Supabase
 /// function isn't deployed) the server still takes the app's word for it;
 /// see supabase/migrations/202611190012_app_attest.sql for switching that off.
 @MainActor
-final class PhotoVerificationService {
+final class DevicePhotoScanReporter: DevicePhotoReporting {
     private let client: SupabaseClient
-    private let profileSync: ProfileCloudSyncing
     private let attestation: AttestedPhotoReporting?
 
-    init(client: SupabaseClient, profileSync: ProfileCloudSyncing, attestation: AttestedPhotoReporting? = nil) {
+    init(client: SupabaseClient, attestation: AttestedPhotoReporting? = nil) {
         self.client = client
-        self.profileSync = profileSync
         self.attestation = attestation ?? AppAttestPhotoReporter(client: client)
     }
 
-    /// Whether the server already has this account's current matching photo
-    /// as verified, for example after a reinstall.
-    func photoIsVerified() async throws -> Bool {
-        try await profileSync.synchronize()
-        let status: MatchingStatus = try await client.rpc("matching_status").execute().value
-        return status.photo_verified
-    }
-
-    /// Uploads the profile and photo first: the server records the exact
-    /// stored version of the selected photo, so replacing it undoes this.
-    func recordDeviceScan(photoID: UUID) async throws {
-        try await profileSync.synchronize()
+    func reportPhotoScan(photoID: UUID) async throws {
         if let attestation, attestation.isSupported {
             do {
                 try await attestation.reportPhotoScan(photoID: photoID)

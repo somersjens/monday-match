@@ -15,12 +15,14 @@ struct DependencyContainer {
     var storeEntitlements: StoreEntitlementRecording?
     /// The matches under My matches, backed up to the person's own iCloud.
     var savedMatchBackup: SavedMatchCloudBackup?
+    /// The account's profile, backed up to the person's own iCloud.
+    var profileBackup: ProfileICloudBackup?
 
     @MainActor
     var profileDeletion: ProfileDeletionService {
         ProfileDeletionService(profileRepository: profileRepository, profileCreationStore: profileCreationStore,
                                server: profileSync as? SupabaseProfileSync, authService: authService,
-                               savedMatchBackup: savedMatchBackup)
+                               savedMatchBackup: savedMatchBackup, profileBackup: profileBackup)
     }
 
     static var live: DependencyContainer {
@@ -37,18 +39,23 @@ struct DependencyContainer {
         let store = UserDefaultsProfileCreationStore()
         // In iCloud, not on our server: it works with or without an account.
         let savedMatchBackup = SavedMatchCloudBackup(store: CloudKitSavedMatchStore())
+        // The profile too: an account backs it up here, and the server only
+        // receives it while it takes part in automatic matching.
+        let profileBackup = ProfileICloudBackup(store: CloudKitProfileBackupStore())
         guard let configuration = SupabaseConfiguration.bundled else {
             return DependencyContainer(authService: UnconfiguredSupabaseAuthService(), profileRepository: repository,
-                                       profileCreationStore: store, savedMatchBackup: savedMatchBackup)
+                                       profileCreationStore: store, savedMatchBackup: savedMatchBackup,
+                                       profileBackup: profileBackup)
         }
         let client = configuration.makeClient()
-        let sync = SupabaseProfileSync(client: client, projectURL: configuration.url, repository: repository, store: store)
+        let sync = SupabaseProfileSync(client: client, projectURL: configuration.url, repository: repository, store: store,
+                                       backup: profileBackup, photoReporter: DevicePhotoScanReporter(client: client))
         return DependencyContainer(authService: SupabaseAuthService(client: client, profileSync: sync),
                                    profileRepository: repository, profileCreationStore: store, profileSync: sync,
                                    chatRepository: SupabaseChatRepository(client: client, projectURL: configuration.url),
                                    photoVerification: PhotoVerificationService(client: client, profileSync: sync),
                                    pushRegistration: SupabasePushDeviceRegistration(client: client),
                                    storeEntitlements: SupabaseStoreEntitlementRecorder(client: client),
-                                   savedMatchBackup: savedMatchBackup)
+                                   savedMatchBackup: savedMatchBackup, profileBackup: profileBackup)
     }
 }

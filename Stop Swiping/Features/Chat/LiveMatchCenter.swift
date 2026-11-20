@@ -15,12 +15,15 @@ final class LiveMatchCenter: ObservableObject {
     @Published private(set) var pastMatches: [CloudChatMatch] = []
     /// Reports against this account, refreshed daily and when a match ends.
     @Published private(set) var moderation: ModerationStatus?
-    /// The active match's photo of the other person. Kept in memory only:
-    /// the server stops sharing it once the match ends.
+    /// The active match's photo of the other person. The server shares it
+    /// only during the match, so the phone keeps a copy with the match
+    /// (`MatchPhotoStore`, and through it the person's own iCloud): after the
+    /// match ends it still shows, and it goes into a report.
     @Published private(set) var partnerPhoto: UIImage?
 
     private let repository: SecureChatRepository?
     private let defaults: UserDefaults
+    private let photos: MatchPhotoStore
     private let pushesArePermitted: () async -> Bool
     private let serverPushDelivered: (_ since: Date) async -> Bool
     private var sharedCards: Set<UUID> = []
@@ -70,11 +73,12 @@ final class LiveMatchCenter: ObservableObject {
     /// Reports end the match, which is checked then; otherwise once a day.
     static let moderationInterval: TimeInterval = 24 * 60 * 60
 
-    init(repository: SecureChatRepository?, defaults: UserDefaults = .standard,
+    init(repository: SecureChatRepository?, defaults: UserDefaults = .standard, photos: MatchPhotoStore = .shared,
          pushesArePermitted: @escaping () async -> Bool = LiveMatchCenter.systemPushesArePermitted,
          serverPushDelivered: @escaping (_ since: Date) async -> Bool = LiveMatchCenter.systemServerPushDelivered) {
         self.repository = repository
         self.defaults = defaults
+        self.photos = photos
         self.pushesArePermitted = pushesArePermitted
         self.serverPushDelivered = serverPushDelivered
         // The match the app was closed on, so a cold start opens on it at
@@ -83,7 +87,10 @@ final class LiveMatchCenter: ObservableObject {
         if repository != nil, let cached = Self.cachedMatch(defaults: defaults), cached.isActive {
             adopt(cached)
         }
-        if repository != nil { pastMatches = Self.cachedHistory(defaults: defaults) ?? [] }
+        if repository != nil {
+            let deleted = Self.pendingDeletes(defaults: defaults)
+            pastMatches = (Self.cachedHistory(defaults: defaults) ?? []).filter { !deleted.contains($0.id) }
+        }
     }
 
     /// Runs while the app is in front and a match can exist. Mostly it waits.
@@ -238,13 +245,53 @@ final class LiveMatchCenter: ObservableObject {
     /// Every broken match, for My matches. Asked for when the list opens and
     /// whenever the active match ends; kept on the phone in between.
     func loadHistory() async {
-        guard let repository, let all = try? await repository.matchHistory() else { return }
-        for match in all {
+        guard let repository else { return }
+        await sendPendingDeletes()
+        guard let all = try? await repository.matchHistory() else { return }
+        let deleted = Self.pendingDeletes(defaults: defaults)
+        for match in all where !deleted.contains(match.id) {
             rememberPartnerCard(match)
             _ = profileAtMatch(match)
         }
-        pastMatches = all.filter { !$0.isActive }
+        pastMatches = all.filter { !$0.isActive && !deleted.contains($0.id) }
         if let data = try? JSONEncoder().encode(pastMatches) { defaults.set(data, forKey: Self.historyKey) }
+    }
+
+    // MARK: - Deleting
+
+    /// Deletes an ended match from My matches: its photo, card and frozen
+    /// result leave this phone at once, and the server drops it from this
+    /// account's list (now, or on the next try). What keeps the two people
+    /// from being matched again stays on the server; the other person keeps
+    /// the match until they delete it too.
+    func delete(_ id: UUID) async {
+        guard match?.id != id else { return }
+        var pending = Self.pendingDeletes(defaults: defaults)
+        pending.insert(id)
+        defaults.set(pending.map(\.uuidString), forKey: Self.pendingDeletesKey)
+        pastMatches.removeAll { $0.id == id }
+        historyChats[id] = nil
+        if let data = try? JSONEncoder().encode(pastMatches) { defaults.set(data, forKey: Self.historyKey) }
+        for kind in ["seen", "chatting", "you", "them", "result", "photoVerified"] {
+            defaults.removeObject(forKey: Self.key(kind, id))
+        }
+        photos.delete(id)
+        await sendPendingDeletes()
+    }
+
+    private func sendPendingDeletes() async {
+        guard let repository else { return }
+        var pending = Self.pendingDeletes(defaults: defaults)
+        for id in pending.sorted(by: { $0.uuidString < $1.uuidString }) {
+            guard (try? await repository.deleteMatch(id)) != nil else { break }
+            pending.remove(id)
+        }
+        if pending.isEmpty { defaults.removeObject(forKey: Self.pendingDeletesKey) }
+        else { defaults.set(pending.map(\.uuidString), forKey: Self.pendingDeletesKey) }
+    }
+
+    private static func pendingDeletes(defaults: UserDefaults) -> Set<UUID> {
+        Set(defaults.stringArray(forKey: pendingDeletesKey)?.compactMap(UUID.init) ?? [])
     }
 
     func refreshModeration() async {
@@ -431,6 +478,29 @@ final class LiveMatchCenter: ObservableObject {
               self.match?.id == match.id else { return }
         partnerPhoto = image
         partnerPhotoPath = path
+        keepPartnerPhoto(data, verified: match.partnerPhotoVerified, for: match.id)
+    }
+
+    /// The photo stays with the match on this phone once the match ends. The
+    /// saved match's iCloud backup picks it up (SavedMatchCloudBackup).
+    private func keepPartnerPhoto(_ data: Data, verified: Bool, for id: UUID) {
+        guard photos.photo(for: id) != data else { return }
+        photos.save(data, for: id)
+        defaults.set(verified, forKey: Self.key("photoVerified", id))
+        NotificationCenter.default.post(name: .savedMatchesChanged, object: defaults,
+                                        userInfo: [SavedMatchStore.changedIDsKey: [id]])
+    }
+
+    /// The other person's photo as it was during the match, kept on this phone.
+    func keptPartnerPhoto(for id: UUID) -> Data? { photos.photo(for: id) }
+
+    /// Whether the kept photo was verified when it was shown.
+    func keptPartnerPhotoWasVerified(_ id: UUID) -> Bool { defaults.bool(forKey: Self.key("photoVerified", id)) }
+
+    /// Every server match whose photo this phone keeps: the active one and
+    /// those listed under My matches.
+    var matchIDsWithPhotos: Set<UUID> {
+        Set(pastMatches.map(\.id) + [match?.id].compactMap { $0 })
     }
 
     private func clearPartnerPhoto() {
@@ -527,6 +597,8 @@ final class LiveMatchCenter: ObservableObject {
     nonisolated private static let cacheKey = "liveMatch.current.v1"
     nonisolated private static let historyKey = "liveMatch.history.v1"
     nonisolated private static let earlierProfileKey = "liveMatch.earlierProfile.v1"
+    /// Matches deleted on this phone that the server has not confirmed yet.
+    nonisolated private static let pendingDeletesKey = "liveMatch.pendingDeletes.v1"
 
     private static func cachedHistory(defaults: UserDefaults) -> [CloudChatMatch]? {
         defaults.data(forKey: historyKey).flatMap { try? JSONDecoder().decode([CloudChatMatch].self, from: $0) }
@@ -550,7 +622,7 @@ final class LiveMatchCenter: ObservableObject {
     /// Signing out: also what was learned about this account, so the next
     /// one starts by asking the server.
     nonisolated static func clearAccountCache(defaults: UserDefaults = .standard) {
-        for key in [cacheKey, historyKey, earlierProfileKey, keyPrefix + "lastRefresh",
+        for key in [cacheKey, historyKey, earlierProfileKey, pendingDeletesKey, keyPrefix + "lastRefresh",
                     keyPrefix + "lastModerationCheck"] {
             defaults.removeObject(forKey: key)
         }

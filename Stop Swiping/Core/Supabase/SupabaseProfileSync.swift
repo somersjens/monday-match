@@ -4,20 +4,29 @@ import Supabase
 
 @MainActor
 protocol ProfileCloudSyncing {
-    /// Sends the profile when it differs from the server's copy.
+    /// Backs the profile up to the person's own iCloud when it changed, and
+    /// sends it to the server only while it takes part in automatic matching.
+    /// Switching matching off removes it from the server again
+    /// (202611200002_matching_only_profiles.sql).
     func synchronize() async throws
-    /// The automatic sync after an edit or on returning to the app. The
-    /// server only needs a profile that takes part in automatic matching, or
-    /// one that just stopped; otherwise the profile stays on the phone and the
-    /// account keeps the copy it last received.
-    func synchronizeMatchingProfile() async throws
     /// Profiles the server accepted from this object so far. A change means
     /// the server may have searched for a partner just now.
     var completedUploads: Int { get }
+    /// The server holds this phone's profile because it takes part in
+    /// automatic matching (or has an active match).
+    var hasMatchingProfileOnServer: Bool { get }
 }
 
-/// Photos live in private Storage, not as base64 data in the profile JSON.
-/// Exact location coordinates stay on the device.
+/// Tells the server that this phone's own scan matched the uploaded
+/// matching photo (see `PhotoVerificationService`).
+@MainActor
+protocol DevicePhotoReporting {
+    func reportPhotoScan(photoID: UUID) async throws
+}
+
+/// The profile as the server keeps it while it takes part in automatic
+/// matching. Photos live in private Storage, not as base64 data in the
+/// profile JSON. Exact location coordinates stay on the device.
 struct SupabaseProfileBackup: Codable, Equatable {
     struct Photo: Codable, Equatable {
         let id: UUID
@@ -64,11 +73,11 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     private let ownerKey: String
     private let now: () -> Date
     private let uploadsKey: String
+    /// The person's own iCloud: the profile's backup, with or without matching.
+    private let backup: ProfileICloudBackup?
+    private let photoReporter: DevicePhotoReporting?
     private var worker: Task<Void, Error>?
     private var needsSync = false
-    /// Set when a pending sync must send the profile even if it takes no
-    /// part in matching (signing in, verifying a photo).
-    private var needsUploadOutsideMatching = false
     /// Set while a profile is being deleted, so no upload can bring it back.
     private var isDeleting = false
     private(set) var completedUploads = 0
@@ -89,13 +98,39 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     }
 
     /// What the server last accepted from this phone for an account, kept
-    /// across launches so an unchanged profile is never sent again.
+    /// across launches so an unchanged profile is never sent again. Present
+    /// only while the server holds a matching profile from this phone.
     struct Upload: Codable {
         var row: Row
         var photoHashes: [UUID: Data]
         /// When the server last accepted or returned this. Missing in
         /// copies saved before the field existed: those count as expired.
         var confirmedAt: Date?
+        /// The matching photo whose scan on this phone the server recorded
+        /// for the version it stores now.
+        var reportedPhotoID: UUID?
+    }
+
+    /// The account's saved profile: in the person's own iCloud, or on the
+    /// server while it takes part in matching.
+    enum SavedProfile {
+        case iCloud(ProfileBackupCopy)
+        case server(Row)
+
+        var state: ProfileCreationState {
+            switch self {
+            case .iCloud(let copy): copy.state
+            case .server(let row): row.backup.state
+            }
+        }
+
+        /// Comparable whatever its source: the form the server would keep.
+        var comparable: SupabaseProfileBackup {
+            switch self {
+            case .iCloud(let copy): SupabaseProfileBackup(state: copy.state, draft: copy.draft)
+            case .server(let row): row.backup
+            }
+        }
     }
 
     /// How long what the server last accepted is trusted without asking.
@@ -108,8 +143,11 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
 
     init(client: SupabaseClient, projectURL: URL, repository: ProfileRepository,
          store: ProfileCreationStateStoring, defaults: UserDefaults = .standard,
+         backup: ProfileICloudBackup? = nil, photoReporter: DevicePhotoReporting? = nil,
          now: @escaping () -> Date = Date.init) {
         self.client = client
+        self.backup = backup
+        self.photoReporter = photoReporter
         self.now = now
         uploader = SupabaseProfilePhotoUploader(client: client, projectURL: projectURL)
         self.repository = repository
@@ -123,7 +161,7 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
 
     /// The account's saved profile while the person chooses between it and
     /// the answers just given on this phone.
-    private var profileAwaitingChoice: Row?
+    private var profileAwaitingChoice: SavedProfile?
 
     /// The phone's profile belongs to this account: it was sent to it, came
     /// from it, or was chosen over what the account had.
@@ -140,15 +178,21 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         let userID = try await client.auth.session.user.id.uuidString.lowercased()
         if defaults.string(forKey: ownerKey) == userID, hasCompletedProfile {
             try await synchronize()
-        } else if let row = try await load(userID: userID) {
-            if conflictsWithPhone(row) {
-                profileAwaitingChoice = row
+            return
+        }
+        if let saved = try await savedProfile(userID: userID) {
+            if conflictsWithPhone(saved) {
+                profileAwaitingChoice = saved
                 throw AccountProfileChoiceRequired()
             }
-            try await restore(row)
+            try await restore(saved, userID: userID)
+            // The restored profile is in place; bringing iCloud and the
+            // server in line with it is retried on the next sync if it fails.
+            try? await synchronize()
         } else {
             // A new account explicitly claims the local profile created before sign-in.
             defaults.set(userID, forKey: ownerKey)
+            // Into the person's own iCloud; to the server only with matching on.
             try await synchronize()
         }
     }
@@ -158,12 +202,18 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     /// the profile they were made with.
     func keepNewAnswers() async throws {
         let userID = try await client.auth.session.user.id.uuidString.lowercased()
-        guard let row = profileAwaitingChoice, row.id == userID else { throw SupabaseSetupError.wrongAccount }
-        LiveMatchCenter.rememberEarlierProfile(row.backup.state, replacedAt: now(), defaults: defaults)
-        // What the server holds now, unconfirmed: every photo of the new
-        // profile is sent, and the old ones stay until the new row replaces
-        // the one naming them.
-        uploads[userID] = Upload(row: row, photoHashes: [:], confirmedAt: nil)
+        guard let saved = profileAwaitingChoice else { throw SupabaseSetupError.wrongAccount }
+        LiveMatchCenter.rememberEarlierProfile(saved.state, replacedAt: now(), defaults: defaults)
+        // What the server holds now, unconfirmed: the new answers replace it
+        // when they take part in matching, and remove it when they don't.
+        let held: Row?
+        switch saved {
+        case .server(let row): held = row
+        case .iCloud: held = try? await load(userID: userID)
+        }
+        if let held, held.id == userID {
+            uploads[userID] = Upload(row: held, photoHashes: [:], confirmedAt: nil)
+        }
         defaults.set(userID, forKey: ownerKey)
         profileAwaitingChoice = nil
         // A failed save is retried by signing in again, which now finds this
@@ -174,9 +224,10 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     /// The account's saved profile wins over the answers on this phone.
     func restoreAccountProfile() async throws {
         let userID = try await client.auth.session.user.id.uuidString.lowercased()
-        guard let row = profileAwaitingChoice, row.id == userID else { throw SupabaseSetupError.wrongAccount }
-        try await restore(row)
+        guard let saved = profileAwaitingChoice else { throw SupabaseSetupError.wrongAccount }
+        try await restore(saved, userID: userID)
         profileAwaitingChoice = nil
+        try? await synchronize()
     }
 
     /// False when the phone holds a finished profile this account never
@@ -185,40 +236,41 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     func restoreIfNeeded() async throws -> Bool {
         let userID = try await client.auth.session.user.id.uuidString.lowercased()
         if defaults.string(forKey: ownerKey) == userID, hasCompletedProfile { return true }
-        guard let row = try await load(userID: userID) else { return true }
-        if conflictsWithPhone(row) { return false }
-        try await restore(row)
+        guard let saved = try await savedProfile(userID: userID) else { return true }
+        if conflictsWithPhone(saved) { return false }
+        try await restore(saved, userID: userID)
         return true
+    }
+
+    /// The person's own iCloud first: it holds the profile with or without
+    /// matching. The server only has a profile that takes part in matching.
+    private func savedProfile(userID: String) async throws -> SavedProfile? {
+        if let backup, let copy = try await backup.load(accountID: userID) { return .iCloud(copy) }
+        return try await load(userID: userID).map(SavedProfile.server)
     }
 
     /// The phone holds a finished profile, one the server would accept, that
     /// differs from the account's saved one.
-    private func conflictsWithPhone(_ row: Row) -> Bool {
+    private func conflictsWithPhone(_ saved: SavedProfile) -> Bool {
         guard let state = store.load(), state.completedAt != nil,
               state.hasAcceptedProfilePrivacy, !state.isUnderageLocked,
               let draft = try? repository.loadProfile() else { return false }
-        let local = Self.roundTripped(Self.row(userID: row.id, state: state, draft: draft, uploader: uploader))
-        return !local.hasSameContent(as: Self.roundTripped(row))
+        let local = Self.roundTripped(SupabaseProfileBackup(state: state, draft: draft))
+        return local.withoutNavigation != Self.roundTripped(saved.comparable).withoutNavigation
+    }
+
+    var hasMatchingProfileOnServer: Bool {
+        guard let owner = defaults.string(forKey: ownerKey) else { return false }
+        return uploads[owner] != nil
     }
 
     func synchronize() async throws {
-        try await synchronize(outsideMatching: true)
-    }
-
-    func synchronizeMatchingProfile() async throws {
-        try await synchronize(outsideMatching: false)
-    }
-
-    private func synchronize(outsideMatching: Bool) async throws {
         needsSync = true
-        if outsideMatching { needsUploadOutsideMatching = true }
         if let worker { try await worker.value; return }
         let task = Task {
             while needsSync {
                 needsSync = false
-                let outsideMatching = needsUploadOutsideMatching
-                needsUploadOutsideMatching = false
-                try await uploadCurrentProfile(outsideMatching: outsideMatching)
+                try await synchronizeCurrentProfile()
             }
         }
         worker = task
@@ -226,22 +278,51 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         try await task.value
     }
 
-    private func uploadCurrentProfile(outsideMatching: Bool) async throws {
+    private func synchronizeCurrentProfile() async throws {
         guard !isDeleting, let state = store.load(), state.completedAt != nil,
               state.hasAcceptedProfilePrivacy, !state.isUnderageLocked,
               let draft = try repository.loadProfile() else { return }
         let userID = try await client.auth.session.user.id.uuidString.lowercased()
         guard defaults.string(forKey: ownerKey) == userID else { throw SupabaseSetupError.wrongAccount }
+        var failure: Error?
+        do {
+            if state.autoMatching.isEnabled {
+                try await uploadMatchingProfile(state: state, draft: draft, userID: userID)
+            } else if uploads[userID] != nil {
+                try await leaveMatching(userID: userID)
+            }
+        } catch {
+            failure = error
+        }
+        do {
+            try await backup?.save(state: state, draft: draft, accountID: userID)
+        } catch {
+            failure = failure ?? error
+        }
+        if let failure { throw failure }
+    }
+
+    /// Automatic matching went off: the server removes the profile, and this
+    /// phone its photos. During an active match the server keeps both until
+    /// the match ends, then removes them itself.
+    private func leaveMatching(userID: String) async throws {
+        let left: Bool = try await client.rpc("leave_matching").execute().value
+        guard left else { return }
+        uploads[userID] = nil
+        // Whatever is left is removed by the server's daily job a day later.
+        try? await uploader.removePhotos(otherThan: [], userID: userID, minimumAge: 0)
+    }
+
+    private func uploadMatchingProfile(state: ProfileCreationState, draft: ProfileDraft, userID: String) async throws {
         let previous = uploads[userID]
-        // Edits to a profile outside matching stay on the phone. Switching
-        // matching off is still sent, so the server stops matching it.
-        let wasMatching = previous?.row.backup.state.autoMatching.isEnabled == true
-        guard outsideMatching || state.autoMatching.isEnabled || wasMatching else { return }
         let row = Self.row(userID: userID, state: state, draft: draft, uploader: uploader)
         let photoHashes = Self.photoHashes(draft.photos)
         let isConfirmed = previous?.confirmedAt.map { now().timeIntervalSince($0) < Self.confirmationLifetime } ?? false
         if isConfirmed, let previous, previous.photoHashes == photoHashes,
-           previous.row.hasSameContent(as: Self.roundTripped(row)) { return }
+           previous.row.hasSameContent(as: Self.roundTripped(row)) {
+            await reportPhotoScanIfNeeded(state: state, userID: userID)
+            return
+        }
         var changedPhotos = draft.photos.filter { previous?.photoHashes[$0.id] != photoHashes[$0.id] }
         if previous != nil, !isConfirmed {
             // The server may have removed a photo it no longer needed: send
@@ -261,10 +342,29 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         }
         _ = try await uploader.uploadPhotos(changedPhotos, userID: userID)
         try await client.from("profiles").upsert(row, onConflict: "id").execute()
-        uploads[userID] = Upload(row: row, photoHashes: photoHashes, confirmedAt: now())
+        // A newly stored matching photo is a new version: its scan is reported again.
+        let reported = changedPhotos.contains { $0.id == state.autoMatching.photoID } ? nil : previous?.reportedPhotoID
+        uploads[userID] = Upload(row: row, photoHashes: photoHashes, confirmedAt: now(), reportedPhotoID: reported)
         completedUploads += 1
         // A replaced photo is no longer named anywhere on the server.
         try? await uploader.removePhotos(previousIDs.subtracting(currentIDs), userID: userID)
+        await reportPhotoScanIfNeeded(state: state, userID: userID)
+    }
+
+    /// The matching photo was verified by a live scan on this phone (setup
+    /// can't be completed with a photo otherwise). The phone remembers that,
+    /// so switching matching back on needs no new scan: the server is told
+    /// again for the version it now stores. A failure is tried on the next sync.
+    private func reportPhotoScanIfNeeded(state: ProfileCreationState, userID: String) async {
+        guard let photoID = state.autoMatching.photoID, state.autoMatching.hasCompletedSetup,
+              let photoReporter, var upload = uploads[userID], upload.reportedPhotoID != photoID else { return }
+        do {
+            try await photoReporter.reportPhotoScan(photoID: photoID)
+            upload.reportedPhotoID = photoID
+            uploads[userID] = upload
+        } catch {
+            // Tried again on the next sync.
+        }
     }
 
     private static func row(userID: String, state: ProfileCreationState, draft: ProfileDraft,
@@ -278,8 +378,8 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
 
     /// The row as it comes back from storage. Some answers are not stored
     /// field for field, so a fresh row is compared in this form.
-    private static func roundTripped(_ row: Row) -> Row {
-        (try? JSONDecoder().decode(Row.self, from: JSONEncoder().encode(row))) ?? row
+    private static func roundTripped<Value: Codable>(_ value: Value) -> Value {
+        (try? JSONDecoder().decode(Value.self, from: JSONEncoder().encode(value))) ?? value
     }
 
     private static func photoHashes(_ photos: [ProfilePhoto]) -> [UUID: Data] {
@@ -310,6 +410,11 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         guard accountDeleted else { return }
         defaults.removeObject(forKey: uploadsKey)
         defaults.removeObject(forKey: ownerKey)
+    }
+
+    /// The signed-in account, for removing its iCloud backup with it.
+    var accountID: String? {
+        get async { (try? await client.auth.session)?.user.id.uuidString.lowercased() }
     }
 
     /// Apple's tokens must be revoked when such an account is deleted.
@@ -344,17 +449,28 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         return rows.first
     }
 
-    private func restore(_ row: Row) async throws {
-        var draft = row.backup.draft
-        for photo in row.backup.photos {
-            draft.photos.append(try await uploader.downloadPhoto(id: photo.id, order: photo.order, userID: row.id))
+    private func restore(_ saved: SavedProfile, userID: String) async throws {
+        switch saved {
+        case .iCloud(let copy):
+            try repository.saveProfile(copy.draft)
+            store.save(copy.state)
+            defaults.set(userID, forKey: ownerKey)
+            backup?.markCurrent(copy, accountID: userID)
+            // What the server holds is unknown: a matching profile is sent
+            // in full on the next sync (identical photos are kept as they are).
+            uploads[userID] = nil
+        case .server(let row):
+            var draft = row.backup.draft
+            for photo in row.backup.photos {
+                draft.photos.append(try await uploader.downloadPhoto(id: photo.id, order: photo.order, userID: row.id))
+            }
+            // Commit only after every photo has downloaded successfully.
+            try repository.saveProfile(draft)
+            store.save(row.backup.state)
+            defaults.set(row.id, forKey: ownerKey)
+            // The phone now holds what the server has: nothing to send back.
+            uploads[row.id] = Upload(row: Self.row(userID: row.id, state: row.backup.state, draft: draft, uploader: uploader),
+                                     photoHashes: Self.photoHashes(draft.photos), confirmedAt: now())
         }
-        // Commit only after every photo has downloaded successfully.
-        try repository.saveProfile(draft)
-        store.save(row.backup.state)
-        defaults.set(row.id, forKey: ownerKey)
-        // The phone now holds what the server has: nothing to send back.
-        uploads[row.id] = Upload(row: Self.row(userID: row.id, state: row.backup.state, draft: draft, uploader: uploader),
-                                 photoHashes: Self.photoHashes(draft.photos), confirmedAt: now())
     }
 }

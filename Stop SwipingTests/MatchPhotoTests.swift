@@ -26,12 +26,15 @@ final class MatchPhotoTests: XCTestCase {
         XCTAssertFalse(match.partnerPhotoVerified)
     }
 
-    func testLiveMatchDownloadsThePhotoOnceAndForgetsItWhenTheMatchEnds() async throws {
+    func testLiveMatchDownloadsThePhotoOnceAndKeepsACopyAfterTheMatchEnds() async throws {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: "MatchPhotoTests-\(UUID())"))
+        let photos = MatchPhotoStore(directory: FileManager.default.temporaryDirectory.appending(path: UUID().uuidString))
+        defer { photos.clear() }
         let repository = PhotoRepository()
-        repository.current = CloudChatMatch(id: UUID(), partnerID: UUID(), partnerName: "Mila", ownScore: 80, partnerScore: 84,
+        let id = UUID()
+        repository.current = CloudChatMatch(id: id, partnerID: UUID(), partnerName: "Mila", ownScore: 80, partnerScore: 84,
                                             matchedAt: Date(), partnerPhotoPath: "mila/photo.jpg", partnerPhotoVerified: true)
-        let center = LiveMatchCenter(repository: repository, defaults: defaults)
+        let center = LiveMatchCenter(repository: repository, defaults: defaults, photos: photos)
         let you = Self.profile("Emma")
 
         await center.refresh(ownProfile: you)
@@ -41,7 +44,41 @@ final class MatchPhotoTests: XCTestCase {
 
         repository.current = nil
         await center.refresh(ownProfile: you)
-        XCTAssertNil(center.partnerPhoto, "The photo goes with the match")
+        XCTAssertNil(center.partnerPhoto, "The server's photo goes with the match")
+        XCTAssertNotNil(center.keptPartnerPhoto(for: id), "The phone keeps the one it was shown, for a report")
+        XCTAssertTrue(center.keptPartnerPhotoWasVerified(id))
+    }
+
+    /// Deleting an ended automatic match removes it from My matches and this
+    /// phone at once, and from the account's list on the server, also when
+    /// that only works on a later try.
+    func testDeletingAnEndedMatchRemovesItHereAndOnTheServer() async throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "MatchPhotoTests-\(UUID())"))
+        let photos = MatchPhotoStore(directory: FileManager.default.temporaryDirectory.appending(path: UUID().uuidString))
+        defer { photos.clear() }
+        let repository = PhotoRepository()
+        var ended = CloudChatMatch(id: UUID(), partnerID: UUID(), partnerName: "Mila", ownScore: 80, partnerScore: 84,
+                                   matchedAt: Date())
+        ended.endedAt = Date()
+        ended.endReason = .broken
+        repository.history = [ended]
+        photos.save(Data([1]), for: ended.id)
+        let center = LiveMatchCenter(repository: repository, defaults: defaults, photos: photos)
+        await center.loadHistory()
+        XCTAssertEqual(center.pastMatches.map(\.id), [ended.id])
+
+        repository.failsDeleting = true
+        await center.delete(ended.id)
+        XCTAssertTrue(center.pastMatches.isEmpty, "Gone from My matches at once")
+        XCTAssertNil(photos.photo(for: ended.id), "Its photo leaves the phone")
+        XCTAssertTrue(repository.deleted.isEmpty)
+
+        // The server still lists it until the delete gets through.
+        await center.loadHistory()
+        XCTAssertTrue(center.pastMatches.isEmpty, "A delete not yet confirmed keeps it hidden")
+        repository.failsDeleting = false
+        await center.loadHistory()
+        XCTAssertEqual(repository.deleted, [ended.id])
     }
 
     func testDemoMatchesAreMarkedAndKeepTheMarkWhenSaved() throws {
@@ -218,7 +255,16 @@ private final class PhotoRepository: SecureChatRepository {
     }
     let scope = "photo-test-" + UUID().uuidString
     var current: CloudChatMatch?
+    var history: [CloudChatMatch] = []
+    var deleted: [UUID] = []
+    var failsDeleting = false
     var downloads: [String] = []
+    func matchHistory() async throws -> [CloudChatMatch] { history }
+    func deleteMatch(_ matchID: UUID) async throws {
+        if failsDeleting { throw CancellationError() }
+        deleted.append(matchID)
+        history.removeAll { $0.id == matchID }
+    }
     let ownID = UUID()
     func userID() async throws -> UUID { ownID }
     func currentMatch() async throws -> CloudChatMatch? { currentMatchCalls += 1; return current }

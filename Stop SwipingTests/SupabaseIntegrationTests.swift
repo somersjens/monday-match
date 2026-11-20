@@ -51,7 +51,7 @@ final class SupabaseIntegrationTests: XCTestCase {
         let suite = "supabase-test.\(UUID())"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        let state = completedState()
+        let state = matchingState()
         let store = InMemoryProfileCreationStore(state: state)
         var draft = ProfileDraft()
         draft.displayName = state.displayName
@@ -86,7 +86,7 @@ final class SupabaseIntegrationTests: XCTestCase {
         let suite = "supabase-test.\(UUID())"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        let state = completedState()
+        let state = matchingState()
         let store = InMemoryProfileCreationStore(state: state)
         var draft = ProfileDraft()
         draft.displayName = state.displayName
@@ -136,7 +136,7 @@ final class SupabaseIntegrationTests: XCTestCase {
 
     func testReturningAccountRestoresCloudProfileBeforeSaving() async throws {
         let response = try sessionData()
-        var remoteState = completedState()
+        var remoteState = matchingState()
         remoteState.displayName = "Remote Alex"
         var draft = ProfileDraft()
         draft.displayName = remoteState.displayName
@@ -212,7 +212,7 @@ final class SupabaseIntegrationTests: XCTestCase {
                                                         InMemoryProfileCreationStore, UserDefaults,
                                                         SupabaseTestRequests, () -> Void) {
         let response = try sessionData()
-        var remoteState = completedState()
+        var remoteState = matchingState()
         remoteState.displayName = "Remote Alex"
         var remoteDraft = ProfileDraft()
         remoteDraft.displayName = remoteState.displayName
@@ -230,7 +230,7 @@ final class SupabaseIntegrationTests: XCTestCase {
         let (client, _) = makeClient()
         let suite = "supabase-test.\(UUID())"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        let state = completedState()
+        let state = matchingState()
         let store = InMemoryProfileCreationStore(state: state)
         var draft = ProfileDraft()
         draft.displayName = state.displayName
@@ -340,27 +340,32 @@ final class SupabaseIntegrationTests: XCTestCase {
         let relaunched = SupabaseProfileSync(client: client, projectURL: projectURL, repository: repository,
                                              store: store, defaults: defaults)
         try await relaunched.synchronize()
-        try await relaunched.synchronizeMatchingProfile()
+        try await relaunched.synchronize()
         XCTAssertEqual(profileSaves(), 1, "An unchanged profile must not be sent again.")
 
         // Browsing the questionnaire is not a change worth sending.
         state.currentStep = .height
         store.save(state)
-        try await relaunched.synchronizeMatchingProfile()
+        try await relaunched.synchronize()
         XCTAssertEqual(profileSaves(), 1)
 
         state.heightCentimeters += 3
         store.save(state)
-        try await relaunched.synchronizeMatchingProfile()
+        try await relaunched.synchronize()
         XCTAssertEqual(profileSaves(), 2)
     }
 
-    func testEditsOutsideMatchingStayOnThePhoneUntilMatchingIsSwitchedOff() async throws {
+    /// Switching matching off removes the profile and its photos from the
+    /// server; edits after that stay on the phone (and in iCloud).
+    func testSwitchingMatchingOffRemovesTheProfileFromTheServer() async throws {
         let response = try sessionData()
         let requests = SupabaseTestRequests()
         SupabaseTestURLProtocol.handler = { request in
             requests.append(request)
-            if request.url!.path == "/auth/v1/token" { return (200, response) }
+            let path = request.url!.path
+            if path == "/auth/v1/token" { return (200, response) }
+            if path == "/rest/v1/rpc/leave_matching" { return (200, Data("true".utf8)) }
+            if path.hasPrefix("/storage/v1/object/list") { return (200, Data("[]".utf8)) }
             return request.httpMethod == "GET" ? (200, Data("[]".utf8)) : (201, Data())
         }
         let (client, _) = makeClient()
@@ -379,25 +384,188 @@ final class SupabaseIntegrationTests: XCTestCase {
         func profileSaves() -> Int {
             requests.all.filter { $0.url?.path == "/rest/v1/profiles" && $0.httpMethod == "POST" }.count
         }
+        func leaves() -> Int { requests.all.filter { $0.url?.path == "/rest/v1/rpc/leave_matching" }.count }
         XCTAssertEqual(profileSaves(), 1)
+        XCTAssertTrue(sync.hasMatchingProfileOnServer)
 
-        // Switching matching off reaches the server, so it stops matching.
         state.autoMatching.isEnabled = false
         store.save(state)
-        try await sync.synchronizeMatchingProfile()
-        XCTAssertEqual(profileSaves(), 2)
+        try await sync.synchronize()
+        XCTAssertEqual(profileSaves(), 1, "Switching off sends no profile")
+        XCTAssertEqual(leaves(), 1, "It asks the server to remove it")
+        XCTAssertTrue(requests.all.contains { $0.url?.path.hasPrefix("/storage/v1/object/list") == true },
+                      "And removes its photos")
+        XCTAssertFalse(sync.hasMatchingProfileOnServer)
 
-        // Later edits stay on the phone.
+        // Later edits stay on the phone, and nothing is removed twice.
         state.heightCentimeters += 3
         store.save(state)
-        try await sync.synchronizeMatchingProfile()
-        XCTAssertEqual(profileSaves(), 2)
+        try await sync.synchronize()
+        XCTAssertEqual(profileSaves(), 1)
+        XCTAssertEqual(leaves(), 1)
 
         // Switching it back on sends the current profile.
         state.autoMatching.isEnabled = true
         store.save(state)
-        try await sync.synchronizeMatchingProfile()
-        XCTAssertEqual(profileSaves(), 3)
+        try await sync.synchronize()
+        XCTAssertEqual(profileSaves(), 2)
+    }
+
+    /// During an active match the server keeps the profile; the phone tries
+    /// again later instead of forgetting what the server holds.
+    func testLeavingDuringAMatchKeepsTryingLater() async throws {
+        let response = try sessionData()
+        let requests = SupabaseTestRequests()
+        SupabaseTestURLProtocol.handler = { request in
+            requests.append(request)
+            let path = request.url!.path
+            if path == "/auth/v1/token" { return (200, response) }
+            if path == "/rest/v1/rpc/leave_matching" { return (200, Data("false".utf8)) }
+            return request.httpMethod == "GET" ? (200, Data("[]".utf8)) : (201, Data())
+        }
+        let (client, _) = makeClient()
+        let suite = "supabase-test.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var state = matchingState()
+        let store = InMemoryProfileCreationStore(state: state)
+        var draft = ProfileDraft()
+        draft.displayName = state.displayName
+        draft.profileCreationCompletedAt = state.completedAt
+        let sync = SupabaseProfileSync(client: client, projectURL: projectURL,
+            repository: InMemoryProfileRepository(profile: draft), store: store, defaults: defaults)
+        _ = try await SupabaseAuthService(client: client, profileSync: sync)
+            .signInWithApple(payload: .init(identityToken: "apple-id-token", rawNonce: "nonce", fullName: nil))
+        state.autoMatching.isEnabled = false
+        store.save(state)
+        try await sync.synchronize()
+        XCTAssertTrue(sync.hasMatchingProfileOnServer, "The server kept it")
+        XCTAssertFalse(requests.all.contains { $0.url?.path.hasPrefix("/storage/v1/object") == true && $0.httpMethod == "DELETE" },
+                       "Its photos stay too")
+        try await sync.synchronize()
+        XCTAssertEqual(requests.all.filter { $0.url?.path == "/rest/v1/rpc/leave_matching" }.count, 2)
+    }
+
+    /// Creating an account without matching sends nothing to the server: the
+    /// profile goes to the person's own iCloud.
+    func testAnAccountWithoutMatchingBacksUpToICloudOnly() async throws {
+        let response = try sessionData()
+        let requests = SupabaseTestRequests()
+        SupabaseTestURLProtocol.handler = { request in
+            requests.append(request)
+            if request.url!.path == "/auth/v1/token" { return (200, response) }
+            return request.httpMethod == "GET" ? (200, Data("[]".utf8)) : (201, Data())
+        }
+        let (client, _) = makeClient()
+        let suite = "supabase-test.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let state = completedState()
+        var draft = ProfileDraft()
+        draft.displayName = state.displayName
+        draft.profileCreationCompletedAt = state.completedAt
+        draft.photos = [ProfilePhoto(imageData: Data([7, 7]), order: 0)]
+        let cloud = FakeProfileBackupStore()
+        let sync = SupabaseProfileSync(client: client, projectURL: projectURL,
+            repository: InMemoryProfileRepository(profile: draft), store: InMemoryProfileCreationStore(state: state),
+            defaults: defaults, backup: ProfileICloudBackup(store: cloud, defaults: defaults))
+        guard case .signedIn = try await SupabaseAuthService(client: client, profileSync: sync)
+            .signInWithApple(payload: .init(identityToken: "apple-id-token", rawNonce: "nonce", fullName: nil)) else {
+            return XCTFail("The finished profile reaches the home screen.")
+        }
+        XCTAssertFalse(requests.all.contains { $0.httpMethod != "GET" && $0.url?.path != "/auth/v1/token" },
+                       "Nothing is written to the server")
+        XCTAssertFalse(requests.all.contains { $0.url?.path.hasPrefix("/storage") == true }, "No photo is uploaded")
+        let backedUp = try XCTUnwrap(cloud.copies[userID.uuidString.lowercased()])
+        XCTAssertEqual(backedUp.state.displayName, "Local Alex")
+        XCTAssertEqual(backedUp.draft.photos.map(\.imageData), [Data([7, 7])])
+
+        // Unchanged: iCloud is not asked again.
+        let saves = cloud.saves
+        try await sync.synchronize()
+        XCTAssertEqual(cloud.saves, saves)
+    }
+
+    /// An empty phone signing in gets the profile back from iCloud.
+    func testSigningInOnAnEmptyPhoneRestoresFromICloud() async throws {
+        let response = try sessionData()
+        let requests = SupabaseTestRequests()
+        SupabaseTestURLProtocol.handler = { request in
+            requests.append(request)
+            if request.url!.path == "/auth/v1/token" { return (200, response) }
+            return request.httpMethod == "GET" ? (200, Data("[]".utf8)) : (201, Data())
+        }
+        let (client, _) = makeClient()
+        let suite = "supabase-test.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var remote = completedState()
+        remote.displayName = "Backed-up Alex"
+        var remoteDraft = ProfileDraft()
+        remoteDraft.displayName = remote.displayName
+        remoteDraft.profileCreationCompletedAt = remote.completedAt
+        remoteDraft.photos = [ProfilePhoto(imageData: Data([3]), order: 0)]
+        let cloud = FakeProfileBackupStore()
+        cloud.copies[userID.uuidString.lowercased()] = ProfileBackupCopy(state: remote, draft: remoteDraft)
+        let store = InMemoryProfileCreationStore(state: nil)
+        let repository = InMemoryProfileRepository()
+        let sync = SupabaseProfileSync(client: client, projectURL: projectURL, repository: repository, store: store,
+            defaults: defaults, backup: ProfileICloudBackup(store: cloud, defaults: defaults))
+        guard case .signedIn = try await SupabaseAuthService(client: client, profileSync: sync)
+            .signInWithApple(payload: .init(identityToken: "apple-id-token", rawNonce: "nonce", fullName: nil)) else {
+            return XCTFail("The restored profile is finished.")
+        }
+        XCTAssertEqual(store.load()?.displayName, "Backed-up Alex")
+        XCTAssertEqual(try repository.loadProfile()?.photos.map(\.imageData), [Data([3])])
+        XCTAssertEqual(cloud.saves, 0, "What came from iCloud is not sent back")
+        XCTAssertFalse(requests.all.contains { $0.url?.path == "/rest/v1/profiles" }, "The server is not even asked")
+    }
+
+    /// The phone remembers that the matching photo passed its scan: the
+    /// server hears of it after every upload of a new photo version, so
+    /// switching matching back on needs no new scan.
+    func testAPassedScanIsReportedAgainAfterSwitchingMatchingBackOn() async throws {
+        let response = try sessionData()
+        SupabaseTestURLProtocol.handler = { request in
+            let path = request.url!.path
+            if path == "/auth/v1/token" { return (200, response) }
+            if path == "/rest/v1/rpc/leave_matching" { return (200, Data("true".utf8)) }
+            if path.hasPrefix("/storage/v1/object/list") { return (200, Data("[]".utf8)) }
+            if path.hasPrefix("/storage/v1/object/profile-photos") {
+                return (200, Data("{\"Id\":\"x\",\"Key\":\"profile-photos/x.jpg\"}".utf8))
+            }
+            return request.httpMethod == "GET" ? (200, Data("[]".utf8)) : (201, Data())
+        }
+        let (client, _) = makeClient()
+        let suite = "supabase-test.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let photo = ProfilePhoto(imageData: Data([5]), order: 0)
+        var state = matchingState()
+        state.autoMatching.photoID = photo.id
+        state.autoMatching.hasCompletedSetup = true
+        let store = InMemoryProfileCreationStore(state: state)
+        var draft = ProfileDraft()
+        draft.displayName = state.displayName
+        draft.profileCreationCompletedAt = state.completedAt
+        draft.photos = [photo]
+        let reporter = FakePhotoReporter()
+        let sync = SupabaseProfileSync(client: client, projectURL: projectURL,
+            repository: InMemoryProfileRepository(profile: draft), store: store, defaults: defaults,
+            photoReporter: reporter)
+        _ = try await SupabaseAuthService(client: client, profileSync: sync)
+            .signInWithApple(payload: .init(identityToken: "apple-id-token", rawNonce: "nonce", fullName: nil))
+        XCTAssertEqual(reporter.reported, [photo.id], "Reported once the photo is stored")
+        try await sync.synchronize()
+        XCTAssertEqual(reporter.reported, [photo.id], "Not again while nothing changed")
+
+        state.autoMatching.isEnabled = false
+        store.save(state)
+        try await sync.synchronize()
+        state.autoMatching.isEnabled = true
+        store.save(state)
+        try await sync.synchronize()
+        XCTAssertEqual(reporter.reported, [photo.id, photo.id], "The photo went up again, and so did its scan")
     }
 
     func testMatchingProfileIsConfirmedAgainAfterFourWeeks() async throws {
@@ -430,13 +598,13 @@ final class SupabaseIntegrationTests: XCTestCase {
             SupabaseProfileSync(client: client, projectURL: projectURL, repository: repository, store: store,
                                 defaults: defaults, now: { Date().addingTimeInterval(days * 86_400) })
         }
-        try await sync(after: 27).synchronizeMatchingProfile()
+        try await sync(after: 27).synchronize()
         XCTAssertEqual(profileSaves(), 1, "Within four weeks the server's copy is trusted.")
         // After that the server may have cleaned up, and it should hear that
         // the profile is still in use.
-        try await sync(after: 29).synchronizeMatchingProfile()
+        try await sync(after: 29).synchronize()
         XCTAssertEqual(profileSaves(), 2)
-        try await sync(after: 29).synchronizeMatchingProfile()
+        try await sync(after: 29).synchronize()
         XCTAssertEqual(profileSaves(), 2, "Confirmed again, so not sent a third time.")
     }
 
@@ -463,7 +631,7 @@ final class SupabaseIntegrationTests: XCTestCase {
             .signInWithApple(payload: .init(identityToken: "apple-id-token", rawNonce: "nonce", fullName: nil))
         let saves = requests.all.filter { $0.url?.path == "/rest/v1/profiles" && $0.httpMethod == "POST" }.count
         try await SupabaseProfileSync(client: client, projectURL: projectURL, repository: repository, store: store,
-            defaults: defaults, now: { Date().addingTimeInterval(60 * 86_400) }).synchronizeMatchingProfile()
+            defaults: defaults, now: { Date().addingTimeInterval(60 * 86_400) }).synchronize()
         XCTAssertEqual(requests.all.filter { $0.url?.path == "/rest/v1/profiles" && $0.httpMethod == "POST" }.count,
                        saves, "A profile outside matching stays on the phone.")
     }
@@ -554,4 +722,23 @@ nonisolated private extension URLRequest {
         }
         return result
     }
+}
+
+@MainActor
+private final class FakeProfileBackupStore: ProfileBackupStoring {
+    var copies: [String: ProfileBackupCopy] = [:]
+    var saves = 0
+    func isAvailable() async throws -> Bool { true }
+    func load(accountID: String) async throws -> ProfileBackupCopy? { copies[accountID] }
+    func save(_ copy: ProfileBackupCopy, accountID: String, sending: Set<UUID>, removing: Set<UUID>) async throws {
+        saves += 1
+        copies[accountID] = copy
+    }
+    func delete(accountID: String) async throws { copies[accountID] = nil }
+}
+
+@MainActor
+private final class FakePhotoReporter: DevicePhotoReporting {
+    var reported: [UUID] = []
+    func reportPhotoScan(photoID: UUID) async throws { reported.append(photoID) }
 }

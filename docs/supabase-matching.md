@@ -18,7 +18,10 @@ that history before adopting CLI deployment for this project.
 
 Every insert or update of `profiles.profile` / `profiles.backup` runs the engine
 inside the same transaction, so the app's normal profile sync is what enters
-someone into matching. A failed match transaction rolls back the profile save
+someone into matching. Since `202611200002_matching_only_profiles.sql` the app
+only sends a profile while automatic matching is on, and switching it off
+calls `leave_matching()`, which removes the row (see
+[data retention](data-retention.md)). A failed match transaction rolls back the profile save
 and can be retried.
 
 Admission requires a completed adult profile, both current privacy receipts,

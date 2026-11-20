@@ -49,7 +49,7 @@ struct MatchSettingsMenu: View {
                     case .scores(let perspective): onShowScores(perspective)
                     case .report(let reason): onReport(reason)
                     case .breakMatch: onBreak()
-                    case .close: break
+                    case .delete, .close: break
                     }
                 }
             }
@@ -66,6 +66,8 @@ struct MatchSettingsMenu: View {
 /// reported from here, and the match is left from here too.
 struct BrokenMatchMenu: View {
     let onReport: (ReportReason) -> Void
+    /// Asks before deleting the match from My matches.
+    let onDelete: () -> Void
     let onClose: () -> Void
 
     @State private var isOpen = false
@@ -92,6 +94,7 @@ struct BrokenMatchMenu: View {
                     try? await Task.sleep(for: .milliseconds(380))
                     switch choice {
                     case .report(let reason): onReport(reason)
+                    case .delete: onDelete()
                     case .close: onClose()
                     default: break
                     }
@@ -110,6 +113,7 @@ private struct MatchSettingsPanel: View {
         case scores(MatchReport.Perspective)
         case report(ReportReason)
         case breakMatch
+        case delete
         case close
     }
 
@@ -117,7 +121,7 @@ private struct MatchSettingsPanel: View {
         /// The gear: your profile, both scores and the ways out of a match.
         /// `canBreak` is false once the match is broken.
         case settings(name: String, canBreak: Bool)
-        /// A broken match's warning triangle: reporting and leaving.
+        /// A broken match's warning triangle: reporting, deleting and leaving.
         case broken
     }
 
@@ -153,6 +157,7 @@ private struct MatchSettingsPanel: View {
     private var brokenOptions: some View {
         VStack(spacing: 0) {
             row(L10n("Report your match"), symbol: "exclamationmark.triangle", showsChevron: true) { showsReasons = true }
+            row(L10n("Delete match"), symbol: "trash", isDestructive: true) { onChoose(.delete) }
             divider
             row(L10n("Close"), symbol: "xmark") { onChoose(.close) }
         }

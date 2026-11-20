@@ -64,14 +64,15 @@ private struct PrivacyPointsCard: View {
     }
 
     /// Heading and text start at the leading edge; the icon follows the
-    /// heading directly. Sizes match the details list below.
+    /// heading directly. The icon is a size below the heading so wide
+    /// symbols (arrows, server, people) don't outweigh the words.
     private func row(_ point: PrivacyContent.Point) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 7) {
                 Text(point.title)
                     .font(.body.weight(.semibold))
                 Image(systemName: point.symbol)
-                    .font(.body.weight(.regular))
+                    .font(.subheadline.weight(.medium))
                     .imageScale(.medium)
                     .foregroundStyle(OnboardingTheme.accentGradient)
                     .accessibilityHidden(true)

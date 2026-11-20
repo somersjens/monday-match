@@ -100,16 +100,8 @@ private struct PhotoVerificationFlow: ViewModifier {
     private func finish(_ receipt: PhotoVerificationReceipt) async {
         switch receipt.outcome {
         case .match:
-            if let service {
-                state.isSaving = true
-                defer { state.isSaving = false }
-                do {
-                    try await service.recordDeviceScan(photoID: receipt.photoID)
-                } catch {
-                    state.issue = Self.isDailyLimit(error) ? .dailyLimit : .serviceUnavailable
-                    return
-                }
-            }
+            // The phone remembers the passed scan. The server hears of it once
+            // the photo goes up with a profile in automatic matching.
             state.issue = nil
             onComplete(receipt)
         case .noMatch:
@@ -118,12 +110,5 @@ private struct PhotoVerificationFlow: ViewModifier {
             let camera = AVCaptureDevice.authorizationStatus(for: .video)
             state.issue = camera == .denied || camera == .restricted ? .cameraAccess : nil
         }
-    }
-
-    /// `record_device_photo_verification` allows five checks per account per
-    /// day; the sixth is refused with this message.
-    private static func isDailyLimit(_ error: Error) -> Bool {
-        (error as? PostgrestError)?.message.contains("Daily verification limit") == true
-            || (error as? PhotoVerificationServiceError) == .dailyLimit
     }
 }

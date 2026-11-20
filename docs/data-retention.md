@@ -1,16 +1,46 @@
 # Data retention and server traffic
 
 What the server keeps, for how long, and how the app keeps its requests down.
-Migration: `supabase/migrations/202611190002_traffic_and_retention.sql`.
-Tests: `supabase/tests/traffic_and_retention.sql`. Edge function:
-`supabase/functions/retention-purge`.
+Migrations: `supabase/migrations/202611190002_traffic_and_retention.sql` and
+`202611200002_matching_only_profiles.sql`. Tests:
+`supabase/tests/traffic_and_retention.sql`, `matching_only_profiles.sql`.
+Edge function: `supabase/functions/retention-purge`.
+
+## Only profiles in automatic matching (since 20 November 2026)
+
+Creating an account backs the profile up to the person's own iCloud
+(`ProfileICloudBackup`, CloudKit zone `Profile`, record types `ProfileBackup`
+and `ProfileBackupPhoto`, all fields encrypted; both deployed to the
+Production schema on 20 November 2026), never to Supabase. The app
+sends the profile and its photos to Supabase only while automatic matching is
+on. Switching it off calls `leave_matching()`: the profile row goes at once
+(out of the pool), the app removes its photos, and the daily job removes
+whatever is left a day later. During an active match nothing is removed (the
+match continues; the job removes the profile once it ends). Signing in on an
+empty phone restores from iCloud first, then from a matching profile on the
+server.
+
+What stays on the server after leaving: the account (`auth.users`, needed to
+sign in and for purchases), push devices, `matches` rows and
+`match_identities` hashes (never the same two people again), and the shared
+match history. The phone remembers that its matching photo passed the live
+scan, so switching matching back on uploads the photo again and reports the
+scan (`DevicePhotoScanReporter`) without a new scan.
+
+The partner's photo is shown by the server only during an active match; the
+app keeps the copy it was shown (`MatchPhotoStore`, backed up to iCloud with
+the saved match), so it stays visible after a break and goes into a report.
+
+`delete_match(match)` removes an ended match from the caller's own My matches.
+The other person keeps it; once both deleted it (or the other account is
+gone), its messages, keys, cards and read states go.
 
 ## Retention rules (daily job `retention`, 03:29 UTC)
 
 | What | When it goes | How |
 | --- | --- | --- |
 | Pool entry of a matcher | No sign of the app for 6 months | SQL, `remove_dormant_from_pool()`; the profile stays and the app's next save puts it back |
-| Matching photo | Auto matching off for 30 days, no active match | `retention_apply('photos')` clears every photo reference in the row, then the edge function deletes the object |
+| Profile and photos outside matching | Auto matching off, no active match, last save over a day ago | `retention_apply('leave')` deletes the row, then the edge function deletes the photos (replaced the 30-day photo rule on 20 November 2026) |
 | Profile row, photo, push devices | No sign of the app for 12 months | `retention_apply('profile')`, then the edge function deletes the photos. The sign-in (`auth.users`) stays |
 | Stored photos nothing names | After a day | `retention_apply('orphans')`, then the edge function deletes them (failed deletes, replaced photos the app could not remove) |
 
@@ -81,6 +111,12 @@ the app catches up on every (re)join anyway.
 ## Deploying
 
 Steps 1 and 2 were done on 19 November 2026 (52 SQL checks pass live).
+On 20 November 2026 `202611200002` replaced step 3: the database created the
+Vault secret `retention_secret` itself, and `retention-purge` checks requests
+with `retention_secret_matches()` instead of a `RETENTION_SECRET` copy
+(43 SQL checks pass live; the function was redeployed). Still by hand: turn
+"Verify JWT with legacy secret" off for `retention-purge`, or pg_net's call
+(which carries no JWT) is refused.
 
 1. SQL editor: run the migration (see the supabase-deploy notes), then the
    test file ("Run without RLS"; everything rolls back).
@@ -99,8 +135,8 @@ could name a photo the job removed.
 
 ## Not covered yet
 
-- The privacy policy's retention table (`PrivacyContent.swift`) still has
-  placeholders. These rules can fill them; changing that copy may need a
-  consent version bump (keep the server's version in sync).
+- The privacy policy's retention table (`PrivacyContent.swift`) now states
+  the matching-profile, iCloud and message rules (20 November 2026); the
+  account, log, report and consent rows still have placeholders.
 - `profiles.profile` and `profiles.backup` overlap (about 6 and 12 kB); the
   matching functions read both, so merging them is a larger change.

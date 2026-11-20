@@ -102,6 +102,8 @@ struct AppCoordinatorView: View {
             // nothing to do this asks iCloud nothing.
             try? await Task.sleep(for: .seconds(2))
             await dependencies.savedMatchBackup?.sync()
+            // A deleted profile whose iCloud backup could not be removed then.
+            await dependencies.profileBackup?.retryPendingDeletions()
         }
         .task {
             guard appState.sessionState == .loading else { return }

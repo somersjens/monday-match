@@ -234,6 +234,9 @@ protocol SecureChatRepository {
     func acknowledgeModeration() async throws
     /// The partner's matching photo; Storage only allows it during an active match.
     func partnerPhoto(path: String) async throws -> Data
+    /// Removes an ended match from this account's My matches. The other
+    /// person keeps it until they delete it too.
+    func deleteMatch(_ matchID: UUID) async throws
 }
 
 extension SecureChatRepository {
@@ -253,6 +256,7 @@ extension SecureChatRepository {
     func moderation() async throws -> ModerationStatus { .init(strikes: 0, strikesSeen: 0, suspendedUntil: nil, banned: false) }
     func acknowledgeModeration() async throws {}
     func partnerPhoto(path: String) async throws -> Data { throw CancellationError() }
+    func deleteMatch(_ matchID: UUID) async throws {}
 }
 
 @MainActor
@@ -373,6 +377,9 @@ final class SupabaseChatRepository: SecureChatRepository {
     }
     func partnerPhoto(path: String) async throws -> Data {
         try await client.storage.from(SupabaseProfilePhotoUploader.bucket).download(path: path)
+    }
+    func deleteMatch(_ matchID: UUID) async throws {
+        try await client.rpc("delete_match", params: ["p_match_id": matchID.uuidString]).execute()
     }
 }
 

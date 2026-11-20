@@ -1,13 +1,17 @@
 import { createClient } from "npm:@supabase/supabase-js@2.95.3";
 
 // Removes what the retention rules no longer allow the server to keep
-// (supabase/migrations/202611190002_traffic_and_retention.sql):
+// (supabase/migrations/202611190002_traffic_and_retention.sql and
+// 202611200002_matching_only_profiles.sql):
 //   profile  no sign of the app for 12 months: profile row, photos, push devices
-//   photos   automatic matching off for 30 days: the photo
+//   leave    automatic matching off, no active match, saved over a day ago:
+//            profile row and photos
 //   orphans  stored photos nothing has named for a day
 // The database decides and changes the rows (retention_apply); this function
 // only deletes Storage objects, which SQL may not. Called once a day by
-// pg_cron, never by the app. Secret: RETENTION_SECRET. Logs counts only.
+// pg_cron, never by the app. The caller proves itself with the Vault secret
+// retention_secret (made by the database, never copied anywhere); a
+// RETENTION_SECRET function secret is still honoured if set. Logs counts only.
 
 const response = (status: number, body: object) => new Response(JSON.stringify(body), {
   status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
@@ -20,18 +24,24 @@ function constantTimeEqual(a: string, b: string): boolean {
   return difference === 0;
 }
 
-type Due = { user_id: string; action: "profile" | "photos" | "orphans" };
+type Due = { user_id: string; action: "profile" | "leave" | "orphans" };
 
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") return response(405, { error: "POST required" });
-  const secret = Deno.env.get("RETENTION_SECRET");
-  if (!secret || !constantTimeEqual(request.headers.get("X-Retention-Secret") ?? "", secret)) {
-    return response(401, { error: "Not allowed" });
-  }
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     { auth: { persistSession: false } });
+  const given = request.headers.get("X-Retention-Secret") ?? "";
+  const secret = Deno.env.get("RETENTION_SECRET");
+  let allowed = false;
+  if (secret) {
+    allowed = constantTimeEqual(given, secret);
+  } else if (given) {
+    const { data, error } = await admin.rpc("retention_secret_matches", { p_secret: given });
+    allowed = !error && data === true;
+  }
+  if (!allowed) return response(401, { error: "Not allowed" });
 
-  const counts = { profile: 0, photos: 0, orphans: 0, objects: 0, failed: 0 };
+  const counts = { profile: 0, leave: 0, orphans: 0, objects: 0, failed: 0 };
   // A few batches per run; whatever is left is still due tomorrow.
   for (let batch = 0; batch < 5; batch++) {
     const { data, error } = await admin.rpc("retention_claim", { p_limit: 100 });

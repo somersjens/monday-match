@@ -165,28 +165,25 @@ select pg_temp.ok(not exists(select 1 from realtime.messages), 'A malformed topi
 select pg_temp.as_admin();
 select set_config('realtime.topic', '', true);
 
--- ===== Retention: matching off for 30 days ===============================
+-- ===== Retention: matching off ==========================================
+-- Since 202611200002 a profile outside matching is removed a day after its
+-- last save (it replaced the 30-day photo rule); tests/matching_only_profiles.sql
+-- covers it in full.
 select pg_temp.as_admin();
 select pg_temp.join(4, false);
 select pg_temp.join(5, false);
 select pg_temp.age(4, interval '40 days');
-select pg_temp.age(5, interval '10 days');
+select pg_temp.age(5, interval '10 minutes');
 select pg_temp.age(1, interval '40 days');
-select pg_temp.ok(pg_temp.due(4, 'photos'), 'Matching off for 40 days: the photo is due');
-select pg_temp.ok(not pg_temp.due(5, 'photos'), 'Matching off for 10 days: the photo stays');
-select pg_temp.ok(not pg_temp.due(1, 'photos'), 'Matching on: the photo stays');
-create temporary table removed4 as select public.retention_apply(pg_temp.id(4), 'photos') as names;
+select pg_temp.ok(pg_temp.due(4, 'leave'), 'Matching off for 40 days: the profile is due');
+select pg_temp.ok(not pg_temp.due(5, 'leave'), 'Matching off for 10 minutes: the profile stays');
+select pg_temp.ok(not pg_temp.due(1, 'leave'), 'Matching on: the profile stays');
+create temporary table removed4 as select public.retention_apply(pg_temp.id(4), 'leave') as names;
 select pg_temp.ok((select names from removed4) = array[pg_temp.photo(4)], 'Apply names the photo to delete');
-select pg_temp.ok((select backup->'photos' = '[]'::jsonb
-        and not (backup #> '{state,storedAutoMatching}' ? 'photoID')
-        and not (backup #> '{draft,autoMatching}' ? 'photoID')
-        and not (backup #>> '{state,storedAutoMatching,hasCompletedSetup}')::boolean
-        and profile->'photoURLs' = '[]'::jsonb
-        and profile->>'displayName' = 'Retention fixture'
-    from public.profiles where id = pg_temp.id(4)), 'The row names no photo any more and keeps the rest');
-select pg_temp.ok(not pg_temp.due(4, 'photos'), 'Done once');
-select pg_temp.ok(public.retention_apply(pg_temp.id(4), 'photos') = array[]::text[], 'Applying again does nothing');
-select pg_temp.ok(public.retention_apply(pg_temp.id(5), 'photos') = array[]::text[]
+select pg_temp.ok(not exists(select 1 from public.profiles where id = pg_temp.id(4)), 'The row is gone');
+select pg_temp.ok(not pg_temp.due(4, 'leave'), 'Done once');
+select pg_temp.ok(public.retention_apply(pg_temp.id(4), 'leave') = array[]::text[], 'Applying again does nothing');
+select pg_temp.ok(public.retention_apply(pg_temp.id(5), 'leave') = array[]::text[]
     and (select jsonb_array_length(backup->'photos') from public.profiles where id = pg_temp.id(5)) = 1,
     'Apply refuses a cleanup that is not due');
 
@@ -205,7 +202,6 @@ select pg_temp.age(6, interval '13 months');
 insert into public.push_devices(device_id, user_id, token, environment)
     values (pg_temp.id(106), pg_temp.id(6), repeat('a', 64), 'production');
 select pg_temp.ok(pg_temp.due(6, 'profile'), '13 months without a sign of the app: the profile is due');
-select pg_temp.ok(not pg_temp.due(6, 'photos'), 'Not also as photos');
 insert into auth.sessions(id, user_id, created_at, updated_at) values (gen_random_uuid(), pg_temp.id(6), now(), now());
 select pg_temp.ok(not pg_temp.due(6, 'profile'), 'A recent session keeps it');
 delete from auth.sessions where user_id = pg_temp.id(6);

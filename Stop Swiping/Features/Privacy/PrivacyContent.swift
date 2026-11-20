@@ -48,80 +48,80 @@ enum PrivacyContent {
         title: "Please read!",
         points: [
             Point(symbol: "iphone",
-                  title: "Stored on your iPhone",
-                  text: "Nobody else can see your profile until you share it yourself."),
+                  title: "Stays on your iPhone",
+                  text: "Your profile is stored on your phone. Manual matching goes from phone to phone, never through our server."),
+            Point(symbol: "chart.bar",
+                  title: "Scores, not answers",
+                  text: "When you match, you both see a score per category and how much it counts, plus basic details such as name, age and religion. Your answers to the questions stay hidden."),
+            Point(symbol: "pin",
+                  title: "Fixed at that moment",
+                  text: "A match keeps the result from that moment. Later edits don't change it, and we can't recall screenshots."),
             Point(symbol: "icloud",
-                  title: "Backup is optional",
-                  text: "With an account you can back up your profile to restore it later. A backup is never visible to other users."),
-            Point(symbol: "arrow.left.arrow.right",
-                  title: "Sharing means everything",
-                  text: "In an exchange you both receive each other's full profile: all answers, importance ratings and dealbreakers. You can't hide individual answers."),
-            Point(symbol: "clock.arrow.circlepath",
-                  title: "Shared stays shared",
-                  text: "The other person keeps the version from that moment. Later edits don't change it, and we can't recall saved copies or screenshots."),
+                  title: "Backup in your own iCloud",
+                  text: "With an account, your profile and saved matches are backed up encrypted to your own iCloud. We can't see them."),
             Point(symbol: "sparkles",
                   title: "Automatic matching is separate",
-                  text: "We'll ask for your permission for that separately.")
+                  text: "We'll ask your permission for that later.")
         ],
         sections: [
-            Section(title: "Storage on your device",
-                    body: "Your answers, importance ratings, preferences and dealbreakers are stored on your iPhone. Depending on your settings, they may also be included in your Apple device backup, which is governed by Apple's terms."),
-            Section(title: "Cloud backup",
-                    body: "Only if you create an account and turn on backup do we store a copy with our cloud provider, Supabase. It is protected in transit and at rest, and access is limited to what is needed to run the service. A backup does not make your profile visible or enroll you in matching."),
-            Section(title: "Profile exchange",
-                    body: "An exchange only happens when both of you start or accept it. You each receive a snapshot of the other's complete profile. Login details and chats are not included."),
+            Section(title: "Storage on your phone",
+                    body: "Your answers, importance ratings, preferences, dealbreakers and saved matches are stored on your iPhone. Depending on your settings, they may also be included in your Apple device backup, which is governed by Apple's terms."),
+            Section(title: "Backup in your iCloud",
+                    body: "If you create an account, we back up your profile, photos and saved matches to your own iCloud, end-to-end encrypted. We have no access to it. The backup doesn't make your profile visible and doesn't sign you up for matching. Signing in with Apple or Google runs through our provider Supabase."),
+            Section(title: "How manual matching works",
+                    body: "You match by scanning someone's QR code or by holding your phones together. Whoever scans a QR code sees the match, so only show yours to people you want to match with. A code stops working after 24 hours. Phone to phone, you both have to start it. Neither way goes through our server."),
+            Section(title: "What the other person sees",
+                    body: "A score for each category of questions, how much each category counts, the total score, and which of each other's requirements aren't met. Plus your basic details: name, age, area and distance, height, gender, who you're looking for, religion, languages, children and use of alcohol, tobacco and drugs. Phone to phone, your photo is included if you've turned that on. Your answers to individual questions and how important each one is to you are never shown."),
             Section(title: "Information already shared",
-                    body: "Later edits don't change snapshots or match scores that were already shared. Recipients can save information or take screenshots; we can't remove copies kept outside the app. Requests about copies within our service are handled under the Privacy Policy."),
+                    body: "A match saves the result once. Later edits, new questions or a new calculation don't change it. The other person can take screenshots; we can't remove copies kept outside the app."),
             Section(title: "Security",
-                    body: "We use secure connections, encrypted storage and restricted access. Cloud data is not technically unreadable to every administrator. We don't sell your information or use your answers for advertising."),
-            Section(title: "Chats",
-                    body: "Messages are encrypted on your device and only decrypted on the recipient's. We process only what delivery requires, such as account IDs and timestamps. If you attach messages to a report yourself, we can review that content."),
-            Section(title: "Your rights",
-                    body: "You can edit your profile, manage your backup, and request access, correction or deletion in the app or via [PRIVACY_CONTACT]. Retention periods and all your rights are set out in the Privacy Policy."),
+                    body: "Your profile travels sealed to the other phone, which works out the result and doesn't keep your answers. The seal keeps your answers unreadable in the app, in QR readers and on our website, but someone who takes the app apart could open it. We don't sell your information or use your answers for advertising."),
+            Section(title: "Deleting",
+                    body: "You can delete saved matches one by one; they then disappear from your phone and your iCloud backup. Deleting your profile removes everything from your phone and your backup. Your rights are set out in the Privacy Policy; you can also contact us via [PRIVACY_CONTACT]."),
             Section(title: "Automatic matching",
-                    body: "Automatic matching processes your complete answers on our servers. We only do this with your separate, explicit consent.")
+                    body: "Automatic matching stores and compares your answers on our server. We only do this with your separate, explicit consent.")
         ],
-        acknowledgement: "I understand how my profile is stored and that an exchange shares my complete profile."
+        acknowledgement: "I understand how my profile is stored and what someone I match with gets to see."
     )
 
     private static let profileNL = Approval(
         title: "Even lezen!",
         points: [
             Point(symbol: "iphone",
-                  title: "Opgeslagen op je iPhone",
-                  text: "Niemand ziet je profiel tot je het zelf deelt."),
+                  title: "Blijft op je iPhone",
+                  text: "Je profiel staat op je telefoon. Handmatig matchen gaat van telefoon naar telefoon, nooit via onze server."),
+            Point(symbol: "chart.bar",
+                  title: "Scores, geen antwoorden",
+                  text: "Bij een match zien jullie per categorie een score en hoe zwaar die weegt, plus basisgegevens zoals naam, leeftijd en geloof. Je antwoorden op de vragen blijven verborgen."),
+            Point(symbol: "pin",
+                  title: "Vastgelegd op dat moment",
+                  text: "Een match houdt de uitkomst van dat moment. Latere wijzigingen veranderen die niet, en screenshots kunnen we niet terughalen."),
             Point(symbol: "icloud",
-                  title: "Back-up is optioneel",
-                  text: "Met een account kun je een back-up maken om je profiel later te herstellen. Een back-up is nooit zichtbaar voor andere gebruikers."),
-            Point(symbol: "arrow.left.arrow.right",
-                  title: "Delen is alles delen",
-                  text: "Bij een uitwisseling krijgen jullie allebei elkaars volledige profiel: alle antwoorden, wegingen en breekpunten. Losse antwoorden verbergen kan niet."),
-            Point(symbol: "clock.arrow.circlepath",
-                  title: "Gedeeld blijft gedeeld",
-                  text: "De ander houdt de versie van dat moment. Latere wijzigingen passen die niet aan, en opgeslagen kopieën of screenshots kunnen we niet terughalen."),
+                  title: "Back-up in je eigen iCloud",
+                  text: "Met een account komen je profiel en bewaarde matches versleuteld in je eigen iCloud. Wij kunnen er niet bij."),
             Point(symbol: "sparkles",
                   title: "Automatisch matchen is apart",
-                  text: "Daarvoor vragen we later los toestemming.")
+                  text: "Daarvoor vragen we later apart toestemming.")
         ],
         sections: [
-            Section(title: "Opslag op je toestel",
-                    body: "Je antwoorden, wegingen, voorkeuren en breekpunten worden op je iPhone opgeslagen. Afhankelijk van je instellingen kunnen ze ook in je Apple-reservekopie terechtkomen; daarvoor gelden de voorwaarden van Apple."),
-            Section(title: "Cloudback-up",
-                    body: "Alleen als je een account aanmaakt en back-up aanzet, bewaren we een kopie bij onze cloudverwerker Supabase. Die is beveiligd tijdens verzending en opslag, en toegang is beperkt tot wat nodig is voor de dienst. Een back-up maakt je profiel niet zichtbaar en meldt je niet aan voor matching."),
-            Section(title: "Profieluitwisseling",
-                    body: "Een uitwisseling gebeurt alleen als jullie die allebei starten of accepteren. Jullie ontvangen dan een momentopname van elkaars volledige profiel. Inloggegevens en chats horen daar niet bij."),
+            Section(title: "Opslag op je telefoon",
+                    body: "Je antwoorden, wegingen, voorkeuren, breekpunten en bewaarde matches staan op je iPhone. Afhankelijk van je instellingen komen ze ook in je Apple-reservekopie terecht; daarvoor gelden de voorwaarden van Apple."),
+            Section(title: "Back-up in je iCloud",
+                    body: "Maak je een account aan, dan zetten we je profiel, foto's en bewaarde matches end-to-end versleuteld in je eigen iCloud. Wij kunnen er niet bij. De back-up maakt je profiel niet zichtbaar en meldt je niet aan voor matching. Inloggen met Apple of Google loopt via onze dienstverlener Supabase."),
+            Section(title: "Zo werkt handmatig matchen",
+                    body: "Je matcht door iemands QR-code te scannen of jullie telefoons bij elkaar te houden. Wie een QR-code scant, ziet de match; laat de jouwe dus alleen zien aan mensen met wie je wilt matchen. Een code werkt 24 uur. Van telefoon naar telefoon moeten jullie het allebei starten. Geen van beide gaat via onze server."),
+            Section(title: "Wat de ander ziet",
+                    body: "Per categorie vragen een score en hoe zwaar die weegt, de totaalscore en aan welke eisen van elkaar jullie niet voldoen. Daarnaast je basisgegevens: naam, leeftijd, woonplaats en afstand, lengte, gender, wie je zoekt, geloof, talen, kinderen en gebruik van alcohol, tabak en drugs. Van telefoon naar telefoon gaat ook je foto mee als je dat hebt aangezet. Je antwoorden op losse vragen en hoe belangrijk je elke vraag vindt, zijn nooit te zien."),
             Section(title: "Eerder gedeelde gegevens",
-                    body: "Latere wijzigingen veranderen eerder gedeelde momentopnamen en matchscores niet. Een ontvanger kan gegevens bewaren of screenshots maken; kopieën buiten de app kunnen wij niet verwijderen. Verzoeken over kopieën binnen onze dienst behandelen we volgens de Privacyverklaring."),
+                    body: "Een match legt de uitkomst één keer vast. Latere wijzigingen, nieuwe vragen of een nieuwe berekening veranderen daar niets aan. De ander kan screenshots maken; kopieën buiten de app kunnen wij niet verwijderen."),
             Section(title: "Beveiliging",
-                    body: "We gebruiken beveiligde verbindingen, versleutelde opslag en beperkte toegangsrechten. Cloudgegevens zijn niet voor iedere beheerder technisch onleesbaar. We verkopen je gegevens niet en gebruiken je antwoorden niet voor advertenties."),
-            Section(title: "Chats",
-                    body: "Berichten worden op jouw toestel versleuteld en pas bij de ontvanger ontsleuteld. We verwerken alleen wat nodig is voor aflevering, zoals account-ID's en tijdstippen. Voeg je zelf berichten toe aan een melding, dan kunnen wij die inhoud bekijken."),
-            Section(title: "Je rechten",
-                    body: "Je kunt je profiel aanpassen, je back-up beheren en in de app of via [PRIVACYCONTACT] inzage, correctie of verwijdering vragen. Bewaartermijnen en al je rechten staan in de Privacyverklaring."),
+                    body: "Je profiel gaat verzegeld naar de andere telefoon. Die rekent de uitkomst uit en bewaart je antwoorden niet. Het zegel houdt je antwoorden onleesbaar in de app, in QR-lezers en op onze website, maar wie de app uit elkaar haalt, kan het openen. We verkopen je gegevens niet en gebruiken je antwoorden niet voor advertenties."),
+            Section(title: "Verwijderen",
+                    body: "Bewaarde matches verwijder je één voor één; ze verdwijnen dan van je telefoon en uit je iCloud-back-up. Verwijder je je profiel, dan gaat alles van je telefoon en uit je back-up. Je rechten staan in de Privacyverklaring; je kunt ons ook bereiken via [PRIVACYCONTACT]."),
             Section(title: "Automatisch matchen",
-                    body: "Bij automatisch matchen worden je volledige antwoorden op onze servers verwerkt. Dat doen we alleen met je aparte, uitdrukkelijke toestemming.")
+                    body: "Bij automatisch matchen bewaren en vergelijken we je antwoorden op onze server. Dat doen we alleen met je aparte, uitdrukkelijke toestemming.")
         ],
-        acknowledgement: "Ik begrijp hoe mijn profiel wordt opgeslagen en dat ik bij een uitwisseling mijn volledige profiel deel."
+        acknowledgement: "Ik begrijp hoe mijn profiel wordt opgeslagen en wat iemand met wie ik match te zien krijgt."
     )
 
     // MARK: - Automatic matching
@@ -130,80 +130,80 @@ enum PrivacyContent {
         title: "Automatic matching",
         points: [
             Point(symbol: "server.rack",
-                  title: "Processed on our servers",
-                  text: "Your complete matching profile is stored and automatically compared with other participants. This includes sensitive answers about your religion, sexuality and use of alcohol, tobacco and drugs."),
+                  title: "Compared on our server",
+                  text: "To find matches, we store your answers, importance ratings and dealbreakers on our server. They include sensitive topics: religion, sexuality and alcohol, tobacco and drugs."),
             Point(symbol: "person.2",
                   title: "Shared when you match",
-                  text: "When you match, you both immediately see each other's full profile and a compatibility score. You don't approve each match first."),
+                  text: "When you match, you both immediately see each other's photo, basic details and a score per category. Your answers stay hidden. You don't approve each match first."),
             Point(symbol: "pin",
                   title: "Fixed at that moment",
-                  text: "The score and shared profile don't update. Your edits only count for new matches."),
-            Point(symbol: "arrow.uturn.backward",
-                  title: "Withdrawing consent",
-                  text: "Turn matching off and you won't get new matches. Anything already shared with a match stays with that person."),
+                  text: "Scores don't change after you match. Your edits only count for new matches."),
+            Point(symbol: "power",
+                  title: "Turn it off anytime",
+                  text: "Your matching profile is then removed from our server. What a match has already seen stays with them."),
             Point(symbol: "lock",
                   title: "Private stays private",
                   text: "Chats are end-to-end encrypted. We don't sell your information or use it for advertising.")
         ],
         sections: [
             Section(title: "What we use",
-                    body: "Your complete matching profile: all answers, importance ratings, preferences and dealbreakers, plus the technical data needed to compare profiles. It is stored with our cloud provider, Supabase. This includes special categories of personal data: your religion or worldview, your gender and the genders you are interested in (which reveal your sexual orientation), your preferences around sex and intimacy, and how often you use alcohol, tobacco and drugs."),
+                    body: "Your matching profile: all answers, importance ratings, preferences, dealbreakers and basic details, your photos, and the technical data needed to compare profiles. We store it with our provider Supabase. This includes special categories of personal data: your religion or worldview, your gender and the genders you're interested in (which reveal your sexual orientation), your wishes around sex and intimacy, and how often you use alcohol, tobacco and drugs. The photo check runs on your phone; we only receive whether it passed."),
             Section(title: "How matching works",
-                    body: "We first check dealbreakers and required criteria in both directions, then calculate a compatibility score from answers and importance ratings. A match is only created when the criteria are met. The score is the result of our calculation, not a prediction of relationship success."),
+                    body: "We first check dealbreakers and requirements in both directions. Then we calculate a score for each category from your answers and importance ratings; together they make up the total score. A match is only created when all requirements are met. The score is a calculation, not a prediction of relationship success."),
             Section(title: "What a match sees",
-                    body: "A snapshot of your complete profile, including your name and photo if they are part of your profile. Individual answers can't be hidden. By turning on matching you agree to this in advance; we don't ask again for each match."),
+                    body: "Your photo and basic details: name, age, area and distance, height, gender, who you're looking for, religion, languages, children and use of alcohol, tobacco and drugs. Plus a score per category, how much each category counts, and the total score. Your answers to individual questions and how important each one is to you are never shown. By turning on matching you agree to this in advance; we don't ask again for each match."),
             Section(title: "Fixed scores",
-                    body: "When a match is created, we save the score and both profiles. Later edits don't change them, so an older score may differ from your current answers. New matches use your latest information."),
+                    body: "When a match is created, the result is saved once. Later edits don't change it, so an older score may differ from your current answers. New matches use your latest information. Your match keeps the photo they were shown, also after the match ends."),
             Section(title: "Security",
-                    body: "Data is protected in transit and at rest. Where possible we separate account details from matching data and restrict access. Because our servers must compare your answers, this processing is not end-to-end encrypted."),
+                    body: "Data is protected in transit and at rest, and access is restricted. We keep account details apart from matching data where possible. Because our server has to compare your answers, this processing is not end-to-end encrypted."),
             Section(title: "Turning matching off",
-                    body: "You'll no longer be included in new matches, and your matching data is deleted or deactivated according to the retention periods in the Privacy Policy. Existing matches, shared snapshots and copies kept by others don't disappear automatically. Your cloud backup follows your backup settings."),
+                    body: "Your matching profile and photos are removed from our server straight away. During an active match they stay until that match ends. If you don't open the app for 6 months, you're taken out of matching automatically. Existing matches and what they've seen don't disappear. Your iCloud backup isn't affected."),
             Section(title: "Chats and reports",
-                    body: "Chats are end-to-end encrypted. We process limited metadata for delivery, safety and support. If you add messages to a report yourself, we can review that content."),
+                    body: "Chats are end-to-end encrypted; we only process what delivery requires, such as account IDs and timestamps. Messages are kept for up to 12 months, also after a match ends. If you add messages to a report yourself, we can review that content."),
             Section(title: "Withdrawal and your rights",
-                    body: "You can withdraw your consent at any time by turning off automatic matching. This stops further processing but does not make earlier processing unlawful. You can exercise your privacy rights via [PRIVACY_CONTACT]. The service providers we use are listed in the Privacy Policy.")
+                    body: "You can withdraw your consent at any time by turning off automatic matching. This stops further processing but doesn't make earlier processing unlawful. You can exercise your privacy rights via [PRIVACY_CONTACT]. The providers we use are listed in the Privacy Policy.")
         ],
-        acknowledgement: "I explicitly consent to my complete matching profile, including sensitive answers about my religion, sexuality and substance use, being stored and automatically processed to find matches, and automatically shared with each match. I can withdraw this consent at any time; anything already shared stays with the recipient."
+        acknowledgement: "I explicitly consent to my matching profile, including sensitive answers about my religion, sexuality and substance use, being stored and automatically compared on the server to find matches, and to each match automatically seeing my photo, basic details and scores per category. I can withdraw this consent at any time; what a match has already seen stays with them."
     )
 
     private static let matchingNL = Approval(
         title: "Automatisch matchen",
         points: [
             Point(symbol: "server.rack",
-                  title: "Verwerkt op onze servers",
-                  text: "Je volledige matchingprofiel wordt opgeslagen en automatisch vergeleken met andere deelnemers. Daarin staan ook gevoelige antwoorden over je geloof, seksualiteit en gebruik van alcohol, tabak en drugs."),
+                  title: "Vergeleken op onze server",
+                  text: "Om matches te vinden bewaren we je antwoorden, wegingen en breekpunten op onze server. Daar zitten gevoelige onderwerpen tussen: geloof, seksualiteit en alcohol, tabak en drugs."),
             Point(symbol: "person.2",
                   title: "Gedeeld bij een match",
-                  text: "Bij een match zien jullie direct elkaars volledige profiel en een matchpercentage. Je keurt niet elke match vooraf goed."),
+                  text: "Bij een match zien jullie meteen elkaars foto, basisgegevens en per categorie een score. Je antwoorden blijven verborgen. Je keurt niet elke match vooraf goed."),
             Point(symbol: "pin",
                   title: "Vastgelegd op dat moment",
-                  text: "Score en gedeeld profiel veranderen niet mee. Je wijzigingen tellen alleen voor nieuwe matches."),
-            Point(symbol: "arrow.uturn.backward",
-                  title: "Toestemming intrekken",
-                  text: "Zet matching uit en je krijgt geen nieuwe matches meer. Wat al met een match is gedeeld, blijft bij die persoon."),
+                  text: "Scores veranderen niet meer na een match. Je wijzigingen tellen alleen voor nieuwe matches."),
+            Point(symbol: "power",
+                  title: "Altijd uit te zetten",
+                  text: "Je matchingprofiel verdwijnt dan van onze server. Wat een match al heeft gezien, blijft bij die persoon."),
             Point(symbol: "lock",
                   title: "Privé blijft privé",
                   text: "Chats zijn end-to-end versleuteld. We verkopen je gegevens niet en gebruiken ze niet voor advertenties.")
         ],
         sections: [
             Section(title: "Welke gegevens",
-                    body: "Je volledige matchingprofiel: alle antwoorden, wegingen, voorkeuren en breekpunten, plus de technische gegevens die nodig zijn om te vergelijken. We bewaren dit bij onze cloudverwerker Supabase. Daaronder vallen bijzondere persoonsgegevens: je geloof of levensovertuiging, je gender en de genders waarin je geïnteresseerd bent (waaruit je seksuele voorkeur blijkt), je wensen rond seks en intimiteit, en hoe vaak je alcohol, tabak en drugs gebruikt."),
+                    body: "Je matchingprofiel: alle antwoorden, wegingen, voorkeuren, breekpunten en basisgegevens, je foto's en de technische gegevens die nodig zijn om te vergelijken. We bewaren dit bij onze dienstverlener Supabase. Daaronder vallen bijzondere persoonsgegevens: je geloof of levensovertuiging, je gender en de genders waarin je geïnteresseerd bent (waaruit je seksuele voorkeur blijkt), je wensen rond seks en intimiteit, en hoe vaak je alcohol, tabak en drugs gebruikt. De fotocontrole gebeurt op je telefoon; wij krijgen alleen te horen of die gelukt is."),
             Section(title: "Hoe matching werkt",
-                    body: "Eerst controleren we breekpunten en harde voorwaarden, in beide richtingen. Daarna berekenen we een matchpercentage op basis van antwoorden en wegingen. Alleen als aan de voorwaarden is voldaan, ontstaat een match. Het percentage is een rekenuitkomst, geen voorspelling van een geslaagde relatie."),
+                    body: "Eerst controleren we breekpunten en eisen, in beide richtingen. Daarna berekenen we per categorie een score uit je antwoorden en wegingen; samen vormen die de totaalscore. Alleen als aan alle eisen is voldaan, ontstaat een match. De score is een rekenuitkomst, geen voorspelling van een geslaagde relatie."),
             Section(title: "Wat een match ziet",
-                    body: "Een momentopname van je volledige profiel, inclusief naam en foto als die in je profiel staan. Losse antwoorden verbergen kan niet. Door matching aan te zetten geef je hier vooraf toestemming voor; we vragen het niet per match opnieuw."),
+                    body: "Je foto en basisgegevens: naam, leeftijd, woonplaats en afstand, lengte, gender, wie je zoekt, geloof, talen, kinderen en gebruik van alcohol, tabak en drugs. Daarnaast per categorie een score, hoe zwaar elke categorie weegt en de totaalscore. Je antwoorden op losse vragen en hoe belangrijk je elke vraag vindt, zijn nooit te zien. Door matching aan te zetten geef je hier vooraf toestemming voor; we vragen het niet per match opnieuw."),
             Section(title: "Vaste scores",
-                    body: "Bij een match leggen we de score en beide profielen vast. Latere wijzigingen passen die niet aan, dus een oude score kan afwijken van je huidige antwoorden. Nieuwe matches gebruiken je nieuwste gegevens."),
+                    body: "Bij een match leggen we de uitkomst één keer vast. Latere wijzigingen veranderen die niet, dus een oude score kan afwijken van je huidige antwoorden. Nieuwe matches gebruiken je nieuwste gegevens. De foto die je match te zien kreeg, blijft ook na het einde van de match bij die persoon."),
             Section(title: "Beveiliging",
-                    body: "Gegevens zijn beveiligd tijdens verzending en opslag. Waar mogelijk scheiden we accountgegevens van matchinggegevens en beperken we toegang. Omdat onze servers je antwoorden moeten kunnen vergelijken, is deze verwerking niet end-to-end versleuteld."),
+                    body: "Gegevens zijn beveiligd tijdens verzending en opslag, en toegang is beperkt. Waar mogelijk houden we accountgegevens gescheiden van matchinggegevens. Omdat onze server je antwoorden moet vergelijken, is deze verwerking niet end-to-end versleuteld."),
             Section(title: "Matching uitzetten",
-                    body: "Je doet dan niet meer mee aan nieuwe matches en we verwijderen of deactiveren je matchinggegevens volgens de bewaartermijnen in de Privacyverklaring. Bestaande matches, gedeelde momentopnamen en kopieën bij anderen verdwijnen niet automatisch. Je cloudback-up volgt je eigen back-upinstellingen."),
+                    body: "Je matchingprofiel en foto's worden meteen van onze server verwijderd. Tijdens een lopende match blijven ze staan tot die match voorbij is. Open je de app 6 maanden niet, dan doe je automatisch niet meer mee. Bestaande matches en wat zij hebben gezien, verdwijnen niet. Je iCloud-back-up blijft zoals hij is."),
             Section(title: "Chats en meldingen",
-                    body: "Chats zijn end-to-end versleuteld. We verwerken beperkte metadata voor aflevering, veiligheid en ondersteuning. Voeg je zelf berichten toe aan een melding, dan kunnen wij die inhoud bekijken."),
+                    body: "Chats zijn end-to-end versleuteld; we verwerken alleen wat nodig is voor aflevering, zoals account-ID's en tijdstippen. Berichten bewaren we maximaal 12 maanden, ook nadat een match is beëindigd. Voeg je zelf berichten toe aan een melding, dan kunnen wij die inhoud bekijken."),
             Section(title: "Intrekken en je rechten",
                     body: "Je kunt je toestemming altijd intrekken door automatisch matchen uit te zetten. Dat stopt verdere verwerking, maar maakt eerdere verwerking niet onrechtmatig. Je privacyrechten oefen je uit via [PRIVACYCONTACT]. Welke dienstverleners we gebruiken, staat in de Privacyverklaring.")
         ],
-        acknowledgement: "Ik geef uitdrukkelijk toestemming om mijn volledige matchingprofiel, inclusief gevoelige antwoorden over mijn geloof, seksualiteit en middelengebruik, op te slaan en automatisch te verwerken om matches te vinden, en het automatisch te delen met iedere match. Ik kan deze toestemming altijd intrekken; wat al gedeeld is, blijft bij de ontvanger."
+        acknowledgement: "Ik geef uitdrukkelijk toestemming om mijn matchingprofiel, inclusief gevoelige antwoorden over mijn geloof, seksualiteit en middelengebruik, op de server op te slaan en automatisch te vergelijken om matches te vinden, en om iedere match automatisch mijn foto, basisgegevens en scores per categorie te laten zien. Ik kan deze toestemming altijd intrekken; wat een match al heeft gezien, blijft bij die persoon."
     )
 
     private static let policyEN = #"""
@@ -231,19 +231,19 @@ You can contact us at [GENERAL_CONTACT_EMAIL], or send privacy requests to [PRIV
 The data we process depends on the features you choose.
 
 ### 3.1 Local profile
-You can answer questions and build a profile on your iPhone. This can include up to [QUESTION_COUNT; INTENDED: 50] answers scored 1–5, importance ratings of 1–5, dealbreakers, preferences, and other information you provide. These data are stored locally on your device. Depending on your settings, they may also be included in an Apple device backup. Unless you enable a cloud feature or exchange profiles, we do not send your local matching profile to our matching server.
+You can answer questions and build a profile on your iPhone. This can include up to [QUESTION_COUNT; INTENDED: 50] answers scored 1–5, importance ratings of 1–5, dealbreakers, preferences, and other information you provide. These data are stored locally on your device. Depending on your settings, they may also be included in an Apple device backup. Manual matching (QR code or phone to phone) happens between the two devices and never goes through our server. Unless you enable automatic matching, we do not send your matching profile to our server.
 
 ### 3.2 Account and identity data
 If you create an account, we process [ACCOUNT_DATA, E.G. AUTH ID, EMAIL ADDRESS, LOGIN PROVIDER], relevant account status, and [ADDITIONAL_IDENTITY_INFORMATION]. Authentication data are handled by Supabase Auth and, where chosen, [THIRD_PARTY_SIGN_IN_PROVIDER]. Your profile name and photo may be stored separately so they can be shown to matches.
 
-### 3.3 Optional cloud backup
-If you separately enable cloud backup, we store a copy of [PRECISE_BACKUP_CONTENT] so you can restore your profile on another device. Backups do not automatically enroll you in matching and are not publicly accessible.
+### 3.3 iCloud backup
+If you create an account, your profile, photos and saved matches are backed up to your own iCloud account, end-to-end encrypted, so you can restore them on another device. We cannot access this backup. It does not enroll you in matching and is never visible to other users. Apple's terms apply to iCloud.
 
 ### 3.4 Automatic matching
-If you expressly enable automatic matching, we process your complete numerical and other matching profile: answers, importance ratings, dealbreakers, preferences, profile version, matching status, and information necessary to find candidates and calculate scores. Your answers may reveal health information, religious beliefs, sexual orientation or other special-category personal data.
+If you expressly enable automatic matching, we store your matching profile on our server for as long as matching is on: answers, importance ratings, dealbreakers, preferences, basic details, photos, profile version, matching status, and information necessary to find candidates and calculate scores. The photo check runs on your device; we only record whether it passed. Your answers may reveal health information, religious beliefs, sexual orientation or other special-category personal data.
 
-### 3.5 Profile exchanges, matches and snapshots
-When you mutually exchange profiles or an automatic match is created, we process linked account identifiers, the match time, fixed compatibility score, algorithm/version information, and full snapshots of both profiles. Each recipient receives all answers, importance ratings, preferences and dealbreakers, plus the profile name and photo included in the exchange. There is no option to hide individual questions.
+### 3.5 Matches
+A match shows each person a score per question category, the weight of each category, the total score and, for manual matches, which requirements are not met, plus basic details: name, age, area and distance, height, gender, who they are looking for, religion, languages, children and use of alcohol, tobacco and drugs, and a photo where applicable. Answers to individual questions and their importance ratings are never shown. For a manual match, the profile travels sealed between the two devices; the receiving device calculates the result and keeps only what is shown. For an automatic match, we process the linked account identifiers, the match time and the fixed scores; the partner's photo is shown by our server only during an active match, and the recipient's device keeps a copy.
 
 ### 3.6 Chats and communications metadata
 Message content is end-to-end encrypted. We process encrypted messages and, where necessary, metadata such as participating account IDs, delivery states and timestamps. We cannot read the content of messages delivered normally. If someone voluntarily submits messages with a safety report, we can process the content they have submitted.
@@ -260,29 +260,29 @@ To keep the service secure and available and prevent misuse, we process the nece
 | --- | --- | --- |
 | Local profile and core features, to the extent processed by us | Let you create and use your profile | Performance of a contract, Art. 6(1)(b), where applicable |
 | Account management and sign-in | Provide and secure your account | Performance of a contract, Art. 6(1)(b) |
-| Optional cloud backup | Restore your profile | [SELECT AND JUSTIFY: CONSENT ART. 6(1)(a) OR CONTRACT ART. 6(1)(b)] |
-| Manual mutual profile exchange | Carry out the exchange you select | [SELECT AND JUSTIFY: ART. 6(1)(a) OR 6(1)(b)] and, if required, a relevant Art. 9 GDPR exception |
-| Automatic matching and automatic full-profile sharing | Find compatible people, calculate scores and exchange profiles | Explicit consent, Art. 6(1)(a); for special-category data, Art. 9(2)(a) |
+| iCloud backup | Restore your profile and saved matches | [SELECT AND JUSTIFY: CONSENT ART. 6(1)(a) OR CONTRACT ART. 6(1)(b)] |
+| Manual matching between two devices | Show the match you start | [SELECT AND JUSTIFY: ART. 6(1)(a) OR 6(1)(b)] and, if required, a relevant Art. 9 GDPR exception |
+| Automatic matching and automatic sharing with matches | Find compatible people, calculate scores and show matches to each other | Explicit consent, Art. 6(1)(a); for special-category data, Art. 9(2)(a) |
 | E2EE chat and delivery | Enable communication between matches | Performance of a contract, Art. 6(1)(b) |
 | Essential security and abuse investigations | Prevent and respond to incidents | Legitimate interests, Art. 6(1)(f), following a balancing test; with an additional condition for special-category data where required |
 | Mandatory legal records | Comply with applicable law | Legal obligation, Art. 6(1)(c) |
 | [OTHER PROCESSING] | [PURPOSE] | [LEGAL BASIS] |
 
-Consent is voluntary, specific and withdrawable for future processing relying on it. Creating an account or enabling backup does not enable automatic matching. We assess in advance whether explicit consent and any other GDPR requirements are suitable and sufficient for processing special-category data.
+Consent is voluntary, specific and withdrawable for future processing relying on it. Creating an account does not enable automatic matching. We assess in advance whether explicit consent and any other GDPR requirements are suitable and sufficient for processing special-category data.
 
 ## 5. How do automatic matching and compatibility percentages work?
 
-Our matching service compares profiles of users who have enabled automatic matching. First, it checks dealbreakers and mandatory criteria in both directions. It then compares numerical answers question by question, taking each participant's importance ratings into account. The exact method for the weighted percentage is [FINAL FORMULA, NORMALIZATION, TREATMENT OF UNANSWERED QUESTIONS AND MATCH THRESHOLD].
+Our matching service compares profiles of users who have enabled automatic matching. First, it checks dealbreakers and mandatory criteria in both directions. It then compares numerical answers question by question, taking each participant's importance ratings into account, and shows the result as a score per category; together these make up the total score. The exact method for the weighted percentage is [FINAL FORMULA, NORMALIZATION, TREATMENT OF UNANSWERED QUESTIONS AND MATCH THRESHOLD].
 
-A match is created only when the criteria are met. The compatibility score and complete profile snapshots shared with both parties are fixed at the time of matching and are not automatically changed by later edits. The percentage represents calculated overlap, not a guarantee or prediction of relationship success.
+A match is created only when the criteria are met. The scores and details shared with both parties are fixed at the time of matching and are not automatically changed by later edits. The percentage represents calculated overlap, not a guarantee or prediction of relationship success.
 
-This automated assessment determines which participants qualify for matches and consequently gain access to each other's full profiles. Assess whether it can have legal or similarly significant effects: [ARTICLE 22 GDPR ASSESSMENT AND FINDING]. You can ask questions about the method or an outcome via [MATCHING_EXPLANATION_CONTACT]. Where required by the GDPR, we provide applicable rights and safeguards relating to automated decision-making.
+This automated assessment determines which participants qualify for matches and consequently see each other's scores and details. Assess whether it can have legal or similarly significant effects: [ARTICLE 22 GDPR ASSESSMENT AND FINDING]. You can ask questions about the method or an outcome via [MATCHING_EXPLANATION_CONTACT]. Where required by the GDPR, we provide applicable rights and safeguards relating to automated decision-making.
 
 ## 6. With whom do we share personal data?
 
 We disclose personal data only for the stated purposes:
 
-- **Other users:** following a mutual exchange you choose or automatic matching to which you have expressly consented. They receive the full profile described above and may retain copies themselves.
+- **Other users:** following a manual match you start or automatic matching to which you have expressly consented. They see the scores and details described above and may retain copies themselves.
 - **Supabase:** to provide database hosting, authentication, storage, application functions and related technical services under applicable agreements.
 - **[OTHER PROCESSORS INCLUDING PUSH, LOGGING, EMAIL, KMS OR HOSTING PROVIDERS]:** only for specified services under suitable contractual protections.
 - **Competent authorities:** if legally required or otherwise supported by an applicable lawful basis.
@@ -307,21 +307,21 @@ The matching service must be able to process necessary answers during scoring. M
 | --- | --- |
 | Local profile | Until you delete the profile or app data from your device, subject to external device backups |
 | Account information | While the account is active and [NUMBER_OF_DAYS] after account deletion, except where a lawful exception applies |
-| Cloud backup | Until disabled/deleted, then no more than [NUMBER_OF_DAYS] in active storage |
-| Active matching profile | While matching is enabled; deleted or irreversibly deactivated within [NUMBER_OF_DAYS] after consent withdrawal |
-| Match scores and server snapshots | [PERIOD AND RULES FOR UNMATCHING/BLOCKING/ACCOUNT DELETION] |
-| Encrypted E2EE message content | [RETENTION OR DELETION RULE], including [RULE FOR UNDELIVERED MESSAGES] |
+| iCloud backup | In your own iCloud until you delete saved matches or your profile; we have no access |
+| Matching profile and photos | While matching is enabled; removed immediately when you turn it off (during an active match, once it ends), with any leftovers removed within a day. After 6 months without app activity you leave the matching pool; after 12 months the profile and photos are removed |
+| Match scores and match records | [PERIOD AND RULES FOR UNMATCHING/BLOCKING/ACCOUNT DELETION] |
+| Encrypted E2EE message content | Up to 12 months after sending, also after a match ends |
 | Technical logs and metadata | No more than [NUMBER_OF_DAYS], except for security investigations |
 | Evidence of consent | [RETENTION NEEDED FOR ACCOUNTABILITY AND LIMITATION PERIODS] |
 | Safety reports and blocks | [RETENTION PERIOD AND CRITERIA] |
 | Backups and deleted copies | Rotated out under [MAXIMUM_BACKUP_RETENTION AND ROTATION] |
 | Mandatory tax or legal records | As required under [LEGAL RETENTION PERIOD] |
 
-Once you disable matching, your profile is no longer used to create new matches. Snapshots already provided to recipients cannot automatically be retrieved. When you request deletion, we also assess copies retained under our control; they are not kept indefinitely without a lawful reason.
+Once you disable matching, your profile is no longer used to create new matches. Information already shown to a match cannot automatically be retrieved. When you request deletion, we also assess copies retained under our control; they are not kept indefinitely without a lawful reason.
 
 ## 10. What choices and rights do you have?
 
-You may decline or later disable matching without losing your local profile. Cloud backup can be managed separately. Under the conditions of the GDPR, you have rights of access, rectification, erasure, restriction, portability and objection, and a right to withdraw consent. Additional rights may apply to automated decision-making.
+You may decline or later disable matching without losing your local profile. Your iCloud backup stays under your own control. Under the conditions of the GDPR, you have rights of access, rectification, erasure, restriction, portability and objection, and a right to withdraw consent. Additional rights may apply to automated decision-making.
 
 Submit a request via [IN-APP PRIVACY REQUEST PATH] or [PRIVACY_EMAIL]. We may carry out necessary verification and ordinarily respond within one month, subject to lawful extensions. Withdrawal does not affect processing that was lawful before withdrawal. We cannot guarantee deletion of copies independently kept by recipients.
 
@@ -365,19 +365,19 @@ Je kunt ons bereiken via [ALGEMEEN_CONTACTADRES] en voor privacyverzoeken via [P
 Welke gegevens we verwerken hangt af van de functies die je gebruikt.
 
 ### 3.1 Lokaal profiel
-Je kunt op je iPhone vragen beantwoorden en een profiel opbouwen. Dit kan bestaan uit maximaal [AANTAL_VRAGEN; BEOGEN: 50] antwoorden met scores van 1 tot 5, belangrijkheidswegingen van 1 tot 5, breekpunten, voorkeuren en andere door jou ingevulde profielgegevens. Deze informatie wordt lokaal op je toestel opgeslagen. Afhankelijk van je instellingen kunnen gegevens ook in een reservekopie van Apple terechtkomen. Zonder gekozen cloudfunctie of profieluitwisseling sturen we het lokale matchingprofiel niet naar onze matchingserver.
+Je kunt op je iPhone vragen beantwoorden en een profiel opbouwen. Dit kan bestaan uit maximaal [AANTAL_VRAGEN; BEOGEN: 50] antwoorden met scores van 1 tot 5, belangrijkheidswegingen van 1 tot 5, breekpunten, voorkeuren en andere door jou ingevulde profielgegevens. Deze informatie wordt lokaal op je toestel opgeslagen. Afhankelijk van je instellingen kunnen gegevens ook in een reservekopie van Apple terechtkomen. Handmatig matchen (QR-code of telefoon naar telefoon) gebeurt tussen de twee toestellen en gaat nooit via onze server. Zonder automatische matching sturen we je matchingprofiel niet naar onze server.
 
 ### 3.2 Account- en identiteitsgegevens
 Als je een account aanmaakt, verwerken we [ACCOUNTGEGEVENS: BIJV. AUTH-ID, E-MAILADRES, INLOGPROVIDER], relevante accountstatussen en [AANVULLENDE_IDENTITEITSGEGEVENS]. Auth-gegevens worden verwerkt via Supabase Auth en, indien gekozen, [INLOGPROVIDER]. Profielnaam en profielfoto kunnen afzonderlijk worden opgeslagen voor het zichtbaar maken van matches.
 
-### 3.3 Optionele cloudback-up
-Als je afzonderlijk cloudback-up inschakelt, bewaren we een kopie van [EXACTE_BACK-UPINHOUD] om je profiel op een ander toestel te kunnen herstellen. Deze back-up is niet automatisch ingeschreven voor matching en is niet openbaar toegankelijk.
+### 3.3 iCloud-back-up
+Als je een account aanmaakt, komen je profiel, foto's en bewaarde matches end-to-end versleuteld in je eigen iCloud, zodat je ze op een ander toestel kunt herstellen. Wij hebben geen toegang tot deze back-up. Ze meldt je niet aan voor matching en is nooit zichtbaar voor andere gebruikers. Voor iCloud gelden de voorwaarden van Apple.
 
 ### 3.4 Automatische matching
-Als je automatische matching uitdrukkelijk inschakelt, verwerken we je volledige numerieke en andere matchingprofiel: antwoorden, wegingen, breekpunten, voorkeuren, profielversie, matchingstatus en de gegevens die nodig zijn om kandidaten te vinden en scores te berekenen. De antwoorden kunnen informatie onthullen over bijvoorbeeld gezondheid, religie, seksuele oriëntatie of andere bijzondere persoonsgegevens.
+Als je automatische matching uitdrukkelijk inschakelt, bewaren we je matchingprofiel op onze server zolang matching aanstaat: antwoorden, wegingen, breekpunten, voorkeuren, basisgegevens, foto's, profielversie, matchingstatus en de gegevens die nodig zijn om kandidaten te vinden en scores te berekenen. De fotocontrole gebeurt op je toestel; wij leggen alleen vast of die gelukt is. De antwoorden kunnen informatie onthullen over bijvoorbeeld gezondheid, religie, seksuele oriëntatie of andere bijzondere persoonsgegevens.
 
-### 3.5 Profieluitwisselingen, matches en snapshots
-Bij een vrijwillige wederzijdse profieluitwisseling of automatische match verwerken we de gekoppelde account-ID’s, de relevante matchdatum, de vastgezette matchscore, de gebruikte methode/versie en volledige momentopnamen van beide profielen. Ontvangers krijgen de volledige snapshot inclusief antwoorden, wegingen, voorkeuren en breekpunten en de profielnaam en foto die bij de uitwisseling horen. Er is geen instelling om afzonderlijke vragen te verbergen.
+### 3.5 Matches
+Bij een match ziet ieder per categorie vragen een score, hoe zwaar elke categorie weegt, de totaalscore en, bij handmatige matches, aan welke eisen niet wordt voldaan. Daarnaast basisgegevens: naam, leeftijd, woonplaats en afstand, lengte, gender, wie iemand zoekt, geloof, talen, kinderen en gebruik van alcohol, tabak en drugs, en waar van toepassing een foto. Antwoorden op losse vragen en de bijbehorende wegingen zijn nooit te zien. Bij een handmatige match gaat het profiel verzegeld van toestel naar toestel; het ontvangende toestel rekent de uitkomst uit en bewaart alleen wat getoond wordt. Bij een automatische match verwerken we de gekoppelde account-ID’s, de matchdatum en de vastgelegde scores; de foto van de ander toont onze server alleen tijdens een lopende match, en het toestel van de ontvanger bewaart een kopie.
 
 ### 3.6 Chats en communicatiegegevens
 Chatinhoud is end-to-end versleuteld. Wij verwerken versleutelde berichten en, voor zover noodzakelijk, metadata zoals betrokken account-ID’s, afleverstatussen en tijdstippen. Wij kunnen de inhoud van normaal verzonden berichten niet lezen. Wanneer iemand chatinhoud vrijwillig bij een melding meestuurt, kunnen wij die aangeleverde inhoud wel verwerken.
@@ -394,29 +394,29 @@ Voor beveiliging, beschikbaarheid en misbruikbestrijding verwerken we voor zover
 | --- | --- | --- |
 | Lokaal profiel en basisbediening, voor zover verwerking door ons plaatsvindt | Je profiel kunnen maken en gebruiken | Uitvoering van de overeenkomst, art. 6 lid 1(b), voor zover van toepassing |
 | Accountbeheer en inloggen | Je account beschikbaar houden en beveiligen | Uitvoering van de overeenkomst, art. 6 lid 1(b) |
-| Optionele cloudback-up | Je profiel veilig kunnen herstellen | [KIES EN ONDERBOUW: TOESTEMMING ART. 6(1)(a) OF OVEREENKOMST ART. 6(1)(b)] |
-| Handmatige, wederzijdse profieluitwisseling | De door jou gekozen uitwisseling uitvoeren | [KIES EN ONDERBOUW: ART. 6(1)(a) OF 6(1)(b)] en waar noodzakelijk een uitzondering uit art. 9 AVG |
-| Automatische matching en automatische volledige profieluitwisseling | Compatibele personen vinden, scores berekenen en profielen delen | Uitdrukkelijke toestemming, art. 6 lid 1(a), en voor bijzondere persoonsgegevens art. 9 lid 2(a) |
+| iCloud-back-up | Je profiel en bewaarde matches kunnen herstellen | [KIES EN ONDERBOUW: TOESTEMMING ART. 6(1)(a) OF OVEREENKOMST ART. 6(1)(b)] |
+| Handmatig matchen tussen twee toestellen | De match tonen die je zelf start | [KIES EN ONDERBOUW: ART. 6(1)(a) OF 6(1)(b)] en waar noodzakelijk een uitzondering uit art. 9 AVG |
+| Automatische matching en automatisch delen met matches | Compatibele personen vinden, scores berekenen en matches aan elkaar tonen | Uitdrukkelijke toestemming, art. 6 lid 1(a), en voor bijzondere persoonsgegevens art. 9 lid 2(a) |
 | E2EE-chat en berichtaflevering | Communicatie tussen matches | Uitvoering van de overeenkomst, art. 6 lid 1(b) |
 | Beveiliging en noodzakelijk misbruikonderzoek | Incidenten voorkomen en behandelen | Gerechtvaardigd belang, art. 6 lid 1(f), na belangenafweging; waar nodig aanvullende grondslag voor bijzondere gegevens |
 | Wettelijke administratieve verplichtingen | Aan wettelijke verplichtingen voldoen | Wettelijke verplichting, art. 6 lid 1(c) |
 | [EVENTUELE OVERIGE VERWERKING] | [DOEL] | [GRONDSLAG] |
 
-Toestemming is vrijwillig, specifiek en kan voor toekomstige verwerking op die grond worden ingetrokken. Een account of cloudback-up schakelt automatische matching niet vanzelf in. Als we bijzondere persoonsgegevens gebruiken, beoordelen we vooraf of uitdrukkelijke toestemming en andere AVG-vereisten passend en voldoende zijn.
+Toestemming is vrijwillig, specifiek en kan voor toekomstige verwerking op die grond worden ingetrokken. Een account schakelt automatische matching niet vanzelf in. Als we bijzondere persoonsgegevens gebruiken, beoordelen we vooraf of uitdrukkelijke toestemming en andere AVG-vereisten passend en voldoende zijn.
 
 ## 5. Hoe werken automatische matches en matchpercentages?
 
-Onze matchingservice vergelijkt de profielgegevens van gebruikers die automatische matching hebben ingeschakeld. Eerst controleren we breekpunten en noodzakelijke criteria in beide richtingen. Vervolgens vergelijken we per vraag de verschillen tussen de numerieke antwoorden, rekening houdend met de opgegeven belangrijkheidswegingen. De methode voor het gewogen percentage is [OMSCHRIJVING DEFINITIEVE FORMULE, MAXIMUMAFWIJKING, OMGANG MET ONBEANTWOORDE VRAGEN EN DREMPELWAARDE].
+Onze matchingservice vergelijkt de profielgegevens van gebruikers die automatische matching hebben ingeschakeld. Eerst controleren we breekpunten en noodzakelijke criteria in beide richtingen. Vervolgens vergelijken we per vraag de verschillen tussen de numerieke antwoorden, rekening houdend met de opgegeven belangrijkheidswegingen, en tonen we de uitkomst als score per categorie; samen vormen die de totaalscore. De methode voor het gewogen percentage is [OMSCHRIJVING DEFINITIEVE FORMULE, MAXIMUMAFWIJKING, OMGANG MET ONBEANTWOORDE VRAGEN EN DREMPELWAARDE].
 
-Een match ontstaat alleen als de ingestelde criteria zijn gehaald. De score en de aan beide personen verstrekte volledige profielmomentopnamen worden op de matchdatum vastgelegd en wijzigen niet automatisch bij latere profielaanpassingen. De score is een rekenkundige overeenkomst, geen garantie of voorspelling van relatiesucces.
+Een match ontstaat alleen als de ingestelde criteria zijn gehaald. De scores en gegevens die beide personen te zien krijgen, worden op de matchdatum vastgelegd en wijzigen niet automatisch bij latere profielaanpassingen. De score is een rekenkundige overeenkomst, geen garantie of voorspelling van relatiesucces.
 
-We gebruiken deze geautomatiseerde beoordeling om binnen de app te bepalen wie voor een match in aanmerking komt en wie elkaars volledige profiel mag zien. De beslissing heeft [BEOORDEEL OF ER SPRAKE KAN ZIJN VAN RECHTSGEVOLGEN OF VERGELIJKBAAR AANZIENLIJKE GEVOLGEN ONDER ART. 22 AVG]. Je kunt vragen stellen over de matchingmethode of een uitkomst via [CONTACT_MATCHING_UITLEG]. Waar de AVG dit vereist, bieden we de toepasselijke rechten en waarborgen bij geautomatiseerde besluitvorming.
+We gebruiken deze geautomatiseerde beoordeling om binnen de app te bepalen wie voor een match in aanmerking komt en wie elkaars scores en gegevens te zien krijgt. De beslissing heeft [BEOORDEEL OF ER SPRAKE KAN ZIJN VAN RECHTSGEVOLGEN OF VERGELIJKBAAR AANZIENLIJKE GEVOLGEN ONDER ART. 22 AVG]. Je kunt vragen stellen over de matchingmethode of een uitkomst via [CONTACT_MATCHING_UITLEG]. Waar de AVG dit vereist, bieden we de toepasselijke rechten en waarborgen bij geautomatiseerde besluitvorming.
 
 ## 6. Met wie delen we persoonsgegevens?
 
 We delen persoonsgegevens alleen voor de hieronder omschreven doelen:
 
-- **Andere gebruikers:** uitsluitend bij door jou gekozen wederzijdse profieluitwisseling of bij automatische matching die je uitdrukkelijk hebt ingeschakeld. Zij zien dan het volledige profiel zoals beschreven; zij kunnen zelf kopieën bewaren.
+- **Andere gebruikers:** uitsluitend bij een handmatige match die je zelf start of bij automatische matching die je uitdrukkelijk hebt ingeschakeld. Zij zien dan de scores en gegevens zoals hierboven beschreven; zij kunnen zelf kopieën bewaren.
 - **Supabase:** voor onze database, authenticatie, opslag, applicatiefuncties en technische dienstverlening op basis van de toepasselijke afspraken.
 - **[OVERIGE VERWERKERS, INCLUSIEF PUSH-, LOG-, E-MAIL-, KMS- OF HOSTINGDIENSTEN]:** uitsluitend voor de benoemde functies en volgens passende overeenkomsten.
 - **Bevoegde instanties:** indien we daartoe wettelijk verplicht zijn of op basis van een geldige rechtsgrond.
@@ -441,21 +441,21 @@ De matchingservice moet noodzakelijke antwoorden tijdens de berekening kunnen ve
 | --- | --- |
 | Lokaal profiel | Tot je dit op je toestel verwijdert of de appgegevens wist, behoudens externe toestelback-ups |
 | Accountgegevens | Gedurende gebruik en [AANTAL_DAGEN] na accountverwijdering, tenzij een geldige uitzondering geldt |
-| Cloudback-up | Tot uitschakeling/verwijdering, vervolgens maximaal [AANTAL_DAGEN] voor actieve opslag |
-| Actief matchingprofiel | Zolang matching aanstaat; na intrekken toestemming binnen [AANTAL_DAGEN] verwijderd/onomkeerbaar buiten gebruik gesteld |
-| Matchscores en server-snapshots | [TERMIJN EN REGEL BIJ UNMATCH/BLOKKEREN/ACCOUNTVERWIJDERING] |
-| E2EE-versleutelde berichtinhoud | [TERMIJN OF VERWIJDERREGEL], met [REGEL VOOR NIET-AFGELEVERDE BERICHTEN] |
+| iCloud-back-up | In je eigen iCloud tot je bewaarde matches of je profiel verwijdert; wij hebben geen toegang |
+| Matchingprofiel en foto's | Zolang matching aanstaat; meteen verwijderd als je het uitzet (tijdens een lopende match zodra die voorbij is), restanten binnen een dag. Na 6 maanden zonder app-activiteit doe je niet meer mee aan matching; na 12 maanden worden profiel en foto's verwijderd |
+| Matchscores en matchgegevens | [TERMIJN EN REGEL BIJ UNMATCH/BLOKKEREN/ACCOUNTVERWIJDERING] |
+| E2EE-versleutelde berichtinhoud | Maximaal 12 maanden na verzending, ook nadat een match is beëindigd |
 | Technische logs en metadata | Maximaal [AANTAL_DAGEN], behoudens incidentonderzoek |
 | Toestemmingsbewijs | [BEWAARTERMIJN TER VERANTWOORDING EN VERJARING] |
 | Veiligheidsmeldingen en blokkades | [BEWAARTERMIJN EN CRITERIA] |
 | Back-ups en verwijderde kopieën | Uit roulatie volgens [MAXIMALE BACK-UPRETENTIE EN ROTATIE] |
 | Fiscale/andere wettelijk vereiste gegevens | Volgens [WETTELIJKE BEWAARTERMIJN] |
 
-Als je matching uitschakelt, komen er geen nieuwe matches tot stand op basis van dat profiel. Reeds gedeelde snapshots bij ontvangers zijn niet automatisch terug te halen. Wanneer een gebruiker om verwijdering verzoekt, beoordelen we ook de kopieën die wij zelf binnen de dienst bewaren; die blijven niet zonder geldige reden onbeperkt beschikbaar.
+Als je matching uitschakelt, komen er geen nieuwe matches tot stand op basis van dat profiel. Wat een match al heeft gezien, is niet automatisch terug te halen. Wanneer een gebruiker om verwijdering verzoekt, beoordelen we ook de kopieën die wij zelf binnen de dienst bewaren; die blijven niet zonder geldige reden onbeperkt beschikbaar.
 
 ## 10. Welke keuzes en rechten heb je?
 
-Je kunt matching weigeren of later uitschakelen zonder je lokale profiel kwijt te raken. Je kunt cloudback-up afzonderlijk beheren. Je hebt, onder de voorwaarden van de AVG, recht op inzage, rectificatie, verwijdering, beperking, overdraagbaarheid en bezwaar; je hebt ook het recht om toestemming in te trekken. Voor geautomatiseerde besluitvorming kunnen aanvullende rechten gelden.
+Je kunt matching weigeren of later uitschakelen zonder je lokale profiel kwijt te raken. Je iCloud-back-up blijft in je eigen beheer. Je hebt, onder de voorwaarden van de AVG, recht op inzage, rectificatie, verwijdering, beperking, overdraagbaarheid en bezwaar; je hebt ook het recht om toestemming in te trekken. Voor geautomatiseerde besluitvorming kunnen aanvullende rechten gelden.
 
 Dien je verzoek in via [IN-APP PAD VOOR PRIVACYVERZOEKEN] of [PRIVACY_E-MAIL]. We kunnen noodzakelijke verificatie vragen en reageren in beginsel binnen één maand, behoudens wettelijk toegestane verlenging. Intrekking verandert niets aan verwerking die vóór de intrekking rechtmatig plaatsvond. Kopieën die ontvangers buiten onze controle hebben bewaard, kunnen we niet gegarandeerd verwijderen.
 

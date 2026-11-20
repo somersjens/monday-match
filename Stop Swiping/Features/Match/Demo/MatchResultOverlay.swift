@@ -314,7 +314,7 @@ struct MatchResultOverlay: View {
             // A live match is the only thing the app does until it ends.
             if match.isBroken && match.isLive {
                 // A broken server match can still be reported, whoever broke it.
-                BrokenMatchMenu(onReport: { reportReason = $0 }, onClose: onClose)
+                BrokenMatchMenu(onReport: { reportReason = $0 }, onDelete: { confirmsDeletion = true }, onClose: onClose)
                     .transition(.opacity)
             } else if (match.isBroken || (isSaved && !match.isLive)) && onRestartDemo != nil {
                 // Elsewhere a saved match has its Close button at the bottom;
@@ -367,7 +367,7 @@ struct MatchResultOverlay: View {
             if match.isBroken && match.isLive {
                 // A broken match is only looked back on, so it can be left,
                 // and the other person can still be reported.
-                BrokenMatchMenu(onReport: { reportReason = $0 }, onClose: onClose)
+                BrokenMatchMenu(onReport: { reportReason = $0 }, onDelete: { confirmsDeletion = true }, onClose: onClose)
             } else if match.isBroken {
                 // A broken match is only looked back on, so it can be left.
                 Button(action: onClose) {

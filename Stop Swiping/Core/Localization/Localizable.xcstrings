@@ -10569,6 +10569,23 @@
         }
       }
     },
+    "Match deleted." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match deleted."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match verwijderd."
+          }
+        }
+      }
+    },
     "Match ended on {0}" : {
       "extractionState" : "manual",
       "localizations" : {

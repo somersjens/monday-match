@@ -14,6 +14,8 @@ struct ProfileDeletionService {
     let authService: AuthServicing
     /// The saved matches' iCloud backup, removed with the profile.
     var savedMatchBackup: SavedMatchCloudBackup?
+    /// The profile's own iCloud backup, removed with it.
+    var profileBackup: ProfileICloudBackup?
     var defaults: UserDefaults = .standard
 
     /// True when deleting first needs Apple to confirm the Apple ID again.
@@ -22,6 +24,7 @@ struct ProfileDeletionService {
     }
 
     func deleteProfile(appleAuthorizationCode: String? = nil) async throws {
+        let accountID = await server?.accountID
         await server?.beginDeletion()
         do {
             try await server?.deleteAccount(appleAuthorizationCode: appleAuthorizationCode)
@@ -33,6 +36,9 @@ struct ProfileDeletionService {
         try wipeLocalData()
         // Now, or as soon as iCloud can be reached; it never holds up deleting.
         savedMatchBackup?.wipe()
+        if let accountID, let profileBackup {
+            Task { await profileBackup.forget(accountID: accountID) }
+        }
         server?.endDeletion(accountDeleted: true)
     }
 
