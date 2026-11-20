@@ -13,7 +13,7 @@ struct MatchProfileView: View {
                 section(L10n("About \(match.name)")) {
                     let facts = facts
                     ForEach(Array(facts.enumerated()), id: \.offset) { index, fact in
-                        factRow(title: fact.title, value: fact.value, isLast: index == facts.count - 1)
+                        factRow(fact, isLast: index == facts.count - 1)
                     }
                 }
             }
@@ -31,7 +31,7 @@ struct MatchProfileView: View {
         .presentationBackground(OnboardingTheme.background)
     }
 
-    private var facts: [(title: String, value: String)] { match.sharedFacts }
+    private var facts: [MatchFact] { match.sharedFacts }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -61,17 +61,25 @@ struct MatchProfileView: View {
         }
     }
 
-    private func factRow(title: String, value: String, isLast: Bool) -> some View {
+    private func factRow(_ fact: MatchFact, isLast: Bool) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(title)
+            Text(fact.title)
                 .font(.subheadline)
                 .foregroundStyle(OnboardingTheme.secondaryText)
             Spacer(minLength: 8)
-            Text(value)
-                .font(.subheadline)
-                .foregroundStyle(OnboardingTheme.primaryText)
-                .multilineTextAlignment(.trailing)
-                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(fact.value)
+                    .font(.subheadline)
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                // What they ask of a partner, on its own line.
+                if let detail = fact.detail {
+                    Text(detail)
+                        .font(.footnote)
+                        .foregroundStyle(OnboardingTheme.secondaryText)
+                }
+            }
+            .multilineTextAlignment(.trailing)
+            .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 11)
@@ -87,6 +95,17 @@ struct MatchProfileView: View {
     }
 }
 
+/// One line in a match's card: the answer, and what they ask of a partner
+/// below it.
+struct MatchFact: Equatable {
+    let title: String
+    let value: String
+    var detail: String? = nil
+
+    /// Both parts as one text, a line each.
+    var text: String { [value, detail].compactMap { $0 }.joined(separator: "\n") }
+}
+
 extension MatchSnapshot {
     private static let basics: [ProfileCreationStep] = [
         .height, .gender, .partnerGenders, .sexualArrangement, .religion, .languages,
@@ -95,21 +114,29 @@ extension MatchSnapshot {
 
     /// The other person's basic answers. Age and distance come first; the
     /// birthday and exact place are never shared.
-    var sharedFacts: [(title: String, value: String)] {
+    var sharedFacts: [MatchFact] {
         let day = CalendarDate.today(calendar: BirthDateRules.calendar, now: matchedAt)
-        var facts: [(String, String)] = []
+        var facts: [MatchFact] = []
         if let age = them.age(on: day) {
-            facts.append((L10n("Age"), L10n("\(age) years")))
+            facts.append(MatchFact(title: L10n("Age"), value: L10n("\(age) years")))
         }
         if let place = them.location?.placeName, !place.isEmpty {
-            facts.append((ProfileCreationStep.location.shortTitle, place))
+            facts.append(MatchFact(title: ProfileCreationStep.location.shortTitle, value: place))
         }
         if let distance = distanceKilometers {
-            facts.append((L10n("Distance"), L10n("About \(distance) km away")))
+            facts.append(MatchFact(title: L10n("Distance"), value: L10n("About \(distance) km away")))
         }
         for step in Self.basics {
-            facts.append((step.shortTitle, them.summary(for: step, today: day).compact))
+            let summary = them.summary(for: step, today: day)
+            // On a line of its own, a detail starts like a sentence.
+            let detail = summary.detail.map { $0.prefix(1).localizedUppercase + $0.dropFirst() }
+            facts.append(MatchFact(title: Self.title(for: step), value: summary.value, detail: detail))
         }
         return facts
+    }
+
+    /// The overview's names, shorter where a long one crowds the answer.
+    private static func title(for step: ProfileCreationStep) -> String {
+        step == .religion ? L10n("Religion") : step.shortTitle
     }
 }

@@ -82,6 +82,14 @@ final class LiveMatchCenter: ObservableObject {
     static let pushTrustWindow: TimeInterval = 30 * 24 * 60 * 60
     /// Reports end the match, which is checked then; otherwise once a day.
     static let moderationInterval: TimeInterval = 24 * 60 * 60
+    /// While an objection waits for a decision (or for an administrator):
+    /// the outcome shows within the hour of opening the app.
+    static let moderationIntervalAwaitingDecision: TimeInterval = 60 * 60
+
+    private var moderationIsDue: Bool {
+        let interval = moderation?.awaitsDecision == true ? Self.moderationIntervalAwaitingDecision : Self.moderationInterval
+        return Date().timeIntervalSince(lastModerationCheck) > interval
+    }
 
     init(repository: SecureChatRepository?, defaults: UserDefaults = .standard, photos: MatchPhotoStore = .shared,
          pushesArePermitted: @escaping () async -> Bool = LiveMatchCenter.systemPushesArePermitted,
@@ -112,7 +120,7 @@ final class LiveMatchCenter: ObservableObject {
         if Self.cachedHistory(defaults: defaults) == nil { await loadHistory() }
         if await asksOnArrival() { await refresh(ownProfile: ownProfile()) }
         while !Task.isCancelled {
-            if Date().timeIntervalSince(lastModerationCheck) > Self.moderationInterval { await refreshModeration() }
+            if moderationIsDue { await refreshModeration() }
             await followActiveMatch()
             await waitForSignal(upTo: await nextTimer())
             guard !Task.isCancelled else { break }
@@ -310,7 +318,7 @@ final class LiveMatchCenter: ObservableObject {
     /// Once a day, also while nothing else asks the server (automatic
     /// matching off, for example after a block), so a lock lifts or comes.
     func refreshModerationIfDue() async {
-        guard Date().timeIntervalSince(lastModerationCheck) > Self.moderationInterval else { return }
+        guard moderationIsDue else { return }
         await refreshModeration()
     }
 
@@ -324,6 +332,35 @@ final class LiveMatchCenter: ObservableObject {
     func acknowledgeModeration() async {
         guard let repository else { return }
         try? await repository.acknowledgeModeration()
+        await refreshModeration()
+    }
+
+    /// Objects to the newest report against this account. Throws so the
+    /// objection screen can say what went wrong and keep the words.
+    func objectToReport(_ reportID: UUID, message: String, idCheck: ReportIDCheck?) async throws {
+        guard let repository else { throw CancellationError() }
+        try await repository.objectToReport(reportID, message: message, idCheck: idCheck)
+        await refreshModeration()
+    }
+
+    /// Administrators: the demo match reported as a report against this
+    /// account, so the warning shows on the home screen.
+    func reportDemo(reason: ReportReason, details: String, chatCopy: [ReportChatLine]?) async throws {
+        guard let repository else { throw CancellationError() }
+        try await repository.reportDemo(reason: reason.rawValue, details: details, chatCopy: chatCopy)
+        await refreshModeration()
+    }
+
+    /// Administrators: the open objections.
+    func adminObjections() async throws -> [AdminObjection] {
+        guard let repository else { return [] }
+        return try await repository.adminObjections()
+    }
+
+    /// Administrators: approve (the report is withdrawn) or reject.
+    func decideObjection(_ objectionID: UUID, approve: Bool) async throws {
+        guard let repository else { throw CancellationError() }
+        try await repository.decideObjection(objectionID, approve: approve)
         await refreshModeration()
     }
 

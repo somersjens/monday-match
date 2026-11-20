@@ -77,6 +77,8 @@ struct FaceVerificationView: View {
     @StateObject private var viewModel: FaceVerificationViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    /// Closing by hand and moving on after a match can meet; report once.
+    @State private var hasCompleted = false
 
     init(referencePhoto: ProfilePhoto,
          configuration: FaceVerificationConfiguration = .init(),
@@ -91,7 +93,11 @@ struct FaceVerificationView: View {
             snapshot: viewModel.snapshot,
             outcome: viewModel.outcome,
             needsCameraPermission: viewModel.needsCameraPermission,
-            onCancel: { complete(.failed(L10n("Verification was cancelled. Start a new scan to verify this photo."))) },
+            onCancel: {
+                // A scan that already matched counts, even when closed before it moves on.
+                complete(viewModel.outcome == .match
+                         ? .match : .failed(L10n("Verification was cancelled. Start a new scan to verify this photo.")))
+            },
             onRetry: { viewModel.start(referenceData: referencePhoto.imageData) },
             onSettings: {
                 if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
@@ -126,6 +132,14 @@ struct FaceVerificationView: View {
             }
         }
         .task { viewModel.start(referenceData: referencePhoto.imageData) }
+        // A match needs no button: the seal lands with its sound, the ring
+        // stays full for a moment, then the scan closes by itself.
+        .task(id: viewModel.outcome) {
+            guard viewModel.outcome == .match else { return }
+            try? await Task.sleep(for: .milliseconds(1500))
+            guard !Task.isCancelled, viewModel.outcome == .match else { return }
+            complete(.match)
+        }
         .onDisappear { viewModel.stop() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background || (phase == .inactive && viewModel.camera != nil) { viewModel.interrupt() }
@@ -133,6 +147,8 @@ struct FaceVerificationView: View {
     }
 
     private func complete(_ outcome: FaceVerificationOutcome) {
+        guard !hasCompleted else { return }
+        hasCompleted = true
         viewModel.stop()
         onComplete(PhotoVerificationReceipt(photoID: referencePhoto.id, imageData: referencePhoto.imageData, outcome: outcome))
         dismiss()

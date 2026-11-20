@@ -102,9 +102,21 @@ nonisolated final class FaceFrameAnalyzer {
                            y: points.map(\.y).reduce(0, +) / CGFloat(points.count))
         }
         guard let a = mean(points(landmarks.leftEye)), let b = mean(points(landmarks.rightEye)),
-              let nose = points(landmarks.noseCrest).min(by: { $0.y < $1.y }),
+              let nose = Self.noseTip(points(landmarks.noseCrest), eyeDistance: hypot(a.x - b.x, a.y - b.y)),
               let mouth = mean(points(landmarks.outerLips)) else { return nil }
         return FaceHeadPose.estimate(eyeA: a, eyeB: b, nose: nose, mouth: mouth, yaw: yaw)
+    }
+
+    /// The lowest nose-crest point alone flips between two points of almost
+    /// the same height on either side of the nose: on a real iPhone a face
+    /// looking straight ahead jumped between −0.22 and +0.25 eye widths from
+    /// frame to frame, which read as a turned head and kept the end of the scan
+    /// on "Look at the camera". Averaging every point near the bottom is stable.
+    static func noseTip(_ crest: [CGPoint], eyeDistance: CGFloat) -> CGPoint? {
+        guard let lowest = crest.map(\.y).min(), eyeDistance.isFinite, eyeDistance > 0 else { return nil }
+        let bottom = crest.filter { $0.y - lowest <= eyeDistance * 0.12 }
+        return CGPoint(x: bottom.map(\.x).reduce(0, +) / CGFloat(bottom.count),
+                       y: bottom.map(\.y).reduce(0, +) / CGFloat(bottom.count))
     }
 
     private func configureComputeDevice(_ request: VNRequest) throws {

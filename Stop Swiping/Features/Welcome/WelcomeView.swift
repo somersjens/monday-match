@@ -40,6 +40,13 @@ struct WelcomeView: View {
     @State private var stage: Stage
     @State private var showsUnderageNotice = false
     @State private var isTransitioning = false
+    /// The helix is still flying in. Only what reshapes the light waits for
+    /// it; the menu (Adjust profile, My matches) opens over it straight away.
+    @State private var isHelixArriving = false
+    /// Counts helix arrivals, so only the newest one ends `isHelixArriving`.
+    @State private var helixArrivals = 0
+    /// When the last screen presented over this one was closed.
+    @State private var screenClosedAt = Date.distantPast
     @State private var lockPulse = 0
     /// The welcome light's entrance sounds once per screen, like the light.
     @State private var hasPlayedEntrance = false
@@ -80,6 +87,14 @@ struct WelcomeView: View {
     @StateObject private var liveMatches: LiveMatchCenter
     /// Strikes whose notice was dismissed on this screen, before the server confirms.
     @State private var acknowledgedStrikes = 0
+    /// The report and objection outcome "Understood" was tapped for here,
+    /// so the card goes at once instead of after the server answers.
+    @State private var acknowledgedReportID: UUID?
+    @State private var acknowledgedResultID: UUID?
+    /// The report being objected to.
+    @State private var objectingReport: ModerationStatus.LatestReport?
+    /// Administrators: the open objections.
+    @State private var showsAdmin = false
     /// The conversation behind the match on screen, live or demo.
     @State private var activeChat: ChatViewModel?
     /// The heart has turned into the rings and the conversation is open.
@@ -104,7 +119,7 @@ struct WelcomeView: View {
     @State private var matchReveal = MatchReveal.hidden
     @State private var matchStartedAt = Date()
     @State private var matchTask: Task<Void, Never>?
-    @State private var scoreDetail: MatchReport.Perspective?
+    @State private var scoreDetail: MatchScoreDetail?
     @State private var showsSavedMatches = false
     /// Set when a cover closes because something else starts at once (a
     /// match, a scanned code), which then brings its own sound.
@@ -191,6 +206,8 @@ struct WelcomeView: View {
     }
 
     private let skipsEntrance: Bool
+    /// Something is reshaping the light, so nothing else may take it over.
+    private var isLightBusy: Bool { isTransitioning || isHelixArriving }
     private var isOnboarding: Bool { lightStage == .onboarding }
     private var canShowCode: Bool { WelcomeLightMetalView.isAvailable }
     /// The QR code is offered once the demo's explanation is understood;
@@ -212,7 +229,7 @@ struct WelcomeView: View {
     /// A scanned profile is matched as soon as the home screen is at rest
     /// with a profile of its own to match against.
     private var canShowScannedMatch: Bool {
-        stage == .complete && lightStage == .complete && activeMatch == nil && demoPhase == nil && !isTransitioning
+        stage == .complete && lightStage == .complete && activeMatch == nil && demoPhase == nil && !isLightBusy
             && scenePhase == .active && profileCreation.state.canShareProfile
             && !showsOverview && !showsAutoMatching && !showsSavedMatches && !showsAccess && !showsProfilePrivacy
             && accountCard == .closed
@@ -315,7 +332,7 @@ struct WelcomeView: View {
                         }
                         .buttonStyle(.plain)
                         .position(x: lightCenter.x, y: lightCenter.y - lift)
-                        .disabled(isTransitioning)
+                        .disabled(isLightBusy)
                         .accessibilityLabel(showsCode ? L10n("QR code") : L10n("Your profile DNA"))
                         .accessibilityHint(showsCode || personalityTest != nil
                                            ? L10n("Turns back into your DNA.")
@@ -344,7 +361,7 @@ struct WelcomeView: View {
                                 .animation(showsCode ? .spring(duration: 0.42, bounce: 0.18) : .easeIn(duration: 0.18),
                                            value: showsCode)
                                 .position(corner.center(slot: 1))
-                                .disabled(isTransitioning)
+                                .disabled(isLightBusy)
                                 .allowsHitTesting(showsCode)
                                 .accessibilityHidden(!showsCode)
                                 .transition(.opacity)
@@ -352,9 +369,22 @@ struct WelcomeView: View {
                             // Fixed to the screen's safe top-right corner.
                             HelixCodeButton(showsCode: showsCode, size: corner.size, action: toggleCode)
                                 .position(corner.center(slot: 0))
-                                .disabled(isTransitioning)
+                                .disabled(isLightBusy)
                                 .opacity(demoPhase == nil ? 1 : 0)
                                 .transition(.opacity)
+
+                            // Administrators: the open objections, in the
+                            // top-left corner opposite the QR code.
+                            if showsAdminButton && !showsCode {
+                                AdminObjectionsButton(size: corner.size,
+                                                      pending: liveMatches.moderation?.adminPending ?? 0) {
+                                    guard !isTransitioning else { return }
+                                    presentScreen { showsAdmin = true }
+                                }
+                                .position(corner.leadingCenter)
+                                .disabled(isTransitioning)
+                                .transition(.opacity)
+                            }
                         }
                     }
 
@@ -390,8 +420,8 @@ struct WelcomeView: View {
                             note: matchNote,
                             lightTransition: lightMatch?.transition ?? .newMatch,
                             lightStartedAt: matchStartedAt,
-                            onShowScores: { scoreDetail = $0 },
-                            onShowProfile: { showsMatchProfile = true },
+                            onShowScores: { detail in presentScreen { scoreDetail = detail } },
+                            onShowProfile: { presentScreen { showsMatchProfile = true } },
                             onRename: renameMatch,
                             onSave: {
                                 // Releasing a held Save match after the demo chat opened is no save.
@@ -410,12 +440,13 @@ struct WelcomeView: View {
                             controlsBottomInset: controlsInset,
                             onSendMessage: startChat,
                             onStartDemoChat: { startDemoChat(activeMatch.snapshot) },
-                            onViewProfile: { showsOverview = true },
+                            onViewProfile: { presentScreen { showsOverview = true } },
                             onShowPersonality: openMatchPersonality,
                             onBreakMatch: breakMatch,
                             onReport: reportMatch,
                             photoCard: activePhotoCard,
-                            reportPhoto: activeReportPhoto
+                            reportPhoto: activeReportPhoto,
+                            demoReportsReachServer: liveMatches.moderation?.isAdmin == true
                         )
                         // Gives the light to the chart: fades quickly as the rings
                         // start to reweave, and returns once they are nearly back.
@@ -614,7 +645,7 @@ struct WelcomeView: View {
             if !allowed {
                 checkAccess()
             } else if stage == .landing, lightStage == .landing, profileCreation.isCompleted,
-                      !showsAccess, !isTransitioning {
+                      !showsAccess, !isLightBusy {
                 // StoreKit answered after this screen chose its stage (a phone
                 // without an account doesn't wait for it at launch): show the
                 // finished profile instead of the start of the questionnaire.
@@ -642,6 +673,21 @@ struct WelcomeView: View {
         .fullScreenCover(isPresented: $showsScanner) {
             ProfileCodeScannerView(onScan: finishScanning) { showsScanner = false }
         }
+        .sheet(item: $objectingReport) { report in
+            if let status = liveMatches.moderation {
+                ReportObjectionSheet(status: status, report: report,
+                                     displayName: profileCreation.state.displayName,
+                                     birthDate: profileCreation.state.birthDateSelection) { message, idCheck in
+                    try await liveMatches.objectToReport(report.id, message: message, idCheck: idCheck)
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $showsAdmin, onDismiss: {
+            Task { await liveMatches.refreshModeration() }
+        }) {
+            AdminObjectionsView(load: { try await liveMatches.adminObjections() },
+                                decide: { try await liveMatches.decideObjection($0, approve: $1) })
+        }
         .onChange(of: canShowScannedMatch && (scannedProfile != nil || codeInbox.pending != nil), initial: true) { _, ready in
             if ready { showScannedMatch() }
         }
@@ -663,15 +709,16 @@ struct WelcomeView: View {
             }
             isLightCovered = coversLight
         }
+        .modifier(ScreenDismissTracking(view: self))
         .onChange(of: showsOverview) { _, shown in
             // The code holds the answers themselves, so edits change it.
             if !shown, showsCode { refreshShareCode() }
         }
         // The landing's sign-in and the home screen's account card share it.
         .accountProfileChoice(signIn)
-        .sheet(item: $scoreDetail) { perspective in
+        .sheet(item: $scoreDetail) { detail in
             if let activeMatch {
-                MatchScoreDetailView(report: activeMatch.report, perspective: perspective,
+                MatchScoreDetailView(report: activeMatch.report, mode: detail,
                                      name: activeMatch.snapshot.name)
             }
         }
@@ -811,7 +858,7 @@ struct WelcomeView: View {
                     case .name:
                         ProfileNameCard(viewModel: profileCreation)
                     case .privacy:
-                        Button(L10n("Read about your privacy")) { showsProfilePrivacy = true }
+                        Button(L10n("Read about your privacy")) { presentScreen { showsProfilePrivacy = true } }
                             .buttonStyle(GlowButtonStyle())
                     case .explanation:
                         Button(L10n("Show how it works"), action: startDemoMatch)
@@ -858,12 +905,35 @@ struct WelcomeView: View {
     /// A strike this phone has not acknowledged yet.
     private var moderationIsUnread: Bool {
         guard hasAccount, let status = liveMatches.moderation else { return false }
-        return status.strikes > max(status.strikesSeen, acknowledgedStrikes)
+        guard status.strikes > status.strikesSeen else { return false }
+        // An approved objection lowers the count, so the newest report says
+        // whether this one was read here already.
+        if let latest = status.latestReport { return latest.id != acknowledgedReportID }
+        return status.strikes > acknowledgedStrikes
+    }
+
+    /// The outcome of an objection, until "Understood".
+    private var unreadObjectionResult: ModerationStatus.ObjectionResult? {
+        guard hasAccount, let result = liveMatches.moderation?.objectionResult,
+              result.id != acknowledgedResultID else { return nil }
+        return result
     }
 
     private func acknowledgeModeration() {
         acknowledgedStrikes = liveMatches.moderation?.strikes ?? acknowledgedStrikes
+        acknowledgedReportID = liveMatches.moderation?.latestReport?.id ?? acknowledgedReportID
+        acknowledgedResultID = liveMatches.moderation?.objectionResult?.id ?? acknowledgedResultID
         Task { await liveMatches.acknowledgeModeration() }
+    }
+
+    private func objectToLatestReport() {
+        guard let status = liveMatches.moderation, status.canObject, let report = status.latestReport else { return }
+        presentScreen { objectingReport = report }
+    }
+
+    /// Administrators only, opposite the QR code.
+    private var showsAdminButton: Bool {
+        hasAccount && liveMatches.moderation?.isAdmin == true && demoPhase == nil && personalityTest == nil
     }
 
     /// Blocked or banned: automatic matching goes off and out of sight, and
@@ -934,15 +1004,20 @@ struct WelcomeView: View {
             AccountCreationCard(phase: accountCard, signIn: signIn, onToggle: toggleAccountCard,
                                 onAuthenticated: finishAccountCreation)
         case .loading:
-            ProgressView()
+            // Holds the card's place for the moment the notification state
+            // takes to load, without a spinner: nothing to see at launch.
+            Color.clear
                 .frame(maxWidth: .infinity, minHeight: OnboardingTheme.buttonHeight)
+                .accessibilityHidden(true)
         case .notifications:
             NotificationPermissionCard(isRequesting: notifications.isRequesting) {
                 Task { await notifications.requestAuthorization() }
             }
         case .matching:
-            if let status = liveMatches.moderation, ModerationCard.isShown(status, isUnread: moderationIsUnread) {
-                ModerationCard(status: status, isUnread: moderationIsUnread, onAcknowledge: acknowledgeModeration)
+            if let status = liveMatches.moderation,
+               ModerationCard.isShown(status, isUnread: moderationIsUnread, hasResult: unreadObjectionResult != nil) {
+                ModerationCard(status: status, isUnread: moderationIsUnread, result: unreadObjectionResult,
+                               onAcknowledge: acknowledgeModeration, onObject: objectToLatestReport)
                     .transition(.opacity.combined(with: .scale(scale: 0.96)))
             }
             if isSuspendedFromMatching {
@@ -957,7 +1032,7 @@ struct WelcomeView: View {
             if !isSuspendedFromMatching {
                 AutoMatchingCard(viewModel: profileCreation) {
                     guard !isTransitioning else { return }
-                    showsAutoMatching = true
+                    presentScreen { showsAutoMatching = true }
                 }
             }
         }
@@ -981,6 +1056,17 @@ struct WelcomeView: View {
                     guard let destination else { return }
                     view.open(destination)
                 }
+        }
+    }
+
+    /// Notes when a screen over this one closes, so the next waits for it.
+    private struct ScreenDismissTracking: ViewModifier {
+        let view: WelcomeView
+
+        func body(content: Content) -> some View {
+            content.onChange(of: view.presentsScreen) { _, shown in
+                if !shown { view.screenClosedAt = .now }
+            }
         }
     }
 
@@ -1034,13 +1120,13 @@ struct WelcomeView: View {
         case .myMatches:
             openSavedMatches()
         case .privacy(.profile):
-            if profileCreation.hasDisplayName { showsProfilePrivacy = true }
+            if profileCreation.hasDisplayName { presentScreen { showsProfilePrivacy = true } }
         case .privacy(.matching), .autoMatching:
-            if hasAccount && !isSuspendedFromMatching { showsAutoMatching = true }
+            if hasAccount && !isSuspendedFromMatching { presentScreen { showsAutoMatching = true } }
         case .share:
             if !showsCode { toggleCode() }
         case .notificationSettings:
-            showsOverview = true
+            presentScreen { showsOverview = true }
         }
     }
 
@@ -1134,7 +1220,7 @@ struct WelcomeView: View {
     }
 
     private func openSignIn() {
-        guard !isTransitioning else { return }
+        guard !isLightBusy else { return }
         signIn.clearError()
         SoundPlayer.shared.play(.open)
         withAnimation(Self.accountMotion(reduceMotion: reduceMotion)) { showsSignIn = true }
@@ -1267,7 +1353,7 @@ struct WelcomeView: View {
     }
 
     private func handleGetStarted() {
-        guard !isTransitioning else { return }
+        guard !isLightBusy else { return }
         guard profileCreation.isUnderageLocked else {
             if access.isReady && access.hasAccess { openOnboarding() }
             else { openAccess() }
@@ -1311,12 +1397,41 @@ struct WelcomeView: View {
 
     /// A screen is presented over the light.
     private var coversLight: Bool {
-        showsOverview || showsAutoMatching || showsSavedMatches || showsProfilePrivacy || showsScanner
+        showsOverview || showsAutoMatching || showsSavedMatches || showsProfilePrivacy || showsScanner || showsAdmin
+    }
+
+    /// Anything presented over this screen. SwiftUI shows one at a time: a
+    /// second one asked for while another is up (two buttons tapped in quick
+    /// succession) never appears, but its flag stays set, which kept the
+    /// light paused and left that button without effect.
+    private var presentsScreen: Bool {
+        coversLight || objectingReport != nil || scoreDetail != nil || showsMatchProfile
+    }
+
+    /// How long a closing screen takes to slide away; SwiftUI can't present
+    /// the next one before it has.
+    private static let screenDismissDuration = 0.5
+
+    /// Opens a screen over this one, unless another is already up. Tapped
+    /// while the previous one is still sliding away, it opens once that one
+    /// has gone, instead of being dropped with its flag left set.
+    private func presentScreen(_ open: @escaping () -> Void) {
+        guard !presentsScreen else { return }
+        let settles = screenClosedAt.addingTimeInterval(Self.screenDismissDuration)
+        guard settles > .now else {
+            open()
+            return
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(settles.timeIntervalSinceNow))
+            guard !presentsScreen else { return }
+            open()
+        }
     }
 
     private func adjustProfile() {
         guard !isTransitioning, activeMatch == nil else { return }
-        showsOverview = true
+        presentScreen { showsOverview = true }
     }
 
     /// Everything is erased first; only then does the overview close and the
@@ -1334,7 +1449,7 @@ struct WelcomeView: View {
     /// The helix opens its personality estimates; the code and the charts
     /// turn back into the helix.
     private func tapHelix() {
-        guard !isTransitioning, activeMatch == nil, closeAccountCard() else { return }
+        guard !isLightBusy, activeMatch == nil, closeAccountCard() else { return }
         if showsCode {
             toggleCode()
         } else if personalityTest != nil {
@@ -1416,7 +1531,7 @@ struct WelcomeView: View {
     }
 
     private func toggleCode() {
-        guard !isTransitioning, activeMatch == nil, closeAccountCard() else { return }
+        guard !isLightBusy, activeMatch == nil, closeAccountCard() else { return }
         guard showsCode || codeIsUnlocked else { return }
         personalityTest = nil
         guard showsCode || refreshShareCode() else { return }
@@ -1434,8 +1549,8 @@ struct WelcomeView: View {
     }
 
     private func openScanner() {
-        guard !isTransitioning, activeMatch == nil, profileCreation.state.canShareProfile else { return }
-        showsScanner = true
+        guard !isLightBusy, activeMatch == nil, profileCreation.state.canShareProfile else { return }
+        presentScreen { showsScanner = true }
     }
 
     private func finishScanning(_ profile: ProfileCode.Received) {
@@ -1487,7 +1602,7 @@ struct WelcomeView: View {
     /// comes back. With reduced motion only the match itself is shown.
     private func startDemoMatch() {
         guard stage == .complete, lightStage == .complete, profileCreation.state.canShareProfile,
-              demoPhase == nil, isDemoPlaying || (activeMatch == nil && !isTransitioning) else { return }
+              demoPhase == nil, isDemoPlaying || (activeMatch == nil && !isLightBusy) else { return }
         var generator = SystemRandomNumberGenerator()
         let snapshot: MatchSnapshot
         let replaces = activeMatch != nil
@@ -1554,7 +1669,7 @@ struct WelcomeView: View {
 
     private func startFakeMatch() {
         guard stage == .complete, lightStage == .complete, profileCreation.state.canShareProfile,
-              demoPhase == nil, activeMatch == nil, !isTransitioning else { return }
+              demoPhase == nil, activeMatch == nil, !isLightBusy else { return }
         var generator = SystemRandomNumberGenerator()
         let snapshot = DemoMatchGenerator.makeMatch(for: profileCreation.state,
                                                     shouldMatch: nextFakeMatchSucceeds,
@@ -1765,7 +1880,12 @@ struct WelcomeView: View {
         OpenDemoChat.clear()
         matchTask?.cancel()
         isDemoPlaying = false
-        isTransitioning = true
+        // The menu (Adjust profile, My matches) answers again at once; only
+        // what reshapes the light waits until the helix is back. The match's
+        // own reveal, cancelled above, would otherwise never release it.
+        isTransitioning = false
+        helixArrivals += 1
+        isHelixArriving = true
         scoreDetail = nil
         showsMatchProfile = false
         SoundPlayer.shared.fadeOut(.match, .noMatch, .unfold, .chatOpen)
@@ -1785,8 +1905,13 @@ struct WelcomeView: View {
             }
             if !reduceMotion {
                 try? await Task.sleep(for: .seconds(0.3))
-                // The helix ropes back in from the sides.
-                SoundPlayer.shared.play(.helixArrival)
+                // Another match took the light while this one faded out.
+                guard activeMatch == nil else {
+                    isHelixArriving = false
+                    return
+                }
+                // The helix ropes back in from the sides, unheard under a screen opened meanwhile.
+                if !coversLight { SoundPlayer.shared.play(.helixArrival) }
             }
             var instant = Transaction()
             instant.disablesAnimations = true
@@ -1803,7 +1928,7 @@ struct WelcomeView: View {
     /// The server's match, shown like any other: the first time with the full
     /// arrival, afterwards unfolding in place from the helix.
     private func openLiveMatch() {
-        guard !isTransitioning, activeMatch == nil, demoPhase == nil,
+        guard !isLightBusy, activeMatch == nil, demoPhase == nil,
               let snapshot = liveMatches.snapshot(fallbackYou: profileCreation.state) else { return }
         let transition: WelcomeLightMatch.Transition = liveMatches.hasBeenSeen(snapshot.id) ? .savedMatch : .newMatch
         liveMatches.markSeen(snapshot.id)
@@ -1896,10 +2021,23 @@ struct WelcomeView: View {
         closeMatch()
     }
 
-    private func reportMatch(_ reason: ReportReason, details: String, alsoBreak: Bool) {
-        activeChat?.submitReport(reason: reason, details: details, endMatch: alsoBreak)
+    private func reportMatch(_ report: MatchReportSubmission) {
+        if activeMatch?.snapshot.isDemo == true, liveMatches.moderation?.isAdmin == true {
+            // An administrator's demo report counts against their own account,
+            // so the warning, the objection and the decision can be tried.
+            let copy = report.includesChat ? activeChat.map { ReportChatLine.copy(of: $0.conversation.messages) } : nil
+            Task {
+                do {
+                    try await liveMatches.reportDemo(reason: report.reason, details: report.details, chatCopy: copy)
+                } catch {
+                    AccessibilityNotification.Announcement(L10n("Could not submit report")).post()
+                }
+            }
+        }
+        activeChat?.submitReport(reason: report.reason, details: report.details, endMatch: report.alsoBreak,
+                                 includesChat: report.includesChat)
         AccessibilityNotification.Announcement(L10n("Thanks. Your report was sent.")).post()
-        if alsoBreak {
+        if report.alsoBreak {
             if activeChat?.isLive == true { liveMatches.forget() }
             if let id = activeMatch?.snapshot.id { savedMatches.markBroken(id) }
             closeMatch()
@@ -1909,9 +2047,11 @@ struct WelcomeView: View {
     private func openSavedMatches() {
         guard profileCreation.state.hasUnderstoodExplanation == true,
               !isTransitioning, activeMatch == nil else { return }
-        showsCode = false
-        showsSavedMatches = true
-        Task { await liveMatches.loadHistory() }
+        presentScreen {
+            showsCode = false
+            showsSavedMatches = true
+            Task { await liveMatches.loadHistory() }
+        }
     }
 
     /// A broken automatic match: its heart with "Match" struck through, and
@@ -1949,6 +2089,7 @@ struct WelcomeView: View {
         Task {
             // Let the cover finish closing before the in-place morph starts.
             try? await Task.sleep(for: .seconds(0.45))
+            guard activeMatch == nil else { return }
             present(snapshot, transition: .savedMatch)
         }
     }
@@ -2005,16 +2146,35 @@ struct WelcomeView: View {
                 isLightHidden = false
             }
             waitForHelixEntrance()
+            isTransitioning = false
         }
     }
 
+    /// The menu works while the helix flies in; a cover opened over it
+    /// pauses the light, and the flight resumes where it stopped, so only
+    /// time the light is actually drawn counts towards its arrival.
     private func waitForHelixEntrance() {
-        isTransitioning = true
+        // Only the newest arrival releases the light, so an earlier one
+        // finishing can't end a later one early.
+        helixArrivals += 1
+        guard !reduceMotion else {
+            isHelixArriving = false
+            return
+        }
+        isHelixArriving = true
+        let arrival = helixArrivals
         Task {
-            if !reduceMotion {
-                try? await Task.sleep(for: .seconds(WelcomeLightHelix.Arrival.delay + WelcomeLightHelix.Arrival.duration))
+            let clock = ContinuousClock()
+            var remaining = Duration.seconds(WelcomeLightHelix.Arrival.delay + WelcomeLightHelix.Arrival.duration)
+            var last = clock.now
+            while remaining > .zero, arrival == helixArrivals {
+                try? await Task.sleep(for: min(remaining, .milliseconds(100)))
+                let now = clock.now
+                if !isLightCovered { remaining -= now - last }
+                last = now
             }
-            isTransitioning = false
+            guard arrival == helixArrivals else { return }
+            isHelixArriving = false
         }
     }
 
@@ -2083,6 +2243,11 @@ struct CornerButtonMetrics: Equatable {
     func center(slot: Int) -> CGPoint {
         CGPoint(x: containerWidth - trailing - size / 2 - CGFloat(slot) * (size + spacing),
                 y: top + size / 2)
+    }
+
+    /// The top-left corner, mirroring slot 0.
+    var leadingCenter: CGPoint {
+        CGPoint(x: trailing + size / 2, y: top + size / 2)
     }
 }
 

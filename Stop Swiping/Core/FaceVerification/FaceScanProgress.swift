@@ -173,6 +173,8 @@ nonisolated struct FaceScanProgress {
                 return
             }
             guard acceptsIdentity(identityScore, at: timestamp) else { return }
+            // Recognised: drop an earlier "Relax…" so the text matches what is asked.
+            snapshot.instruction = L10n("Look at the camera")
             if let first = neutralPoses.first,
                hypot(pose.horizontal - first.horizontal, pose.vertical - first.vertical) > 0.09 {
                 neutralPoses.removeAll(); neutralSince = nil

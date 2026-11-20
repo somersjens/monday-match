@@ -221,17 +221,7 @@ struct ProfileCodeScannerView: View {
                     VStack(spacing: 0) {
                         HStack {
                             Spacer()
-                            Button(action: onClose) {
-                                Image(systemName: "xmark")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(OnboardingTheme.accentGradient)
-                                    .frame(width: 44, height: 44)
-                                    .background { Circle().fill(.white.opacity(0.08)) }
-                                    .overlay { Circle().strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5) }
-                                    .contentShape(Circle())
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(L10n("Close"))
+                            BrandCrossButton(action: onClose)
                         }
                         // Same corner as the close buttons of My matches and the profile overview.
                         .padding(.horizontal, 20)

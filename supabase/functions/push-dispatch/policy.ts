@@ -17,7 +17,8 @@ export type Platform = "ios" | "android";
 export type Entry = {
   outbox_id: number;
   // moderation_report goes only to administrators (matching_private.admins):
-  // a new report, with its reason code, never a name or the explanation.
+  // a new objection to a report (202611200007), with the report's reason
+  // code, never a name, the explanation or the objection.
   kind: "match_new" | "first_match" | "message_new" | "match_ended" | "moderation_report";
   match_id: string;
   // moderation_report only: the report's reason code (e.g. "underage").

@@ -46,6 +46,17 @@ struct MatchChatPanel: View {
                 composer
             }
         }
+        // Pinned just under the name, photo and gear, so it stays in view
+        // above the rings instead of scrolling away with the messages.
+        .overlay(alignment: .top) {
+            if chat.showsSafetyNotice {
+                safetyNotice
+                    .padding(.horizontal, 14)
+                    .padding(.top, 2)
+                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
+            }
+        }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: chat.showsSafetyNotice)
         // On iPad and iPhone Duo open, messages keep a readable line length
         // instead of running from edge to edge.
         .readableColumn()
@@ -80,11 +91,6 @@ struct MatchChatPanel: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    if chat.showsSafetyNotice {
-                        safetyNotice
-                            .padding(.bottom, 10)
-                            .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
-                    }
                     notice
                         .padding(.bottom, 14)
                     ForEach(Array(visibleMessages.enumerated()), id: \.element.id) { index, message in
@@ -115,7 +121,6 @@ struct MatchChatPanel: View {
                 .padding(.top, max(0, ringsBottom - headerHeight))
                 .animation(reduceMotion ? nil : .spring(duration: 0.35, bounce: 0.2), value: visibleMessages.count)
                 .animation(.easeInOut(duration: 0.2), value: chat.isPartnerTyping)
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: chat.showsSafetyNotice)
             }
             .defaultScrollAnchor(.bottom)
             .scrollDismissesKeyboard(.interactively)
@@ -169,16 +174,26 @@ struct MatchChatPanel: View {
     /// For a live and a demo match alike, until it is closed with the cross.
     private var safetyNotice: some View {
         Text(L10n("If you meet in person, it's always best to choose a public place."))
-            .font(.footnote)
+            .font(.subheadline)
             .foregroundStyle(OnboardingTheme.primaryText)
             .multilineTextAlignment(.center)
+            // Never more than two lines: a longer translation or a larger
+            // text size shrinks a little instead of growing the bubble.
+            .lineLimit(2)
+            .minimumScaleFactor(0.75)
             .frame(maxWidth: .infinity)
             // Room on both sides keeps the text centred clear of the cross.
-            .padding(.horizontal, 36)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 34)
+            .padding(.vertical, 8)
             .background {
+                // Opaque underneath: on smaller iPhones the bubble reaches
+                // the top of the rings, and the light must not shine through.
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(OnboardingTheme.pink.opacity(0.10))
+                    .fill(OnboardingTheme.background)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(OnboardingTheme.pink.opacity(0.10))
+                    }
             }
             .overlay {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -196,7 +211,7 @@ struct MatchChatPanel: View {
                 .padding(2)
                 .accessibilityLabel(L10n("Close"))
             }
-            .frame(maxWidth: 340)
+            .frame(maxWidth: 380)
             .accessibilityIdentifier("chat.safetyNotice")
     }
 

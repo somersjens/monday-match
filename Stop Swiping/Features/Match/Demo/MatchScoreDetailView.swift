@@ -1,27 +1,29 @@
 import SwiftUI
 
+/// Which score the sheet explains: both ways together (the heart), or one of
+/// the two directions (the numbers beside it).
+enum MatchScoreDetail: String, Identifiable, Hashable {
+    case together, yours, theirs
+
+    var id: String { rawValue }
+
+    init(_ perspective: MatchReport.Perspective) {
+        self = perspective == .yours ? .yours : .theirs
+    }
+}
+
 /// How a score came about, per category: how well the answers fit and how
 /// much each category counts. Score × weight, added up, gives the total.
 /// Single answers are never shown, so nobody can copy what the other looks for.
 struct MatchScoreDetailView: View {
     let report: MatchReport
+    /// Only the score that was tapped: no switching between them here.
+    let mode: MatchScoreDetail
     let name: String
-    @State private var mode: Mode
-
-    /// Both ways together, or one of the two directions.
-    enum Mode: Hashable, CaseIterable {
-        case together, yours, theirs
-    }
-
-    init(report: MatchReport, perspective: MatchReport.Perspective, name: String) {
-        self.report = report
-        self.name = name
-        _mode = State(initialValue: perspective == .yours ? .yours : .theirs)
-    }
 
     private static let scoreColumn: CGFloat = 52
     private static let weightColumn: CGFloat = 60
-    private static let rowInsets = EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 8)
+    private static let rowInsets = EdgeInsets(top: 13, leading: 16, bottom: 13, trailing: 8)
     private static let scoreSize: CGFloat = 30
     private static let scoreCapHeight = UIFont.systemFont(ofSize: scoreSize, weight: .light).capHeight
 
@@ -53,8 +55,6 @@ struct MatchScoreDetailView: View {
         let categories = categories
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                picker
-                    .padding(.bottom, 18)
                 header
                     .padding(.bottom, 16)
                 if !categories.isEmpty {
@@ -64,6 +64,10 @@ struct MatchScoreDetailView: View {
                             row(category, isLast: category.id == categories.last?.id)
                         }
                     }
+                    // Room above the column titles and below the last line,
+                    // so neither sits against the rounded edge.
+                    .padding(.top, 8)
+                    .padding(.bottom, 8)
                     .onboardingSurface(cornerRadius: 20)
                     .padding(.bottom, 16)
                 }
@@ -81,7 +85,7 @@ struct MatchScoreDetailView: View {
             }
             .frame(maxWidth: OnboardingTheme.contentWidth)
             .padding(.horizontal, 20)
-            .padding(.top, 20)
+            .padding(.top, 28)
             .padding(.bottom, 32)
             .frame(maxWidth: .infinity)
         }
@@ -91,15 +95,6 @@ struct MatchScoreDetailView: View {
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .presentationBackground(OnboardingTheme.background)
-    }
-
-    private var picker: some View {
-        Picker(L10n("Score"), selection: $mode) {
-            Text(L10n("Together")).tag(Mode.together)
-            Text(L10n("You → \(name)")).tag(Mode.yours)
-            Text(L10n("\(name) → you")).tag(Mode.theirs)
-        }
-        .pickerStyle(.segmented)
     }
 
     private var title: String {
@@ -137,7 +132,7 @@ struct MatchScoreDetailView: View {
             Text(total, format: .percent)
                 .font(.system(size: Self.scoreSize, weight: .light, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(OnboardingTheme.cyan)
+                .foregroundStyle(Self.fitColor(Double(total) / 100))
                 .alignmentGuide(.top) { $0[.firstTextBaseline] - Self.scoreCapHeight }
         }
         .accessibilityElement(children: .combine)
@@ -180,7 +175,7 @@ struct MatchScoreDetailView: View {
             Text(category.fitPercentage.map { L10nPercent($0) } ?? "–")
                 .font(.system(.body, design: .rounded, weight: .semibold))
                 .monospacedDigit()
-                .foregroundStyle(category.fit.map { Self.fitSpectrum(1 - $0) } ?? OnboardingTheme.tertiaryText)
+                .foregroundStyle(category.fit.map { Self.fitColor($0) } ?? OnboardingTheme.tertiaryText)
                 .frame(width: Self.scoreColumn)
             Text(L10nPercent(category.sharePercentage))
                 .font(.system(.body, design: .rounded, weight: .medium))
@@ -204,7 +199,7 @@ struct MatchScoreDetailView: View {
                 Capsule().fill(.white.opacity(0.08))
                 if let fit = category.fit {
                     Capsule()
-                        .fill(Self.fitSpectrum(1 - fit))
+                        .fill(Self.fitColor(fit))
                         .frame(width: max(4, proxy.size.width * fit))
                 }
             }
@@ -220,6 +215,13 @@ struct MatchScoreDetailView: View {
                 .frame(height: 0.5)
                 .padding(.leading, 16)
         }
+    }
+
+    /// Cyan for a good fit, through violet, to pink for a poor one. Scores
+    /// bunch up high, so the scale spans where they actually fall: 95% and up
+    /// is fully cyan, 65% and below fully pink.
+    static func fitColor(_ fit: Double) -> Color {
+        fitSpectrum((0.95 - fit) / 0.30)
     }
 
     /// Mixes cyan into pink; `amount` runs from 0 (a full fit) to 1 (no fit).

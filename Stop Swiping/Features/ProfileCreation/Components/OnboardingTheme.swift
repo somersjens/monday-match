@@ -49,8 +49,8 @@ enum OnboardingTheme {
     }
 }
 
-/// The app's red cross in a dark circle, as big as the back chevron: removes
-/// a photo, or closes the photo scan.
+/// The app's red cross in a dark circle, as big as the back chevron. Only for
+/// removing a profile photo: closing a screen uses `BrandCrossButton`.
 struct RedCrossButton: View {
     let accessibilityLabel: String
     let action: () -> Void
@@ -73,6 +73,27 @@ struct RedCrossButton: View {
     }
 }
 
+/// The brand-coloured cross in a dark circle that closes a full-screen camera
+/// (the photo scan, the profile code scanner). Red stays for removing a photo.
+struct BrandCrossButton: View {
+    var accessibilityLabel = L10n("Close")
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "xmark")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(OnboardingTheme.accentGradient)
+                .frame(width: 44, height: 44)
+                .background { Circle().fill(.white.opacity(0.08)) }
+                .overlay { Circle().strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5) }
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
+    }
+}
+
 enum OnboardingMotion {
     static let step = Animation.spring(duration: 0.56, bounce: 0.1)
     static let stage = Animation.spring(duration: 0.95, bounce: 0.08)
@@ -84,15 +105,17 @@ enum OnboardingMotion {
     /// just the selection landing (and a mirrored partner value following),
     /// so the tap and the page change read as one gesture.
     static let answerSettle: Duration = .milliseconds(240)
-    /// After a first own answer, how long before the partner side takes over:
-    /// the check lands, then the ring travels across.
-    static let partnerHandoff: Duration = .milliseconds(200)
-    /// The ring travelling between the own and partner tabs; its overshoot
-    /// gives the landing squeeze.
-    static let ringHandoff = Animation.spring(duration: 0.5, bounce: 0.22)
+    /// After a first own answer, how long before the partner side takes over.
+    /// The ring sets off while the check (`selection`, 0.16 s) is still
+    /// landing, so the tap and the handoff read as one quick gesture:
+    /// tap to settled is about 0.4 s.
+    static let partnerHandoff: Duration = .milliseconds(90)
+    /// The ring travelling between the own and partner tabs; a small
+    /// overshoot gives the landing squeeze without a long settling tail.
+    static let ringHandoff = Animation.spring(duration: 0.32, bounce: 0.16)
     /// Everything that follows the ring (rows, tab labels, the rail), so the
     /// whole card changes sides as one motion instead of snapping ahead.
-    static let sideHandoff = Animation.spring(duration: 0.42, bounce: 0)
+    static let sideHandoff = Animation.spring(duration: 0.28, bounce: 0)
 
     static func resolved(_ animation: Animation, reduceMotion: Bool) -> Animation {
         reduceMotion ? .easeInOut(duration: 0.2) : animation

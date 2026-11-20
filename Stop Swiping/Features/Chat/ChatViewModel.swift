@@ -226,7 +226,9 @@ final class ChatViewModel: ObservableObject {
         } else { conversation.isBlocked=block; conversation.isClosed=true }
     }
     func submitReport(reason: ReportReason, details: String) { submitReport(reason: reason, details: details, endMatch: false) }
-    func submitReport(reason: ReportReason, details: String, endMatch: Bool) {
+    /// `includesChat` adds a copy of the whole conversation as this phone
+    /// has it, for an administrator to read if the other person objects.
+    func submitReport(reason: ReportReason, details: String, endMatch: Bool, includesChat: Bool = false) {
         guard !isPerformingAction else { return }
         if endMatch && !isLive { conversation.isClosed=true }
         let report=UserReport(matchID:conversation.matchID,reason:reason.rawValue,details:details.trimmingCharacters(in:.whitespacesAndNewlines))
@@ -235,7 +237,8 @@ final class ChatViewModel: ObservableObject {
             Task {
                 defer { isPerformingAction=false }
                 do {
-                    try await secureSession.report(reason:reason.rawValue,details:report.details,breakMatch:endMatch)
+                    try await secureSession.report(reason:reason.rawValue,details:report.details,breakMatch:endMatch,
+                        chatCopy:includesChat ? ReportChatLine.copy(of:conversation.messages) : nil)
                     lastReport=report; showsReportSheet=false
                     if endMatch { conversation.isClosed=true; updateSecurityState() }
                 }

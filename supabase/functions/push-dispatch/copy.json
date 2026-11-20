@@ -172,8 +172,8 @@
     "admin.moderation_report": [
       {
         "id": "admin.report.1",
-        "title": "New report",
-        "body": "Reason: {reason}. Check it in the moderation overview."
+        "title": "New objection",
+        "body": "Someone objected to a report ({reason}). Decide in the app's admin overview."
       }
     ]
   },
@@ -350,8 +350,8 @@
     "admin.moderation_report": [
       {
         "id": "admin.report.1",
-        "title": "Nieuwe melding",
-        "body": "Reden: {reason}. Bekijk hem in het moderatie-overzicht."
+        "title": "Nieuw bezwaar",
+        "body": "Iemand maakt bezwaar tegen een rapportage ({reason}). Beslis in het beheeroverzicht van de app."
       }
     ]
   }

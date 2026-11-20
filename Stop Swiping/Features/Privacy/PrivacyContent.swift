@@ -315,7 +315,7 @@ The matching service must be able to process necessary answers during scoring. M
 | Encrypted E2EE message content | Up to 12 months after sending, also after a match ends |
 | Technical logs and metadata | No more than [NUMBER_OF_DAYS], except for security investigations |
 | Evidence of consent | [RETENTION NEEDED FOR ACCOUNTABILITY AND LIMITATION PERIODS] |
-| Safety reports and blocks | The written explanation: 12 months. The report itself (reason, date and a keyed hash of the reported person's sign-in identity), which counts towards a block or ban, also for a new account with the same Apple or Google ID: 5 years after it was filed. A ban ends once the oldest of its three reports is older than 5 years |
+| Safety reports and blocks | The written explanation: 12 months. The report itself (reason, date and a keyed hash of the reported person's sign-in identity), which counts towards a block or ban, also for a new account with the same Apple or Google ID: 5 years after it was filed. A ban ends once the oldest of its three reports is older than 5 years. A conversation copy added to a report, and the words and age check of an objection: 12 months |
 | Backups and deleted copies | Rotated out under [MAXIMUM_BACKUP_RETENTION AND ROTATION] |
 | Mandatory tax or legal records | As required under [LEGAL RETENTION PERIOD] |
 
@@ -331,7 +331,7 @@ If you can create an account, you can also request deletion in the app at [DELET
 
 ## 11. Minors, safety and abuse
 
-The service is for adults aged 18 or over. Users can block another person or report inappropriate behavior at [BLOCK_AND_REPORT_PATH]. Our staff cannot normally read E2EE message contents. A reporting user may, however, voluntarily provide relevant messages for review. We handle safety reports through [SAFETY_REPORTING_PROCESS_AND_CONTACT].
+The service is for adults aged 18 or over. Users can block another person or report inappropriate behavior at [BLOCK_AND_REPORT_PATH]. Our staff cannot normally read E2EE message contents. A reporting user may, however, voluntarily add a copy of the conversation; an administrator reads it only if the reported person objects. A reported person can always object in their own words. To dispute a report that they may be under 18, their phone reads the machine-readable zone of a passport or ID card and sends only the first initial, the date of birth and the expiry date, never the photo of the document. We handle safety reports through [SAFETY_REPORTING_PROCESS_AND_CONTACT].
 
 ## 12. Changes to this policy
 
@@ -451,7 +451,7 @@ De matchingservice moet noodzakelijke antwoorden tijdens de berekening kunnen ve
 | E2EE-versleutelde berichtinhoud | Maximaal 12 maanden na verzending, ook nadat een match is beëindigd |
 | Technische logs en metadata | Maximaal [AANTAL_DAGEN], behoudens incidentonderzoek |
 | Toestemmingsbewijs | [BEWAARTERMIJN TER VERANTWOORDING EN VERJARING] |
-| Veiligheidsmeldingen en blokkades | De toelichting: 12 maanden. De melding zelf (reden, datum en een hash met een geheime sleutel van de inlogidentiteit van wie gemeld is), die meetelt voor een blokkade of ban, ook bij een nieuw account met hetzelfde Apple- of Google-ID: 5 jaar na de melding. Een ban vervalt zodra de oudste van de drie meldingen ouder is dan 5 jaar |
+| Veiligheidsmeldingen en blokkades | De toelichting: 12 maanden. De melding zelf (reden, datum en een hash met een geheime sleutel van de inlogidentiteit van wie gemeld is), die meetelt voor een blokkade of ban, ook bij een nieuw account met hetzelfde Apple- of Google-ID: 5 jaar na de melding. Een ban vervalt zodra de oudste van de drie meldingen ouder is dan 5 jaar. Een kopie van het gesprek bij een melding, en de tekst en leeftijdscheck van een bezwaar: 12 maanden |
 | Back-ups en verwijderde kopieën | Uit roulatie volgens [MAXIMALE BACK-UPRETENTIE EN ROTATIE] |
 | Fiscale/andere wettelijk vereiste gegevens | Volgens [WETTELIJKE BEWAARTERMIJN] |
 
@@ -467,7 +467,7 @@ Als je een account kunt aanmaken, kun je dat ook binnen de app laten verwijderen
 
 ## 11. Minderjarigen, veiligheid en misbruik
 
-De app is 18+. Gebruikers kunnen een andere gebruiker blokkeren en ongewenst gedrag melden via [PAD_BLOKKEREN_EN_MELDEN]. Onze medewerkers kunnen de inhoud van normaal E2EE-verkeer niet lezen. Een gebruiker kan er wel voor kiezen relevante berichten met een melding aan te leveren. We behandelen veiligheidsmeldingen volgens [PROCEDURE_EN_CONTACTPUNT].
+De app is 18+. Gebruikers kunnen een andere gebruiker blokkeren en ongewenst gedrag melden via [PAD_BLOKKEREN_EN_MELDEN]. Onze medewerkers kunnen de inhoud van normaal E2EE-verkeer niet lezen. Een gebruiker kan er wel voor kiezen een kopie van het gesprek met een melding mee te sturen; een beheerder leest die alleen als de gemelde persoon bezwaar maakt. Wie gemeld is, kan altijd in eigen woorden bezwaar maken. Om een melding over mogelijk jonger dan 18 te weerleggen, leest de telefoon de machineleesbare zone van een paspoort of ID-kaart en stuurt alleen de voorletter, de geboortedatum en de vervaldatum, nooit de foto van het document. We behandelen veiligheidsmeldingen volgens [PROCEDURE_EN_CONTACTPUNT].
 
 ## 12. Wijzigingen in deze verklaring
 

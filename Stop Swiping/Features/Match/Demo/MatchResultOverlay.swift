@@ -37,7 +37,7 @@ struct MatchResultOverlay: View {
     var note: String? = nil
     var lightTransition: WelcomeLightMatch.Transition = .newMatch
     var lightStartedAt = Date()
-    let onShowScores: (MatchReport.Perspective) -> Void
+    let onShowScores: (MatchScoreDetail) -> Void
     let onShowProfile: () -> Void
     let onRename: (String) -> Void
     let onSave: () -> Void
@@ -62,13 +62,20 @@ struct MatchResultOverlay: View {
     var onViewProfile: () -> Void = {}
     var onShowPersonality: () -> Void = {}
     var onBreakMatch: () -> Void = {}
-    var onReport: (ReportReason, String, Bool) -> Void = { _, _, _ in }
+    var onReport: (MatchReportSubmission) -> Void = { _ in }
     /// The other person's photo card: for a match the server made, and for
     /// the demo (your own). Nil hides the photo button.
     var photoCard: MatchPhotoCard? = nil
     /// The photo for the report's PDF: like the card's, but kept after the
     /// match is broken, when reporting is still possible.
     var reportPhoto: UIImage? = nil
+    /// An administrator's report of the demo match goes to the server, as a
+    /// report against their own account.
+    var demoReportsReachServer = false
+
+    /// A broken match with the warning triangle: one the server made, and
+    /// the demo, so reporting after a break can be tried out.
+    private var hasBrokenMenu: Bool { match.isBroken && (match.isLive || match.isDemo) }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var confirmsDeletion = false
@@ -110,7 +117,7 @@ struct MatchResultOverlay: View {
                     let movingFrame = MatchStageFrame(
                         center: CGPoint(x: frame.center.x, y: frame.center.y + offset * frame.unit), unit: frame.unit)
                     ZStack {
-                        heartAverage(at: movingFrame.point(0, layout.heartCenterY))
+                        heartAverage
                             .position(movingFrame.point(0, layout.heartCenterY))
                             .opacity(reveal >= .average ? 1 : 0)
                             .scaleEffect(reveal >= .average || reduceMotion ? 1 : 0.92)
@@ -186,7 +193,8 @@ struct MatchResultOverlay: View {
         .destructiveConfirmation(isPresented: $confirmsBreak, confirmTitle: L10n("Break match"), action: onBreakMatch)
         .sheet(item: $reportReason) { reason in
             MatchReportSheet(match: match, chat: chat, photo: reportPhoto ?? photoCard?.photo,
-                             reason: reason, onSubmit: onReport)
+                             reason: reason, demoGoesToServer: demoReportsReachServer && match.isDemo,
+                             onSubmit: onReport)
         }
         .animation(.easeInOut(duration: reduceMotion ? 0.2 : 0.55), value: isChatting)
         .onChange(of: isChatting) { _, _ in closePhoto() }
@@ -315,7 +323,7 @@ struct MatchResultOverlay: View {
             .accessibilityIdentifier("match.profile")
 
             // A live match is the only thing the app does until it ends.
-            if match.isBroken && match.isLive {
+            if hasBrokenMenu {
                 // A broken server match can still be reported, whoever broke it.
                 BrokenMatchMenu(onReport: { reportReason = $0 }, onDelete: { confirmsDeletion = true }, onClose: onClose)
                     .transition(.opacity)
@@ -367,7 +375,7 @@ struct MatchResultOverlay: View {
                               onReport: { reportReason = $0 }, onBreak: { confirmsBreak = true },
                               canBreak: !match.isBroken)
 
-            if match.isBroken && match.isLive {
+            if hasBrokenMenu {
                 // A broken match is only looked back on, so it can be left,
                 // and the other person can still be reported.
                 BrokenMatchMenu(onReport: { reportReason = $0 }, onDelete: { confirmsDeletion = true }, onClose: onClose)
@@ -392,20 +400,15 @@ struct MatchResultOverlay: View {
         .frame(height: MatchChatLayout.headerHeight, alignment: .top)
     }
 
-    /// With a photo card, the big percentage opens it too.
-    @ViewBuilder
-    private func heartAverage(at point: CGPoint) -> some View {
-        if photoCard != nil {
-            Button { openPhoto(from: point) } label: {
-                average.contentShape(Rectangle())
-            }
-            .buttonStyle(ScoreButtonStyle())
-            .accessibilityHint(photoCard?.isOwnPreview == true
-                ? L10n("Shows your photo card") : L10n("Shows \(match.name)’s photo"))
-            .accessibilityIdentifier("match.average")
-        } else {
-            average
+    /// The big percentage opens how the combined score came about, as the
+    /// numbers beside it do for theirs. The photo opens from its own button.
+    private var heartAverage: some View {
+        Button { onShowScores(.together) } label: {
+            average.contentShape(Rectangle())
         }
+        .buttonStyle(ScoreButtonStyle())
+        .accessibilityHint(L10n("Shows the categories behind this score."))
+        .accessibilityIdentifier("match.average")
     }
 
     private var average: some View {
@@ -445,7 +448,7 @@ struct MatchResultOverlay: View {
         let gap: CGFloat = 22
         let labelHeight: CGFloat = 34
         let line = frame.point(x, layout.lineY)
-        return Button { onShowScores(perspective) } label: {
+        return Button { onShowScores(MatchScoreDetail(perspective)) } label: {
             VStack(spacing: 0) {
                 Text(report.score(perspective), format: .percent)
                     .font(.system(size: frame.unit * 0.25, weight: .light, design: .rounded))
@@ -544,7 +547,7 @@ struct MatchResultOverlay: View {
 
     private var controls: some View {
         VStack(spacing: 12) {
-            if match.isBroken && !match.isLive {
+            if match.isBroken && !hasBrokenMenu {
                 // A saved match that was deleted once: only looked back on,
                 // until it is deleted for good.
                 Button(L10n("Close"), action: onClose)

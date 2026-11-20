@@ -163,7 +163,7 @@ struct MatchReportExport {
         let facts = match.sharedFacts
         for (index, fact) in facts.enumerated() {
             let title = PDFText(fact.title, font: PDFStyle.font(10.5), color: PDFStyle.secondary)
-            let value = PDFText(fact.value, font: PDFStyle.font(10.5, .medium), color: PDFStyle.ink)
+            let value = PDFText(fact.text, font: PDFStyle.font(10.5, .medium), color: PDFStyle.ink)
             let valueWidth = page.width - titleWidth - 12
             let height = max(title.height(width: titleWidth), value.height(width: valueWidth)) + 14
             page.ensure(height)

@@ -137,7 +137,7 @@ struct CompatibilityScaleQuestion: Hashable, Identifiable {
                 symbol: "sun.max"
             ),
         ]),
-        Section(category: .homeLife, title: text("Home life"), questions: [
+        Section(category: .homeLife, title: text("Home and household"), questions: [
             Self(
                 step: .hostingGuests,
                 title: text("Guests at home"),
@@ -187,7 +187,7 @@ struct CompatibilityScaleQuestion: Hashable, Identifiable {
                 symbol: "house"
             ),
         ]),
-        Section(category: .socialLife, title: text("Social life"), questions: [
+        Section(category: .socialLife, title: text("Family and social life"), questions: [
             Self(
                 step: .familyRole,
                 title: text("Family"),

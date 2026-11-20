@@ -186,6 +186,19 @@ final class FaceCircleScanTests: XCTestCase {
         XCTAssertEqual(scan.snapshot.collectedSectors.count, 1)
     }
 
+    func testNoseTipDoesNotFlipBetweenNearlyEqualLowestPoints() throws {
+        // Two bottom points either side of the nose, a hair apart in height:
+        // whichever is lower must not decide the head's direction.
+        let crest = [CGPoint(x: 100, y: 160), CGPoint(x: 100, y: 130),
+                     CGPoint(x: 88, y: 100.4), CGPoint(x: 112, y: 100)]
+        let swapped = [crest[0], crest[1], CGPoint(x: 88, y: 100), CGPoint(x: 112, y: 100.4)]
+        let tip = try XCTUnwrap(FaceFrameAnalyzer.noseTip(crest, eyeDistance: 100))
+        let other = try XCTUnwrap(FaceFrameAnalyzer.noseTip(swapped, eyeDistance: 100))
+        XCTAssertEqual(tip.x, 100, accuracy: 0.001)
+        XCTAssertEqual(other.x, 100, accuracy: 0.001)
+        XCTAssertNil(FaceFrameAnalyzer.noseTip([], eyeDistance: 100))
+    }
+
     func testHeadPoseIgnoresTranslationScalingAndInPlaneRotation() throws {
         let eyes = [CGPoint(x: 0, y: 0), CGPoint(x: 2, y: 0)]
         let nose = CGPoint(x: 1, y: -0.8), mouth = CGPoint(x: 1, y: -2)

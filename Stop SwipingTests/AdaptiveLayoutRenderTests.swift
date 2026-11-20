@@ -67,6 +67,51 @@ final class AdaptiveLayoutRenderTests: XCTestCase {
         }
     }
 
+    /// The report notices on the home screen, the objection screen and the
+    /// administrator's list, in Dutch (the copy the person sees first).
+    func testRenderObjectionScreens() async throws {
+        AppLanguageSettings.shared.language = .dutch
+        defer { AppLanguageSettings.shared.language = .english }
+        let report = ModerationStatus.LatestReport(id: UUID(), reason: "underage", objection: nil)
+        let warning = ModerationStatus(strikes: 1, strikesSeen: 0, suspendedUntil: nil, banned: false, latestReport: report)
+        let blocked = ModerationStatus(strikes: 2, strikesSeen: 1, suspendedUntil: Date().addingTimeInterval(5 * 86_400),
+                                       banned: false, latestReport: .init(id: UUID(), reason: "harassment", objection: .pending))
+        let decided = ModerationStatus.ObjectionResult(id: UUID(), decision: .approved, reason: "spam")
+        let cards = VStack(spacing: 16) {
+            ModerationCard(status: warning, isUnread: true, result: nil, onAcknowledge: {}, onObject: {})
+            ModerationCard(status: blocked, isUnread: false, result: nil, onAcknowledge: {}, onObject: {})
+            ModerationCard(status: ModerationStatus(strikes: 0, strikesSeen: 0, suspendedUntil: nil, banned: false,
+                                                    objectionResult: decided),
+                           isUnread: false, result: decided, onAcknowledge: {}, onObject: {})
+        }
+        .padding(.horizontal, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(OnboardingTheme.background)
+        let admin = AdminObjectionsView(load: { [try Self.sampleObjection()] }, decide: { _, _ in })
+        let objection = ReportObjectionSheet(status: warning, report: report, displayName: "Anna",
+                                             birthDate: .init(year: 1974, month: 8, day: 12)) { _, _ in }
+        for device in Self.devices.prefix(4) {
+            try await render(cards, screen: "objection-cards", device: device)
+            try await render(objection, screen: "objection-sheet", device: device)
+            try await render(admin, screen: "objection-admin", device: device)
+        }
+    }
+
+    static func sampleObjection() throws -> AdminObjection {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(AdminObjection.self, from: Data("""
+        {"id":"\(UUID())","created_at":"2026-11-20T11:00:00Z","message":"Ik ben 26, zie mijn paspoort.",
+         "display_name":"Anna","age_proven_before":true,
+         "id_check":{"initial":"A","birth_date":"1974-08-12","adult":true,"expired":false,"check_digits":true,
+                     "profile_initial":"A","profile_birth_date":"1974-08-12","initial_matches":true,"birth_date_matches":true},
+         "report":{"id":"\(UUID())","reason":"underage","details":"Zei dat ze 16 is.","created_at":"2026-11-19T20:00:00Z",
+                   "ended_match":true,"strike":2,
+                   "chat_copy":[{"from":"reporter","at":"2026-11-19T19:58:00Z","text":"Hoe oud ben je eigenlijk?"},
+                                {"from":"reported","at":"2026-11-19T19:59:00Z","text":"Haha raad maar"}]}}
+        """.utf8))
+    }
+
     func testRenderSecondaryScreens() async throws {
         for device in Self.devices {
             let model = ProfileCreationViewModel(store: InMemoryProfileCreationStore(state: Self.completedState()),
@@ -151,8 +196,11 @@ final class AdaptiveLayoutRenderTests: XCTestCase {
             store.save(match)
             try await render(SavedMatchesView(store: store, center: LiveMatchCenter(repository: nil), onOpen: { _ in }),
                              screen: "saved-matches", device: device)
-            try await render(MatchScoreDetailView(report: match.report, perspective: .yours, name: match.name),
+            let scored = Self.scoredMatch()
+            try await render(MatchScoreDetailView(report: scored.report, mode: .together, name: scored.name),
                              screen: "score-detail", device: device)
+            try await render(MatchScoreDetailView(report: scored.report, mode: .yours, name: scored.name),
+                             screen: "score-detail-yours", device: device)
         }
     }
 
@@ -168,6 +216,24 @@ final class AdaptiveLayoutRenderTests: XCTestCase {
         state.profilePrivacyConsent = .init(version: PrivacyConsentKind.profile.version, acceptedAt: Date(), languageCode: "en")
         state.hasUnderstoodExplanation = true
         return state
+    }
+
+    /// A match with every question answered, some answers far apart, so the
+    /// score sheet shows strong and weak categories side by side.
+    static func scoredMatch() -> MatchSnapshot {
+        var you = completedState()
+        for (index, question) in CompatibilityScaleQuestion.all.enumerated() {
+            let value = 1 + index % 5
+            you.lifestyle[question] = CompatibilityScaleAnswer(own: value, partner: value, isPartnerCustomized: true,
+                                                               importance: 1 + (index * 2) % 5)
+        }
+        var rng = SystemRandomNumberGenerator()
+        var them = DemoMatchGenerator.makeMatch(for: you, shouldMatch: true, using: &rng).them
+        let questions = Array(CompatibilityScaleQuestion.all)
+        for (index, question) in questions.enumerated() where index % 4 == 0 || index > questions.count - 8 {
+            them.lifestyle[question].own = 6 - (you.lifestyle[question].partner ?? 3)
+        }
+        return MatchSnapshot(matchedAt: Date(), you: you, them: them, isDemo: true)
     }
 
     /// A profile with an auto-matching photo, verified or not yet.

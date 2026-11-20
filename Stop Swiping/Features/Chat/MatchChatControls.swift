@@ -1,13 +1,13 @@
 import SwiftUI
 
 /// The single gear in the chat's top right: your own profile and personality
-/// tests, both scores, and the two ways out of a match. Drawn as its own
+/// tests, the three scores, and the two ways out of a match. Drawn as its own
 /// panel so every option fits on one line.
 struct MatchSettingsMenu: View {
     let name: String
     let onViewProfile: () -> Void
     let onShowPersonality: () -> Void
-    let onShowScores: (MatchReport.Perspective) -> Void
+    let onShowScores: (MatchScoreDetail) -> Void
     let onReport: (ReportReason) -> Void
     let onBreak: () -> Void
     /// False once the match is broken: only reporting is left.
@@ -46,7 +46,7 @@ struct MatchSettingsMenu: View {
                     switch choice {
                     case .profile: onViewProfile()
                     case .personality: onShowPersonality()
-                    case .scores(let perspective): onShowScores(perspective)
+                    case .scores(let detail): onShowScores(detail)
                     case .report(let reason): onReport(reason)
                     case .breakMatch: onBreak()
                     case .delete, .close: break
@@ -110,7 +110,7 @@ private struct MatchSettingsPanel: View {
     enum Choice {
         case profile
         case personality
-        case scores(MatchReport.Perspective)
+        case scores(MatchScoreDetail)
         case report(ReportReason)
         case breakMatch
         case delete
@@ -118,7 +118,7 @@ private struct MatchSettingsPanel: View {
     }
 
     enum Kind {
-        /// The gear: your profile, both scores and the ways out of a match.
+        /// The gear: your profile, the three scores and the ways out of a match.
         /// `canBreak` is false once the match is broken.
         case settings(name: String, canBreak: Bool)
         /// A broken match's warning triangle: reporting, deleting and leaving.
@@ -168,6 +168,7 @@ private struct MatchSettingsPanel: View {
             row(L10n("View your profile"), symbol: "person.crop.circle") { onChoose(.profile) }
             row(L10n("Your personality tests"), symbol: "brain.head.profile") { onChoose(.personality) }
             divider
+            row(L10n("You and \(name)"), symbol: "heart.circle") { onChoose(.scores(.together)) }
             row(L10n("Your match with \(name)"), symbol: "arrow.right.circle") { onChoose(.scores(.yours)) }
             row(L10n("\(name)’s match with you"), symbol: "arrow.left.circle") { onChoose(.scores(.theirs)) }
             divider
@@ -245,6 +246,15 @@ private struct MenuRowStyle: ButtonStyle {
     }
 }
 
+/// What the report screen sends.
+struct MatchReportSubmission: Equatable {
+    let reason: ReportReason
+    let details: String
+    let alsoBreak: Bool
+    /// A copy of the whole conversation goes with the report.
+    let includesChat: Bool
+}
+
 /// After a reason is picked from the menu: what happened, and whether the
 /// match ends too. With one match at a time, a report may be traced back to
 /// whoever made it, so the screen says so up front.
@@ -254,7 +264,10 @@ struct MatchReportSheet: View {
     let chat: ChatViewModel?
     /// For the PDF: the other person's photo, or your own in the demo.
     let photo: UIImage?
-    let onSubmit: (ReportReason, String, Bool) -> Void
+    /// An administrator's demo report goes to the server, as a report
+    /// against their own account, so its conversation can go with it.
+    var demoGoesToServer = false
+    let onSubmit: (MatchReportSubmission) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -262,6 +275,7 @@ struct MatchReportSheet: View {
     @State private var showsReasons = false
     @State private var details = ""
     @State private var alsoBreak = false
+    @State private var includesChat = false
     @State private var confirmsBreak = false
     @State private var export: ExportedFile?
     @State private var exportFailed = false
@@ -270,10 +284,11 @@ struct MatchReportSheet: View {
     private var name: String { match.name }
 
     init(match: MatchSnapshot, chat: ChatViewModel?, photo: UIImage?, reason: ReportReason,
-         onSubmit: @escaping (ReportReason, String, Bool) -> Void) {
+         demoGoesToServer: Bool = false, onSubmit: @escaping (MatchReportSubmission) -> Void) {
         self.match = match
         self.chat = chat
         self.photo = photo
+        self.demoGoesToServer = demoGoesToServer
         self.onSubmit = onSubmit
         _reason = State(initialValue: reason)
     }
@@ -308,6 +323,8 @@ struct MatchReportSheet: View {
                             if text.utf8.count > 4000 { details = String(text.prefix(2000)) }
                         }
                 }
+
+                if hasConversation { chatCopyToggle }
 
                 // Once the match is broken there is nothing left to break.
                 if !match.isBroken { breakToggle }
@@ -382,6 +399,37 @@ struct MatchReportSheet: View {
             .buttonStyle(.plain)
             .accessibilityLabel(L10n("Back"))
         }
+    }
+
+    /// Only for a real conversation: the demo's is made up, unless an
+    /// administrator's demo report goes to the server.
+    private var hasConversation: Bool {
+        guard let chat, !chat.isDemo || demoGoesToServer else { return false }
+        return chat.conversation.messages.contains { $0.sender != .system }
+    }
+
+    /// Messages are end-to-end encrypted, so the server has no copy unless
+    /// the reporter sends one from this phone.
+    private var chatCopyToggle: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L10n("Attach a copy of the chat"))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                Text(L10n("The whole conversation goes with your report. It is only read if \(name) objects."))
+                    .font(.footnote)
+                    .foregroundStyle(OnboardingTheme.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityHidden(true)
+            GlowToggle(isOn: includesChat, label: L10n("Attach a copy of the chat")) {
+                includesChat.toggle()
+            }
+            .accessibilityIdentifier("report.includesChat")
+        }
+        .padding(14)
+        .onboardingSurface(cornerRadius: 16)
+        .onChange(of: includesChat) { detailsFocused = false }
     }
 
     private var breakToggle: some View {
@@ -526,7 +574,8 @@ struct MatchReportSheet: View {
     }
 
     private func send() {
-        onSubmit(reason, details.trimmingCharacters(in: .whitespacesAndNewlines), alsoBreak)
+        onSubmit(MatchReportSubmission(reason: reason, details: details.trimmingCharacters(in: .whitespacesAndNewlines),
+                                       alsoBreak: alsoBreak, includesChat: includesChat && hasConversation))
         dismiss()
     }
 }

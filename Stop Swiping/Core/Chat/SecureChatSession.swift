@@ -183,9 +183,9 @@ final class SecureChatSession {
         }
     }
     func breakMatch() async throws { try await identity(); try await repository.breakMatch(match.id); isClosed=true }
-    func report(reason: String,details: String,breakMatch: Bool = false) async throws {
+    func report(reason: String,details: String,breakMatch: Bool = false,chatCopy: [ReportChatLine]? = nil) async throws {
         try await identity()
-        try await repository.report(match.id,reason:reason,details:details,breakMatch:breakMatch)
+        try await repository.report(match.id,reason:reason,details:details,breakMatch:breakMatch,chatCopy:chatCopy)
         if breakMatch { isClosed=true }
     }
     /// The newest server row of a message from the partner, for read receipts.

@@ -1,5 +1,5 @@
 -- Launch rules (202611200005): only proven photo scans, only paying accounts in
--- the pool, and reports pushed to administrators. Run as postgres in the
+-- the pool, and administrator pushes (since 202611200007 for objections only). Run as postgres in the
 -- Supabase SQL Editor ("Run without RLS" is fine): everything rolls back, and
 -- the last line reports how many checks passed. The access check stays ON here.
 begin;
@@ -99,21 +99,23 @@ select pg_temp.buy(4, 'production', 'monthly_access', now() + interval '20 days'
 select pg_temp.ok(matching_private.has_access(pg_temp.id(4)), 'A running monthly plan is');
 select pg_temp.ok(matching_private.has_access(pg_temp.id(5)) = false, 'No purchase, no access');
 
--- ===== 3. Reports reach the administrators =================================
+-- ===== 3. Administrators =================================================
+-- Since 202611200007 a report alone reaches no administrator; an objection
+-- to it does (supabase/tests/report_objections.sql).
 insert into matching_private.admins(user_id) values (pg_temp.id(8));
 insert into public.push_devices(device_id, user_id, token, environment)
     values (pg_temp.id(801), pg_temp.id(8), repeat('ab', 32), 'sandbox');
 insert into public.matches(id, user_low, user_high, score_low, score_high) values (pg_temp.id(700), pg_temp.id(6), pg_temp.id(7), 80, 80);
 insert into public.match_reports(match_id, reported_id, reason, details, counts_as_strike)
     values (pg_temp.id(700), pg_temp.id(7), 'underage', 'Secret explanation', true);
-select pg_temp.ok(exists (select 1 from notification_private.outbox where user_id = pg_temp.id(8)
-    and kind = 'moderation_report' and detail = 'underage'), 'A report queues a push for the administrator');
-select pg_temp.ok(not exists (select 1 from notification_private.outbox where kind = 'moderation_report'
-    and user_id <> pg_temp.id(8)), 'Only for administrators');
+select pg_temp.ok(not exists (select 1 from notification_private.outbox where kind = 'moderation_report'),
+    'A report alone queues no push for the administrator');
+insert into notification_private.outbox(user_id, kind, match_id, detail)
+    values (pg_temp.id(8), 'moderation_report', pg_temp.id(700), 'underage');
 create temporary table claimed as select public.push_claim_due(500) as entries;
 select pg_temp.ok((select exists (select 1 from jsonb_array_elements(entries) e
     where e->>'kind' = 'moderation_report' and e->>'detail' = 'underage' and (e->>'visible')::boolean) from claimed),
-    'The push carries the reason, always visible');
+    'An administrator push carries the reason, always visible');
 select pg_temp.ok((select entries::text not like '%Secret explanation%' from claimed), 'Never the explanation');
 
 do $$ begin

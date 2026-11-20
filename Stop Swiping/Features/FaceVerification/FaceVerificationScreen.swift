@@ -16,9 +16,11 @@ struct FaceVerificationScreen<CameraContent: View>: View {
     private var isMatched: Bool { outcome == .match }
     var body: some View {
         GeometryReader { geometry in
-            let resultSpace: CGFloat = outcome == nil ? 0 : isMatched ? 90 : 140
-            let diameter = min(geometry.size.width - 64, 340,
-                               max(160, geometry.size.height - 200 - resultSpace))
+            // A match moves on by itself, so it keeps the circle centred.
+            let resultSpace: CGFloat = outcome == nil || isMatched ? 0 : 140
+            // The first layout pass can be zero-sized; never hand SwiftUI a negative frame.
+            let diameter = max(0, min(geometry.size.width - 64, 340,
+                                      max(160, geometry.size.height - 200 - resultSpace)))
             VStack(spacing: 0) {
                 topBar
                 ScrollView {
@@ -35,7 +37,7 @@ struct FaceVerificationScreen<CameraContent: View>: View {
                 }
                 .scrollIndicators(.hidden)
                 .scrollBounceBehavior(.basedOnSize)
-                if outcome != nil { footer }
+                if outcome != nil, !isMatched { footer }
             }
         }
         .background {
@@ -51,11 +53,11 @@ struct FaceVerificationScreen<CameraContent: View>: View {
         .preferredColorScheme(.dark)
     }
 
-    /// Only the app's red cross, top right: the circle says the rest.
+    /// Only the brand cross, top right: the circle says the rest.
     private var topBar: some View {
         HStack {
             Spacer()
-            RedCrossButton(accessibilityLabel: L10n("Cancel verification"), action: onCancel)
+            BrandCrossButton(accessibilityLabel: L10n("Cancel verification"), action: onCancel)
         }
         .padding(.horizontal, 24)
         .padding(.top, 8)
@@ -63,7 +65,7 @@ struct FaceVerificationScreen<CameraContent: View>: View {
 
     private var scanCircle: some View {
         GeometryReader { geometry in
-            let size = min(geometry.size.width, geometry.size.height)
+            let size = max(50, min(geometry.size.width, geometry.size.height))
             ZStack {
                 Circle()
                     .fill(OnboardingTheme.blue.opacity(0.08))
@@ -96,6 +98,7 @@ struct FaceVerificationScreen<CameraContent: View>: View {
                 }
                 .frame(width: size - 50, height: size - 50)
                 .clipShape(Circle())
+                .animation(reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.35), value: outcome)
                 .overlay(Circle().strokeBorder(.white.opacity(0.12), lineWidth: 1))
                 .accessibilityLabel(L10n("Live front camera preview"))
 
@@ -135,16 +138,12 @@ struct FaceVerificationScreen<CameraContent: View>: View {
 
     private var footer: some View {
         VStack(spacing: 10) {
-            if outcome != nil {
-                Button(isMatched ? L10n("Continue") : needsCameraPermission ? L10n("Open Settings") : L10n("Try again"),
-                       action: isMatched ? onDone : needsCameraPermission ? onSettings : onRetry)
-                    .buttonStyle(GlowButtonStyle())
-                if !isMatched {
-                    Button(needsCameraPermission ? L10n("Try again") : L10n("Back"),
-                           action: needsCameraPermission ? onRetry : onDone)
-                        .buttonStyle(QuietButtonStyle())
-                }
-            }
+            Button(needsCameraPermission ? L10n("Open Settings") : L10n("Try again"),
+                   action: needsCameraPermission ? onSettings : onRetry)
+                .buttonStyle(GlowButtonStyle())
+            Button(needsCameraPermission ? L10n("Try again") : L10n("Back"),
+                   action: needsCameraPermission ? onRetry : onDone)
+                .buttonStyle(QuietButtonStyle())
         }
         .frame(maxWidth: OnboardingTheme.controlWidth)
         .padding(.horizontal, 28)
