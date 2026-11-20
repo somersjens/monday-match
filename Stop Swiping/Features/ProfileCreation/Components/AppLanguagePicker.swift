@@ -2,6 +2,9 @@ import SwiftUI
 
 struct AppLanguagePicker: View {
     @Environment(\.dismiss) private var dismiss
+    /// The sheet is exactly as tall as its two choices (it was half empty at
+    /// the medium detent); grows with Dynamic Type.
+    @State private var contentHeight: CGFloat = 320
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -59,10 +62,11 @@ struct AppLanguagePicker: View {
             .onboardingSurface(cornerRadius: 24)
         }
         .padding(24)
-        .frame(maxWidth: OnboardingTheme.contentWidth)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding(.top, 12)
-        .presentationDetents([.medium, .large])
+        .frame(maxWidth: OnboardingTheme.contentWidth)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .presentationDetents([.height(contentHeight)])
         .presentationDragIndicator(.visible)
         .presentationBackground(OnboardingTheme.background)
         .preferredColorScheme(.dark)

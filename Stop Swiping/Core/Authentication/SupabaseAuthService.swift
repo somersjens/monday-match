@@ -17,8 +17,11 @@ struct SupabaseAuthService: AuthServicing {
     /// The Keychain's session, possibly expired. Reading it needs no network,
     /// so the app can open on it at once while `restoreSession()` refreshes.
     func localSession() -> RestoredSession? {
-        guard client.auth.currentSession != nil else { return .signedOut }
-        return profileSync.hasCompletedProfile ? .signedIn : .onboarding
+        guard let session = client.auth.currentSession else { return .signedOut }
+        guard profileSync.hasCompletedProfile else { return .onboarding }
+        // A finished profile the account never chose (signing in stopped at
+        // the choice): only the server can tell whether it may stay.
+        return profileSync.ownsProfile(userID: session.user.id) ? .signedIn : nil
     }
 
     func restoreSession() async throws -> RestoredSession {
@@ -26,13 +29,21 @@ struct SupabaseAuthService: AuthServicing {
             _ = try await client.auth.session
         } catch AuthError.sessionMissing {
             return .signedOut
-        } catch let error as URLError where error.code != .cancelled {
-            // Offline, an expired token can't be refreshed yet; the stored
-            // session stays valid until the server says otherwise.
+        } catch {
+            // Offline, a server outage (5xx/429) or a cancelled refresh: the
+            // stored session stays valid until the server says otherwise. When
+            // the server does reject the token, the SDK has already removed
+            // the stored session, so this reads as signed out.
             return localSession() ?? .signedOut
         }
         // A cloud outage must not destroy an otherwise valid local session.
-        try? await profileSync.restoreIfNeeded()
+        if (try? await profileSync.restoreIfNeeded()) == false {
+            // Signing in stopped before the person chose between the account's
+            // profile and the new answers. Signed out, the account card offers
+            // signing in again, which asks once more; the answers stay.
+            try? await client.auth.signOut(scope: .local)
+            return .signedOut
+        }
         return profileSync.hasCompletedProfile ? .signedIn : .onboarding
     }
 
@@ -63,7 +74,18 @@ struct SupabaseAuthService: AuthServicing {
     private func finishSignIn() async throws -> RestoredSession {
         // Keep the account step open on failure so the same account can
         // retry saving the profile before progressing to notifications.
+        // AccountProfileChoiceRequired reaches the sign-in screen, which asks.
         try await profileSync.connectAccount()
+        return profileSync.hasCompletedProfile ? .signedIn : .onboarding
+    }
+
+    func keepNewAnswers() async throws -> RestoredSession {
+        try await profileSync.keepNewAnswers()
+        return profileSync.hasCompletedProfile ? .signedIn : .onboarding
+    }
+
+    func restoreAccountProfile() async throws -> RestoredSession {
+        try await profileSync.restoreAccountProfile()
         return profileSync.hasCompletedProfile ? .signedIn : .onboarding
     }
 

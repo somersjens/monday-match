@@ -31,13 +31,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The camera scans profile codes and verifies your chosen photo. Offline scans stay on this iPhone. If you choose server verification, the live face video and photo are processed by AWS in Ireland after your consent."
+            "value" : "The camera scans profile codes and checks that your chosen photo is you. The face scan happens on this iPhone; the camera image is never uploaded."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "De camera scant profielcodes en verifieert je gekozen foto. Offline scans blijven op deze iPhone. Als je voor serververificatie kiest, worden de live gezichtsopname en foto na jouw toestemming door AWS in Ierland verwerkt."
+            "value" : "De camera scant profielcodes en controleert of je gekozen foto echt jij bent. De gezichtsscan gebeurt op deze iPhone; het camerabeeld wordt nooit geüpload."
           }
         }
       }

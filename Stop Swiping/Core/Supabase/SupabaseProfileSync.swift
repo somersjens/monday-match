@@ -121,11 +121,30 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
 
     var hasCompletedProfile: Bool { store.load()?.completedAt != nil }
 
+    /// The account's saved profile while the person chooses between it and
+    /// the answers just given on this phone.
+    private var profileAwaitingChoice: Row?
+
+    /// The phone's profile belongs to this account: it was sent to it, came
+    /// from it, or was chosen over what the account had.
+    func ownsProfile(userID: UUID) -> Bool {
+        defaults.string(forKey: ownerKey) == userID.uuidString.lowercased()
+    }
+
+    /// Throws `AccountProfileChoiceRequired` when the account already has a
+    /// profile that differs from the one just finished on this phone. Someone
+    /// signing in for the first time, or returning to an empty phone, never
+    /// has to choose.
     func connectAccount() async throws {
+        profileAwaitingChoice = nil
         let userID = try await client.auth.session.user.id.uuidString.lowercased()
         if defaults.string(forKey: ownerKey) == userID, hasCompletedProfile {
             try await synchronize()
         } else if let row = try await load(userID: userID) {
+            if conflictsWithPhone(row) {
+                profileAwaitingChoice = row
+                throw AccountProfileChoiceRequired()
+            }
             try await restore(row)
         } else {
             // A new account explicitly claims the local profile created before sign-in.
@@ -134,12 +153,52 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         }
     }
 
-    func restoreIfNeeded() async throws {
+    /// The new answers win: the account's saved profile is replaced. Its
+    /// matches stay the account's, and those made before now keep showing
+    /// the profile they were made with.
+    func keepNewAnswers() async throws {
         let userID = try await client.auth.session.user.id.uuidString.lowercased()
-        if defaults.string(forKey: ownerKey) == userID, hasCompletedProfile { return }
-        if let row = try await load(userID: userID) {
-            try await restore(row)
-        }
+        guard let row = profileAwaitingChoice, row.id == userID else { throw SupabaseSetupError.wrongAccount }
+        LiveMatchCenter.rememberEarlierProfile(row.backup.state, replacedAt: now(), defaults: defaults)
+        // What the server holds now, unconfirmed: every photo of the new
+        // profile is sent, and the old ones stay until the new row replaces
+        // the one naming them.
+        uploads[userID] = Upload(row: row, photoHashes: [:], confirmedAt: nil)
+        defaults.set(userID, forKey: ownerKey)
+        profileAwaitingChoice = nil
+        // A failed save is retried by signing in again, which now finds this
+        // phone owning the account and sends the profile without asking.
+        try await synchronize()
+    }
+
+    /// The account's saved profile wins over the answers on this phone.
+    func restoreAccountProfile() async throws {
+        let userID = try await client.auth.session.user.id.uuidString.lowercased()
+        guard let row = profileAwaitingChoice, row.id == userID else { throw SupabaseSetupError.wrongAccount }
+        try await restore(row)
+        profileAwaitingChoice = nil
+    }
+
+    /// False when the phone holds a finished profile this account never
+    /// chose, because signing in stopped before the person decided. Nothing
+    /// is restored over it then.
+    func restoreIfNeeded() async throws -> Bool {
+        let userID = try await client.auth.session.user.id.uuidString.lowercased()
+        if defaults.string(forKey: ownerKey) == userID, hasCompletedProfile { return true }
+        guard let row = try await load(userID: userID) else { return true }
+        if conflictsWithPhone(row) { return false }
+        try await restore(row)
+        return true
+    }
+
+    /// The phone holds a finished profile, one the server would accept, that
+    /// differs from the account's saved one.
+    private func conflictsWithPhone(_ row: Row) -> Bool {
+        guard let state = store.load(), state.completedAt != nil,
+              state.hasAcceptedProfilePrivacy, !state.isUnderageLocked,
+              let draft = try? repository.loadProfile() else { return false }
+        let local = Self.roundTripped(Self.row(userID: row.id, state: state, draft: draft, uploader: uploader))
+        return !local.hasSameContent(as: Self.roundTripped(row))
     }
 
     func synchronize() async throws {

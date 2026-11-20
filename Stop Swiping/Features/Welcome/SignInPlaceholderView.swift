@@ -53,6 +53,7 @@ struct SignInPlaceholderView: View {
         .frame(maxWidth: .infinity)
         .adaptiveStageHeight()
         .animation(.easeInOut(duration: 0.2), value: viewModel.errorMessage)
+        .accountProfileChoice(viewModel)
         .navigationBarTitleDisplayMode(.inline)
         .background { OnboardingTheme.background.ignoresSafeArea() }
         .preferredColorScheme(.dark)

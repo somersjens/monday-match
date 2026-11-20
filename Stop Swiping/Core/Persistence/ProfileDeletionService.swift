@@ -12,6 +12,8 @@ struct ProfileDeletionService {
     let profileCreationStore: ProfileCreationStateStoring
     let server: SupabaseProfileSync?
     let authService: AuthServicing
+    /// The saved matches' iCloud backup, removed with the profile.
+    var savedMatchBackup: SavedMatchCloudBackup?
     var defaults: UserDefaults = .standard
 
     /// True when deleting first needs Apple to confirm the Apple ID again.
@@ -29,6 +31,8 @@ struct ProfileDeletionService {
         }
         try? await authService.signOut()
         try wipeLocalData()
+        // Now, or as soon as iCloud can be reached; it never holds up deleting.
+        savedMatchBackup?.wipe()
         server?.endDeletion(accountDeleted: true)
     }
 

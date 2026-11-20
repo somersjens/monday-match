@@ -12,6 +12,10 @@ final class SignInViewModel: ObservableObject {
     /// The provider whose sheet or request is in progress.
     @Published private(set) var activeProvider: Provider?
     @Published var errorMessage: String?
+    /// The account already has a profile that differs from the answers just
+    /// given: the person picks one. The provider stays busy meanwhile.
+    @Published private(set) var awaitsProfileChoice = false
+    private var onProfileChosen: ((RestoredSession) -> Void)?
 
     var isSigningIn: Bool { activeProvider != nil }
 
@@ -47,6 +51,26 @@ final class SignInViewModel: ObservableObject {
         errorMessage = nil
     }
 
+    /// Finishes signing in with the profile the person chose: the answers
+    /// just given, or the one saved on the account.
+    func chooseProfile(keepNewAnswers: Bool) {
+        guard awaitsProfileChoice, let onAuthenticated = onProfileChosen else { return }
+        awaitsProfileChoice = false
+        onProfileChosen = nil
+        Task { [authService] in
+            do {
+                let session = keepNewAnswers
+                    ? try await authService.keepNewAnswers()
+                    : try await authService.restoreAccountProfile()
+                activeProvider = nil
+                onAuthenticated(session)
+            } catch {
+                handleSignInError(error)
+                activeProvider = nil
+            }
+        }
+    }
+
     private func start(_ provider: Provider, onAuthenticated: @escaping (RestoredSession) -> Void,
                        signIn: @escaping @MainActor () async throws -> RestoredSession) {
         guard activeProvider == nil else { return }
@@ -57,6 +81,9 @@ final class SignInViewModel: ObservableObject {
                 let session = try await signIn()
                 activeProvider = nil
                 onAuthenticated(session)
+            } catch is AccountProfileChoiceRequired {
+                onProfileChosen = onAuthenticated
+                awaitsProfileChoice = true
             } catch {
                 handleSignInError(error)
                 activeProvider = nil

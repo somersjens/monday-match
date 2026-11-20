@@ -7,9 +7,6 @@
     "–" : {
 
     },
-    ", %lld" : {
-
-    },
     "{0} → you" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14227,6 +14224,23 @@
         }
       }
     },
+    "Restore old profile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore old profile"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oud profiel herstellen"
+          }
+        }
+      }
+    },
     "Restore purchases" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17661,6 +17675,23 @@
         }
       }
     },
+    "This account already has a profile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This account already has a profile"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit account heeft al een profiel"
+          }
+        }
+      }
+    },
     "This camera rotation is unsupported. Hold your phone upright and try again." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18422,6 +18453,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mijn locatie gebruiken"
+          }
+        }
+      }
+    },
+    "Use new answers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use new answers"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe antwoorden gebruiken"
           }
         }
       }
@@ -19782,6 +19830,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jij en {0}"
+          }
+        }
+      }
+    },
+    "You answered the questions again. Use your new answers, or restore the profile saved on this account. Your matches are kept either way." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You answered the questions again. Use your new answers, or restore the profile saved on this account. Your matches are kept either way."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je hebt de vragen opnieuw beantwoord. Gebruik je nieuwe antwoorden, of herstel het profiel dat bij dit account is bewaard. Je matches blijven in beide gevallen bewaard."
           }
         }
       }

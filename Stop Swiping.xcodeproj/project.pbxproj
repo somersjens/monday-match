@@ -473,7 +473,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Stop Swiping/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Stop Swiping";
-				INFOPLIST_KEY_NSCameraUsageDescription = "The camera scans profile codes and verifies your chosen photo. Offline scans stay on this iPhone. If you choose server verification, the live face video and photo are processed by AWS in Ireland after your consent.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "The camera scans profile codes and checks that your chosen photo is you. The face scan happens on this iPhone; the camera image is never uploaded.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Stop Swiping uses your local network to find the phone you hold yours against, so the two of you can exchange profiles directly.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to find matches within the distance you choose. Only an approximate location is stored and your exact coordinates are never shown on your profile.";
 				INFOPLIST_KEY_NSNearbyInteractionUsageDescription = "Stop Swiping measures the distance to another phone, so profiles are only exchanged when you hold your phones together.";
@@ -526,7 +526,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Stop Swiping/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Stop Swiping";
-				INFOPLIST_KEY_NSCameraUsageDescription = "The camera scans profile codes and verifies your chosen photo. Offline scans stay on this iPhone. If you choose server verification, the live face video and photo are processed by AWS in Ireland after your consent.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "The camera scans profile codes and checks that your chosen photo is you. The face scan happens on this iPhone; the camera image is never uploaded.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Stop Swiping uses your local network to find the phone you hold yours against, so the two of you can exchange profiles directly.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to find matches within the distance you choose. Only an approximate location is stored and your exact coordinates are never shown on your profile.";
 				INFOPLIST_KEY_NSNearbyInteractionUsageDescription = "Stop Swiping measures the distance to another phone, so profiles are only exchanged when you hold your phones together.";

@@ -58,10 +58,59 @@ final class SignInViewModelTests: XCTestCase {
     }
 }
 
+extension SignInViewModelTests {
+    func testAnAccountWithAnotherProfileAsksAndKeepsTheNewAnswers() async {
+        let auth = TestSignInService()
+        auth.result = .failure(AccountProfileChoiceRequired())
+        let model = SignInViewModel(authService: auth)
+        let asked = expectation(description: "Asked")
+        let observation = model.$awaitsProfileChoice.filter { $0 }.prefix(1).sink { _ in asked.fulfill() }
+        let completed = expectation(description: "Authenticated")
+        model.signInWithGoogle { session in
+            guard case .signedIn = session else { return XCTFail("Unexpected session") }
+            completed.fulfill()
+        }
+        await fulfillment(of: [asked], timeout: 2)
+        XCTAssertTrue(model.isSigningIn, "The provider stays busy while the person chooses")
+        XCTAssertNil(model.errorMessage)
+        model.chooseProfile(keepNewAnswers: true)
+        XCTAssertFalse(model.awaitsProfileChoice)
+        await fulfillment(of: [completed], timeout: 2)
+        XCTAssertEqual(auth.choices, [true])
+        XCTAssertFalse(model.isSigningIn)
+        withExtendedLifetime(observation) {}
+    }
+
+    func testRestoringTheOldProfileIsTheOtherChoice() async {
+        let auth = TestSignInService()
+        auth.result = .failure(AccountProfileChoiceRequired())
+        let model = SignInViewModel(authService: auth)
+        let asked = expectation(description: "Asked")
+        let observation = model.$awaitsProfileChoice.filter { $0 }.prefix(1).sink { _ in asked.fulfill() }
+        let completed = expectation(description: "Authenticated")
+        model.signInWithGoogle { _ in completed.fulfill() }
+        await fulfillment(of: [asked], timeout: 2)
+        model.chooseProfile(keepNewAnswers: false)
+        model.chooseProfile(keepNewAnswers: true)
+        await fulfillment(of: [completed], timeout: 2)
+        XCTAssertEqual(auth.choices, [false], "Only the first answer counts")
+        withExtendedLifetime(observation) {}
+    }
+}
+
 @MainActor
 private final class TestSignInService: AuthServicing {
     var result: Result<RestoredSession, Error> = .success(.signedIn)
     var googleCalls = 0
+    var choices: [Bool] = []
+    func keepNewAnswers() async throws -> RestoredSession {
+        choices.append(true)
+        return .signedIn
+    }
+    func restoreAccountProfile() async throws -> RestoredSession {
+        choices.append(false)
+        return .signedIn
+    }
     func restoreSession() async throws -> RestoredSession { .signedOut }
     func signInWithApple(payload: AppleAuthorizationPayload) async throws -> RestoredSession { try result.get() }
     func signInWithGoogle() async throws -> RestoredSession {

@@ -594,7 +594,15 @@ struct WelcomeView: View {
             if !hasName { showsCode = false }
         }
         .onChange(of: access.hasAccess) { _, allowed in
-            if !allowed { checkAccess() }
+            if !allowed {
+                checkAccess()
+            } else if stage == .landing, lightStage == .landing, profileCreation.isCompleted,
+                      !showsAccess, !isTransitioning {
+                // StoreKit answered after this screen chose its stage (a phone
+                // without an account doesn't wait for it at launch): show the
+                // finished profile instead of the start of the questionnaire.
+                revealCompletedProfile()
+            }
         }
         .modifier(CancelSubscriptionReminder(access: access))
         .sheet(isPresented: $showsProfilePrivacy) {
@@ -642,6 +650,8 @@ struct WelcomeView: View {
             // The code holds the answers themselves, so edits change it.
             if !shown, showsCode { refreshShareCode() }
         }
+        // The landing's sign-in and the home screen's account card share it.
+        .accountProfileChoice(signIn)
         .alert(moderationTitle, isPresented: showsModerationNotice) {
             Button(L10n("I understand")) {
                 acknowledgedStrikes = liveMatches.moderation?.strikes ?? acknowledgedStrikes
@@ -1922,9 +1932,14 @@ struct WelcomeView: View {
             openAccess()
             return
         }
-        isTransitioning = true
         SoundPlayer.shared.play(.complete)
         AccessibilityNotification.Announcement(L10n("Your profile is complete.")).post()
+        revealCompletedProfile()
+    }
+
+    /// Moves the light from wherever it is to the finished profile's helix.
+    private func revealCompletedProfile() {
+        isTransitioning = true
         Task {
             guard !reduceMotion else {
                 withAnimation(.easeInOut(duration: 0.3)) {

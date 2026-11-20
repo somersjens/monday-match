@@ -239,7 +239,10 @@ final class LiveMatchCenter: ObservableObject {
     /// whenever the active match ends; kept on the phone in between.
     func loadHistory() async {
         guard let repository, let all = try? await repository.matchHistory() else { return }
-        for match in all { rememberPartnerCard(match) }
+        for match in all {
+            rememberPartnerCard(match)
+            _ = profileAtMatch(match)
+        }
         pastMatches = all.filter { !$0.isActive }
         if let data = try? JSONEncoder().encode(pastMatches) { defaults.set(data, forKey: Self.historyKey) }
     }
@@ -288,7 +291,7 @@ final class LiveMatchCenter: ObservableObject {
             adopt(current)
             rememberPartnerCard(current)
             chat?.partnerReadAt = current.partnerReadAt
-            freezeOwnProfile(ownProfile, for: current.id)
+            if profileAtMatch(current) == nil { freezeOwnProfile(ownProfile, for: current.id) }
             await shareCard(for: current.id)
             await loadPartnerPhoto(current)
             // The first time registers this phone's key and decrypts anything
@@ -338,7 +341,7 @@ final class LiveMatchCenter: ObservableObject {
 
     /// Any server match, active or broken. A broken one carries why it ended.
     func snapshot(of match: CloudChatMatch, fallbackYou: ProfileCreationState) -> MatchSnapshot {
-        let you = frozenProfile(for: match.id) ?? fallbackYou.sharedCopy(today: .today())
+        let you = profileAtMatch(match) ?? fallbackYou.sharedCopy(today: .today())
         let card = partnerProfile(for: match)
         var them = card ?? ProfileCreationState(today: .today(), applicationLanguage: "en")
         if them.displayName.isEmpty { them.displayName = match.partnerName }
@@ -456,6 +459,35 @@ final class LiveMatchCenter: ObservableObject {
         defaults.data(forKey: Self.key("you", id)).flatMap { try? JSONDecoder().decode(ProfileCreationState.self, from: $0) }
     }
 
+    /// This profile as it was when the match was made: the copy frozen then,
+    /// or, on a phone that never saw the match, the profile the account had
+    /// before new answers replaced it. Nil when only the current one fits.
+    private func profileAtMatch(_ match: CloudChatMatch) -> ProfileCreationState? {
+        if let frozen = frozenProfile(for: match.id) { return frozen }
+        guard let earlier = Self.earlierProfile(defaults: defaults), let matchedAt = match.matchedAt,
+              matchedAt < earlier.replacedAt else { return nil }
+        freezeOwnProfile(earlier.profile, for: match.id)
+        return frozenProfile(for: match.id)
+    }
+
+    private struct EarlierProfile: Codable {
+        let profile: ProfileCreationState
+        let replacedAt: Date
+    }
+
+    /// Signing in with new answers replaced the account's saved profile.
+    /// Its matches stay, and the ones made before then are shown with the
+    /// profile they were made with, not with the new answers.
+    static func rememberEarlierProfile(_ profile: ProfileCreationState, replacedAt: Date,
+                                       defaults: UserDefaults = .standard) {
+        guard let data = try? JSONEncoder().encode(EarlierProfile(profile: profile, replacedAt: replacedAt)) else { return }
+        defaults.set(data, forKey: earlierProfileKey)
+    }
+
+    private static func earlierProfile(defaults: UserDefaults) -> EarlierProfile? {
+        defaults.data(forKey: earlierProfileKey).flatMap { try? JSONDecoder().decode(EarlierProfile.self, from: $0) }
+    }
+
     /// The partner's card is kept on this phone once seen, so the profile
     /// can still be opened after they delete their account.
     private func rememberPartnerCard(_ match: CloudChatMatch) {
@@ -494,6 +526,7 @@ final class LiveMatchCenter: ObservableObject {
 
     nonisolated private static let cacheKey = "liveMatch.current.v1"
     nonisolated private static let historyKey = "liveMatch.history.v1"
+    nonisolated private static let earlierProfileKey = "liveMatch.earlierProfile.v1"
 
     private static func cachedHistory(defaults: UserDefaults) -> [CloudChatMatch]? {
         defaults.data(forKey: historyKey).flatMap { try? JSONDecoder().decode([CloudChatMatch].self, from: $0) }
@@ -517,7 +550,8 @@ final class LiveMatchCenter: ObservableObject {
     /// Signing out: also what was learned about this account, so the next
     /// one starts by asking the server.
     nonisolated static func clearAccountCache(defaults: UserDefaults = .standard) {
-        for key in [cacheKey, historyKey, keyPrefix + "lastRefresh", keyPrefix + "lastModerationCheck"] {
+        for key in [cacheKey, historyKey, earlierProfileKey, keyPrefix + "lastRefresh",
+                    keyPrefix + "lastModerationCheck"] {
             defaults.removeObject(forKey: key)
         }
     }

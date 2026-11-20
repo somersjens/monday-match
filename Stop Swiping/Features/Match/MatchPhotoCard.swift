@@ -142,7 +142,7 @@ struct MatchPhotoCardView: View {
     private var details: some View {
         VStack(alignment: .leading, spacing: 6 * scale) {
             HStack(alignment: .center, spacing: 8 * scale) {
-                Text("\(Text(card.name).fontWeight(.semibold))\(Text(card.age.map { ", \($0)" } ?? "").fontWeight(.light))")
+                Text("\(Text(card.name).fontWeight(.semibold))\(Text(verbatim: card.age.map { ", \($0)" } ?? "").fontWeight(.light))")
                     .font(.system(size: 30 * scale, design: .rounded))
                     .foregroundStyle(.white)
                     .lineLimit(1)

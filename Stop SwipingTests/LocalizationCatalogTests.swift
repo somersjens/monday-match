@@ -70,7 +70,7 @@ final class LocalizationCatalogTests: XCTestCase {
         let dealbreakers = MatchDealbreakers(state: state)
         XCTAssertEqual(dealbreakers.pronoun, .they)
         XCTAssertEqual(dealbreakers.heading,
-                       "Zelfs bij een persoonlijkheidsmatch van 100% krijg je geen match als je mogelijke partner:")
+                       "Zelfs bij een persoonlijkheidsmatch van 100% krijg je geen match als diegene:")
         XCTAssertTrue(dealbreakers.lines.contains("Al kinderen heeft"))
         XCTAssertTrue(dealbreakers.lines.contains("Geen kinderen wil"))
         for plural in ["Hebben", "Willen", "Zijn ", "Wonen", "Drinken", "Roken", "Gebruiken", "Spreken"] {

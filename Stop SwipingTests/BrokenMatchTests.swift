@@ -87,6 +87,39 @@ final class BrokenMatchTests: XCTestCase {
         XCTAssertFalse(chat.canSend)
     }
 
+    /// New answers replaced the account's saved profile on a phone that never
+    /// saw its matches: those made before still show the profile they were
+    /// made with, and later ones the new answers.
+    func testMatchesFromBeforeNewAnswersKeepTheEarlierProfile() async throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "BrokenMatchTests-\(UUID())"))
+        let replacedAt = Date()
+        LiveMatchCenter.rememberEarlierProfile(Self.profile("Old Emma"), replacedAt: replacedAt, defaults: defaults)
+        let before = UUID(), after = UUID()
+        let repository = HistoryRepository()
+        repository.history = [
+            CloudChatMatch(id: before, partnerID: UUID(), partnerName: "Mila", ownScore: 80, partnerScore: 84,
+                           matchedAt: replacedAt.addingTimeInterval(-86_400), endedAt: replacedAt.addingTimeInterval(-3_600),
+                           endReason: .broken),
+            CloudChatMatch(id: after, partnerID: UUID(), partnerName: "Noor", ownScore: 70, partnerScore: 75,
+                           matchedAt: replacedAt.addingTimeInterval(3_600), endedAt: replacedAt.addingTimeInterval(7_200),
+                           endReason: .broken),
+        ]
+        let center = LiveMatchCenter(repository: repository, defaults: defaults)
+        await center.loadHistory()
+        let current = Self.profile("New Emma")
+        let old = try XCTUnwrap(center.pastMatches.first { $0.id == before })
+        let new = try XCTUnwrap(center.pastMatches.first { $0.id == after })
+        XCTAssertEqual(center.snapshot(of: old, fallbackYou: current).you.displayName, "Old Emma")
+        XCTAssertEqual(center.snapshot(of: new, fallbackYou: current).you.displayName, "New Emma")
+
+        // Frozen per match: signing out and back in keeps it.
+        LiveMatchCenter.clearAccountCache(defaults: defaults)
+        let relaunched = LiveMatchCenter(repository: repository, defaults: defaults)
+        await relaunched.loadHistory()
+        let again = try XCTUnwrap(relaunched.pastMatches.first { $0.id == before })
+        XCTAssertEqual(relaunched.snapshot(of: again, fallbackYou: current).you.displayName, "Old Emma")
+    }
+
     /// After a hard close the app opens on the active match straight away,
     /// before the server has answered, and forgets it once the server does.
     func testActiveMatchIsThereAtLaunchBeforeTheServerAnswers() async throws {

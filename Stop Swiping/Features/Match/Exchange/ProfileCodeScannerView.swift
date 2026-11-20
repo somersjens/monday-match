@@ -233,8 +233,9 @@ struct ProfileCodeScannerView: View {
                             .buttonStyle(.plain)
                             .accessibilityLabel(L10n("Close"))
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
+                        // Same corner as the close buttons of My matches and the profile overview.
+                        .padding(.horizontal, 20)
+                        .padding(.top, 20)
 
                         Spacer(minLength: 8)
 

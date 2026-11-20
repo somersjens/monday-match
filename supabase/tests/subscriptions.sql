@@ -35,25 +35,25 @@ insert into auth.users(id, aud, role) select pg_temp.id(n), 'authenticated', 'au
 
 -- ===== Monthly plan ==========================================================
 select pg_temp.ok(public.record_store_entitlement(pg_temp.id(1), 'app_store', 'monthly_access', '3000000001',
-    now() - interval '10 days', null, 'sandbox', now() + interval '20 days') = 'recorded',
+    now() - interval '10 days', null, 'production', now() + interval '20 days') = 'recorded',
     'A monthly plan is recorded with its period end');
 select pg_temp.ok(pg_temp.error_of(format(
     'select public.record_store_entitlement(%L, %L, %L, %L, now(), null, %L)',
-    pg_temp.id(1), 'app_store', 'monthly_access', '3000000002', 'sandbox')) like '23514 %',
+    pg_temp.id(1), 'app_store', 'monthly_access', '3000000002', 'production')) like '23514 %',
     'A monthly plan needs a period end');
 select pg_temp.ok(pg_temp.error_of(format(
     'select public.record_store_entitlement(%L, %L, %L, %L, now(), null, %L, now())',
-    pg_temp.id(1), 'app_store', 'lifetime_access', '3000000003', 'sandbox')) like '23514 %',
+    pg_temp.id(1), 'app_store', 'lifetime_access', '3000000003', 'production')) like '23514 %',
     'Lifetime access never runs out');
 select pg_temp.ok(public.record_store_entitlement(pg_temp.id(1), 'app_store', 'monthly_access', '3000000001',
-    now() - interval '10 days', null, 'sandbox', now() + interval '50 days') = 'updated'
+    now() - interval '10 days', null, 'production', now() + interval '50 days') = 'updated'
     and pg_temp.expiry('3000000001') > now() + interval '49 days', 'A renewal moves the period end forward');
 select public.record_store_entitlement(pg_temp.id(1), 'app_store', 'monthly_access', '3000000001',
-    now() - interval '10 days', null, 'sandbox', now() + interval '20 days');
+    now() - interval '10 days', null, 'production', now() + interval '20 days');
 select pg_temp.ok(pg_temp.expiry('3000000001') > now() + interval '49 days',
     'An older period sent late never moves it back');
 select pg_temp.ok(public.record_store_entitlement(pg_temp.id(2), 'app_store', 'monthly_access', '3000000001',
-    now(), null, 'sandbox', now() + interval '80 days') = 'other_account'
+    now(), null, 'production', now() + interval '80 days') = 'other_account'
     and pg_temp.expiry('3000000001') < now() + interval '51 days', 'Another account can neither take nor extend it');
 
 -- Refund of the current month, then a later renewal under the same ID.
@@ -70,7 +70,7 @@ select pg_temp.ok(public.update_store_entitlement('app_store', '3999999999', now
     = 'unknown' and not exists (select 1 from public.store_entitlements where original_transaction_id = '3999999999'),
     'A notification for a purchase no account recorded changes nothing');
 select pg_temp.ok(public.record_store_entitlement(pg_temp.id(1), 'app_store', 'lifetime_access_subscriber',
-    '3000000004', now(), null, 'sandbox') = 'recorded', 'Subscriber lifetime access is recorded');
+    '3000000004', now(), null, 'production') = 'recorded', 'Subscriber lifetime access is recorded');
 select public.update_store_entitlement('app_store', '3000000004', now() + interval '30 days', null);
 select pg_temp.ok((select expires_at is null from public.store_entitlements where original_transaction_id = '3000000004'),
     'A lifetime purchase never gets a period end');

@@ -500,31 +500,71 @@ struct OpenDemoChat: Codable, Equatable {
     }
 }
 
+extension Notification.Name {
+    /// Saved matches were added, changed or deleted on this phone. The
+    /// object is the UserDefaults holding them; `SavedMatchStore.changedIDsKey`
+    /// names the matches.
+    static let savedMatchesChanged = Notification.Name("savedMatchesChanged")
+    /// The iCloud backup added saved matches to the phone. The object is the
+    /// UserDefaults holding them.
+    static let savedMatchesRestored = Notification.Name("savedMatchesRestored")
+}
+
 final class SavedMatchStore: ObservableObject {
     /// Newest first.
     @Published private(set) var matches: [MatchSnapshot] = []
 
     private let defaults: UserDefaults
     private let key: String
+    private let notifications: NotificationCenter
+    private var restoreObserver: NSObjectProtocol?
 
     nonisolated static let storageKey = "savedMatches.v2"
     /// Held the other person's whole profile; removed wherever it is found.
     nonisolated static let legacyStorageKey = "savedMatches.v1"
+    nonisolated static let changedIDsKey = "ids"
+    /// Kept by the iCloud backup (SavedMatchCloudBackup): changes still to
+    /// send, and the iCloud account whose backup was merged with this phone.
+    nonisolated static let backupPendingKey = "savedMatches.backupPending.v1"
+    nonisolated static let backupMergedKey = "savedMatches.backupMerged.v1"
 
     /// Removes every saved match from the phone.
     static func clear(defaults: UserDefaults = .standard) {
-        defaults.removeObject(forKey: storageKey)
-        defaults.removeObject(forKey: legacyStorageKey)
+        for key in [storageKey, legacyStorageKey, backupPendingKey, backupMergedKey] {
+            defaults.removeObject(forKey: key)
+        }
     }
 
-    init(defaults: UserDefaults = .standard, key: String = SavedMatchStore.storageKey) {
+    /// What the phone holds, unsorted, without a store.
+    static func stored(defaults: UserDefaults = .standard, key: String = storageKey) -> [MatchSnapshot] {
+        defaults.data(forKey: key).flatMap { try? JSONDecoder().decode([MatchSnapshot].self, from: $0) } ?? []
+    }
+
+    static func store(_ matches: [MatchSnapshot], defaults: UserDefaults = .standard, key: String = storageKey) {
+        guard let data = try? JSONEncoder().encode(matches) else { return }
+        defaults.set(data, forKey: key)
+    }
+
+    init(defaults: UserDefaults = .standard, key: String = SavedMatchStore.storageKey,
+         notifications: NotificationCenter = .default) {
         self.defaults = defaults
         self.key = key
+        self.notifications = notifications
         defaults.removeObject(forKey: Self.legacyStorageKey)
-        if let data = defaults.data(forKey: key),
-           let stored = try? JSONDecoder().decode([MatchSnapshot].self, from: data) {
-            matches = stored.sorted { $0.matchedAt > $1.matchedAt }
+        matches = Self.stored(defaults: defaults, key: key).sorted { $0.matchedAt > $1.matchedAt }
+        // Signing in brought the account's saved matches to this phone.
+        restoreObserver = notifications.addObserver(forName: .savedMatchesRestored, object: defaults,
+                                                    queue: nil) { [weak self] _ in
+            MainActor.assumeIsolated { self?.reload() }
         }
+    }
+
+    deinit {
+        if let restoreObserver { notifications.removeObserver(restoreObserver) }
+    }
+
+    private func reload() {
+        matches = Self.stored(defaults: defaults, key: key).sorted { $0.matchedAt > $1.matchedAt }
     }
 
     func contains(_ id: UUID) -> Bool { matches.contains { $0.id == id } }
@@ -533,13 +573,13 @@ final class SavedMatchStore: ObservableObject {
         guard !contains(match.id) else { return }
         matches.append(match)
         matches.sort { $0.matchedAt > $1.matchedAt }
-        write()
+        write(changed: match.id)
     }
 
     func delete(_ id: UUID) {
         matches.removeAll { $0.id == id }
-        write()
         MatchPhotoStore.shared.delete(id)
+        write(changed: id)
     }
 
     /// A deleted match stays in the list as broken; deleting it from there
@@ -547,7 +587,7 @@ final class SavedMatchStore: ObservableObject {
     func markBroken(_ id: UUID, at date: Date = Date()) {
         guard let index = matches.firstIndex(where: { $0.id == id }), !matches[index].isBroken else { return }
         matches[index].ended = .init(at: date, reason: nil, byMe: true)
-        write()
+        write(changed: id)
     }
 
     func rename(_ id: UUID, to name: String) {
@@ -555,11 +595,11 @@ final class SavedMatchStore: ObservableObject {
         var match = matches[index]
         guard match.rename(to: name) else { return }
         matches[index] = match
-        write()
+        write(changed: id)
     }
 
-    private func write() {
-        guard let data = try? JSONEncoder().encode(matches) else { return }
-        defaults.set(data, forKey: key)
+    private func write(changed id: UUID) {
+        Self.store(matches, defaults: defaults, key: key)
+        notifications.post(name: .savedMatchesChanged, object: defaults, userInfo: [Self.changedIDsKey: [id]])
     }
 }

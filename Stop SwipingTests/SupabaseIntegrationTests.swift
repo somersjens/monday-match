@@ -163,6 +163,85 @@ final class SupabaseIntegrationTests: XCTestCase {
         XCTAssertFalse(requests.all.contains { $0.url?.path == "/rest/v1/profiles" && $0.httpMethod == "POST" })
     }
 
+    /// Answering the questions again and then signing in to an account that
+    /// already has a profile asks first, and sends nothing until then.
+    func testNewAnswersReplaceTheAccountProfileOnlyAfterChoosing() async throws {
+        let (sync, auth, store, defaults, requests, cleanup) = try accountWithAnotherProfile()
+        defer { cleanup() }
+        do {
+            _ = try await auth.signInWithApple(payload: .init(identityToken: "apple-id-token", rawNonce: "nonce", fullName: nil))
+            XCTFail("An account with another profile must ask first.")
+        } catch is AccountProfileChoiceRequired {}
+        XCTAssertEqual(store.load()?.displayName, "Local Alex")
+        XCTAssertFalse(requests.all.contains { $0.url?.path == "/rest/v1/profiles" && $0.httpMethod == "POST" })
+        XCTAssertFalse(sync.ownsProfile(userID: userID))
+
+        guard case .signedIn = try await auth.keepNewAnswers() else { return XCTFail("The new profile reaches the home screen.") }
+        XCTAssertEqual(store.load()?.displayName, "Local Alex")
+        let save = try XCTUnwrap(requests.all.last { $0.url?.path == "/rest/v1/profiles" && $0.httpMethod == "POST" })
+        let sent = try PostgrestClient.Configuration.jsonDecoder.decode(SupabaseProfileSync.Row.self, from: save.bodyData)
+        XCTAssertEqual(sent.backup.state.displayName, "Local Alex")
+        XCTAssertTrue(sync.ownsProfile(userID: userID))
+        XCTAssertNotNil(defaults.data(forKey: "liveMatch.earlierProfile.v1"),
+                        "Matches from before keep the profile they were made with")
+        guard case .signedIn = try await auth.restoreSession() else { return XCTFail("The choice holds on the next launch.") }
+    }
+
+    func testRestoringTheAccountProfileReplacesTheNewAnswers() async throws {
+        let (sync, auth, store, _, requests, cleanup) = try accountWithAnotherProfile()
+        defer { cleanup() }
+        _ = try? await auth.signInWithApple(payload: .init(identityToken: "apple-id-token", rawNonce: "nonce", fullName: nil))
+        guard case .signedIn = try await auth.restoreAccountProfile() else { return XCTFail("The restored profile is finished.") }
+        XCTAssertEqual(store.load()?.displayName, "Remote Alex")
+        XCTAssertFalse(requests.all.contains { $0.url?.path == "/rest/v1/profiles" && $0.httpMethod == "POST" })
+        XCTAssertTrue(sync.ownsProfile(userID: userID))
+    }
+
+    /// The app closed while the choice was open: the next launch neither
+    /// restores the old profile over the new answers nor keeps the account.
+    func testAnUnansweredChoiceSignsOutInsteadOfRestoring() async throws {
+        let (_, auth, store, _, _, cleanup) = try accountWithAnotherProfile()
+        defer { cleanup() }
+        _ = try? await auth.signInWithApple(payload: .init(identityToken: "apple-id-token", rawNonce: "nonce", fullName: nil))
+        XCTAssertNil(auth.localSession(), "Only the server can tell whether this profile may stay")
+        guard case .signedOut = try await auth.restoreSession() else { return XCTFail("Signing in must be offered again.") }
+        XCTAssertEqual(store.load()?.displayName, "Local Alex")
+    }
+
+    private func accountWithAnotherProfile() throws -> (SupabaseProfileSync, SupabaseAuthService,
+                                                        InMemoryProfileCreationStore, UserDefaults,
+                                                        SupabaseTestRequests, () -> Void) {
+        let response = try sessionData()
+        var remoteState = completedState()
+        remoteState.displayName = "Remote Alex"
+        var remoteDraft = ProfileDraft()
+        remoteDraft.displayName = remoteState.displayName
+        remoteDraft.profileCreationCompletedAt = remoteState.completedAt
+        let remote = SupabaseProfileSync.Row(id: userID.uuidString.lowercased(),
+            profile: CloudProfile(draft: remoteDraft, photoURLs: []), backup: .init(state: remoteState, draft: remoteDraft))
+        let rows = try PostgrestClient.Configuration.jsonEncoder.encode([remote])
+        let requests = SupabaseTestRequests()
+        SupabaseTestURLProtocol.handler = { request in
+            requests.append(request)
+            if request.url!.path == "/auth/v1/token" { return (200, response) }
+            if request.httpMethod == "GET" { return (200, rows) }
+            return (201, Data())
+        }
+        let (client, _) = makeClient()
+        let suite = "supabase-test.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        let state = completedState()
+        let store = InMemoryProfileCreationStore(state: state)
+        var draft = ProfileDraft()
+        draft.displayName = state.displayName
+        draft.profileCreationCompletedAt = state.completedAt
+        let repository = InMemoryProfileRepository(profile: draft)
+        let sync = SupabaseProfileSync(client: client, projectURL: projectURL, repository: repository, store: store,
+                                       defaults: defaults)
+        return (sync, SupabaseAuthService(client: client, profileSync: sync), store, defaults, requests,
+                { defaults.removePersistentDomain(forName: suite) })
+    }
+
     func testCloudFailureDoesNotAdvanceSignUpOrEraseTheLocalProfile() async throws {
         let response = try sessionData()
         SupabaseTestURLProtocol.handler = { request in

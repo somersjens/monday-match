@@ -13,11 +13,14 @@ struct DependencyContainer {
     var pushRegistration: PushDeviceRegistering?
     /// Records lifetime access against the account, verified by the server.
     var storeEntitlements: StoreEntitlementRecording?
+    /// The matches under My matches, backed up to the person's own iCloud.
+    var savedMatchBackup: SavedMatchCloudBackup?
 
     @MainActor
     var profileDeletion: ProfileDeletionService {
         ProfileDeletionService(profileRepository: profileRepository, profileCreationStore: profileCreationStore,
-                               server: profileSync as? SupabaseProfileSync, authService: authService)
+                               server: profileSync as? SupabaseProfileSync, authService: authService,
+                               savedMatchBackup: savedMatchBackup)
     }
 
     static var live: DependencyContainer {
@@ -32,9 +35,11 @@ struct DependencyContainer {
         }
 
         let store = UserDefaultsProfileCreationStore()
+        // In iCloud, not on our server: it works with or without an account.
+        let savedMatchBackup = SavedMatchCloudBackup(store: CloudKitSavedMatchStore())
         guard let configuration = SupabaseConfiguration.bundled else {
             return DependencyContainer(authService: UnconfiguredSupabaseAuthService(), profileRepository: repository,
-                                       profileCreationStore: store)
+                                       profileCreationStore: store, savedMatchBackup: savedMatchBackup)
         }
         let client = configuration.makeClient()
         let sync = SupabaseProfileSync(client: client, projectURL: configuration.url, repository: repository, store: store)
@@ -43,6 +48,7 @@ struct DependencyContainer {
                                    chatRepository: SupabaseChatRepository(client: client, projectURL: configuration.url),
                                    photoVerification: PhotoVerificationService(client: client, profileSync: sync),
                                    pushRegistration: SupabasePushDeviceRegistration(client: client),
-                                   storeEntitlements: SupabaseStoreEntitlementRecorder(client: client))
+                                   storeEntitlements: SupabaseStoreEntitlementRecorder(client: client),
+                                   savedMatchBackup: savedMatchBackup)
     }
 }

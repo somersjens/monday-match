@@ -113,6 +113,33 @@ private struct AccountProviderButtonStyle: ButtonStyle {
     }
 }
 
+/// Asks which profile the account keeps when signing in finds one saved on
+/// it that differs from the answers just given on this phone. It only
+/// appears then: a first account, or an empty phone, never sees it.
+struct AccountProfileChoice: ViewModifier {
+    @ObservedObject var signIn: SignInViewModel
+
+    func body(content: Content) -> some View {
+        content.alert(
+            L10n("This account already has a profile"),
+            // Only its buttons close it: the account waits for an answer.
+            isPresented: Binding(get: { signIn.awaitsProfileChoice }, set: { _ in })
+        ) {
+            Button(L10n("Restore old profile")) { signIn.chooseProfile(keepNewAnswers: false) }
+            Button(L10n("Use new answers")) { signIn.chooseProfile(keepNewAnswers: true) }
+                .keyboardShortcut(.defaultAction)
+        } message: {
+            Text(L10n("You answered the questions again. Use your new answers, or restore the profile saved on this account. Your matches are kept either way."))
+        }
+    }
+}
+
+extension View {
+    func accountProfileChoice(_ signIn: SignInViewModel) -> some View {
+        modifier(AccountProfileChoice(signIn: signIn))
+    }
+}
+
 /// A sign-in problem, resolved out of a soft blur under the buttons.
 struct AccountSignInError: View {
     let message: String

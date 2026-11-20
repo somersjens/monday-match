@@ -30,15 +30,15 @@ insert into auth.users(id, aud, role) select pg_temp.id(n), 'authenticated', 'au
 
 -- ===== Store entitlements ====================================================
 select pg_temp.ok(public.record_store_entitlement(pg_temp.id(1), 'app_store', 'lifetime_access', '2000000123',
-    now() - interval '1 day', null, 'sandbox') = 'recorded', 'A verified purchase is recorded');
+    now() - interval '1 day', null, 'production') = 'recorded', 'A verified purchase is recorded');
 select pg_temp.ok(public.record_store_entitlement(pg_temp.id(1), 'app_store', 'lifetime_access', '2000000123',
-    now() - interval '1 day', null, 'sandbox') = 'updated', 'Sending it again changes nothing');
+    now() - interval '1 day', null, 'production') = 'updated', 'Sending it again changes nothing');
 select pg_temp.ok(public.record_store_entitlement(pg_temp.id(2), 'app_store', 'lifetime_access', '2000000123',
-    now() - interval '1 day', null, 'sandbox') = 'other_account', 'One purchase belongs to the first account');
+    now() - interval '1 day', null, 'production') = 'other_account', 'One purchase belongs to the first account');
 select public.record_store_entitlement(pg_temp.id(1), 'app_store', 'lifetime_access', '2000000123',
-    now() - interval '1 day', now(), 'sandbox');
+    now() - interval '1 day', now(), 'production');
 select public.record_store_entitlement(pg_temp.id(1), 'app_store', 'lifetime_access', '2000000123',
-    now() - interval '1 day', null, 'sandbox');
+    now() - interval '1 day', null, 'production');
 select pg_temp.ok((select revoked_at is not null from public.store_entitlements where original_transaction_id = '2000000123'),
     'A refund is kept, never undone');
 select pg_temp.as_user(1);
@@ -50,8 +50,13 @@ select pg_temp.ok(pg_temp.error_of(format(
     'select public.record_store_entitlement(%L, %L, %L, %L, now(), null, %L)',
     pg_temp.id(1), 'app_store', 'lifetime_access', '999', 'production')) like '42501 %',
     'The app cannot record a purchase itself');
+-- 202611200001: a sandbox (TestFlight) purchase is kept but grants nothing.
+select pg_temp.as_admin();
+select pg_temp.ok(public.record_store_entitlement(pg_temp.id(2), 'app_store', 'lifetime_access', '2000000999',
+    now() - interval '1 day', null, 'sandbox') = 'recorded', 'A sandbox purchase is recorded');
 select pg_temp.as_user(2);
-select pg_temp.ok(not exists (select 1 from public.my_store_entitlements()), 'Another account sees nothing');
+select pg_temp.ok(not exists (select 1 from public.my_store_entitlements()),
+    'Another account sees nothing, and a sandbox purchase is not access');
 select pg_temp.as_admin();
 
 -- ===== App Attest ============================================================

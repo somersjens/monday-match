@@ -61,7 +61,9 @@ struct CloudChatMatch: Codable, Identifiable, Equatable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(UUID.self, forKey: .id)
         partnerID = try c.decode(UUID.self, forKey: .partnerID)
-        partnerName = try c.decodeIfPresent(String.self, forKey: .partnerName) ?? ""
+        // The server stores whatever the other phone uploaded; never let a
+        // name written past the app's own limit break the layout here.
+        partnerName = ProfileNameRules.normalized(try c.decodeIfPresent(String.self, forKey: .partnerName) ?? "")
         ownScore = try c.decode(Int.self, forKey: .ownScore)
         partnerScore = try c.decode(Int.self, forKey: .partnerScore)
         matchedAt = try? c.decodeIfPresent(Date.self, forKey: .matchedAt)

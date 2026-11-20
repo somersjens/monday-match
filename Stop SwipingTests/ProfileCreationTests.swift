@@ -140,7 +140,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
 
         XCTAssertEqual(viewModel.submitCurrentStep(), .rejected)
         XCTAssertEqual(viewModel.feedback, .birthday)
-        XCTAssertEqual(viewModel.feedback?.message, "Go celebrate your birthday, come back tomorrow.")
+        XCTAssertEqual(viewModel.feedback?.message, "You're still a little too young! Come back in 18 years.")
         XCTAssertEqual(viewModel.currentStep, .dateOfBirth)
         XCTAssertEqual(viewModel.rejectionCount, 1)
     }
@@ -750,7 +750,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         let language = LanguageCatalog.option(for: viewModel.state.languages[0]).name
         let dealbreakers = viewModel.dealbreakers
         XCTAssertEqual(dealbreakers.heading,
-                       "Even if your potential partner matches 100% on personality, you will not be matched if she:")
+                       "Even if someone matches 100% on personality, you will not be matched if she:")
         XCTAssertEqual(dealbreakers.lines, [
             "Is younger than 25 or older than 40",
             "Is shorter than 173 cm or taller than 207 cm",

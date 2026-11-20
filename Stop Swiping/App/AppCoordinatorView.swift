@@ -62,9 +62,6 @@ struct AppCoordinatorView: View {
             }
         }
         .background(Color("WelcomeBackground").ignoresSafeArea())
-        #if DEBUG
-        .modifier(TempSheetProbe()) // TEMP probe
-        #endif
         .overlay(alignment: .top) {
             ProfileCodeNoticeBanner(inbox: codeInbox)
         }
@@ -98,6 +95,13 @@ struct AppCoordinatorView: View {
             // Lifetime access then belongs to the account, not only this iPhone.
             guard notificationAccountState.hasAccount else { return }
             await access.connectServer(dependencies.storeEntitlements)
+        }
+        .task {
+            // Saved matches and their iCloud backup, once launch has settled:
+            // changes made offline, or a new phone getting them back. With
+            // nothing to do this asks iCloud nothing.
+            try? await Task.sleep(for: .seconds(2))
+            await dependencies.savedMatchBackup?.sync()
         }
         .task {
             guard appState.sessionState == .loading else { return }
