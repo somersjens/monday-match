@@ -4,6 +4,57 @@
     "" : {
 
     },
+    "Automatic matching is off while this lasts. You can still view your personality and edit your profile." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic matching is off while this lasts. You can still view your personality and edit your profile."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch matchen staat uit zolang dit duurt. Je persoonlijkheid bekijken en je profiel aanpassen kan gewoon."
+          }
+        }
+      }
+    },
+    "Saved in My matches." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved in My matches."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewaard in Mijn matches."
+          }
+        }
+      }
+    },
+    "You compared with this person in the last 24 hours, so you see the outcome from then, even if answers changed since." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You compared with this person in the last 24 hours, so you see the outcome from then, even if answers changed since."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je hebt deze persoon in de afgelopen 24 uur al vergeleken. Je ziet daarom de uitkomst van toen, ook als antwoorden sindsdien zijn veranderd."
+          }
+        }
+      }
+    },
     "–" : {
 
     },

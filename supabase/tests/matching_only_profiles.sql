@@ -2,6 +2,8 @@
 -- deleted from one's own list (202611200002). Run as postgres in the Supabase
 -- SQL Editor ("Run without RLS" is fine): everything rolls back.
 begin;
+-- Fixture accounts have no store purchase (202611200005).
+set local stop_swiping.access_check = 'off';
 set local stop_swiping.matching_throttle = 'off';
 create temporary table leave_results(name text primary key);
 grant select, insert on leave_results to authenticated;

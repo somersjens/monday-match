@@ -45,7 +45,9 @@ gone), its messages, keys, cards and read states go.
 | Stored photos nothing names | After a day | `retention_apply('orphans')`, then the edge function deletes them (failed deletes, replaced photos the app could not remove) |
 
 These come on top of the 12-month purge of messages, cards and reports
-(`purge-expired-data`, 202611180003).
+(`purge-expired-data`, 202611180003). The same job removes reports 5 years
+after they were filed and match rows (with their identity hashes) 5 years
+after the match ended (`202611200004`).
 
 "Sign of the app" (`matching_private.last_active`) is the latest of: a
 profile save, a sign-in, a session refresh. The app refreshes its token
@@ -99,8 +101,9 @@ Other savings:
   its list opens and when a match ends. Moderation is checked daily and when
   a match ends (a report ends it).
 - **Photos** are resized to 1080 px at JPEG quality 0.78 (was 1600 px / 0.82).
-- The app falls back to the old requests when the server answers PGRST202
-  (function missing), and to timers when Realtime is not available.
+- The app falls back to timers when Realtime is not available. (The
+  PGRST202 fallback to the pre-`202611190002` requests was removed on
+  20 November 2026: the live server has `chat_poll` and `current_match(p_known_card)`.)
 
 Realtime notes: private channels need the policy "Match participants receive
 live signals" on `realtime.messages` (no insert policy: only the database

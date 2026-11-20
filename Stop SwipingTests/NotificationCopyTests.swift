@@ -199,7 +199,8 @@ final class NotificationCopyTests: XCTestCase {
         for language in AppLanguage.allCases {
             let catalog = NotificationCopy.catalog(for: language)
             let appKeys = catalog.keys.filter { key in serverKinds.contains { key == $0 || key.hasPrefix($0 + ".") } }
-            let copy = server[language.rawValue] ?? [:]
+            // admin.* copy goes only to administrators (new reports) and has no app counterpart.
+            let copy = (server[language.rawValue] ?? [:]).filter { !$0.key.hasPrefix("admin.") }
             XCTAssertEqual(Set(copy.keys), Set(appKeys), language.rawValue)
             for key in appKeys { XCTAssertEqual(copy[key], catalog[key], "\(language.rawValue) \(key)") }
         }

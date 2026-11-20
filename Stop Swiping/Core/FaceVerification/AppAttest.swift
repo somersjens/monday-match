@@ -19,6 +19,8 @@ protocol AttestedPhotoReporting {
 
 nonisolated enum AppAttestError: Error, Equatable {
     case unsupported, dailyLimit, rejected, unavailable
+    /// The server doesn't know this phone's key (409 unknown_key).
+    case unknownKey
 }
 
 @MainActor
@@ -43,8 +45,10 @@ final class AppAttestPhotoReporter: AttestedPhotoReporting {
         if defaults.string(forKey: Self.registeredKey) != "\(user)|\(keyID)" {
             do {
                 try await register(keyID: keyID)
-            } catch DCError.invalidKey {
-                // The key was lost (restore to another phone, app reinstall): make a new one.
+            } catch is DCError {
+                // Apple attests a key only once, and a key can be lost (restore to
+                // another phone, app reinstall): a key Apple won't attest is
+                // replaced by a new one.
                 defaults.removeObject(forKey: Self.keyIDKey)
                 keyID = try await ensureKey()
                 try await register(keyID: keyID)
@@ -59,10 +63,12 @@ final class AppAttestPhotoReporter: AttestedPhotoReporting {
             try await invoke(Body(action: "photo", challengeId: challenge.id, keyId: keyID,
                                   assertion: assertion.base64EncodedString(), clientData: clientData.base64EncodedString(),
                                   photoId: photoID.uuidString.lowercased()))
-        } catch AppAttestError.rejected where defaults.string(forKey: Self.registeredKey) != nil {
-            // The server no longer knows the key: register it again next time.
+        } catch AppAttestError.unknownKey {
+            // The server no longer knows the key. Apple attests a key only
+            // once, so the next report starts over with a new key.
             defaults.removeObject(forKey: Self.registeredKey)
-            throw AppAttestError.rejected
+            defaults.removeObject(forKey: Self.keyIDKey)
+            throw AppAttestError.unknownKey
         }
     }
 
@@ -121,6 +127,7 @@ final class AppAttestPhotoReporter: AttestedPhotoReporting {
         guard case FunctionsError.httpError(let code, let data) = error else { return AppAttestError.unavailable }
         let message = String(decoding: data, as: UTF8.self)
         if code == 429, message.contains("daily_limit") { return AppAttestError.dailyLimit }
+        if code == 409, message.contains("unknown_key") { return AppAttestError.unknownKey }
         if code == 403 || code == 409 { return AppAttestError.rejected }
         return AppAttestError.unavailable
     }

@@ -1,5 +1,16 @@
 # Local photo verification
 
+> **20 November 2026: App Attest proven on an iPhone 17 Pro** (development
+> environment): key registered, signed report accepted, scan stored as
+> `device.attested.v1` with `attested = true`. Three fixes were needed:
+> `verify.ts` checks the certificate chain with `@noble/curves` because Deno's
+> WebCrypto has no ECDSA for a P-384 key with SHA-256 (Apple's App Attest CA);
+> assertions read only rpIdHash and the counter (the iPhone sets the
+> attested-data flag without data); and the app makes a new key when Apple
+> won't attest an existing one, and starts over only on 409 `unknown_key`.
+> `app-attest` logs the action and reason of a refusal or failure, never keys
+> or photos. The scan has no daily limit any more (`202611200004`).
+
 > **19 November 2026:** where the iPhone supports App Attest, the scan report
 > is signed with a Secure Enclave key that Apple certified for this app, and
 > the server records it as `attested` (`app-attest` edge function,

@@ -1,0 +1,691 @@
+<title>Stop Swiping procesplaat</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: één lange kaart met een vaste inhoudsbalk; landkaart bovenaan, daarna processen, opslag, ritme, limieten, verwijderen, risico's. */
+:root {
+  --bg: #f5f6f9;
+  --surface: #ffffff;
+  --ink: #161a2b;
+  --muted: #5a6078;
+  --line: #d9dce6;
+  --accent: #3b4cca;
+  --accent-soft: #e6e9fb;
+  --e2e: #1d8a5b;  --e2e-soft: #dcf2e7;
+  --seal: #7a4bc4; --seal-soft: #eee5fa;
+  --tls: #b06d00;  --tls-soft: #fbefd8;
+  --local: #3f6f9f; --local-soft: #e1ecf7;
+  --risk: #c23a3a; --risk-soft: #fbe3e3;
+  --ok: #1d8a5b;
+  --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body: "Instrument Sans", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1220; --surface: #171b2d; --ink: #e8eaf3; --muted: #9aa0b8; --line: #2c3150;
+  --accent: #8d9bff; --accent-soft: #232a52;
+  --e2e: #4fcf94; --e2e-soft: #133325; --seal: #b893f2; --seal-soft: #2a1f42;
+  --tls: #f0b04a; --tls-soft: #3a2a10; --local: #7fb2e3; --local-soft: #172a3e;
+  --risk: #ff7b7b; --risk-soft: #3d1a1d; --ok: #4fcf94; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1220; --surface: #171b2d; --ink: #e8eaf3; --muted: #9aa0b8; --line: #2c3150;
+  --accent: #8d9bff; --accent-soft: #232a52;
+  --e2e: #4fcf94; --e2e-soft: #133325; --seal: #b893f2; --seal-soft: #2a1f42;
+  --tls: #f0b04a; --tls-soft: #3a2a10; --local: #7fb2e3; --local-soft: #172a3e;
+  --risk: #ff7b7b; --risk-soft: #3d1a1d; --ok: #4fcf94; color-scheme: dark; }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 17px; font-weight: 700; }
+p { margin: 0; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+code { background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+header.top { display: grid; gap: 12px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { max-width: 72ch; color: var(--muted); font-size: 16px; }
+
+nav.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: 10px max(16px, env(safe-area-inset-left, 0px)); overflow-x: auto; white-space: nowrap; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+nav.toc a { display: inline-block; margin-right: 16px; font-size: 13.5px; font-weight: 600; color: var(--muted); text-decoration: none; padding: 4px 0; }
+nav.toc a:hover { color: var(--ink); }
+
+section { padding-top: 40px; display: grid; gap: 16px; scroll-margin-top: 56px; }
+.section-intro { max-width: 76ch; color: var(--muted); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.c-e2e { color: var(--e2e); background: var(--e2e-soft); }
+.c-seal { color: var(--seal); background: var(--seal-soft); }
+.c-tls { color: var(--tls); background: var(--tls-soft); }
+.c-local { color: var(--local); background: var(--local-soft); }
+.c-risk { color: var(--risk); background: var(--risk-soft); }
+.c-ok { color: var(--ok); background: var(--e2e-soft); }
+
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.map svg { display: block; min-width: 980px; width: 100%; height: auto; }
+.map text { font-family: var(--body); fill: var(--ink); }
+.map .zone { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+.map .zone-title { font-family: var(--display); font-weight: 700; font-size: 15px; }
+.map .zone-sub { font-size: 11px; fill: var(--muted); }
+.map .item { fill: var(--surface); stroke: var(--line); }
+.map .item-e2e { stroke: var(--e2e); stroke-width: 1.5; }
+.map .item-seal { stroke: var(--seal); stroke-width: 1.5; }
+.map .item-tls { stroke: var(--tls); stroke-width: 1.5; }
+.map .item-local { stroke: var(--local); stroke-width: 1.5; }
+.map .it { font-size: 12.5px; font-weight: 600; }
+.map .is { font-size: 10.5px; fill: var(--muted); }
+.map .flow { fill: none; stroke-width: 2; }
+.map .f-e2e { stroke: var(--e2e); } .map .f-seal { stroke: var(--seal); } .map .f-tls { stroke: var(--tls); } .map .f-plain { stroke: var(--muted); stroke-dasharray: 5 4; }
+.map .fl { font-size: 11px; font-weight: 600; }
+.map .fl-e2e { fill: var(--e2e); } .map .fl-seal { fill: var(--seal); } .map .fl-tls { fill: var(--tls); } .map .fl-plain { fill: var(--muted); }
+.map .ah-e2e { fill: var(--e2e); } .map .ah-seal { fill: var(--seal); } .map .ah-tls { fill: var(--tls); } .map .ah-plain { fill: var(--muted); }
+.map .num { fill: var(--accent); } .map .numt { fill: var(--surface); font-family: var(--mono); font-size: 10.5px; font-weight: 500; }
+
+.procs { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+.proc { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 16px 14px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.proc-head { display: flex; align-items: baseline; gap: 10px; }
+.pnum { font-family: var(--mono); font-size: 12px; color: var(--surface); background: var(--accent); border-radius: 5px; padding: 1px 6px; flex: none; }
+.proc ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
+.proc dl { margin: 0; display: grid; grid-template-columns: 92px 1fr; gap: 4px 10px; font-size: 13px; border-top: 1px solid var(--line); padding-top: 10px; }
+.proc dt { color: var(--muted); font-weight: 600; }
+.proc dd { margin: 0; min-width: 0; }
+
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; background: var(--bg); position: sticky; top: 0; }
+tr:last-child td { border-bottom: 0; }
+td.num, .tab { font-variant-numeric: tabular-nums; }
+.t-wide { min-width: 860px; }
+.t-mid { min-width: 640px; }
+.group-row td { background: var(--accent-soft); font-weight: 700; font-size: 12.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
+
+.clock { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.night { position: relative; height: 58px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
+.night .tick { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent); }
+.night .lab { position: absolute; top: 6px; font-family: var(--mono); font-size: 11px; transform: translateX(-50%); white-space: nowrap; }
+.night .lab2 { position: absolute; bottom: 5px; font-size: 11px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+.rows { display: grid; gap: 8px; }
+.row { display: grid; grid-template-columns: 108px 1fr; gap: 10px; font-size: 13.5px; }
+.row .when { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 500; }
+
+.risks { display: grid; gap: 10px; }
+.risk { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; grid-template-columns: 1fr; gap: 6px; }
+.risk.hoog { border-left-color: var(--risk); }
+.risk.middel { border-left-color: var(--tls); }
+.risk.laag { border-left-color: var(--local); }
+.risk-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.risk p { font-size: 14px; color: var(--muted); max-width: 90ch; }
+.risk p strong { color: var(--ink); font-weight: 600; }
+.who { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-left: auto; }
+
+.done { display: grid; gap: 8px; }
+.done li { font-size: 14px; }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.note { font-size: 13px; color: var(--muted); }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+@media (max-width: 520px) { .proc dl { grid-template-columns: 1fr; } .row { grid-template-columns: 1fr; gap: 2px; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Stop Swiping · stand van 20 november 2026 · vóór livegang</div>
+    <h1>Procesplaat: hoe de gegevens lopen</h1>
+    <p class="lede">Alle processen van de app en de server op één plaat: wat waar staat, hoe het versleuteld is, hoe vaak er ververst wordt, welke grenzen er gelden, wanneer iets verwijderd wordt en waar het nog kwetsbaar is. Gemaakt uit de code in de repository (migraties tot en met <code>202611200006</code>, edge functions en de iOS-app).</p>
+    <div class="legend" aria-label="Legenda versleuteling">
+      <span class="chip c-e2e">End-to-end: alleen telefoons kunnen lezen</span>
+      <span class="chip c-seal">Verzegeld met app-sleutel</span>
+      <span class="chip c-tls">TLS + schijfversleuteling: server kan lezen</span>
+      <span class="chip c-local">Op de telefoon, iOS-gegevensbescherming</span>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Inhoud">
+    <a href="#landkaart">Landkaart</a>
+    <a href="#processen">Processen</a>
+    <a href="#opslag">Opslag &amp; versleuteling</a>
+    <a href="#ritme">Verversen</a>
+    <a href="#limieten">Beperkingen</a>
+    <a href="#verwijderen">Verwijderen</a>
+    <a href="#risicos">Kwetsbaarheden</a>
+    <a href="#vandaag">Vandaag aangepast</a>
+  </nav>
+
+  <!-- ============ LANDKAART ============ -->
+  <section id="landkaart">
+    <h2>Landkaart</h2>
+    <p class="section-intro">Vijf plekken waar gegevens kunnen staan. De pijlen zijn de stromen ertussen; hun kleur zegt wie de inhoud onderweg en op de bestemming kan lezen. De nummers verwijzen naar de processen hieronder.</p>
+    <div class="scroll map">
+      <svg viewBox="0 0 1120 610" role="img" aria-label="Landkaart van telefoon, iCloud, Supabase, Apple en Google, en de andere telefoon met de gegevensstromen ertussen">
+        <defs>
+          <marker id="a-e2e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-e2e"/></marker>
+          <marker id="a-seal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-seal"/></marker>
+          <marker id="a-tls" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-tls"/></marker>
+          <marker id="a-plain" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-plain"/></marker>
+        </defs>
+
+        <!-- Telefoon -->
+        <rect class="zone" x="20" y="40" width="240" height="350" rx="12"/>
+        <text class="zone-title" x="36" y="64">Jouw telefoon</text>
+        <rect class="item item-local" x="34" y="80" width="212" height="46" rx="7"/>
+        <text class="it" x="46" y="99">Profiel, antwoorden, foto's</text>
+        <text class="is" x="46" y="115">UserDefaults + profile.json</text>
+        <rect class="item item-local" x="34" y="140" width="212" height="46" rx="7"/>
+        <text class="it" x="46" y="159">Opgeslagen matches</text>
+        <text class="is" x="46" y="175">savedMatches.v2, liveMatch.*</text>
+        <rect class="item item-e2e" x="34" y="200" width="212" height="46" rx="7"/>
+        <text class="it" x="46" y="219">Keychain</text>
+        <text class="is" x="46" y="235">chatsleutels (dit toestel), sessie</text>
+        <rect class="item item-local" x="34" y="260" width="212" height="46" rx="7"/>
+        <text class="it" x="46" y="279">Partnerfoto's</text>
+        <text class="is" x="46" y="295">MatchPhotoStore (bestand)</text>
+        <rect class="item item-local" x="34" y="320" width="212" height="46" rx="7"/>
+        <text class="it" x="46" y="339">App group</text>
+        <text class="is" x="46" y="355">matchnaam voor de melding</text>
+
+        <!-- Andere telefoon -->
+        <rect class="zone" x="20" y="480" width="240" height="90" rx="12"/>
+        <text class="zone-title" x="36" y="506">Andere telefoon</text>
+        <text class="zone-sub" x="36" y="526">QR-code of telefoons tegen elkaar</text>
+        <text class="zone-sub" x="36" y="543">geen server betrokken</text>
+
+        <!-- iCloud -->
+        <rect class="zone" x="330" y="430" width="230" height="140" rx="12"/>
+        <text class="zone-title" x="346" y="456">Jouw iCloud</text>
+        <text class="zone-sub" x="346" y="474">CloudKit privé, versleutelde velden</text>
+        <rect class="item item-e2e" x="344" y="484" width="202" height="34" rx="7"/>
+        <text class="it" x="356" y="506">Profielback-up + foto's</text>
+        <rect class="item item-e2e" x="344" y="526" width="202" height="34" rx="7"/>
+        <text class="it" x="356" y="548">Matches + partnerfoto's</text>
+
+        <!-- Supabase -->
+        <rect class="zone" x="620" y="40" width="290" height="530" rx="12"/>
+        <text class="zone-title" x="636" y="64">Supabase (server)</text>
+        <rect class="item item-tls" x="634" y="80" width="262" height="46" rx="7"/>
+        <text class="it" x="646" y="99">Auth: accounts</text>
+        <text class="is" x="646" y="115">auth.users, sessies (Apple/Google-ID)</text>
+        <rect class="item item-tls" x="634" y="140" width="262" height="46" rx="7"/>
+        <text class="it" x="646" y="159">profiles</text>
+        <text class="is" x="646" y="175">alleen bij automatisch matchen</text>
+        <rect class="item item-tls" x="634" y="200" width="262" height="46" rx="7"/>
+        <text class="it" x="646" y="219">pool, matches, meldingen</text>
+        <text class="is" x="646" y="235">+ identiteitshashes (HMAC)</text>
+        <rect class="item item-e2e" x="634" y="260" width="262" height="46" rx="7"/>
+        <text class="it" x="646" y="279">encrypted_messages</text>
+        <text class="is" x="646" y="295">alleen ciphertext + metadata</text>
+        <rect class="item item-seal" x="634" y="320" width="262" height="46" rx="7"/>
+        <text class="it" x="646" y="339">match_cards</text>
+        <text class="is" x="646" y="355">verzegelde profielcode v3</text>
+        <rect class="item item-tls" x="634" y="380" width="262" height="46" rx="7"/>
+        <text class="it" x="646" y="399">Storage: profile-photos</text>
+        <text class="is" x="646" y="415">privé bucket, JPEG ≤ 2 MB</text>
+        <rect class="item item-tls" x="634" y="440" width="262" height="46" rx="7"/>
+        <text class="it" x="646" y="459">Vault</text>
+        <text class="is" x="646" y="475">identity_hash_key, push-, retentiegeheim</text>
+        <rect class="item item-tls" x="634" y="500" width="262" height="46" rx="7"/>
+        <text class="it" x="646" y="519">pg_cron + edge functions</text>
+        <text class="is" x="646" y="535">push, opruimen, aankoop, App Attest</text>
+
+        <!-- Apple & Google -->
+        <rect class="zone" x="960" y="40" width="150" height="290" rx="12"/>
+        <text class="zone-title" x="974" y="64">Apple &amp; Google</text>
+        <rect class="item" x="972" y="80" width="126" height="46" rx="7"/>
+        <text class="it" x="984" y="99">Inloggen</text>
+        <text class="is" x="984" y="115">Apple / Google</text>
+        <rect class="item" x="972" y="140" width="126" height="46" rx="7"/>
+        <text class="it" x="984" y="159">APNs / FCM</text>
+        <text class="is" x="984" y="175">pushberichten</text>
+        <rect class="item" x="972" y="200" width="126" height="46" rx="7"/>
+        <text class="it" x="984" y="219">App Store</text>
+        <text class="is" x="984" y="235">aankopen</text>
+        <rect class="item" x="972" y="260" width="126" height="46" rx="7"/>
+        <text class="it" x="984" y="279">App Attest</text>
+        <text class="is" x="984" y="295">echtheid toestel</text>
+
+        <!-- Stromen -->
+        <path class="flow f-tls" d="M262,103 H618" marker-end="url(#a-tls)"/>
+        <text class="fl fl-tls" x="300" y="96">inloggen: Apple/Google-token → sessie</text>
+
+        <path class="flow f-tls" d="M262,163 H618" marker-end="url(#a-tls)"/>
+        <text class="fl fl-tls" x="282" y="156">profiel + matchingfoto (alleen auto-matchen)</text>
+
+        <path class="flow f-e2e" d="M262,223 L618,283" marker-start="url(#a-e2e)" marker-end="url(#a-e2e)"/>
+        <text class="fl fl-e2e" x="330" y="230">chat: alleen ciphertext</text>
+
+        <path class="flow f-seal" d="M618,343 C520,343 420,300 262,290" marker-end="url(#a-seal)" fill="none"/>
+        <text class="fl fl-seal" x="420" y="326">matchkaart (verzegeld)</text>
+
+        <path class="flow f-tls" d="M618,403 C470,403 400,330 262,330" marker-end="url(#a-tls)"/>
+        <text class="fl fl-tls" x="380" y="398">partnerfoto, alleen tijdens match</text>
+
+        <path class="flow f-e2e" d="M200,392 C200,440 300,500 342,500" marker-start="url(#a-e2e)" marker-end="url(#a-e2e)"/>
+        <text class="fl fl-e2e" x="214" y="420">back-up</text>
+
+        <path class="flow f-seal" d="M110,392 V478" marker-start="url(#a-seal)" marker-end="url(#a-seal)"/>
+        <text class="fl fl-seal" x="118" y="440">profielcode</text>
+        <text class="fl fl-seal" x="118" y="454">(QR/radio)</text>
+
+        <path class="flow f-plain" d="M1035,140 V20 H140 V38" marker-end="url(#a-plain)"/>
+        <text class="fl fl-plain" x="430" y="15">push: soort, match-ID, aantal. Nooit naam of tekst</text>
+
+        <path class="flow f-tls" d="M912,522 L970,300" marker-end="url(#a-tls)"/>
+        <text class="fl fl-tls" x="918" y="430">push,</text>
+        <text class="fl fl-tls" x="918" y="444">aankoop-</text>
+        <text class="fl fl-tls" x="918" y="458">check</text>
+
+        <!-- nummers -->
+        <g><circle class="num" cx="290" cy="103" r="9"/><text class="numt" x="290" y="107" text-anchor="middle">2</text></g>
+        <g><circle class="num" cx="272" cy="163" r="9"/><text class="numt" x="272" y="167" text-anchor="middle">3</text></g>
+        <g><circle class="num" cx="318" cy="232" r="9"/><text class="numt" x="318" y="236" text-anchor="middle">6</text></g>
+        <g><circle class="num" cx="406" cy="322" r="9"/><text class="numt" x="406" y="326" text-anchor="middle">5</text></g>
+        <g><circle class="num" cx="98" cy="434" r="9"/><text class="numt" x="98" y="438" text-anchor="middle">8</text></g>
+        <g><circle class="num" cx="270" cy="440" r="9"/><text class="numt" x="270" y="444" text-anchor="middle">2</text></g>
+        <g><circle class="num" cx="418" cy="11" r="9"/><text class="numt" x="418" y="15" text-anchor="middle">7</text></g>
+      </svg>
+    </div>
+    <p class="note">Supabase versleutelt de database en opslag op schijf en alle verkeer met TLS. Dat beschermt tegen diefstal van schijven en afluisteren, niet tegen iemand met beheerrechten op het project: die kan alles wat oranje is lezen.</p>
+  </section>
+
+  <!-- ============ PROCESSEN ============ -->
+  <section id="processen">
+    <h2>Processen</h2>
+    <p class="section-intro">Tien processen, in de volgorde waarin een gebruiker ze tegenkomt. Per proces: de stappen, wat er bewaard wordt, de versleuteling, wanneer het ververst en wanneer het weer verdwijnt.</p>
+    <div class="procs">
+
+      <article class="proc">
+        <div class="proc-head"><span class="pnum">1</span><h3>Profiel maken &amp; toestemming</h3></div>
+        <ol>
+          <li>Vragenlijst (50 persoonlijkheidsvragen, basisgegevens, wensen) volledig op de telefoon.</li>
+          <li>Leeftijdscheck: minderjarig = vergrendeld.</li>
+          <li>Twee toestemmingen met versiebon (profiel, matchen), versie moet gelijk zijn aan die van de server.</li>
+        </ol>
+        <dl>
+          <dt>Opslag</dt><dd>Telefoon: <code>profileCreation.state.v1</code>, <code>profile.json</code></dd>
+          <dt>Versleuteling</dt><dd><span class="chip c-local">iOS-standaard</span> leesbaar na eerste ontgrendeling, gaat mee in de iPhone-back-up</dd>
+          <dt>Verdwijnt</dt><dd>Bij profiel verwijderen</dd>
+        </dl>
+      </article>
+
+      <article class="proc">
+        <div class="proc-head"><span class="pnum">2</span><h3>Account &amp; iCloud-back-up</h3></div>
+        <ol>
+          <li>Inloggen met Apple (nonce, SHA-256) of Google (PKCE). E-mail en anoniem staan uit.</li>
+          <li>Supabase-sessie in de Keychain.</li>
+          <li>Profiel + foto's naar de eigen iCloud (CloudKit-zone <code>Profile</code>), nooit naar Supabase.</li>
+          <li>Lege telefoon: eerst herstel uit iCloud, dan uit een matchingprofiel op de server.</li>
+        </ol>
+        <dl>
+          <dt>Opslag</dt><dd><code>auth.users</code> (provider-ID), iCloud-records</dd>
+          <dt>Versleuteling</dt><dd><span class="chip c-e2e">iCloud encryptedValues</span> <span class="chip c-tls">account</span></dd>
+          <dt>Ververst</dt><dd>Token bij openen na &gt; 1 uur weg</dd>
+          <dt>Verdwijnt</dt><dd>Account verwijderen; iCloud direct of zodra bereikbaar</dd>
+        </dl>
+      </article>
+
+      <article class="proc">
+        <div class="proc-head"><span class="pnum">3</span><h3>Automatisch matchen</h3></div>
+        <ol>
+          <li>Aan: profiel (coördinaten afgerond) en matchingfoto naar Supabase.</li>
+          <li>Trigger op <code>profiles</code> zet je in de pool als alles klopt (volwassen, beide toestemmingen, 50 antwoorden, geen blokkade).</li>
+          <li>Zoeken onder één lock: harde eisen beide kanten op, minimumscore per richting, nooit dezelfde twee mensen (ook niet via nieuw account: HMAC van Apple/Google-ID).</li>
+          <li>Hoogste som van beide scores wint; match wordt atomair aangemaakt.</li>
+          <li>Uit: <code>leave_matching()</code> haalt het profiel direct weg.</li>
+        </ol>
+        <dl>
+          <dt>Opslag</dt><dd><code>profiles</code>, <code>pool</code>, <code>matches</code>, <code>match_identities</code></dd>
+          <dt>Versleuteling</dt><dd><span class="chip c-tls">server leest antwoorden</span> nodig om te kunnen matchen</dd>
+          <dt>Ververst</dt><dd>Zoeken max. 1×/min per account; uitgestelde zoekacties elke 20 s; app bevestigt elke 28 dagen</dd>
+          <dt>Verdwijnt</dt><dd>Uit: direct; restjes na 1 dag; 12 mnd inactief</dd>
+        </dl>
+      </article>
+
+      <article class="proc">
+        <div class="proc-head"><span class="pnum">4</span><h3>Fotoverificatie</h3></div>
+        <ol>
+          <li>Live gezichtsscan op de telefoon (Vision + SFace), camerabeeld gaat nooit weg.</li>
+          <li>Alleen het foto-ID naar <code>record_device_photo_verification</code>; die legt de exacte Storage-versie vast.</li>
+          <li>App Attest (<code>app-attest</code>) bewijst echte app op echt toestel: sleutel in de Secure Enclave, door Apple gecertificeerd, elke melding ondertekend. Werkt op de iPhone sinds 20-11. Sinds 202611200005 is dit de enige route: een onbewezen melding telt niet meer.</li>
+          <li>AWS Face Liveness staat geparkeerd (tag <code>aws-liveness-v1</code>).</li>
+        </ol>
+        <dl>
+          <dt>Opslag</dt><dd><code>photo_verifications</code>, <code>verification_attempts</code></dd>
+          <dt>Versleuteling</dt><dd><span class="chip c-tls">metadata</span> geen biometrie op de server</dd>
+          <dt>Limiet</dt><dd>Telefoon: geen daglimiet, zoeken max. 1×/min. AWS: 5 sessies per dag. Challenge 5 min geldig</dd>
+          <dt>Verdwijnt</dt><dd>Nieuwe foto-versie = verificatie vervalt</dd>
+        </dl>
+      </article>
+
+      <article class="proc">
+        <div class="proc-head"><span class="pnum">5</span><h3>Match tonen</h3></div>
+        <ol>
+          <li>Beide telefoons leggen een verzegelde profielcode in <code>match_cards</code>.</li>
+          <li>De ander opent die op de telefoon; uitkomst wordt één keer berekend en bevroren (<code>MatchResult</code>).</li>
+          <li>Scherm toont scores per categorie, nooit losse antwoorden.</li>
+          <li>Partnerfoto alleen downloadbaar tijdens een actieve match; de app bewaart zijn kopie, ook na verbreken (voor een melding) en in de eigen iCloud.</li>
+        </ol>
+        <dl>
+          <dt>Versleuteling</dt><dd><span class="chip c-seal">ChaCha20-Poly1305</span> sleutel afgeleid in de app</dd>
+          <dt>Ververst</dt><dd><code>current_match(p_known_card)</code> stuurt de kaart niet opnieuw</dd>
+          <dt>Verdwijnt</dt><dd>Kaart 12 mnd na einde match, of als niemand meer leest</dd>
+        </dl>
+      </article>
+
+      <article class="proc">
+        <div class="proc-head"><span class="pnum">6</span><h3>Chat</h3></div>
+        <ol>
+          <li>Elke telefoon registreert per match een X25519-sleutel (één actief toestel per persoon).</li>
+          <li>Elk bericht: HPKE (RFC 9180, auth-modus) naar ontvanger én eigen kopie.</li>
+          <li>Server bewaart enveloppe + afzender, tijd, apparaat-ID's; controleert deelnemer, open match, grootte.</li>
+          <li>Realtime-kanaal <code>match:&lt;id&gt;</code> meldt alleen soort en wie, nooit inhoud.</li>
+          <li>Veiligheidscode vergelijken; gewijzigde sleutel stopt verzenden tot bevestiging.</li>
+        </ol>
+        <dl>
+          <dt>Versleuteling</dt><dd><span class="chip c-e2e">E2E</span> sleutels: Keychain, alleen dit toestel, niet in iCloud</dd>
+          <dt>Ververst</dt><dd>Per signaal één <code>chat_poll</code>; zonder kanaal 3 s / 10 s</dd>
+          <dt>Verdwijnt</dt><dd>Berichten na 12 mnd; alles als niemand meer leest</dd>
+        </dl>
+      </article>
+
+      <article class="proc">
+        <div class="proc-head"><span class="pnum">7</span><h3>Meldingen</h3></div>
+        <ol>
+          <li>Lokale meldingen: één planner op de telefoon, max. 2 nudges per 7 dagen, stille uren 22–09.</li>
+          <li>Server: triggers zetten nieuwe match, berichten en einde in <code>outbox</code>, samengevoegd per gesprek.</li>
+          <li>pg_cron roept elke 15 s <code>push-dispatch</code> aan (alleen als er iets klaarstaat) → APNs/FCM.</li>
+          <li>Payload: soort, match-ID, aantal. De extensie vult de naam in vanuit de app group.</li>
+        </ol>
+        <dl>
+          <dt>Opslag</dt><dd><code>push_devices</code> (token, taal, tijdzone), <code>outbox</code></dd>
+          <dt>Versleuteling</dt><dd><span class="chip c-tls">token</span> Apple/Google zien alleen soort + aantal</dd>
+          <dt>Verdwijnt</dt><dd>Outbox na 14 dagen; apparaten bij 12 mnd inactief of ingetrokken token</dd>
+        </dl>
+      </article>
+
+      <article class="proc">
+        <div class="proc-head"><span class="pnum">8</span><h3>Handmatig matchen (QR / radio)</h3></div>
+        <ol>
+          <li>QR-code of link <code>…/stop-swiping/code#…</code> met verzegelde profielcode v3, 24 uur geldig.</li>
+          <li>Telefoons tegen elkaar: MultipeerConnectivity met verplichte versleuteling; beide apps open en tegen elkaar is de toestemming.</li>
+          <li>Uitkomst direct op de telefoon en meteen bewaard in Mijn matches; verwijderen kan.</li>
+          <li>Zelfde persoon binnen 24 uur geeft dezelfde uitkomst, en het scherm zegt dat erbij.</li>
+          <li>Opgeslagen match → eigen iCloud.</li>
+        </ol>
+        <dl>
+          <dt>Server</dt><dd>Niet betrokken</dd>
+          <dt>Versleuteling</dt><dd><span class="chip c-seal">profiel: app-sleutel</span> <span class="chip c-e2e">radio: sessiesleutel</span></dd>
+          <dt>Verdwijnt</dt><dd>Herinnering scans na 24 u; matches bij profiel verwijderen</dd>
+        </dl>
+      </article>
+
+      <article class="proc">
+        <div class="proc-head"><span class="pnum">9</span><h3>Melden &amp; moderatie</h3></div>
+        <ol>
+          <li><code>report_partner</code>: reden + toelichting (max. 8 000 bytes), eventueel match beëindigen.</li>
+          <li>Eerste melding per match telt als strike, gekoppeld aan identiteitshashes.</li>
+          <li>1 = waarschuwing, 2 = 7 dagen blokkade, 3 = ban (ook bij nieuw account).</li>
+          <li>Op het homescreen: een kaart met de waarschuwing, blokkade of ban. Bij blokkade en ban ontrafelt de helix tot hart en sluit zich tot slot; automatisch matchen gaat uit en verdwijnt. Profiel en persoonlijkheidstesten blijven open.</li>
+          <li>Elke nieuwe melding stuurt een pushbericht "Nieuwe melding · reden" naar de beheerder (<code>matching_private.admins</code>), zonder namen of toelichting.</li>
+          <li>Beheerder kan een melding intrekken (<code>dismiss_report</code>).</li>
+        </ol>
+        <dl>
+          <dt>Versleuteling</dt><dd><span class="chip c-tls">leesbaar</span> toelichting in platte tekst</dd>
+          <dt>Verdwijnt</dt><dd>Toelichting leeg na 12 mnd; melding en strike na 5 jaar</dd>
+        </dl>
+      </article>
+
+      <article class="proc">
+        <div class="proc-head"><span class="pnum">10</span><h3>Aankopen</h3></div>
+        <ol>
+          <li>StoreKit 2: maand (€ 0,99), lifetime, early adopter (gratis).</li>
+          <li>App stuurt ondertekende transacties naar <code>store-entitlement</code>; die controleert Apple's handtekening tot aan de root.</li>
+          <li>App Store Server Notifications V2 werken bestaande rijen bij (verlenging, terugbetaling).</li>
+          <li>De server laat alleen wie betaald heeft in de matchingpool. TestFlight-aankopen tellen zolang de beta-schakelaar aan staat.</li>
+          <li>Een aankoop komt direct de pool in; een terugbetaling haalt je er direct uit; een verlopen maand gaat er in de dagelijkse opruiming uit.</li>
+          <li>De app geeft aankopen per account door, dus ook aan een nieuw account op dezelfde telefoon.</li>
+        </ol>
+        <dl>
+          <dt>Opslag</dt><dd><code>store_entitlements</code>, telefoon: <code>storeEntitlements.*</code>, Keychain-ledger</dd>
+          <dt>Versleuteling</dt><dd><span class="chip c-tls">transactie-ID's</span></dd>
+          <dt>Verdwijnt</dt><dd>Met het account (aankoop blijft bij Apple ID)</dd>
+        </dl>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ OPSLAG ============ -->
+  <section id="opslag">
+    <h2>Wat staat waar, en hoe versleuteld</h2>
+    <p class="section-intro">Per gegeven: waar het staat, wie het kan lezen en hoe lang het blijft. "Server kan lezen" betekent: iedereen met beheerrechten op het Supabase-project, en de edge functions met de service-role-sleutel.</p>
+    <div class="scroll">
+      <table class="t-wide">
+        <thead><tr><th>Gegeven</th><th>Plek</th><th>Bescherming</th><th>Wie kan het lezen</th><th>Bewaard tot</th></tr></thead>
+        <tbody>
+          <tr class="group-row"><td colspan="5">Telefoon</td></tr>
+          <tr><td>Profiel en alle antwoorden (ook religie, intimiteit, middelen)</td><td><code>UserDefaults</code>, <code>Documents/profile.json</code></td><td><span class="chip c-local">iOS-standaard</span></td><td>Jij; iPhone-back-up</td><td>Profiel verwijderen</td></tr>
+          <tr><td>Opgeslagen matches (alleen wat het scherm toont)</td><td><code>savedMatches.v2</code>, <code>liveMatch.*</code></td><td><span class="chip c-local">iOS-standaard</span></td><td>Jij</td><td>Profiel verwijderen of match verwijderen</td></tr>
+          <tr><td>Chatsleutels, onverzonden ciphertexts</td><td>Keychain</td><td><span class="chip c-e2e">WhenUnlockedThisDeviceOnly</span></td><td>Alleen dit toestel, ontgrendeld</td><td>Profiel verwijderen</td></tr>
+          <tr><td>Supabase-sessie</td><td>Keychain</td><td><span class="chip c-local">Keychain</span></td><td>De app</td><td>Uitloggen</td></tr>
+          <tr><td>Partnerfoto's</td><td><code>MatchPhotoStore</code></td><td><span class="chip c-local">tot eerste ontgrendeling</span></td><td>Jij</td><td>Match of profiel verwijderen</td></tr>
+          <tr><td>Matchnaam voor meldingen</td><td>App group <code>pushPreview.v1</code></td><td><span class="chip c-local">iOS-standaard</span></td><td>App + meldingsextensie</td><td>Einde match, previews uit, profiel verwijderen</td></tr>
+          <tr><td>Meldingsrapport (PDF)</td><td>Tijdelijk bestand</td><td><span class="chip c-local">complete</span></td><td>Jij</td><td>Na delen</td></tr>
+          <tr class="group-row"><td colspan="5">Jouw iCloud</td></tr>
+          <tr><td>Profielback-up + foto's</td><td>CloudKit privé, zone <code>Profile</code></td><td><span class="chip c-e2e">encryptedValues</span></td><td>Jouw Apple-apparaten</td><td>Account verwijderen</td></tr>
+          <tr><td>Opgeslagen matches + partnerfoto's</td><td>CloudKit privé</td><td><span class="chip c-e2e">encryptedValues</span></td><td>Jouw Apple-apparaten</td><td>Profiel verwijderen</td></tr>
+          <tr class="group-row"><td colspan="5">Supabase</td></tr>
+          <tr><td>Account: provider + subject (Apple/Google-ID), e-mail van provider</td><td><code>auth.users</code>, <code>auth.identities</code></td><td><span class="chip c-tls">TLS + schijf</span></td><td>Server</td><td>Account verwijderen (blijft na 12 mnd inactief)</td></tr>
+          <tr><td>Matchingprofiel incl. bijzondere gegevens, locatie ~1 km</td><td><code>profiles.profile</code> + <code>.backup</code> (jsonb)</td><td><span class="chip c-tls">TLS + schijf</span></td><td>Server; jij via RLS</td><td>Matchen uit, 12 mnd inactief</td></tr>
+          <tr><td>Pool-regel (eisen + antwoorden als getallen)</td><td><code>matching_private.pool</code></td><td><span class="chip c-tls">TLS + schijf</span></td><td>Alleen server</td><td>Match, uit, 6 mnd inactief</td></tr>
+          <tr><td>Matchingfoto</td><td>Storage <code>profile-photos/&lt;id&gt;/&lt;uuid&gt;.jpg</code></td><td><span class="chip c-tls">privé bucket</span></td><td>Jij; partner tijdens match</td><td>Matchen uit, 12 mnd, weesfoto na 1 dag</td></tr>
+          <tr><td>Matches (wie met wie, scores, einde)</td><td><code>matches</code></td><td><span class="chip c-tls">TLS + schijf</span></td><td>Beide deelnemers</td><td>5 jaar na einde match</td></tr>
+          <tr><td>Identiteitshashes</td><td><code>match_identities</code>, <code>match_reports</code></td><td><span class="chip c-tls">HMAC-SHA256, sleutel in Vault</span></td><td>Alleen server</td><td>5 jaar (met de match of melding)</td></tr>
+          <tr><td>Chatberichten</td><td><code>encrypted_messages</code></td><td><span class="chip c-e2e">HPKE X25519</span></td><td>Alleen de twee telefoons</td><td>12 mnd, of als niemand meer leest</td></tr>
+          <tr><td>Publieke chatsleutels, leesstatus</td><td><code>match_key_bundles</code>, <code>match_read_states</code></td><td><span class="chip c-tls">publiek materiaal</span></td><td>Deelnemers</td><td>12 mnd na einde match</td></tr>
+          <tr><td>Matchkaart</td><td><code>match_cards</code></td><td><span class="chip c-seal">verzegeld, app-sleutel</span></td><td>Deelnemers; wie de app ontleedt</td><td>12 mnd na einde match</td></tr>
+          <tr><td>Meldingen (reden, toelichting)</td><td><code>match_reports</code></td><td><span class="chip c-tls">TLS + schijf</span></td><td>Alleen server</td><td>Tekst 12 mnd, melding 5 jaar</td></tr>
+          <tr><td>Pushtoken, taal, tijdzone</td><td><code>push_devices</code></td><td><span class="chip c-tls">TLS + schijf</span></td><td>Alleen server</td><td>Max. 5 per account; 12 mnd inactief</td></tr>
+          <tr><td>Aankopen</td><td><code>store_entitlements</code></td><td><span class="chip c-tls">TLS + schijf</span></td><td>Jij (alleen productie)</td><td>Met het account</td></tr>
+          <tr><td>Geheimen</td><td>Vault + function secrets</td><td><span class="chip c-tls">Vault-versleuteld</span></td><td>Database / functies</td><td>Nooit roteren: <code>identity_hash_key</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ RITME ============ -->
+  <section id="ritme">
+    <h2>Wanneer er ververst wordt</h2>
+    <p class="section-intro">De server werkt met vaste klokken; de app vraagt alleen iets als iets hem vertelt dat er iets veranderd is. Er is geen vaste poll.</p>
+    <div class="clock">
+      <div class="panel">
+        <h3>Nachtelijke jobs (UTC)</h3>
+        <div class="night" aria-hidden="true">
+          <span class="tick" style="left:20%"></span><span class="lab" style="left:20%">03:17</span>
+          <span class="tick" style="left:40%"></span><span class="lab" style="left:40%">03:29</span>
+          <span class="tick" style="left:63%"></span><span class="lab" style="left:63%">03:41</span>
+          <span class="tick" style="left:85%"></span><span class="lab" style="left:85%">03:53</span>
+          <span class="lab2" style="left:20%">purge</span><span class="lab2" style="left:40%">retention</span><span class="lab2" style="left:63%">push-prune</span><span class="lab2" style="left:85%">api-prune</span>
+        </div>
+        <div class="rows">
+          <div class="row"><span class="when">03:17 dagelijks</span><span><code>purge-expired-data</code>: berichten &gt; 12 mnd; kaarten, sleutels, leesstatus van matches die &gt; 12 mnd geleden eindigden; meldingstekst leeg; meldingen en matches na 5 jaar.</span></div>
+          <div class="row"><span class="when">03:29 dagelijks</span><span><code>retention</code>: 6 mnd inactief uit de pool; daarna <code>retention-purge</code> voor profielen buiten matching, 12 mnd inactief en weesfoto's.</span></div>
+          <div class="row"><span class="when">03:41 dagelijks</span><span><code>push-prune</code>: outbox &gt; 14 dagen, cron-log &gt; 7 dagen.</span></div>
+          <div class="row"><span class="when">03:53 dagelijks</span><span><code>api-writes-prune</code>: schrijftellers &gt; 1 dag.</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Doorlopend op de server</h3>
+        <div class="rows">
+          <div class="row"><span class="when">elke 15 s</span><span><code>push-dispatch</code>, alleen als er een push klaarstaat en het geheim bestaat.</span></div>
+          <div class="row"><span class="when">elke 20 s</span><span><code>matching-pending-searches</code>: uitgestelde zoekacties waarvan de minuut voorbij is.</span></div>
+          <div class="row"><span class="when">15 s / 2 min</span><span>Berichtpush 15 s na het laatste bericht, uiterlijk 2 min na het eerste.</span></div>
+          <div class="row"><span class="when">3 min</span><span>Max. één berichtpush per gesprek; nieuwe vervangt oude.</span></div>
+          <div class="row"><span class="when">5 min, 5×</span><span>Mislukte push opnieuw na 5 min, maximaal 5 pogingen.</span></div>
+          <div class="row"><span class="when">20–60 min</span><span>APNs-providertoken vernieuwd; FCM-token na 50 min.</span></div>
+          <div class="row"><span class="when">bij elke save</span><span>Matching draait in dezelfde transactie; ongewijzigd profiel kost niets.</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>In de app</h3>
+        <div class="rows">
+          <div class="row"><span class="when">bij push</span><span>Nieuwe match: één <code>current_match</code>.</span></div>
+          <div class="row"><span class="when">bij openen</span><span>Alleen als er een push kwam, een melding in het meldingencentrum staat, of het laatste antwoord &gt; 6 u oud is (10 min zonder push).</span></div>
+          <div class="row"><span class="when">10 min</span><span>Zonder pushrechten (of 30 dagen geen push): zolang de app open is, zonder match.</span></div>
+          <div class="row"><span class="when">1 min</span><span>Met match maar zonder Realtime-kanaal; ook na een mislukt verzoek.</span></div>
+          <div class="row"><span class="when">3 s / 10 s</span><span>Open chat zonder kanaal: actief / stil. Met kanaal: veiligheidscheck elke 5 min.</span></div>
+          <div class="row"><span class="when">&gt; 1 uur weg</span><span>Sessietoken vernieuwen bij openen.</span></div>
+          <div class="row"><span class="when">dagelijks</span><span>Moderatiestatus (ook met automatisch matchen uit), en bij het einde van een match. Bewaard op de telefoon.</span></div>
+          <div class="row"><span class="when">28 dagen</span><span>Profiel en foto's opnieuw bevestigen (server verwijdert niets wat &lt; 30 dagen bevestigd is).</span></div>
+          <div class="row"><span class="when">24 uur</span><span>QR-code geldig; scan-herinnering vergeet.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LIMIETEN ============ -->
+  <section id="limieten">
+    <h2>Ingerichte beperkingen</h2>
+    <p class="section-intro">De publieke sleutel zit in elke download, dus iedereen met een Apple- of Google-account kan de API direct aanroepen. RLS houdt hem binnen zijn eigen gegevens; deze grenzen houden één account binnen de quota.</p>
+    <div class="scroll">
+      <table class="t-mid">
+        <thead><tr><th>Wat</th><th>Grens</th><th>Waar afgedwongen</th></tr></thead>
+        <tbody class="tab">
+          <tr><td>Schrijfacties via de Data API</td><td>120 per account per minuut</td><td><code>api_guard.check_request</code> (HTTP 429)</td></tr>
+          <tr><td>Zoekactie matching</td><td>1 per account per minuut</td><td><code>search_state</code></td></tr>
+          <tr><td>Database-statement en lock</td><td>8 s</td><td>Rolinstelling</td></tr>
+          <tr><td>Profiel</td><td>128 kB; naam 400 tekens (app: 30)</td><td>Tabelcheck</td></tr>
+          <tr><td>Foto's</td><td>12 per account, 2 MB, alleen JPEG, pad <code>&lt;account&gt;/&lt;uuid&gt;.jpg</code>; app: 1080 px, kwaliteit 0,78</td><td>Bucket + Storage-RLS</td></tr>
+          <tr><td>Chatbericht</td><td>32 kB; 60 per minuut; 5 MB per dag</td><td><code>send_encrypted_message</code></td></tr>
+          <tr><td>Chatapparaten</td><td>1 actief, 10 totaal per persoon per match</td><td><code>register_chat_device</code></td></tr>
+          <tr><td>Pushapparaten</td><td>5 per account (oudste vervalt)</td><td>Registratie</td></tr>
+          <tr><td>Fotoverificaties</td><td>Telefoon (ook App Attest): geen daglimiet, zoeken 1×/min. AWS: 5 sessies per dag</td><td><code>record_photo_scan</code>, <code>begin_photo_verification</code></td></tr>
+          <tr><td>App Attest</td><td>20 open challenges (5 min), 10 sleutels per account, teller tegen replay</td><td><code>app-attest</code></td></tr>
+          <tr><td>Melden</td><td>1 strike per persoon per match</td><td><code>report_partner</code></td></tr>
+          <tr><td>Edge-functie-invoer</td><td>apple-revoke 4 kB; app-attest 20 kB; store-entitlement 100 kB, 1–10 transacties</td><td>Functies</td></tr>
+          <tr><td>Inloggen</td><td>Alleen Apple en Google; Supabase-limieten op Auth</td><td>Supabase Auth</td></tr>
+          <tr><td>Minimumscore</td><td>50–90 %, per richting</td><td>Matching</td></tr>
+          <tr><td>Toegang tot de matchingpool</td><td>Geverifieerde aankoop op het account (niet ingetrokken, maand niet verlopen); sandbox alleen in de beta</td><td><code>has_access</code> in <code>pool_entry</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>Hoe de veiligheid geborgd is</h3>
+      <ul class="plain">
+        <li><strong>RLS op elke tabel</strong> in <code>public</code>, <code>matching_private</code> en <code>api_guard</code>; <code>anon</code> heeft nergens rechten (van buiten getest op 20 november).</li>
+        <li><strong>Precies 19 functies</strong> zijn aanroepbaar voor ingelogde gebruikers; alle <code>security definer</code>-functies hebben een vast <code>search_path</code> en halen de gebruiker uit <code>auth.uid()</code>, nooit uit een parameter.</li>
+        <li><strong>De client kiest nooit</strong> zijn partner, score of verificatie; de server rekent.</li>
+        <li><strong>Edge functions</strong> controleren zelf de gebruiker of een gedeeld geheim (constant-time vergelijking), loggen alleen aantallen, en de service-role-sleutel staat alleen daar.</li>
+        <li><strong>Aankopen</strong> worden gecontroleerd tegen Apple's root-certificaat; sandbox telt niet.</li>
+        <li><strong>Pushberichten</strong> bevatten geen namen of tekst; Apple en Google kunnen ze lezen.</li>
+        <li><strong>Lock</strong> voor matching, breken, moderatie en verificatie: geen dubbele boekingen.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ VERWIJDEREN ============ -->
+  <section id="verwijderen">
+    <h2>Verwijderprocessen</h2>
+    <p class="section-intro">Wie het start, wat er direct weg gaat en wat bewust blijft.</p>
+    <div class="scroll">
+      <table class="t-wide">
+        <thead><tr><th>Moment</th><th>Gestart door</th><th>Direct weg</th><th>Later weg</th><th>Blijft bewust</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Automatisch matchen uit</strong></td><td>Gebruiker → <code>leave_matching()</code></td><td>Profielrij (uit de pool), zoekstatus; app verwijdert foto's</td><td>Restjes na 1 dag (job <code>leave</code>)</td><td>Account, push-apparaten, matches, hashes. Tijdens een actieve match niets.</td></tr>
+          <tr><td><strong>Match beëindigen</strong></td><td>Een van beiden, melding of moderatie</td><td>Niets; beiden weer vrij</td><td>Berichten na 12 mnd; kaart, sleutels, leesstatus 12 mnd na einde</td><td>Gesprek leesbaar voor beiden</td></tr>
+          <tr><td><strong>Match uit Mijn matches</strong></td><td>Gebruiker → <code>delete_match()</code></td><td>Uit eigen lijst; lokale kopie + foto</td><td>Berichten, sleutels, kaarten, leesstatus zodra de ander ook verwijdert of weg is</td><td>Matchrij + hashes (nooit weer dezelfde twee)</td></tr>
+          <tr><td><strong>Profiel/account verwijderen</strong></td><td>Gebruiker</td><td>Apple-tokens ingetrokken; foto's via Storage; <code>auth.users</code> met alles wat eraan hangt; op de telefoon alles (ook Keychain, partnerfoto's, matchnamen); iCloud-back-up</td><td>iCloud zodra bereikbaar; gesprek als niemand meer leest</td><td>Matchrijen, identiteitshashes, strikes (tot 5 jaar). Aankopen blijven bij het Apple ID.</td></tr>
+          <tr><td><strong>6 mnd geen teken van de app</strong></td><td>Job 03:29</td><td>Uit de pool</td><td>Volgende save zet je terug</td><td>Profiel</td></tr>
+          <tr><td><strong>12 mnd geen teken van de app</strong></td><td>Job 03:29 → <code>retention-purge</code></td><td>Profiel, foto's, push-apparaten</td><td>—</td><td><code>auth.users</code> (inloggen, aankopen)</td></tr>
+          <tr><td><strong>Weesfoto's</strong></td><td>Job 03:29</td><td>Foto's die niemand noemt, na 1 dag</td><td>Mislukte delete: morgen opnieuw</td><td>—</td></tr>
+          <tr><td><strong>Bewaartermijnen</strong></td><td>Job 03:17</td><td>Berichten &gt; 12 mnd; materiaal van matches &gt; 12 mnd geëindigd; meldingstekst</td><td>—</td><td>Strike telt door</td></tr>
+          <tr><td><strong>5 jaar</strong></td><td>Job 03:17</td><td>Meldingen &gt; 5 jaar (en hun strike); matches &gt; 5 jaar geëindigd, met identiteitshashes</td><td>Een match wacht zolang er nog een melding over is</td><td>—</td></tr>
+          <tr><td><strong>Push-onderhoud</strong></td><td>Dispatch / job 03:41</td><td>Ingetrokken token; outbox &gt; 14 dagen</td><td>—</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">"Teken van de app" (<code>last_active</code>) is de laatste van: profiel opslaan, inloggen, sessie vernieuwen.</p>
+  </section>
+
+  <!-- ============ RISICO'S ============ -->
+  <section id="risicos">
+    <h2>Kwetsbaarheden en open punten</h2>
+    <p class="section-intro">Gerangschikt naar wat het eerst moet. Rood blokkeert de livegang of raakt bijzondere persoonsgegevens; oranje is een bewuste afweging die je moet kunnen verantwoorden; blauw is onderhoud.</p>
+    <div class="risks">
+
+      <div class="risk laag"><div class="risk-head"><span class="chip c-ok">Opgelost</span><h3>De dagelijkse verwijderjob werkt</h3><span class="who">gecontroleerd 20-11</span></div>
+        <p>"Verify JWT" staat uit voor <code>retention-purge</code>. Een aanroep zoals de cron-job die doet gaf 200 met <code>{"profile":0,"leave":0,"orphans":0}</code>: het Vault-geheim klopt en de functie mag verwijderen. De job roept de functie alleen aan als er iets te verwijderen is.</p></div>
+
+      <div class="risk hoog"><div class="risk-head"><span class="chip c-risk">Hoog</span><h3>Privacyverklaring is nog een sjabloon, privacy-URL geeft 404</h3><span class="who">jij + ik</span></div>
+        <p>Ongeveer 60 invulvelden (<code>PrivacyContent.swift</code>) en <code>hakketjak.com/stop-swiping/privacy</code> bestaat niet. Toestemming voor bijzondere gegevens is dan niet geldig, en App Review en Google OAuth keuren af. <strong>Let op:</strong> bij een tekstwijziging moet de toestemmingsversie in app én server tegelijk omhoog.</p></div>
+
+      <div class="risk hoog"><div class="risk-head"><span class="chip c-risk">Hoog</span><h3>Bijzondere persoonsgegevens zijn leesbaar op de server</h3><span class="who">jij</span></div>
+        <p>Tijdens automatisch matchen staan religie, intimiteitsvoorkeuren, middelengebruik, leeftijd en locatie (~1 km) als gewone JSON in <code>profiles</code>, en dubbel (<code>profile</code> en <code>backup</code>). Dat is nodig om op de server te matchen, maar iedereen met beheerrechten kan het lezen. Gecontroleerd: het project staat in <strong>West EU (Ierland)</strong> en jij bent het enige lid. Een concept-DPIA staat in <code>docs/dpia.md</code>. <strong>Nog doen:</strong> tweestapsverificatie (MFA) op je Supabase-account aanzetten (staat uit), de verwerkersovereenkomst met Supabase ondertekenen, de DPIA afmaken en de regio in de privacyverklaring noemen. Later: <code>backup</code> en <code>profile</code> samenvoegen (minder dubbele gevoelige data).</p></div>
+
+      <div class="risk laag"><div class="risk-head"><span class="chip c-ok">Opgelost</span><h3>De server controleert nu of iemand betaald heeft</h3><span class="who">live 20-11</span></div>
+        <p>Alleen een door Apple ondertekende aankoop op het account geeft toegang tot de pool. TestFlight telt tijdens de beta; zet <code>sandbox_purchases_count</code> uit bij de lancering. Live getest: zonder aankoop uit de pool, na het doorgeven van je early-adopter-aankoop vanzelf erin.</p></div>
+
+      <div class="risk laag"><div class="risk-head"><span class="chip c-ok">Opgelost</span><h3>Fotoverificatie is nu bewezen</h3><span class="who">live 20-11</span></div>
+        <p>Alleen een scan die met App Attest is ondertekend telt. De onbewezen route is dicht en onbewezen records tellen niet mee. Android moet Play Integrity krijgen voordat het live gaat; de simulator kan geen foto meer verifiëren.</p></div>
+
+      <div class="risk laag"><div class="risk-head"><span class="chip c-ok">Opgelost</span><h3>Meldingen bereiken de beheerder</h3><span class="who">live 20-11</span></div>
+        <p>Elke nieuwe melding stuurt een pushbericht met de reden naar je iPhone. Live getest: APNs nam het bericht aan. Leg nog vast hoe snel je reageert en wanneer je de politie inschakelt (bij minderjarigen).</p></div>
+
+      <div class="risk laag"><div class="risk-head"><span class="chip c-ok">Opgelost</span><h3>Verborgen gebaar alleen in debug</h3><span class="who">20-11</span></div>
+        <p>Het early-adopter-gebaar zit achter <code>#if DEBUG</code>; App Store-builds hebben het niet.</p></div>
+
+      <div class="risk middel"><div class="risk-head"><span class="chip c-tls">Middel</span><h3>Profielcode en matchkaart zijn verzegeld met een sleutel die in de app zit</h3><span class="who">geaccepteerd</span></div>
+        <p>Nodig omdat twee telefoons zonder server moeten kunnen matchen. Wie de app ontleedt (of deze repository leest) kan codes openen en zo antwoorden van anderen zien; dat geldt ook voor een serverbeheerder met <code>match_cards</code>. De QR-code verloopt na 24 uur en de schermen tonen alleen categorieën. Staat nu zo uitgelegd in de privacyverklaring (§3.5). <strong>Advies:</strong> de sleutel roteren voor de lancering als de repository ooit gedeeld is geweest.</p></div>
+
+      <div class="risk middel"><div class="risk-head"><span class="chip c-tls">Middel</span><h3>Chat zonder forward secrecy</h3><span class="who">geaccepteerd</span></div>
+        <p>HPKE per bericht, maar geen ratchet: wie een bewaarde gesprekssleutel van een toestel krijgt, leest de geschiedenis van dat gesprek. Eerste sleutel wordt vertrouwd bij eerste gebruik; de veiligheidscode maakt een vervalsing zichtbaar. Staat nu eerlijk in de privacyverklaring (§3.6), met de veiligheidscode als controle. Niet als "Signal-niveau" in de marketing zetten.</p></div>
+
+      <div class="risk laag"><div class="risk-head"><span class="chip c-ok">Opgelost</span><h3>Gegevens hebben nu een einddatum</h3><span class="who">live 20-11</span></div>
+        <p>Matches en identiteitshashes gaan 5 jaar na het einde van de match weg, meldingen (en hun strike) 5 jaar na de melding. Staat in de privacyverklaring (§9). <code>auth.users</code> blijft na 12 maanden inactiviteit (inloggen, aankopen); ook dat staat er nu in.</p></div>
+
+      <div class="risk middel"><div class="risk-head"><span class="chip c-tls">Middel</span><h3>Google-login staat nog in Testing</h3><span class="who">jij</span></div>
+        <p>Echte gebruikers krijgen "toegang geblokkeerd". Publiceren na de privacy-URL, of de knop verbergen tot dan.</p></div>
+
+      <div class="risk laag"><div class="risk-head"><span class="chip c-local">Laag</span><h3>Matching schaalt via één lock</h3><span class="who">later</span></div>
+        <p>Alle zoekacties lopen achter één advisory lock en lezen de hele pool. Prima voor de eerste duizenden; niet load-getest.</p></div>
+
+      <div class="risk laag"><div class="risk-head"><span class="chip c-local">Laag</span><h3>Lokale profieldata met iOS-standaardbescherming</h3><span class="who">bewust</span></div>
+        <p>Leesbaar na de eerste ontgrendeling (nodig voor meldingen op de achtergrond) en onderdeel van de iPhone-back-up van de gebruiker zelf. Strenger maken breekt achtergrondwerk.</p></div>
+
+      <div class="risk laag"><div class="risk-head"><span class="chip c-local">Laag</span><h3>Onderhoud</h3><span class="who">ik</span></div>
+        <p>De Deno-tests van de edge functions zijn nooit gedraaid (geen Deno op deze Mac). <code>ITSAppUsesNonExemptEncryption</code> ontbreekt in Info.plist. Opgelost op 20-11: het oude <code>RETENTION_SECRET</code>-pad in <code>retention-purge</code> en de tijdelijke render-test.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ VANDAAG ============ -->
+  <section id="vandaag">
+    <h2>Vandaag aangepast</h2>
+    <div class="panel">
+      <ul class="plain done">
+        <li><span class="chip c-ok">app</span> <strong>Oude server-terugval weg.</strong> Als <code>chat_poll</code> of <code>current_match(p_known_card)</code> ontbrak, las de app berichten en matches direct uit de tabellen. De live server heeft beide functies sinds 19 november; die stille tweede route bestaat niet meer.</li>
+        <li><span class="chip c-ok">app</span> <strong>Matchnamen gewist bij profiel verwijderen.</strong> De naam die de meldingsextensie gebruikt bleef in de app group staan; nu gaat hij mee met de rest.</li>
+        <li><span class="chip c-ok">app</span> <strong>Ongebruikt entitlements-bestand verwijderd</strong> (<code>Stop_Swiping.entitlements</code>, met een onjuiste sleutel en lege iCloud-container). De app gebruikt <code>Account.entitlements</code>.</li>
+        <li><span class="chip c-tls">server, niet uitgerold</span> <strong>Migratie <code>202611200003_schema_cleanup.sql</code>:</strong> het oude protocol <code>e2ee-v1</code> uit de tabelcheck, en de twee NOT VALID-grenzen (32 kB-bericht, 400-tekensnaam) gevalideerd. Kan omdat de database leeg is. Uitrollen via de SQL-editor.</li>
+        <li><span class="chip c-ok">docs</span> <code>data-retention.md</code> en <code>supabase-matching.md</code> bijgewerkt.</li>
+        <li><span class="chip c-ok">server, live</span> <code>202611200003</code> en <code>202611200004</code> uitgerold: geen daglimiet voor scans op de telefoon (zoeken 1×/min), 5 per dag alleen voor AWS, en de 5-jaarsregel. Test: 24/24.</li>
+        <li><span class="chip c-ok">app</span> <strong>Moderatie op het homescreen:</strong> kaart met waarschuwing, blokkade of ban; bij blokkade en ban wordt de helix via het hart een slot, automatisch matchen gaat uit en verdwijnt. De status blijft op de telefoon bewaard.</li>
+        <li><span class="chip c-ok">app</span> <strong>Scans worden standaard bewaard</strong> in Mijn matches, ook "geen match". Bij een herhaalde scan binnen 24 uur staat erbij waarom de uitkomst gelijk is.</li>
+        <li><span class="chip c-ok">server + app</span> <strong>App Attest werkt op de iPhone.</strong> Ketencontrole via <code>@noble/curves</code> (Deno kan P-384 met SHA-256 niet), assertions lezen alleen rpId en teller, en de app maakt een nieuwe sleutel als Apple een bestaande niet meer certificeert. <code>app-attest</code> logt bij een fout de reden, nooit sleutels of foto's.</li>
+        <li><span class="chip c-ok">server, live</span> <strong>Lanceringsregels</strong> (<code>202611200005</code> + fix <code>006</code>): alleen betalende accounts in de pool, alleen bewezen fotoscans, en een push naar de beheerder bij elke melding. Test: 16/16; bestaande tests aangepast en opnieuw groen (scan 24/24, android-readiness).</li>
+        <li><span class="chip c-ok">app</span> <strong>Aankopen per account doorgegeven</strong>: een aankoop die al aan een eerder account was doorgegeven, ging niet naar een nieuw account. Gerepareerd en live bevestigd.</li>
+        <li><span class="chip c-ok">app</span> Early-adopter-gebaar alleen in debug; de onbewezen fotoroute is uit de app.</li>
+        <li><span class="chip c-ok">docs</span> Concept-DPIA in <code>docs/dpia.md</code>.</li>
+        <li><span class="chip c-ok">app</span> <strong>Privacyverklaring:</strong> bewaartermijnen voor matches, hashes, meldingen en accounts; uitleg over chatversleuteling en over de sleutel in de app (EN + NL).</li>
+      </ul>
+      <p class="note">Build geslaagd; de tests in de aangeraakte gebieden (slotanimatie, matchprivacy, verwijderen, chat, partnerfoto, vertalingen, privacyflow) slagen. Niets gecommit.</p>
+    </div>
+  </section>
+
+  <footer>Bron: repository Stop Swiping, migraties 202611160001–202611200003, edge functions app-attest, apple-revoke, push-dispatch, retention-purge, store-entitlement, en <code>docs/</code>. Live-stand volgens de productiecheck van 20 november 2026.</footer>
+</div>

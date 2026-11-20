@@ -50,7 +50,8 @@ send a late replacement. iOS controls final delivery (for example Focus and
 notification summaries); no app can guarantee an exact visible delivery time.
 An APNs server is unnecessary for this device-local reminder.
 
-In **all builds, including production**, hold the Lifetime Access card for three
+In **debug builds only** (since 20 November 2026; App Store builds have no hidden
+features, guideline 2.3.1), hold the Lifetime Access card for three
 seconds to reveal the early-adopter option again. Revealing alone does not grant
 access. Continuing explicitly starts another seven-day window without a charge;
 this exception is persisted in Keychain separately from the original purchase

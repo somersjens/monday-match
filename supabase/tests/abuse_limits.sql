@@ -4,6 +4,8 @@
 -- chat envelope size, messages per minute and per day, chat devices per
 -- match, the per-minute write guard, and AWS staying parked.
 begin;
+-- Fixture accounts have no store purchase (202611200005).
+set local stop_swiping.access_check = 'off';
 set local stop_swiping.matching_throttle = 'off';
 create temporary table limit_results(name text primary key);
 grant select, insert on limit_results to authenticated, service_role;
@@ -185,8 +187,8 @@ select pg_temp.ok(not has_table_privilege('authenticated', 'matching_private.api
 select pg_temp.ok(not has_function_privilege('authenticated', 'public.begin_photo_verification(uuid,text)', 'execute')
     and not has_function_privilege('anon', 'public.begin_photo_verification(uuid,text)', 'execute'),
     'The app cannot start a paid AWS check');
-select pg_temp.ok(has_function_privilege('authenticated', 'public.record_device_photo_verification(uuid)', 'execute'),
-    'The on-device check still works');
+select pg_temp.ok(not has_function_privilege('authenticated', 'public.record_device_photo_verification(uuid)', 'execute'),
+    'Only proven (App Attest) scans count since 202611200005');
 select pg_temp.ok(has_function_privilege('authenticated', 'public.can_upload_profile_photo(text)', 'execute')
     and not has_function_privilege('anon', 'public.can_upload_profile_photo(text)', 'execute'),
     'Only signed-in accounts may upload');

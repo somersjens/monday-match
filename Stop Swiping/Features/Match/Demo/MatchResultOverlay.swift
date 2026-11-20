@@ -32,6 +32,9 @@ struct MatchResultOverlay: View {
     let frame: MatchStageFrame
     let reveal: MatchReveal
     let isSaved: Bool
+    /// One line above the buttons: that a scan was saved by itself, or
+    /// that it repeats the outcome of an earlier scan of the same person.
+    var note: String? = nil
     var lightTransition: WelcomeLightMatch.Transition = .newMatch
     var lightStartedAt = Date()
     let onShowScores: (MatchReport.Perspective) -> Void
@@ -54,7 +57,7 @@ struct MatchResultOverlay: View {
     /// Lifts the buttons into the centred band on tall screens (iPad).
     var controlsBottomInset: CGFloat = 0
     var onSendMessage: () -> Void = {}
-    /// Holding Save match opens a made-up conversation, before launch.
+    /// Holding Save match (or Close, once saved) opens a made-up conversation, before launch.
     var onStartDemoChat: () -> Void = {}
     var onViewProfile: () -> Void = {}
     var onShowPersonality: () -> Void = {}
@@ -557,9 +560,21 @@ struct MatchResultOverlay: View {
                 // cleared each other's minimum score, so they can talk.
                 LiveMatchControls(chat: chat, name: match.name, onSendMessage: onSendMessage)
             } else {
+                if let note {
+                    Text(note)
+                        .font(.footnote)
+                        .foregroundStyle(OnboardingTheme.secondaryText)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("match.note")
+                }
                 if isSaved {
                     Button(L10n("Close"), action: onClose)
                         .buttonStyle(GlowButtonStyle())
+                        .simultaneousGesture(
+                            LongPressGesture(minimumDuration: 3)
+                                .onEnded { _ in if !match.isLive { onStartDemoChat() } }
+                        )
                 } else {
                     Button(L10n("Save match"), action: onSave)
                         .buttonStyle(GlowButtonStyle())

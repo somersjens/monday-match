@@ -31,11 +31,12 @@ final class PhotoVerificationService {
 /// matching photo, so matching treats that photo version as verified. Only
 /// the photo ID is sent.
 ///
-/// Where the device supports it, the report is signed with an Apple App
-/// Attest key (`AppAttestPhotoReporter`), so the server records it as coming
-/// from the genuine app. Elsewhere (the simulator, or while the attest
-/// function isn't deployed) the server still takes the app's word for it;
-/// see supabase/migrations/202611190012_app_attest.sql for switching that off.
+/// The report is signed with an Apple App Attest key (`AppAttestPhotoReporter`),
+/// so the server records it as coming from the genuine app on a genuine
+/// iPhone. Since 20 November 2026 that is the only route: the server no longer
+/// takes an unsigned report (202611200005), so a phone without App Attest (or
+/// the simulator) cannot verify a photo. A failure is tried again on the next
+/// sync; Android will report through Play Integrity.
 @MainActor
 final class DevicePhotoScanReporter: DevicePhotoReporting {
     private let client: SupabaseClient
@@ -47,21 +48,12 @@ final class DevicePhotoScanReporter: DevicePhotoReporting {
     }
 
     func reportPhotoScan(photoID: UUID) async throws {
-        if let attestation, attestation.isSupported {
-            do {
-                try await attestation.reportPhotoScan(photoID: photoID)
-                return
-            } catch AppAttestError.dailyLimit {
-                throw PhotoVerificationServiceError.dailyLimit
-            } catch {
-                // Not deployed yet, a network error, or an attest failure:
-                // the unproven route below still works until it is revoked.
-            }
+        guard let attestation, attestation.isSupported else { throw AppAttestError.unsupported }
+        do {
+            try await attestation.reportPhotoScan(photoID: photoID)
+        } catch AppAttestError.dailyLimit {
+            throw PhotoVerificationServiceError.dailyLimit
         }
-        let recorded: Bool = try await client
-            .rpc("record_device_photo_verification", params: Params(p_photo_id: photoID))
-            .execute().value
-        guard recorded else { throw PhotoVerificationServiceError.notRecorded }
     }
 }
 
@@ -71,4 +63,3 @@ nonisolated enum PhotoVerificationServiceError: Error, Equatable {
 
 /// Decoded off the main actor by Supabase, so these must not be main-actor isolated.
 private nonisolated struct MatchingStatus: Decodable { let photo_verified: Bool }
-private nonisolated struct Params: Encodable { let p_photo_id: UUID }

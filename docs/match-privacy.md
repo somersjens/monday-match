@@ -94,7 +94,14 @@ people who each scan the other both see the match.
 6-byte `ProfileHolder`, sealed into every code and exchange. For 24 hours, the
 same person again (same or fresh code, same or changed own answers) brings
 back the first outcome. Changing your own answers and rescanning therefore
-reveals nothing about what they look for. Deleting the profile clears the memory
+reveals nothing about what they look for. The screen says so under the
+outcome ("You compared with this person in the last 24 hours…"), so a
+repeated result doesn't look like a mistake.
+
+**Kept by default**: a scanned or exchanged outcome goes into My matches as
+soon as it shows ("Saved in My matches."), so closing the app or walking off
+keeps it. Delete match removes such an outcome for good (a match saved
+earlier is first kept as broken). Deleting the profile clears the memory
 and makes a new holder.
 
 **QR density**: sealing makes codes longer. A usual profile is version 11

@@ -5,6 +5,8 @@
 -- deletion, never matching the same people again (also via a recreated
 -- account), and the report flow: warning → 7-day block → ban.
 begin;
+-- Fixture accounts have no store purchase (202611200005).
+set local stop_swiping.access_check = 'off';
 -- Saves follow each other within milliseconds here: no one-minute search limit
 -- (202611180005). Its own checks are at the end of matching_regression.sql.
 set local stop_swiping.matching_throttle = 'off';

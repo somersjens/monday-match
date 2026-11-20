@@ -7,6 +7,8 @@
 -- now() is fixed for a whole transaction, so time passing is simulated by
 -- moving stored timestamps instead.
 begin;
+-- Fixture accounts have no store purchase (202611200005).
+set local stop_swiping.access_check = 'off';
 create temporary table push_results(name text primary key);
 grant select, insert on push_results to authenticated;
 create function pg_temp.ok(passed boolean, label text) returns void

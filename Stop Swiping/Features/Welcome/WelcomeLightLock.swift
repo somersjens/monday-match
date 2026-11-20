@@ -145,6 +145,9 @@ enum WelcomeLightLock {
         private var codeFrom = 0.0
         private var codeTo = 0.0
         private var codeStartedAt: Double?
+        /// Helix to lock goes through the heart: the helix unweaves into
+        /// the heart first, and at this moment the heart weaves the lock.
+        private var lockAt: Double?
 
         mutating func update(isLocked locked: Bool, pulse: Int, now: Double, animated: Bool) {
             update(form: locked ? .lock : .heart, pulse: pulse, now: now, animated: animated)
@@ -162,7 +165,19 @@ enum WelcomeLightLock {
                 lastPulse = pulse
                 return
             }
+            settleQueuedLock(now: now)
+            if newForm != current, newForm == .lock, shape == .helix, animated, progress(at: now) > 0 {
+                // The helix unravels into the heart, which then closes into the lock.
+                from = progress(at: now)
+                to = 0
+                startedAt = now
+                form = newForm
+                lockAt = now + morphDuration
+                pulseAt = now + morphDuration * 1.82
+                return
+            }
             if newForm != current {
+                lockAt = nil
                 var start = progress(at: now)
                 if newForm != .heart {
                     // Lock and helix never blend into each other; a switch
@@ -198,7 +213,20 @@ enum WelcomeLightLock {
             return codeFrom + (codeTo - codeFrom) * t
         }
 
+        /// Once the heart has formed, the queued lock becomes the current morph.
+        private mutating func settleQueuedLock(now: Double) {
+            guard let lockAt, now >= lockAt else { return }
+            shape = .lock
+            from = 0
+            to = 1
+            startedAt = lockAt
+            self.lockAt = nil
+        }
+
         func progress(at now: Double) -> Double {
+            if let lockAt, now >= lockAt {
+                return min(max((now - lockAt) / morphDuration, 0), 1)
+            }
             guard let startedAt, now - startedAt < morphDuration else { return to }
             let t = max((now - startedAt) / morphDuration, 0)
             return from + (to - from) * t
@@ -208,13 +236,14 @@ enum WelcomeLightLock {
             let amount = progress(at: now)
             guard amount > 0 else { return .unlocked }
             let jiggle = pulseAt.map { WelcomeLightLock.pulse(elapsed: now - $0) } ?? (lift: 0, shake: 0)
-            let isHelix = shape == .helix
+            let isHelix = shape == .helix && !(lockAt.map { now >= $0 } ?? false)
             return Pose(amount: amount, lift: jiggle.lift, shake: jiggle.shake, isHelix: isHelix,
                         code: isHelix ? codeProgress(at: now) : 0)
         }
 
         func isAnimating(at now: Double) -> Bool {
-            let morphing = startedAt.map { now - $0 < morphDuration } ?? false
+            let morphing = (startedAt.map { now - $0 < morphDuration } ?? false)
+                || (lockAt.map { now - $0 < morphDuration } ?? false)
             let pulsing = pulseAt.map { now - $0 < 1.6 } ?? false
             let coding = codeStartedAt.map { now - $0 < WelcomeLightCode.morphDuration } ?? false
             return morphing || pulsing || coding

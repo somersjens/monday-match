@@ -168,6 +168,13 @@
         "title": "Not every match is the one",
         "body": "This one has ended. With auto-matching on, the search starts again."
       }
+    ],
+    "admin.moderation_report": [
+      {
+        "id": "admin.report.1",
+        "title": "New report",
+        "body": "Reason: {reason}. Check it in the moderation overview."
+      }
     ]
   },
   "nl": {
@@ -338,6 +345,13 @@
         "id": "match_ended.nl.e",
         "title": "Niet elke match is de ware",
         "body": "Deze is voorbij. Staat automatisch matchen aan, dan zoeken we gewoon verder."
+      }
+    ],
+    "admin.moderation_report": [
+      {
+        "id": "admin.report.1",
+        "title": "Nieuwe melding",
+        "body": "Reden: {reason}. Bekijk hem in het moderatie-overzicht."
       }
     ]
   }

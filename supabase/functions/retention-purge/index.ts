@@ -10,19 +10,12 @@ import { createClient } from "npm:@supabase/supabase-js@2.95.3";
 // The database decides and changes the rows (retention_apply); this function
 // only deletes Storage objects, which SQL may not. Called once a day by
 // pg_cron, never by the app. The caller proves itself with the Vault secret
-// retention_secret (made by the database, never copied anywhere); a
-// RETENTION_SECRET function secret is still honoured if set. Logs counts only.
+// retention_secret (made by the database, never copied anywhere), checked by
+// the database itself (retention_secret_matches). Logs counts only.
 
 const response = (status: number, body: object) => new Response(JSON.stringify(body), {
   status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
 });
-
-function constantTimeEqual(a: string, b: string): boolean {
-  const left = new TextEncoder().encode(a), right = new TextEncoder().encode(b);
-  let difference = left.length ^ right.length;
-  for (let i = 0; i < Math.max(left.length, right.length); i++) difference |= (left[i] ?? 0) ^ (right[i] ?? 0);
-  return difference === 0;
-}
 
 type Due = { user_id: string; action: "profile" | "leave" | "orphans" };
 
@@ -31,15 +24,9 @@ Deno.serve(async (request: Request) => {
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     { auth: { persistSession: false } });
   const given = request.headers.get("X-Retention-Secret") ?? "";
-  const secret = Deno.env.get("RETENTION_SECRET");
-  let allowed = false;
-  if (secret) {
-    allowed = constantTimeEqual(given, secret);
-  } else if (given) {
-    const { data, error } = await admin.rpc("retention_secret_matches", { p_secret: given });
-    allowed = !error && data === true;
-  }
-  if (!allowed) return response(401, { error: "Not allowed" });
+  if (!given || given.length > 200) return response(401, { error: "Not allowed" });
+  const { data: allowed, error: checkError } = await admin.rpc("retention_secret_matches", { p_secret: given });
+  if (checkError || allowed !== true) return response(401, { error: "Not allowed" });
 
   const counts = { profile: 0, leave: 0, orphans: 0, objects: 0, failed: 0 };
   // A few batches per run; whatever is left is still due tomorrow.

@@ -18,6 +18,8 @@ final class StoreEntitlementSyncTests: XCTestCase {
         var calls: [[String]] = []
         var renewals: [[String]] = []
         var fails = false
+        var account: String? = "account-1"
+        func accountID() async -> String? { account }
         func record(appStoreTransactions: [String], appStoreRenewals: [String]) async throws {
             if fails { throw URLError(.notConnectedToInternet) }
             calls.append(appStoreTransactions)
@@ -53,6 +55,18 @@ final class StoreEntitlementSyncTests: XCTestCase {
         purchases.signed = [.init(originalID: "1", isRevoked: true, jws: "a.b.d")]
         await sync.syncIfNeeded()
         XCTAssertEqual(recorder.calls.last, ["a.b.d"], "A refund is sent too")
+    }
+
+    func testANewAccountOnThisPhoneGetsThePurchaseToo() async {
+        let purchases = Purchases(), recorder = Recorder()
+        let sync = StoreEntitlementSync(recorder: recorder, purchasing: purchases, defaults: defaults)
+        purchases.signed = [.init(originalID: "1", isRevoked: false, jws: "a.b.c")]
+        await sync.syncIfNeeded()
+        recorder.account = "account-2"
+        await sync.syncIfNeeded()
+        await sync.syncIfNeeded()
+        XCTAssertEqual(recorder.calls, [["a.b.c"], ["a.b.c"]],
+                       "Recorded for one account, sent once more for the next (seen 20 November 2026)")
     }
 
     func testARenewalIsSentAgain() async {

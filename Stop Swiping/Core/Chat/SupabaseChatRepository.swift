@@ -180,7 +180,7 @@ protocol MatchFollowing: AnyObject {
 
 /// Reports against this account: 1 is a warning, 2 blocks matching and chat
 /// for 7 days, 3 bans the account.
-nonisolated struct ModerationStatus: Decodable, Equatable {
+nonisolated struct ModerationStatus: Codable, Equatable {
     let strikes: Int
     let strikesSeen: Int
     let suspendedUntil: Date?
@@ -273,21 +273,11 @@ final class SupabaseChatRepository: SecureChatRepository {
     }
     func currentMatch(knownCard: UUID?) async throws -> CloudChatMatch? {
         guard let knownCard else { return try await currentMatch() }
-        do {
-            return try await client.rpc("current_match", params: ["p_known_card": knownCard.uuidString]).execute().value
-        } catch let error as PostgrestError where Self.isMissingFunction(error) {
-            // A server without 202611190002 yet.
-            return try await currentMatch()
-        }
+        return try await client.rpc("current_match", params: ["p_known_card": knownCard.uuidString]).execute().value
     }
     func poll(_ matchID: UUID, after: Int64?) async throws -> ChatPoll {
         struct Params: Encodable { let p_match_id: UUID; let p_after: Int64? }
-        do {
-            return try await client.rpc("chat_poll", params: Params(p_match_id: matchID, p_after: after)).execute().value
-        } catch let error as PostgrestError where Self.isMissingFunction(error) {
-            let closed = try await isClosed(matchID)
-            return ChatPoll(closed: closed, keys: nil, partnerReadAt: nil, messages: try await messages(matchID, after: after))
-        }
+        return try await client.rpc("chat_poll", params: Params(p_match_id: matchID, p_after: after)).execute().value
     }
     func follow(_ matchID: UUID, onSignal: @escaping @MainActor (MatchSignal) -> Void) async throws -> MatchFollowing? {
         let channel = client.channel("match:\(matchID.uuidString.lowercased())") { $0.isPrivate = true }
@@ -311,8 +301,6 @@ final class SupabaseChatRepository: SecureChatRepository {
         }
         return SupabaseMatchFollow(client: client, channel: channel, subscriptions: [changes, status])
     }
-    /// PostgREST's answer for a function the database does not have.
-    private static func isMissingFunction(_ error: PostgrestError) -> Bool { error.code == "PGRST202" }
     func isClosed(_ matchID: UUID) async throws -> Bool {
         struct Row: Decodable { let ended_at: Date? }
         let rows: [Row] = try await client.from("matches").select("ended_at").eq("id",value:matchID)

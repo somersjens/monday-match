@@ -94,6 +94,11 @@ struct WelcomeView: View {
     @State private var matchPhotoIsVerified = false
     /// The match shown in place of the home controls.
     @State private var activeMatch: ActiveMatch?
+    /// The line under a scanned outcome (saved by itself, or a repeat).
+    @State private var matchNote: String?
+    /// A scan kept in My matches without the person choosing Save: deleting
+    /// it removes it for good instead of keeping it as broken.
+    @State private var autoSavedMatchID: UUID?
     /// What the light draws. It trails `activeMatch` while the heart fades out.
     @State private var lightMatch: WelcomeLightMatch.Request?
     @State private var matchReveal = MatchReveal.hidden
@@ -218,7 +223,7 @@ struct WelcomeView: View {
         switch lightStage {
         case .landing: profileCreation.isUnderageLocked ? .lock : .heart
         case .onboarding: .heart
-        case .complete: .helix
+        case .complete: homeIsLocked ? .lock : .helix
         }
     }
 
@@ -382,6 +387,7 @@ struct WelcomeView: View {
                             frame: MatchStageFrame(center: lightCenter, unit: layout.unit),
                             reveal: matchReveal,
                             isSaved: savedMatches.contains(activeMatch.snapshot.id),
+                            note: matchNote,
                             lightTransition: lightMatch?.transition ?? .newMatch,
                             lightStartedAt: matchStartedAt,
                             onShowScores: { scoreDetail = $0 },
@@ -565,6 +571,17 @@ struct WelcomeView: View {
             guard pollsLiveMatches else { return }
             await liveMatches.run { [profileCreation] in profileCreation.state }
         }
+        .task(id: hasAccount && scenePhase == .active) {
+            // Also with automatic matching off, so a block or ban reaches
+            // this phone and an ended block unlocks it.
+            guard hasAccount, scenePhase == .active else { return }
+            await liveMatches.refreshModerationIfDue()
+        }
+        .onChange(of: hasAccount && isSuspendedFromMatching, initial: true) { _, locked in
+            guard locked else { return }
+            showsAutoMatching = false
+            if profileCreation.state.autoMatching.isEnabled { profileCreation.leaveAutoMatching() }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .serverDataChanged)) { _ in
             liveMatches.wake()
         }
@@ -652,14 +669,6 @@ struct WelcomeView: View {
         }
         // The landing's sign-in and the home screen's account card share it.
         .accountProfileChoice(signIn)
-        .alert(moderationTitle, isPresented: showsModerationNotice) {
-            Button(L10n("I understand")) {
-                acknowledgedStrikes = liveMatches.moderation?.strikes ?? acknowledgedStrikes
-                Task { await liveMatches.acknowledgeModeration() }
-            }
-        } message: {
-            Text(moderationMessage)
-        }
         .sheet(item: $scoreDetail) { perspective in
             if let activeMatch {
                 MatchScoreDetailView(report: activeMatch.report, perspective: perspective,
@@ -683,11 +692,8 @@ struct WelcomeView: View {
             profileCreation.markProfileExchangeUsed()
             notificationEngine?.recordCompatibilityCheck()
             exchanges += 1
-            // Someone exchanged with before today gets the same outcome again.
-            let snapshot = ScannedMatchMemory().resolve(
-                MatchSnapshot(id: result.id, matchedAt: Date(), you: result.you, them: result.them), for: result.holder)
-            if let photo = result.photo { MatchPhotoStore.shared.save(photo, for: snapshot.id) }
-            present(snapshot)
+            presentScanned(MatchSnapshot(id: result.id, matchedAt: Date(), you: result.you, them: result.them),
+                           holder: result.holder, photo: result.photo)
         }
         .onAppear {
             guard lightStage == .complete else { return }
@@ -849,30 +855,22 @@ struct WelcomeView: View {
 
     // MARK: - Reports against this account
 
-    private var showsModerationNotice: Binding<Bool> {
-        Binding(get: {
-            guard hasAccount, let status = liveMatches.moderation else { return false }
-            return status.strikes > max(status.strikesSeen, acknowledgedStrikes)
-        }, set: { _ in })
+    /// A strike this phone has not acknowledged yet.
+    private var moderationIsUnread: Bool {
+        guard hasAccount, let status = liveMatches.moderation else { return false }
+        return status.strikes > max(status.strikesSeen, acknowledgedStrikes)
     }
 
-    private var moderationTitle: String {
-        guard let status = liveMatches.moderation else { return "" }
-        if status.banned { return L10n("Your account is banned") }
-        if status.isSuspended() { return L10n("Your account is blocked for 7 days") }
-        return L10n("You were reported")
+    private func acknowledgeModeration() {
+        acknowledgedStrikes = liveMatches.moderation?.strikes ?? acknowledgedStrikes
+        Task { await liveMatches.acknowledgeModeration() }
     }
 
-    private var moderationMessage: String {
-        guard let status = liveMatches.moderation else { return "" }
-        if status.banned {
-            return L10n("You were reported three times. Your account can no longer match or chat. You can still delete it from your profile.")
-        }
-        if status.isSuspended(), let until = status.suspendedUntil {
-            let date = until.formatted(.dateTime.day().month(.wide).hour().minute().locale(AppLocale.current))
-            return L10n("You were reported a second time. Until \(date) you can’t match or chat. A third report bans your account.")
-        }
-        return L10n("Someone you matched with reported you. This is a warning: a second report blocks you for 7 days, a third bans your account.")
+    /// Blocked or banned: automatic matching goes off and out of sight, and
+    /// the helix, at rest on the home screen, becomes the lock.
+    private var homeIsLocked: Bool {
+        hasAccount && isSuspendedFromMatching && activeMatch == nil && personalityTest == nil
+            && !showsCode && demoPhase == nil
     }
 
     /// The server is asked about matches only while one can exist: with
@@ -943,16 +941,24 @@ struct WelcomeView: View {
                 Task { await notifications.requestAuthorization() }
             }
         case .matching:
-            if access.remindsToCancelSubscription {
+            if let status = liveMatches.moderation, ModerationCard.isShown(status, isUnread: moderationIsUnread) {
+                ModerationCard(status: status, isUnread: moderationIsUnread, onAcknowledge: acknowledgeModeration)
+                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+            }
+            if isSuspendedFromMatching {
+                // Nothing to switch on while blocked or banned.
+            } else if access.remindsToCancelSubscription {
                 CancelSubscriptionCard(access: access)
                     .transition(.opacity.combined(with: .scale(scale: 0.96)))
             } else if profileCreation.state.autoMatching.isEnabled && access.offersSubscriberLifetime {
                 SubscriberLifetimeOfferCard(access: access)
                     .transition(.opacity.combined(with: .scale(scale: 0.96)))
             }
-            AutoMatchingCard(viewModel: profileCreation) {
-                guard !isTransitioning else { return }
-                showsAutoMatching = true
+            if !isSuspendedFromMatching {
+                AutoMatchingCard(viewModel: profileCreation) {
+                    guard !isTransitioning else { return }
+                    showsAutoMatching = true
+                }
             }
         }
     }
@@ -1030,7 +1036,7 @@ struct WelcomeView: View {
         case .privacy(.profile):
             if profileCreation.hasDisplayName { showsProfilePrivacy = true }
         case .privacy(.matching), .autoMatching:
-            if hasAccount { showsAutoMatching = true }
+            if hasAccount && !isSuspendedFromMatching { showsAutoMatching = true }
         case .share:
             if !showsCode { toggleCode() }
         case .notificationSettings:
@@ -1450,10 +1456,29 @@ struct WelcomeView: View {
         profileCreation.markProfileExchangeUsed()
         notificationEngine?.recordCompatibilityCheck()
         exchanges += 1
-        // Scanning someone again, even from a fresh code, shows the first outcome.
         let snapshot = MatchSnapshot(matchedAt: Date(), you: profileCreation.state.sharedCopy(today: .today()),
                                      them: them.profile)
-        present(ScannedMatchMemory().resolve(snapshot, for: them.holder))
+        presentScanned(snapshot, holder: them.holder)
+    }
+
+    /// An outcome from a code or from two phones together. It goes into My
+    /// matches straight away, so closing the app or walking off keeps it;
+    /// Delete match removes it. Someone compared with in the last day gets
+    /// the outcome from then, which the screen says, so changed answers
+    /// don't look like a mistake.
+    private func presentScanned(_ snapshot: MatchSnapshot, holder: ProfileHolder, photo: Data? = nil) {
+        let memory = ScannedMatchMemory()
+        let isRepeat = memory.snapshot(for: holder) != nil
+        let shown = memory.resolve(snapshot, for: holder)
+        if let photo { MatchPhotoStore.shared.save(photo, for: shown.id) }
+        if !savedMatches.contains(shown.id) {
+            savedMatches.save(shown)
+            autoSavedMatchID = shown.id
+        }
+        present(shown)
+        matchNote = isRepeat
+            ? L10n("You compared with this person in the last 24 hours, so you see the outcome from then, even if answers changed since.")
+            : L10n("Saved in My matches.")
     }
 
     // MARK: - Matches
@@ -1638,6 +1663,7 @@ struct WelcomeView: View {
     private func present(_ snapshot: MatchSnapshot, transition: WelcomeLightMatch.Transition = .newMatch,
                          chatting: Bool = false) {
         let report = snapshot.report
+        matchNote = nil
         if activeMatch?.snapshot.id != snapshot.id { loadMatchPhoto(for: snapshot) }
         showsCode = false
         personalityTest = nil
@@ -1722,7 +1748,7 @@ struct WelcomeView: View {
             savedMatches.delete(snapshot.id)
             Task { await liveMatches.delete(snapshot.id) }
             AccessibilityNotification.Announcement(L10n("Match deleted.")).post()
-        } else if savedMatches.contains(snapshot.id) && !snapshot.isBroken {
+        } else if savedMatches.contains(snapshot.id) && !snapshot.isBroken && snapshot.id != autoSavedMatchID {
             savedMatches.markBroken(snapshot.id)
             AccessibilityNotification.Announcement(L10n("Match broken.")).post()
         } else {
@@ -1734,6 +1760,8 @@ struct WelcomeView: View {
     /// The heart fades where it is, and the helix ropes back in from the sides.
     private func closeMatch() {
         guard activeMatch != nil else { return }
+        matchNote = nil
+        autoSavedMatchID = nil
         OpenDemoChat.clear()
         matchTask?.cancel()
         isDemoPlaying = false

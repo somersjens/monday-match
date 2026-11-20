@@ -10,10 +10,14 @@ protocol StoreEntitlementRecording {
     func record(appStoreTransactions: [String], appStoreRenewals: [String]) async throws
     /// What the signed-in account owns, from every device and store.
     func accountEntitlements() async throws -> [AccountEntitlement]
+    /// The signed-in account, so a purchase recorded for one account is
+    /// still sent to the next (a new or recreated account on this phone).
+    func accountID() async -> String?
 }
 
 extension StoreEntitlementRecording {
     func accountEntitlements() async throws -> [AccountEntitlement] { [] }
+    func accountID() async -> String? { nil }
 }
 
 /// One purchase the server verified for the signed-in account, from any
@@ -50,6 +54,10 @@ struct AccountEntitlement: Codable, Equatable {
 final class SupabaseStoreEntitlementRecorder: StoreEntitlementRecording {
     private let client: SupabaseClient
     init(client: SupabaseClient) { self.client = client }
+
+    func accountID() async -> String? {
+        try? await client.auth.session.user.id.uuidString.lowercased()
+    }
 
     func record(appStoreTransactions: [String], appStoreRenewals: [String]) async throws {
         struct Body: Encodable { let appStoreTransactions: [String]; let appStoreRenewals: [String] }
@@ -111,7 +119,8 @@ final class StoreEntitlementSync {
         defer { isSyncing = false }
         let transactions = await purchasing.signedTransactions()
         guard !transactions.isEmpty else { return false }
-        let fingerprint = Self.fingerprint(transactions)
+        // Per account: what one account already has is new to the next one.
+        let fingerprint = (await recorder.accountID() ?? "") + "|" + Self.fingerprint(transactions)
         guard defaults.string(forKey: Self.recordedKey) != fingerprint else { return false }
         let sent = Array(transactions.prefix(10))
         do {

@@ -441,11 +441,14 @@ final class NotificationEngine: NSObject, ObservableObject, UNUserNotificationCe
         await sync()
     }
 
-    /// Deleting the profile: pending notifications and local history go.
-    static func clearLocalData(defaults: UserDefaults = .standard) {
+    /// Deleting the profile: pending notifications and local history go,
+    /// and so do the match names the notification extension may still hold.
+    static func clearLocalData(defaults: UserDefaults = .standard,
+                               previewDefaults: UserDefaults? = UserDefaults(suiteName: PushPreview.appGroup)) {
         NotificationLedgerStore(defaults: defaults).clear()
         NotificationSignalStore(defaults: defaults).clear()
         defaults.removeObject(forKey: legacyPreferencesKey)
+        PushPreview.save(nil, to: previewDefaults)
         let center = UNUserNotificationCenter.current()
         Task {
             let requests = await center.pendingNotificationRequests()

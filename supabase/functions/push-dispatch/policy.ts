@@ -16,8 +16,12 @@ export type Platform = "ios" | "android";
 
 export type Entry = {
   outbox_id: number;
-  kind: "match_new" | "first_match" | "message_new" | "match_ended";
+  // moderation_report goes only to administrators (matching_private.admins):
+  // a new report, with its reason code, never a name or the explanation.
+  kind: "match_new" | "first_match" | "message_new" | "match_ended" | "moderation_report";
   match_id: string;
+  // moderation_report only: the report's reason code (e.g. "underage").
+  detail?: string;
   count: number;
   // Missing on rows claimed before 202611190010: those were all iOS.
   platform?: Platform;
@@ -39,6 +43,7 @@ export const platformOf = (entry: Entry): Platform => entry.platform ?? "ios";
 // The server only ever sends copy without a name. The preview slots in
 // copy.json are used on the phone, which knows the name.
 export function slot(entry: Entry): string {
+  if (entry.kind === "moderation_report") return "admin.moderation_report";
   if (entry.kind !== "message_new") return entry.kind;
   return entry.count > 1 ? "message_new.private_batch" : "message_new.private";
 }
@@ -56,7 +61,8 @@ export function pickTemplate(entry: Entry): Template {
 
 const destination = (kind: Entry["kind"]) =>
   kind === "message_new" ? "stopswiping://open/chat"
-    : kind === "match_ended" ? "stopswiping://open/matches" : "stopswiping://open/match";
+    : kind === "match_ended" ? "stopswiping://open/matches"
+    : kind === "moderation_report" ? "stopswiping://open/profile" : "stopswiping://open/match";
 
 // The key the app uses to recognise a notification it already showed.
 export function dedupeKey(entry: Entry): string {
@@ -64,12 +70,18 @@ export function dedupeKey(entry: Entry): string {
     case "match_new": case "first_match": return `match_new.${entry.match_id}`;
     case "match_ended": return `match_ended.${entry.match_id}`;
     case "message_new": return `message_new.${entry.match_id}.${entry.outbox_id}`;
+    case "moderation_report": return `moderation_report.${entry.outbox_id}`;
   }
 }
 
 // A newer push for the same conversation replaces the older one.
 const collapseKey = (entry: Entry) =>
-  (entry.kind === "message_new" ? `chat.${entry.match_id}` : `${entry.kind}.${entry.match_id}`).slice(0, 64);
+  (entry.kind === "message_new" ? `chat.${entry.match_id}`
+    : entry.kind === "moderation_report" ? `report.${entry.outbox_id}`
+    : `${entry.kind}.${entry.match_id}`).slice(0, 64);
+
+// What fills a template's placeholders on the server (never a name).
+const values = (entry: Entry) => ({ count: String(entry.count), reason: entry.detail ?? "" });
 
 // What both platforms receive besides the visible text. Strings only, as FCM requires.
 function facts(entry: Entry): Record<string, string> {
@@ -96,12 +108,12 @@ export function compose(entry: Entry, now = Date.now()): { headers: Record<strin
   }
 
   const template = pickTemplate(entry);
-  const values = { count: String(entry.count) };
+  const filled = values(entry);
   const isMessage = entry.kind === "message_new";
   const aps: Record<string, unknown> = {
-    alert: { title: render(template.title, values), body: render(template.body, values) },
+    alert: { title: render(template.title, filled), body: render(template.body, filled) },
     "interruption-level": entry.quiet ? "passive" : "active",
-    "thread-id": isMessage ? `chat.${entry.match_id}` : "transactional",
+    "thread-id": isMessage ? `chat.${entry.match_id}` : entry.kind === "moderation_report" ? "moderation" : "transactional",
     category: "stopswiping.transactional",
     "content-available": 1,
   };
@@ -123,8 +135,8 @@ export function composeFCM(entry: Entry): { message: Record<string, unknown> } {
     quiet: entry.quiet ? "1" : "0", language: entry.language ?? "en" };
   if (entry.visible) {
     const template = pickTemplate(entry);
-    const values = { count: String(entry.count) };
-    Object.assign(data, { title: render(template.title, values), body: render(template.body, values),
+    const filled = values(entry);
+    Object.assign(data, { title: render(template.title, filled), body: render(template.body, filled),
       variant: template.id });
   }
   return {

@@ -2,6 +2,8 @@
 -- postgres in the Supabase SQL Editor ("Run without RLS" is fine):
 -- everything rolls back.
 begin;
+-- Fixture accounts have no store purchase (202611200005).
+set local stop_swiping.access_check = 'off';
 create temporary table ready_results(name text primary key);
 grant select, insert on ready_results to authenticated, service_role;
 create function pg_temp.ok(passed boolean, label text) returns void
@@ -99,13 +101,14 @@ create function pg_temp.verification(n integer) returns matching_private.photo_v
     where o.name = pg_temp.id(n)::text || '/' || pg_temp.id(100 + n)::text || '.jpg' $$;
 
 select pg_temp.as_user(1);
-select pg_temp.ok(public.record_device_photo_verification(pg_temp.id(101)), 'The app still records a device scan');
+select pg_temp.ok(pg_temp.error_of(format('select public.record_device_photo_verification(%L)', pg_temp.id(101))) like '42501 %',
+    'The app can no longer report an unproven scan (202611200005)');
 select pg_temp.ok(pg_temp.error_of(format('select public.record_attested_photo_verification(%L, %L)',
     pg_temp.id(1), pg_temp.id(101))) like '42501 %', 'The app cannot claim an attested scan itself');
 select pg_temp.ok(pg_temp.error_of(format('select matching_private.record_photo_scan(%L, %L, true)',
     pg_temp.id(1), pg_temp.id(101))) like '42501 %', 'Nor call the shared body');
 select pg_temp.as_admin();
-select pg_temp.ok((select method = 'device' and not attested from pg_temp.verification(1)), 'An unproven scan is not attested');
+select pg_temp.ok((select object_id from pg_temp.verification(1)) is null, 'So no unproven scan is recorded');
 select pg_temp.ok(public.record_attested_photo_verification(pg_temp.id(2), pg_temp.id(102)), 'The edge function records a proven scan');
 select pg_temp.ok((select method = 'device' and attested from pg_temp.verification(2)), 'A proven scan is attested');
 select pg_temp.ok((select consent_version from matching_private.verification_attempts where user_id = pg_temp.id(2))

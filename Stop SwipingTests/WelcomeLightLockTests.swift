@@ -251,6 +251,26 @@ final class WelcomeLightLockTests: XCTestCase {
         XCTAssertTrue(motion.pose(at: 20.5).isHelix, "Returning to the heart unweaves the helix.")
         XCTAssertEqual(motion.pose(at: 30), .unlocked)
 
+        // A block or ban: the helix unweaves into the heart, which then closes into the lock.
+        var blocked = WelcomeLightLock.Motion()
+        blocked.update(form: .helix, pulse: 0, now: 0, animated: true)
+        blocked.update(form: .lock, pulse: 0, now: 10, animated: true)
+        let duration = WelcomeLightLock.morphDuration
+        XCTAssertTrue(blocked.pose(at: 10 + duration / 2).isHelix, "First the helix unweaves.")
+        XCTAssertEqual(blocked.pose(at: 10 + duration / 2).amount, 0.5, accuracy: 1e-9)
+        XCTAssertEqual(blocked.pose(at: 10 + duration), .unlocked, "The heart in between.")
+        let closing = blocked.pose(at: 10 + duration * 1.5)
+        XCTAssertFalse(closing.isHelix, "Then the heart weaves the lock.")
+        XCTAssertEqual(closing.amount, 0.5, accuracy: 1e-9)
+        XCTAssertTrue(blocked.isAnimating(at: 10 + duration * 1.5))
+        XCTAssertEqual(blocked.pose(at: 10 + duration * 3).amount, 1)
+        XCTAssertFalse(blocked.pose(at: 10 + duration * 3).isHelix)
+        blocked.update(form: .lock, pulse: 0, now: 10 + duration * 3, animated: true)
+        XCTAssertEqual(blocked.pose(at: 10 + duration * 3).amount, 1, "Settling keeps the lock.")
+        blocked.update(form: .helix, pulse: 0, now: 100, animated: true)
+        XCTAssertEqual(blocked.pose(at: 100), .init(amount: 1, lift: 0, shake: 0, isHelix: true),
+                       "When the block ends the helix comes back whole.")
+
         var completed = WelcomeLightLock.Motion()
         completed.update(form: .helix, pulse: 0, now: 0, animated: true)
         XCTAssertEqual(completed.pose(at: 0), .init(amount: 1, lift: 0, shake: 0, isHelix: true),

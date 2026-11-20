@@ -2,6 +2,8 @@
 -- Run as postgres in Supabase SQL Editor ("Run without RLS"). Every fixture and change rolls back.
 -- The report/strike flow and history after a break are in lifecycle_moderation.sql.
 begin;
+-- Fixture accounts have no store purchase (202611200005).
+set local stop_swiping.access_check = 'off';
 -- Saves follow each other within milliseconds here: no one-minute search limit
 -- (202611180005). Its own checks are at the end of matching_regression.sql.
 set local stop_swiping.matching_throttle = 'off';

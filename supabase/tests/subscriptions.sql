@@ -2,6 +2,8 @@
 -- postgres in the Supabase SQL Editor ("Run without RLS" is fine):
 -- everything rolls back.
 begin;
+-- Fixture accounts have no store purchase (202611200005).
+set local stop_swiping.access_check = 'off';
 create temporary table sub_results(name text primary key);
 grant select, insert on sub_results to authenticated, service_role;
 create function pg_temp.ok(passed boolean, label text) returns void

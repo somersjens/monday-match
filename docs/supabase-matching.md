@@ -119,6 +119,13 @@ ended more than 12 months ago lose their cards, keys and read positions (the
 match row stays for the pair exclusion); a report's written explanation is
 blanked after 12 months while the strike keeps counting.
 
+Since `202611200004_scan_limits_and_five_years.sql` (live 20 November 2026,
+24 checks in `tests/scan_limits_and_five_years.sql`) the same job also ends
+what kept people apart: a report goes 5 years after it was filed (its strike
+with it, so a ban ends once the oldest of its three reports is 5 years old),
+and a match row goes 5 years after it ended, together with both identity
+hashes, unless a report about it remains.
+
 ### Never the same two people again
 
 `unique (user_low, user_high)` blocks the same two accounts. In addition each
@@ -168,9 +175,37 @@ ID keeps them.
 
 `matching_status()` returns `moderation: {strikes, strikes_seen, suspended_until,
 banned}`; the app shows a notice once per new strike and calls
-`acknowledge_moderation()`. An administrator can withdraw an unfounded report
+`acknowledge_moderation()`. Since 20 November 2026 the notice is a card on the
+home screen (`ModerationCard`) instead of an alert; while blocked or banned the
+helix unweaves into the heart and closes into the lock, automatic matching is
+switched off (`leaveAutoMatching`) and hidden, and the profile and personality
+tests stay open. The status is kept on the phone and refreshed daily, also with
+automatic matching off. An administrator can withdraw an unfounded report
 with `select matching_private.dismiss_report('<report id>')`, which lifts a block
 or ban it caused and lets the person search again.
+
+## Launch rules (202611200005, live 20 November 2026)
+
+* **Only paying accounts enter the pool.** `matching_private.has_access(uid)`
+  requires a verified store purchase on the account (`store_entitlements`):
+  not revoked, a monthly plan not expired. Sandbox (TestFlight) purchases count
+  while `matching_private.settings` row `sandbox_purchases_count` is on; switch
+  it off at launch. A recorded purchase searches at once (trigger
+  `store_entitlements_access`); a refund leaves the pool at once; the daily
+  sweep (`remove_dormant_from_pool`) takes out lapsed plans. SQL tests switch
+  the check off with `set local stop_swiping.access_check = 'off'` (only as
+  `postgres`). `202611200006` fixed a null that admitted everyone for a few
+  minutes before any real account was affected.
+* **Only proven photo scans count.** `record_device_photo_verification` is
+  revoked from the app; only the `app-attest` function records a scan, and
+  `has_verified_photo` ignores unproven device records.
+* **Reports reach the administrators.** A new report queues a
+  `moderation_report` push ("New report. Reason: <code>") for every account in
+  `matching_private.admins`. Add one with
+  `insert into matching_private.admins(user_id) values ('<auth user id>');`.
+  Tested live on 20 November 2026: APNs accepted the push.
+
+Tests: `supabase/tests/launch_rules.sql` (16 checks, live).
 
 ## Requirements and scores
 
@@ -296,8 +331,9 @@ reviewed before public release.
 The database independently rejects nonparticipants, ended matches and revoked
 sender/recipient devices. Ciphertext sizes are bounded and reused delivery IDs
 cannot change content. The backend cannot prove a client-supplied string was
-encrypted; the app's cryptographic path enforces it. Legacy `e2ee-v1` is retained
-for existing transport rows; the live client uses `hpke-auth-x25519-v1`.
+encrypted; the app's cryptographic path enforces it. Only `hpke-auth-x25519-v1`
+is accepted (the legacy `e2ee-v1` value leaves the table check with
+`202611200003_schema_cleanup.sql`).
 
 ## Photo verification
 
@@ -308,7 +344,10 @@ app calls `record_device_photo_verification(p_photo_id)`
 photo, current privacy consent and stored object, records that exact object
 version in `matching_private.photo_verifications` with `method = 'device'`, and
 re-runs matching. `has_verified_photo` is unchanged, so device and AWS records
-both count. The server cannot prove the scan happened; that is the accepted
+both count. Since `202611200004` a scan on the phone (proven or not) has no
+daily limit; it searches through `request_search` (one search a minute) instead
+of taking the matching lock at once. The limit of 5 a day applies to AWS
+sessions only and counts only AWS attempts. The server cannot prove the scan happened; that is the accepted
 beta trade-off.
 
 AWS Face Liveness (server-proven) is parked; see

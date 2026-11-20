@@ -96,3 +96,11 @@ Deno.test("FCM answers map to revoke, retry or done", () => {
   assert(classifyFCM(503) === "retry");
   assert(classifyFCM(400, "INVALID_ARGUMENT") === "failed");
 });
+
+Deno.test("a new report reaches administrators with its reason only", () => {
+  const entry = { ...base, kind: "moderation_report" as const, detail: "underage", language: "nl" as const };
+  const payload = JSON.parse(compose(entry).body);
+  assert(payload.aps.alert.title === "Nieuwe melding" && payload.aps.alert.body.includes("underage"));
+  assert(payload.aps["thread-id"] === "moderation" && payload.destination === "stopswiping://open/profile");
+  assert(dedupeKey(entry) === `moderation_report.${base.outbox_id}`);
+});

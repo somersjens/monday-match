@@ -167,13 +167,21 @@ struct EarlyAccessView: View {
         else { dismiss() }
     }
 
+    /// Debug builds only: holding the card for three seconds shows the
+    /// early-adopter plan again, for testing. App Store builds have no
+    /// hidden features (guideline 2.3.1), so the gesture isn't there.
+    @ViewBuilder
     private var lifetimeCard: some View {
+        #if DEBUG
         planCard(.lifetime)
             .simultaneousGesture(LongPressGesture(minimumDuration: 3).onEnded { _ in
                 guard !access.isBusy else { return }
                 access.revealEarlyAccess()
                 selection = .earlyAdopter
             })
+        #else
+        planCard(.lifetime)
+        #endif
     }
 
     /// What Apple asks to show with a subscription: that it renews, how to

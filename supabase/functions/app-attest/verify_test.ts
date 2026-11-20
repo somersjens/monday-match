@@ -55,6 +55,10 @@ Deno.test("replays, other client data and other apps are refused", async () => {
 Deno.test("authenticator data and DER signatures are parsed strictly", async () => {
   const parsed = parseAuthData(await authData(7));
   assert(parsed.counter === 7 && parsed.credentialID === undefined);
+  // An assertion's flags may claim attested data that isn't there (iPhone, 20 November 2026).
+  const flagged = await authData(9);
+  flagged[32] = 0x40;
+  assert(parseAuthData(flagged, false).counter === 9);
   let refused = false;
   try { parseAuthData(new Uint8Array(10)); } catch (error) { refused = error instanceof Rejected; }
   assert(refused);

@@ -14,7 +14,17 @@ final class LiveMatchCenter: ObservableObject {
     /// Broken matches, newest first. Their conversations stay readable.
     @Published private(set) var pastMatches: [CloudChatMatch] = []
     /// Reports against this account, refreshed daily and when a match ends.
-    @Published private(set) var moderation: ModerationStatus?
+    /// Kept on the phone, so a blocked or banned account opens locked even
+    /// before the server answers (and with automatic matching off).
+    @Published private(set) var moderation: ModerationStatus? {
+        didSet {
+            if let moderation, let data = try? JSONEncoder().encode(moderation) {
+                defaults.set(data, forKey: Self.moderationKey)
+            } else {
+                defaults.removeObject(forKey: Self.moderationKey)
+            }
+        }
+    }
     /// The active match's photo of the other person. The server shares it
     /// only during the match, so the phone keeps a copy with the match
     /// (`MatchPhotoStore`, and through it the person's own iCloud): after the
@@ -86,6 +96,9 @@ final class LiveMatchCenter: ObservableObject {
         // first refresh confirms it, updates it or ends it.
         if repository != nil, let cached = Self.cachedMatch(defaults: defaults), cached.isActive {
             adopt(cached)
+        }
+        if repository != nil, let data = defaults.data(forKey: Self.moderationKey) {
+            moderation = try? JSONDecoder().decode(ModerationStatus.self, from: data)
         }
         if repository != nil {
             let deleted = Self.pendingDeletes(defaults: defaults)
@@ -292,6 +305,13 @@ final class LiveMatchCenter: ObservableObject {
 
     private static func pendingDeletes(defaults: UserDefaults) -> Set<UUID> {
         Set(defaults.stringArray(forKey: pendingDeletesKey)?.compactMap(UUID.init) ?? [])
+    }
+
+    /// Once a day, also while nothing else asks the server (automatic
+    /// matching off, for example after a block), so a lock lifts or comes.
+    func refreshModerationIfDue() async {
+        guard Date().timeIntervalSince(lastModerationCheck) > Self.moderationInterval else { return }
+        await refreshModeration()
     }
 
     func refreshModeration() async {
@@ -623,7 +643,7 @@ final class LiveMatchCenter: ObservableObject {
     /// one starts by asking the server.
     nonisolated static func clearAccountCache(defaults: UserDefaults = .standard) {
         for key in [cacheKey, historyKey, earlierProfileKey, pendingDeletesKey, keyPrefix + "lastRefresh",
-                    keyPrefix + "lastModerationCheck"] {
+                    keyPrefix + "lastModerationCheck", moderationKey] {
             defaults.removeObject(forKey: key)
         }
     }
@@ -638,6 +658,7 @@ final class LiveMatchCenter: ObservableObject {
     }
 
     nonisolated private static let keyPrefix = "liveMatch."
+    nonisolated private static let moderationKey = keyPrefix + "moderation.v1"
 
     private static func key(_ kind: String, _ id: UUID) -> String {
         "\(keyPrefix)\(kind).\(id.uuidString.lowercased())"

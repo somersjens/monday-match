@@ -4,6 +4,8 @@
 -- participants and outsiders, the key fingerprint, and what the retention
 -- job removes and keeps.
 begin;
+-- Fixture accounts have no store purchase (202611200005).
+set local stop_swiping.access_check = 'off';
 set local stop_swiping.matching_throttle = 'off';
 create temporary table retention_results(name text primary key);
 grant select, insert on retention_results to authenticated;

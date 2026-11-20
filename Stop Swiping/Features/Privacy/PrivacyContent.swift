@@ -245,8 +245,10 @@ If you expressly enable automatic matching, we store your matching profile on ou
 ### 3.5 Matches
 A match shows each person a score per question category, the weight of each category, the total score and, for manual matches, which requirements are not met, plus basic details: name, age, area and distance, height, gender, who they are looking for, religion, languages, children and use of alcohol, tobacco and drugs, and a photo where applicable. Answers to individual questions and their importance ratings are never shown. For a manual match, the profile travels sealed between the two devices; the receiving device calculates the result and keeps only what is shown. For an automatic match, we process the linked account identifiers, the match time and the fixed scores; the partner's photo is shown by our server only during an active match, and the recipient's device keeps a copy.
 
+The sealed profile (in a QR code, between two phones, and as the match card on our server) is encrypted with a key built into the app, because two phones must be able to read each other's profile without our server. The seal keeps answers out of sight in the app, in QR readers, on our website and in our database, but it does not protect against someone who takes the app apart. That is why a QR code expires after 24 hours, screens never show answers to individual questions, and we do not open match cards.
+
 ### 3.6 Chats and communications metadata
-Message content is end-to-end encrypted. We process encrypted messages and, where necessary, metadata such as participating account IDs, delivery states and timestamps. We cannot read the content of messages delivered normally. If someone voluntarily submits messages with a safety report, we can process the content they have submitted.
+Message content is end-to-end encrypted. Each message is encrypted on the sender's phone for the recipient's phone and for the sender's own copy (HPKE with X25519 and ChaCha20-Poly1305, RFC 9180). The keys stay on the phone and are not included in any backup. The keys of a conversation do not change while it lasts, so someone who gains access to an unlocked phone with that conversation's key could read its history; you can compare a security code with your match to check that no one is in between. We process encrypted messages and, where necessary, metadata such as participating account IDs, delivery states and timestamps. We cannot read the content of messages delivered normally. If someone voluntarily submits messages with a safety report, we can process the content they have submitted.
 
 ### 3.7 Technical and safety data
 To keep the service secure and available and prevent misuse, we process the necessary [IP ADDRESS, APP VERSION, DEVICE/SESSION IDENTIFIERS, ERROR AND SECURITY LOGS, REPORTS AND BLOCKS; ADJUST TO REAL USE]. We minimize log contents and do not log complete matching answers, decryption keys or readable chat content.
@@ -306,14 +308,14 @@ The matching service must be able to process necessary answers during scoring. M
 | Data category | Retention rule |
 | --- | --- |
 | Local profile | Until you delete the profile or app data from your device, subject to external device backups |
-| Account information | While the account is active and [NUMBER_OF_DAYS] after account deletion, except where a lawful exception applies |
+| Account information | While the account exists; removed when you delete your account. After 12 months without app activity only the sign-in itself remains (to sign in again and keep purchases) |
 | iCloud backup | In your own iCloud until you delete saved matches or your profile; we have no access |
 | Matching profile and photos | While matching is enabled; removed immediately when you turn it off (during an active match, once it ends), with any leftovers removed within a day. After 6 months without app activity you leave the matching pool; after 12 months the profile and photos are removed |
-| Match scores and match records | [PERIOD AND RULES FOR UNMATCHING/BLOCKING/ACCOUNT DELETION] |
+| Match scores and match records | The match (both account IDs, the fixed scores, dates and how it ended) and keyed hashes of both sign-in identities, so the same two people are never matched again, also after deleting and recreating an account: until 5 years after the match ended. Match cards, chat keys and read positions: 12 months after the match ended, or as soon as both people deleted the match |
 | Encrypted E2EE message content | Up to 12 months after sending, also after a match ends |
 | Technical logs and metadata | No more than [NUMBER_OF_DAYS], except for security investigations |
 | Evidence of consent | [RETENTION NEEDED FOR ACCOUNTABILITY AND LIMITATION PERIODS] |
-| Safety reports and blocks | [RETENTION PERIOD AND CRITERIA] |
+| Safety reports and blocks | The written explanation: 12 months. The report itself (reason, date and a keyed hash of the reported person's sign-in identity), which counts towards a block or ban, also for a new account with the same Apple or Google ID: 5 years after it was filed. A ban ends once the oldest of its three reports is older than 5 years |
 | Backups and deleted copies | Rotated out under [MAXIMUM_BACKUP_RETENTION AND ROTATION] |
 | Mandatory tax or legal records | As required under [LEGAL RETENTION PERIOD] |
 
@@ -379,8 +381,10 @@ Als je automatische matching uitdrukkelijk inschakelt, bewaren we je matchingpro
 ### 3.5 Matches
 Bij een match ziet ieder per categorie vragen een score, hoe zwaar elke categorie weegt, de totaalscore en, bij handmatige matches, aan welke eisen niet wordt voldaan. Daarnaast basisgegevens: naam, leeftijd, woonplaats en afstand, lengte, gender, wie iemand zoekt, geloof, talen, kinderen en gebruik van alcohol, tabak en drugs, en waar van toepassing een foto. Antwoorden op losse vragen en de bijbehorende wegingen zijn nooit te zien. Bij een handmatige match gaat het profiel verzegeld van toestel naar toestel; het ontvangende toestel rekent de uitkomst uit en bewaart alleen wat getoond wordt. Bij een automatische match verwerken we de gekoppelde account-ID’s, de matchdatum en de vastgelegde scores; de foto van de ander toont onze server alleen tijdens een lopende match, en het toestel van de ontvanger bewaart een kopie.
 
+Het verzegelde profiel (in een QR-code, tussen twee telefoons en als matchkaart op onze server) is versleuteld met een sleutel die in de app zit, omdat twee telefoons elkaars profiel zonder onze server moeten kunnen lezen. Het zegel houdt antwoorden uit het zicht in de app, in QR-lezers, op onze website en in onze database, maar beschermt niet tegen iemand die de app uit elkaar haalt. Daarom verloopt een QR-code na 24 uur, tonen schermen nooit antwoorden op losse vragen en openen wij matchkaarten niet.
+
 ### 3.6 Chats en communicatiegegevens
-Chatinhoud is end-to-end versleuteld. Wij verwerken versleutelde berichten en, voor zover noodzakelijk, metadata zoals betrokken account-ID’s, afleverstatussen en tijdstippen. Wij kunnen de inhoud van normaal verzonden berichten niet lezen. Wanneer iemand chatinhoud vrijwillig bij een melding meestuurt, kunnen wij die aangeleverde inhoud wel verwerken.
+Chatinhoud is end-to-end versleuteld. Elk bericht wordt op de telefoon van de afzender versleuteld voor de telefoon van de ontvanger en voor de eigen kopie van de afzender (HPKE met X25519 en ChaCha20-Poly1305, RFC 9180). De sleutels blijven op de telefoon en gaan in geen enkele back-up mee. De sleutels van een gesprek wisselen niet zolang het gesprek loopt: wie toegang krijgt tot een ontgrendelde telefoon met de sleutel van dat gesprek, kan de geschiedenis ervan lezen. Met een veiligheidscode kun je met je match controleren dat niemand ertussen zit. Wij verwerken versleutelde berichten en, voor zover noodzakelijk, metadata zoals betrokken account-ID’s, afleverstatussen en tijdstippen. Wij kunnen de inhoud van normaal verzonden berichten niet lezen. Wanneer iemand chatinhoud vrijwillig bij een melding meestuurt, kunnen wij die aangeleverde inhoud wel verwerken.
 
 ### 3.7 Technische gegevens en veiligheid
 Voor beveiliging, beschikbaarheid en misbruikbestrijding verwerken we voor zover nodig [IP-ADRES, APP-VERSIE, APPARAAT-/SESSIE-ID, FOUT- EN BEVEILIGINGSLOGS, MELDINGEN EN BLOKKADES; EXACT AANPASSEN]. We beperken de inhoud van logs en bewaren daarin geen volledige matchingantwoorden, decryptiesleutels of chatberichten in leesbare vorm.
@@ -440,14 +444,14 @@ De matchingservice moet noodzakelijke antwoorden tijdens de berekening kunnen ve
 | Gegevens | Bewaarregel |
 | --- | --- |
 | Lokaal profiel | Tot je dit op je toestel verwijdert of de appgegevens wist, behoudens externe toestelback-ups |
-| Accountgegevens | Gedurende gebruik en [AANTAL_DAGEN] na accountverwijdering, tenzij een geldige uitzondering geldt |
+| Accountgegevens | Zolang het account bestaat; verwijderd als je je account verwijdert. Na 12 maanden zonder app-activiteit blijft alleen de inlog zelf bestaan (om weer in te loggen en aankopen te behouden) |
 | iCloud-back-up | In je eigen iCloud tot je bewaarde matches of je profiel verwijdert; wij hebben geen toegang |
 | Matchingprofiel en foto's | Zolang matching aanstaat; meteen verwijderd als je het uitzet (tijdens een lopende match zodra die voorbij is), restanten binnen een dag. Na 6 maanden zonder app-activiteit doe je niet meer mee aan matching; na 12 maanden worden profiel en foto's verwijderd |
-| Matchscores en matchgegevens | [TERMIJN EN REGEL BIJ UNMATCH/BLOKKEREN/ACCOUNTVERWIJDERING] |
+| Matchscores en matchgegevens | De match (beide account-ID's, de vastgelegde scores, data en hoe hij eindigde) en hashes met een geheime sleutel van beide inlogidentiteiten, zodat dezelfde twee mensen nooit opnieuw gematcht worden, ook niet na het verwijderen en opnieuw aanmaken van een account: tot 5 jaar na het einde van de match. Matchkaarten, chatsleutels en leesposities: 12 maanden na het einde van de match, of zodra jullie allebei de match hebben verwijderd |
 | E2EE-versleutelde berichtinhoud | Maximaal 12 maanden na verzending, ook nadat een match is beëindigd |
 | Technische logs en metadata | Maximaal [AANTAL_DAGEN], behoudens incidentonderzoek |
 | Toestemmingsbewijs | [BEWAARTERMIJN TER VERANTWOORDING EN VERJARING] |
-| Veiligheidsmeldingen en blokkades | [BEWAARTERMIJN EN CRITERIA] |
+| Veiligheidsmeldingen en blokkades | De toelichting: 12 maanden. De melding zelf (reden, datum en een hash met een geheime sleutel van de inlogidentiteit van wie gemeld is), die meetelt voor een blokkade of ban, ook bij een nieuw account met hetzelfde Apple- of Google-ID: 5 jaar na de melding. Een ban vervalt zodra de oudste van de drie meldingen ouder is dan 5 jaar |
 | Back-ups en verwijderde kopieën | Uit roulatie volgens [MAXIMALE BACK-UPRETENTIE EN ROTATIE] |
 | Fiscale/andere wettelijk vereiste gegevens | Volgens [WETTELIJKE BEWAARTERMIJN] |
 

@@ -8,12 +8,14 @@ import { appleRoot, fromBase64, Rejected, verifyAssertion, verifyAttestation } f
 //   photo      { challengeId, keyId, assertion, clientData, photoId }
 // clientData is the JSON the phone signed: {"challenge","photo_id","purpose"}.
 // "Verify JWT with legacy secret" must be off: the user is checked here.
-// Nothing about keys or photos is logged.
+// Nothing about keys or photos is logged; a refusal or failure logs its
+// action and reason only, so it can be traced.
 
 const response = (status: number, body: object) => new Response(JSON.stringify(body), {
   status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
 });
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const reason = (error: unknown) => error instanceof Error ? error.name + ": " + error.message : String(error);
 const isText = (value: unknown, max: number): value is string =>
   typeof value === "string" && value.length > 0 && value.length <= max;
 
@@ -53,7 +55,10 @@ Deno.serve(async (request: Request) => {
           keyID: body.keyId, root: await appleRoot() });
         const { error } = await admin.rpc("app_attest_register_key", { p_user_id: user, p_key_id: body.keyId,
           p_public_key: attested.publicKey, p_environment: attested.environment });
-        if (error) return response(500, { error: "Key not stored" });
+        if (error) {
+          console.error(JSON.stringify({ action: "register", failed: "store", reason: error.message }));
+          return response(500, { error: "Key not stored" });
+        }
         return response(200, { registered: true });
       }
       case "photo": {
@@ -81,6 +86,7 @@ Deno.serve(async (request: Request) => {
         return response(400, { error: "Unknown action" });
     }
   } catch (error) {
+    console.error(JSON.stringify({ action: body.action, rejected: error instanceof Rejected, reason: reason(error) }));
     if (error instanceof Rejected) return response(403, { error: "rejected" });
     return response(500, { error: "Attestation failed" });
   }

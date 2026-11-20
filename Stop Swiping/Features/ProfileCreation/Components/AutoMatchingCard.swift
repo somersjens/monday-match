@@ -349,7 +349,7 @@ struct NotificationPermissionCard: View {
     }
 }
 
-private struct MatchingActionSurface: ViewModifier {
+struct MatchingActionSurface: ViewModifier {
     let isOn: Bool
 
     func body(content: Content) -> some View {

@@ -1,8 +1,15 @@
 import * as x509 from "npm:@peculiar/x509@1.12.3";
 import { decode } from "npm:cbor-x@1.6.0";
+import { p256 } from "npm:@noble/curves@1.6.0/p256";
+import { p384 } from "npm:@noble/curves@1.6.0/p384";
 
 // Apple App Attest, checked as Apple describes in "Validating apps that
-// connect to your server". Pure apart from WebCrypto, so it can be tested.
+// connect to your server". Pure apart from WebCrypto digests, so it can be tested.
+//
+// The certificate chain is checked with @noble/curves, not WebCrypto: Apple's
+// App Attestation CA signs the phone's certificate with a P-384 key and
+// SHA-256, a pairing Deno's WebCrypto does not implement ("NotSupportedError:
+// Not implemented", seen on the first real iPhone on 20 November 2026).
 
 x509.cryptoProvider.set(crypto);
 
@@ -23,16 +30,80 @@ export const fromBase64 = (text: string) => Uint8Array.from(atob(text), (c) => c
 export const toBase64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes));
 export const equal = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((value, i) => value === b[i]);
 
+// ===== Minimal DER reading: certificates, keys and signatures ==============
+
+type DER = { tag: number; offset: number; start: number; end: number };
+
+function derElement(bytes: Uint8Array, offset: number): DER {
+  if (offset + 2 > bytes.length) throw new Rejected("Bad DER");
+  const tag = bytes[offset];
+  let length = bytes[offset + 1], start = offset + 2;
+  if (length & 0x80) {
+    const count = length & 0x7f;
+    if (count === 0 || count > 4) throw new Rejected("Bad DER");
+    length = 0;
+    for (let i = 0; i < count; i++) length = length * 256 + bytes[start + i];
+    start += count;
+  }
+  if (start + length > bytes.length) throw new Rejected("Bad DER");
+  return { tag, offset, start, end: start + length };
+}
+
+function derChildren(bytes: Uint8Array, parent: DER): DER[] {
+  const children: DER[] = [];
+  for (let offset = parent.start; offset < parent.end;) {
+    const child = derElement(bytes, offset);
+    children.push(child);
+    offset = child.end;
+  }
+  return children;
+}
+
+/** The uncompressed EC point inside a DER SubjectPublicKeyInfo. */
+export function spkiPoint(spki: Uint8Array): Uint8Array {
+  const [algorithm, bits] = derChildren(spki, derElement(spki, 0));
+  if (algorithm?.tag !== 0x30 || bits?.tag !== 0x03 || spki[bits.start] !== 0) throw new Rejected("Bad public key");
+  return spki.slice(bits.start + 1, bits.end);
+}
+
+// OBJECT IDENTIFIER contents of ecdsa-with-SHA256 and ecdsa-with-SHA384.
+const ecdsaWithSHA256 = new Uint8Array([0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02]);
+const ecdsaWithSHA384 = new Uint8Array([0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x03]);
+
+/** Whether the holder of issuerPoint (P-256 or P-384) signed this DER certificate. */
+export async function signedBy(certificate: Uint8Array, issuerPoint: Uint8Array): Promise<boolean> {
+  const [tbs, algorithm, signature] = derChildren(certificate, derElement(certificate, 0));
+  if (tbs?.tag !== 0x30 || algorithm?.tag !== 0x30 || signature?.tag !== 0x03) return false;
+  const oid = derChildren(certificate, algorithm)[0];
+  const value = certificate.slice(oid.start, oid.end);
+  const hash = equal(value, ecdsaWithSHA256) ? "SHA-256" : equal(value, ecdsaWithSHA384) ? "SHA-384" : null;
+  const curve = issuerPoint.length === 65 ? p256 : issuerPoint.length === 97 ? p384 : null;
+  if (!hash || !curve || certificate[signature.start] !== 0) return false;
+  const digest = new Uint8Array(await crypto.subtle.digest(hash, certificate.slice(tbs.offset, tbs.end)));
+  try {
+    // DER-encoded signature; NIST curves accept high-S signatures.
+    return curve.verify(certificate.slice(signature.start + 1, signature.end), digest, issuerPoint, { lowS: false });
+  } catch {
+    return false;
+  }
+}
+
+const within = (certificate: x509.X509Certificate, date: Date) =>
+  date >= certificate.notBefore && date <= certificate.notAfter;
+
 export type AuthData = {
   rpIDHash: Uint8Array; counter: number; aaguid?: Uint8Array; credentialID?: Uint8Array;
 };
 
 // WebAuthn authenticator data: rpIdHash(32) flags(1) counter(4) [aaguid(16) idLength(2) id ...].
-export function parseAuthData(data: Uint8Array): AuthData {
+// Only an attestation carries the credential part. An assertion's flags can
+// still have the attested-data bit set (seen on an iPhone 17 Pro, 20 November
+// 2026) while nothing follows the counter, so assertions read just the first 37 bytes.
+export function parseAuthData(data: Uint8Array, withCredential = true): AuthData {
   if (data.length < 37) throw new Rejected("Authenticator data too short");
   const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
   const result: AuthData = { rpIDHash: data.slice(0, 32), counter: view.getUint32(33) };
-  if (data[32] & 0x40) {
+  if (withCredential && (data[32] & 0x40)) {
     if (data.length < 55) throw new Rejected("Attested credential data too short");
     const length = view.getUint16(53);
     if (data.length < 55 + length) throw new Rejected("Credential ID too short");
@@ -52,7 +123,9 @@ export async function appleRoot(): Promise<x509.X509Certificate> {
   const response = await fetch(rootURL);
   if (!response.ok) throw new Error("Apple's App Attest root is unavailable");
   const root = new x509.X509Certificate(await response.text());
-  if (!root.subject.includes("CN=Apple App Attestation Root CA") || !(await root.isSelfSigned())) {
+  const rootPoint = spkiPoint(new Uint8Array(root.publicKey.rawData));
+  if (!root.subject.includes("CN=Apple App Attestation Root CA") ||
+      !(await signedBy(new Uint8Array(root.rawData), rootPoint))) {
     throw new Error("Unexpected App Attest root");
   }
   cachedRoot = root;
@@ -70,10 +143,13 @@ export async function verifyAttestation(input: {
   if (object?.fmt !== "apple-appattest" || !object.authData || object.attStmt?.x5c?.length !== 2) {
     throw new Rejected("Not an App Attest object");
   }
-  const [credential, intermediate] = object.attStmt.x5c.map((item) => new x509.X509Certificate(item));
+  const [credentialDER, intermediateDER] = object.attStmt.x5c.map((item) => new Uint8Array(item));
+  const [credential, intermediate] = [credentialDER, intermediateDER].map((item) => new x509.X509Certificate(item));
   const date = input.now ?? new Date();
-  if (!(await credential.verify({ publicKey: intermediate.publicKey, date })) ||
-      !(await intermediate.verify({ publicKey: input.root.publicKey, date }))) {
+  const intermediatePoint = spkiPoint(new Uint8Array(intermediate.publicKey.rawData));
+  const rootPoint = spkiPoint(new Uint8Array(input.root.publicKey.rawData));
+  if (!within(credential, date) || !within(intermediate, date) ||
+      !(await signedBy(credentialDER, intermediatePoint)) || !(await signedBy(intermediateDER, rootPoint))) {
     throw new Rejected("Not certified by Apple");
   }
 
@@ -87,8 +163,8 @@ export async function verifyAttestation(input: {
     throw new Rejected("Challenge mismatch");
   }
 
-  // The key ID is the hash of the certified public key.
-  const point = new Uint8Array(await crypto.subtle.exportKey("raw", await credential.publicKey.export()));
+  // The key ID is the hash of the certified public key (the uncompressed point).
+  const point = spkiPoint(new Uint8Array(credential.publicKey.rawData));
   const keyID = fromBase64(input.keyID);
   if (!equal(await sha256(point), keyID)) throw new Rejected("Key ID mismatch");
 
@@ -135,7 +211,7 @@ export async function verifyAssertion(input: {
   const valid = await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, key,
     derToRaw(new Uint8Array(object.signature)), nonce);
   if (!valid) throw new Rejected("Bad signature");
-  const parsed = parseAuthData(authData);
+  const parsed = parseAuthData(authData, false);
   if (!equal(parsed.rpIDHash, await sha256(new TextEncoder().encode(appID)))) throw new Rejected("Another app");
   if (parsed.counter <= input.signCount) throw new Rejected("Replayed assertion");
   return parsed.counter;
