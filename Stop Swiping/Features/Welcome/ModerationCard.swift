@@ -289,7 +289,7 @@ enum ModerationCopy {
                                     message: L10n("You can’t match or chat. You can still delete your account from your profile."),
                                     canObject: false)
         }
-        let until = status.suspendedUntil.map(Self.until) ?? ""
+        let until = status.suspendedUntil.map { Self.until($0) } ?? ""
         return ModerationNotice(kind: .strike, title: L10n("Blocked until \(until)"), reason: nil,
                                 message: L10n("You can’t match or chat until then. You can still view your profile and personality."),
                                 canObject: status.canObject)

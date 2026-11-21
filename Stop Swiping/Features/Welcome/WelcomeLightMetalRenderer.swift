@@ -195,8 +195,12 @@ final class WelcomeLightMetalResources {
     /// same floating-point contract, including exact path-boundary decisions.
     nonisolated static func compileOptions() -> MTLCompileOptions {
         let options = MTLCompileOptions()
-        options.mathMode = .safe
-        options.mathFloatingPointFunctions = .precise
+        if #available(iOS 18, *) {
+            options.mathMode = .safe
+            options.mathFloatingPointFunctions = .precise
+        } else {
+            options.fastMathEnabled = false
+        }
         return options
     }
 

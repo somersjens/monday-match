@@ -138,9 +138,9 @@ struct MatchChatPanel: View {
                     }
                 }
             }
-            .onScrollGeometryChange(for: Bool.self) { geometry in
+            .onScrollMetricsChange(for: Bool.self, fallback: true) { geometry in
                 geometry.visibleRect.maxY >= geometry.contentSize.height - 24
-            } action: { _, atBottom in
+            } action: { atBottom in
                 scrollEdge.isAtBottom = atBottom
             }
             .onChange(of: visibleMessages.last?.id) { _, _ in scrollToBottom(proxy) }

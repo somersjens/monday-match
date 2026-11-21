@@ -463,6 +463,9 @@ struct BitReader {
             guard let byte = read(8) else { return nil }
             utf8.append(UInt8(byte))
         }
-        return String(validating: utf8, as: UTF8.self)
+        if #available(iOS 18, *) {
+            return String(validating: utf8, as: UTF8.self)
+        }
+        return String(bytes: utf8, encoding: .utf8)
     }
 }

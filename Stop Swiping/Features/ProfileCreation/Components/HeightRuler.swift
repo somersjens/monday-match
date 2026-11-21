@@ -8,6 +8,20 @@ struct HeightRuler: View {
     @Binding var centimeters: Int
     let range: ClosedRange<Int>
 
+    var body: some View {
+        if #available(iOS 18, *) {
+            ScrollPositionHeightRuler(centimeters: $centimeters, range: range)
+        } else {
+            LegacyHeightRuler(centimeters: $centimeters, range: range)
+        }
+    }
+}
+
+@available(iOS 18, *)
+private struct ScrollPositionHeightRuler: View {
+    @Binding var centimeters: Int
+    let range: ClosedRange<Int>
+
     @State private var position = ScrollPosition()
     /// The last value the ruler reported, so it does not scroll itself back.
     @State private var reportedValue: Int?
@@ -73,7 +87,7 @@ struct HeightRuler: View {
                 endPoint: .trailing
             )
         }
-        .overlay(alignment: .top) { indicator }
+        .overlay(alignment: .top) { RulerIndicator(isFocused: isFocused) }
         .onChange(of: centimeters) { _, value in
             guard value != reportedValue else { return }
             scroll(to: value, animated: true)
@@ -91,26 +105,6 @@ struct HeightRuler: View {
         .accessibilityAdjustableAction { direction in
             nudge(direction == .increment ? 1 : -1)
         }
-    }
-
-    private var indicator: some View {
-        VStack(spacing: 0) {
-            Capsule()
-                .fill(LinearGradient(colors: [OnboardingTheme.cyan, OnboardingTheme.violet], startPoint: .top, endPoint: .bottom))
-                .frame(width: 3, height: 52)
-                .shadow(color: OnboardingTheme.cyan.opacity(0.8), radius: 8)
-            Circle()
-                .fill(OnboardingTheme.violet)
-                .frame(width: 6, height: 6)
-                .shadow(color: OnboardingTheme.violet, radius: 6)
-                .offset(y: -2)
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(.white.opacity(isFocused ? 0.7 : 0), lineWidth: 2)
-                .frame(width: 22, height: 70)
-        }
-        .allowsHitTesting(false)
     }
 
     private var padding: CGFloat {
@@ -134,6 +128,155 @@ struct HeightRuler: View {
     private func nudge(_ delta: Int) {
         let next = min(max(centimeters + delta, range.lowerBound), range.upperBound)
         if next != centimeters { centimeters = next }
+    }
+}
+
+/// iOS 17 has no `ScrollPosition` and no scroll geometry observation: the
+/// offset comes from the content's frame in the scroll view, and the ruler
+/// scrolls to a tick by its id. Looks and behaves like the iOS 18 ruler.
+private struct LegacyHeightRuler: View {
+    @Binding var centimeters: Int
+    let range: ClosedRange<Int>
+
+    @State private var reportedValue: Int?
+    @State private var pendingValue: Int?
+    @State private var offsetValue: Int?
+    @State private var viewportWidth: CGFloat = 0
+    /// Without scroll phases there is no "user took over" signal, so a
+    /// programmatic scroll stops counting once its animation is over.
+    @State private var pendingRelease: Task<Void, Never>?
+    @FocusState private var isFocused: Bool
+
+    private let tickSpacing: CGFloat = 10
+    private let height: CGFloat = 96
+
+    init(centimeters: Binding<Int>, range: ClosedRange<Int>) {
+        _centimeters = centimeters
+        self.range = range
+        _pendingValue = State(initialValue: centimeters.wrappedValue)
+    }
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal) {
+                HStack(spacing: 0) {
+                    Color.clear.frame(width: padding)
+                    ForEach(Array(range), id: \.self) { value in
+                        RulerTick(value: value)
+                            .frame(width: tickSpacing, height: height, alignment: .top)
+                            .id(value)
+                            .onTapGesture { centimeters = value }
+                    }
+                    Color.clear.frame(width: padding)
+                }
+                .onGeometryChange(for: CGFloat.self, of: { -$0.frame(in: .scrollView(axis: .horizontal)).minX }) { offset in
+                    offsetChanged(offset)
+                }
+            }
+            .scrollTargetBehavior(TickSnapping(spacing: tickSpacing))
+            .scrollIndicators(.hidden)
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width in
+                viewportWidth = width
+                scroll(to: centimeters, animated: false, proxy: proxy)
+            }
+            .onChange(of: centimeters) { _, value in
+                guard value != reportedValue else { return }
+                scroll(to: value, animated: true, proxy: proxy)
+            }
+        }
+        .frame(height: height)
+        .mask {
+            LinearGradient(
+                stops: [
+                    .init(color: .clear, location: 0),
+                    .init(color: .black, location: 0.22),
+                    .init(color: .black, location: 0.78),
+                    .init(color: .clear, location: 1)
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        }
+        .overlay(alignment: .top) { RulerIndicator(isFocused: isFocused) }
+        .sensoryFeedback(.selection, trigger: centimeters)
+        .soundFeedback(.tick, trigger: centimeters)
+        .focusable()
+        .focused($isFocused)
+        .focusEffectDisabled()
+        .onKeyPress(.leftArrow) { nudge(-1); return .handled }
+        .onKeyPress(.rightArrow) { nudge(1); return .handled }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(L10n("Height"))
+        .accessibilityValue(L10n("\(centimeters) centimeters"))
+        .accessibilityAdjustableAction { direction in
+            nudge(direction == .increment ? 1 : -1)
+        }
+    }
+
+    private func offsetChanged(_ offset: CGFloat) {
+        let value = value(forOffset: offset)
+        offsetValue = value
+        if let pending = pendingValue {
+            if pending == value { pendingValue = nil }
+            return
+        }
+        guard value != centimeters else { return }
+        reportedValue = value
+        centimeters = value
+    }
+
+    private var padding: CGFloat {
+        max(0, (viewportWidth - tickSpacing) / 2)
+    }
+
+    private func value(forOffset offset: CGFloat) -> Int {
+        let steps = Int((offset / tickSpacing).rounded())
+        return min(max(range.lowerBound + steps, range.lowerBound), range.upperBound)
+    }
+
+    private func scroll(to value: Int, animated: Bool, proxy: ScrollViewProxy) {
+        guard viewportWidth > 0 else { return }
+        reportedValue = value
+        pendingValue = value == offsetValue ? nil : value
+        withAnimation(animated ? .snappy(duration: 0.3) : nil) {
+            proxy.scrollTo(value, anchor: .center)
+        }
+        pendingRelease?.cancel()
+        guard pendingValue != nil else { return }
+        pendingRelease = Task {
+            try? await Task.sleep(for: .milliseconds(animated ? 450 : 250))
+            guard !Task.isCancelled else { return }
+            pendingValue = nil
+        }
+    }
+
+    private func nudge(_ delta: Int) {
+        let next = min(max(centimeters + delta, range.lowerBound), range.upperBound)
+        if next != centimeters { centimeters = next }
+    }
+}
+
+private struct RulerIndicator: View {
+    let isFocused: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Capsule()
+                .fill(LinearGradient(colors: [OnboardingTheme.cyan, OnboardingTheme.violet], startPoint: .top, endPoint: .bottom))
+                .frame(width: 3, height: 52)
+                .shadow(color: OnboardingTheme.cyan.opacity(0.8), radius: 8)
+            Circle()
+                .fill(OnboardingTheme.violet)
+                .frame(width: 6, height: 6)
+                .shadow(color: OnboardingTheme.violet, radius: 6)
+                .offset(y: -2)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(.white.opacity(isFocused ? 0.7 : 0), lineWidth: 2)
+                .frame(width: 22, height: 70)
+        }
+        .allowsHitTesting(false)
     }
 }
 

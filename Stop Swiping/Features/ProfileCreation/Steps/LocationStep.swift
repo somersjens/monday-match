@@ -230,11 +230,10 @@ struct LocationStep: View {
         guard location == nil,
               let regionCode = Locale.current.region?.identifier,
               let country = Locale(identifier: "en_US").localizedString(forRegionCode: regionCode),
-              let request = MKGeocodingRequest(addressString: country),
-              let item = try? await request.mapItems.first,
+              let center = await Self.coordinate(of: country),
               location == nil else { return }
         withAnimation(reduceMotion ? nil : .smooth(duration: 1.2)) {
-            camera = .region(MKCoordinateRegion(center: item.location.coordinate, latitudinalMeters: 900_000, longitudinalMeters: 900_000))
+            camera = .region(MKCoordinateRegion(center: center, latitudinalMeters: 900_000, longitudinalMeters: 900_000))
         }
     }
 
@@ -242,11 +241,32 @@ struct LocationStep: View {
         guard let location, location.placeName == nil else { return }
         try? await Task.sleep(for: .milliseconds(300))
         guard !Task.isCancelled,
-              let request = MKReverseGeocodingRequest(location: CLLocation(latitude: location.latitude, longitude: location.longitude)),
-              let item = try? await request.mapItems.first,
+              let name = await Self.placeName(at: CLLocation(latitude: location.latitude, longitude: location.longitude)),
               !Task.isCancelled else { return }
-        let name = item.addressRepresentations?.cityWithContext ?? item.name
         viewModel.updatePlaceName(name, for: location.coordinate)
+    }
+
+    /// MapKit's geocoding requests on iOS 26, `CLGeocoder` before that.
+    private static func coordinate(of address: String) async -> CLLocationCoordinate2D? {
+        if #available(iOS 26, *) {
+            guard let request = MKGeocodingRequest(addressString: address),
+                  let item = try? await request.mapItems.first else { return nil }
+            return item.location.coordinate
+        }
+        return try? await CLGeocoder().geocodeAddressString(address).first?.location?.coordinate
+    }
+
+    private static func placeName(at location: CLLocation) async -> String? {
+        if #available(iOS 26, *) {
+            guard let request = MKReverseGeocodingRequest(location: location),
+                  let item = try? await request.mapItems.first else { return nil }
+            return item.addressRepresentations?.cityWithContext ?? item.name
+        }
+        guard let placemark = try? await CLGeocoder().reverseGeocodeLocation(location).first else { return nil }
+        if let city = placemark.locality {
+            return [city, placemark.country].compactMap { $0 }.joined(separator: ", ")
+        }
+        return placemark.name
     }
 
     /// The circle takes a growing share of the map as the radius grows, so

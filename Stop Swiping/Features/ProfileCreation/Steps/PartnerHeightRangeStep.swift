@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct PartnerHeightRangeStep: View {
     @ObservedObject var viewModel: ProfileCreationViewModel
@@ -102,7 +103,7 @@ private struct HeightInputSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var input: String
-    @State private var selection: TextSelection?
+    @State private var selection = TextSelectionBox()
     @FocusState private var isFocused: Bool
 
     init(title: String, centimeters: Int, onSave: @escaping (Int) -> Void) {
@@ -121,7 +122,7 @@ private struct HeightInputSheet: View {
                     .foregroundStyle(OnboardingTheme.primaryText)
 
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    TextField(title, text: $input, selection: $selection)
+                    heightField
                         .font(.system(size: 64, weight: .light, design: .rounded).monospacedDigit())
                         .multilineTextAlignment(.center)
                         .keyboardType(.numberPad)
@@ -167,7 +168,22 @@ private struct HeightInputSheet: View {
         .preferredColorScheme(.dark)
         .task {
             isFocused = true
-            selection = TextSelection(range: input.startIndex..<input.endIndex)
+            if #available(iOS 18, *) {
+                selection.value = TextSelection(range: input.startIndex..<input.endIndex)
+            } else {
+                // Without TextSelection, select the text once the field has focus.
+                try? await Task.sleep(for: .milliseconds(150))
+                UIApplication.shared.sendAction(#selector(UIResponder.selectAll(_:)), to: nil, from: nil, for: nil)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var heightField: some View {
+        if #available(iOS 18, *) {
+            TextField(title, text: $input, selection: $selection.value)
+        } else {
+            TextField(title, text: $input)
         }
     }
 
@@ -175,5 +191,16 @@ private struct HeightInputSheet: View {
         guard let value else { return }
         onSave(value)
         dismiss()
+    }
+}
+
+/// Holds a `TextSelection` (iOS 18) in a property that exists on iOS 17 too.
+private struct TextSelectionBox {
+    private var storage: Any?
+
+    @available(iOS 18, *)
+    var value: TextSelection? {
+        get { storage as? TextSelection }
+        set { storage = newValue }
     }
 }

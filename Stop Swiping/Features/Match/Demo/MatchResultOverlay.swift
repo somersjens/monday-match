@@ -489,11 +489,13 @@ struct MatchResultOverlay: View {
             VStack(spacing: 0) {
                 ScrollView { issueList }
                     .scrollIndicators(.hidden)
-                    .onScrollGeometryChange(for: Bool.self) { geometry in
+                    // This variant only shows when the list does not fit, so
+                    // on iOS 17 the chevron stays visible.
+                    .onScrollMetricsChange(for: Bool.self, fallback: true) { geometry in
                         // Only hidden rows count, not the padding below the last issue.
                         geometry.contentOffset.y + geometry.containerSize.height
                             < geometry.contentSize.height - issueListPadding - 1
-                    } action: { _, hasMore in
+                    } action: { hasMore in
                         hasMoreIssuesBelow = hasMore
                     }
 
