@@ -105,7 +105,7 @@ struct FaceVerificationView: View {
             onDone: { complete(viewModel.outcome ?? .failed(L10n("The scan was incomplete."))) }
         ) {
             if let camera = viewModel.camera {
-                FaceCameraPreview(session: camera.session)
+                CameraPreview(session: camera.session)
             } else {
                 Image(systemName: "person.crop.circle")
                     .font(.system(size: 100, weight: .ultraLight))
@@ -155,17 +155,22 @@ struct FaceVerificationView: View {
     }
 }
 
-private struct FaceCameraPreview: UIViewRepresentable {
+/// A live camera preview, upright on every iPhone. The front camera is
+/// mirrored, like a mirror; the rear camera shows what it sees.
+struct CameraPreview: UIViewRepresentable {
     let session: AVCaptureSession
+    var mirrored = true
 
     func makeUIView(context: Context) -> PreviewView {
         let view = PreviewView()
         view.previewLayer.videoGravity = .resizeAspectFill
+        view.mirrored = mirrored
         view.configure(session: session)
         return view
     }
 
     func updateUIView(_ view: PreviewView, context: Context) {
+        view.mirrored = mirrored
         view.configure(session: session)
     }
 
@@ -176,6 +181,7 @@ private struct FaceCameraPreview: UIViewRepresentable {
     final class PreviewView: UIView {
         override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
         var previewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
+        var mirrored = true
         private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
         private var rotationObservation: NSKeyValueObservation?
 
@@ -203,7 +209,7 @@ private struct FaceCameraPreview: UIViewRepresentable {
                   let angle = FaceCameraRotation.quarterTurn(for: rotationCoordinator.videoRotationAngleForHorizonLevelPreview) else { return }
             if connection.isVideoRotationAngleSupported(angle) { connection.videoRotationAngle = angle }
             connection.automaticallyAdjustsVideoMirroring = false
-            if connection.isVideoMirroringSupported { connection.isVideoMirrored = true }
+            if connection.isVideoMirroringSupported { connection.isVideoMirrored = mirrored }
         }
 
         func stopPreview() {

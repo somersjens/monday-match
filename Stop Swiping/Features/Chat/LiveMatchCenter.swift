@@ -38,6 +38,8 @@ final class LiveMatchCenter: ObservableObject {
     private let serverPushDelivered: (_ since: Date) async -> Bool
     private var sharedCards: Set<UUID> = []
     private var chatChanges: AnyCancellable?
+    /// The server said this account is now banned (`DeviceInstallID`).
+    private var moderationChanges: AnyCancellable?
     private var historyChats: [UUID: ChatViewModel] = [:]
     /// The Storage object `partnerPhoto` was downloaded from.
     private var partnerPhotoPath: String?
@@ -107,6 +109,12 @@ final class LiveMatchCenter: ObservableObject {
         }
         if repository != nil, let data = defaults.data(forKey: Self.moderationKey) {
             moderation = try? JSONDecoder().decode(ModerationStatus.self, from: data)
+        }
+        if repository != nil {
+            // For example a new account on a phone that belonged to a banned one.
+            moderationChanges = NotificationCenter.default.publisher(for: .moderationChanged)
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in Task { await self?.refreshModeration() } }
         }
         if repository != nil {
             let deleted = Self.pendingDeletes(defaults: defaults)
@@ -322,6 +330,14 @@ final class LiveMatchCenter: ObservableObject {
         await refreshModeration()
     }
 
+    /// Back on the home screen from a match: a report against this account
+    /// shows here, never in the chat. At most every five minutes.
+    func refreshModerationOnReturn() async {
+        guard Date().timeIntervalSince(lastModerationCheck) > Self.moderationIntervalOnReturn else { return }
+        await refreshModeration()
+    }
+    static let moderationIntervalOnReturn: TimeInterval = 5 * 60
+
     func refreshModeration() async {
         guard let repository, let status = try? await repository.moderation() else { return }
         lastModerationCheck = Date()
@@ -337,9 +353,9 @@ final class LiveMatchCenter: ObservableObject {
 
     /// Objects to the newest report against this account. Throws so the
     /// objection screen can say what went wrong and keep the words.
-    func objectToReport(_ reportID: UUID, message: String, idCheck: ReportIDCheck?) async throws {
+    func objectToReport(_ reportID: UUID, message: String, proof: AgeProof?) async throws {
         guard let repository else { throw CancellationError() }
-        try await repository.objectToReport(reportID, message: message, idCheck: idCheck)
+        try await repository.objectToReport(reportID, message: message, proof: proof)
         await refreshModeration()
     }
 
@@ -357,10 +373,24 @@ final class LiveMatchCenter: ObservableObject {
         return try await repository.adminObjections()
     }
 
-    /// Administrators: approve (the report is withdrawn) or reject.
-    func decideObjection(_ objectionID: UUID, approve: Bool) async throws {
+    /// Administrators: approve (the report is withdrawn) or reject, and on
+    /// reject optionally ban the account directly.
+    func decideObjection(_ objectionID: UUID, approve: Bool, ban: Bool = false) async throws {
         guard let repository else { throw CancellationError() }
-        try await repository.decideObjection(objectionID, approve: approve)
+        try await repository.decideObjection(objectionID, approve: approve, ban: ban)
+        await refreshModeration()
+    }
+
+    /// Administrators: "concerning offline behavior" waiting for a decision.
+    func adminReviews() async throws -> [AdminReview] {
+        guard let repository else { return [] }
+        return try await repository.adminReviews()
+    }
+
+    /// Administrators: keep as a regular warning, or ban directly.
+    func reviewReport(_ reportID: UUID, ban: Bool) async throws {
+        guard let repository else { throw CancellationError() }
+        try await repository.reviewReport(reportID, ban: ban)
         await refreshModeration()
     }
 

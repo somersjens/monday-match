@@ -1,5 +1,6 @@
 import CoreLocation
 import XCTest
+import UIKit
 @testable import Stop_Swiping
 
 @MainActor
@@ -350,6 +351,39 @@ final class DemoMatchTests: XCTestCase {
             }
             XCTAssertEqual(previous, 0, accuracy: 1e-9)
         }
+    }
+
+    // MARK: - Score detail sheet
+
+    /// Pulling the sheet from half to full height drops its side margins; the
+    /// content keeps its first width so it doesn't stretch along the way.
+    func testScoreDetailKeepsItsWidthWhileTheSheetWidens() {
+        XCTAssertEqual(SheetWidthKeeper.contentWidth(keeping: nil, sheetWidth: 380), 380)
+        XCTAssertEqual(SheetWidthKeeper.contentWidth(keeping: 380, sheetWidth: 402), 380)
+        // Narrower always fits the sheet; much wider (rotation) takes the room.
+        XCTAssertEqual(SheetWidthKeeper.contentWidth(keeping: 402, sheetWidth: 380), 380)
+        XCTAssertEqual(SheetWidthKeeper.contentWidth(keeping: 380, sheetWidth: 874), 874)
+    }
+
+    /// The real sheet's widening stays inside what the detail view treats as
+    /// the same width, on whatever device the tests run on.
+    func testHalfToFullSheetWideningStaysWithinTheKeptWidth() async throws {
+        let window = try XCTUnwrap(UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow }.first)
+        let host = try XCTUnwrap(window.rootViewController)
+        let sheet = UIViewController()
+        sheet.sheetPresentationController?.detents = [.medium(), .large()]
+        host.present(sheet, animated: false)
+        defer { sheet.dismiss(animated: false) }
+        try await Task.sleep(for: .seconds(1))
+        let half = sheet.view.convert(sheet.view.bounds, to: nil).width
+        sheet.sheetPresentationController?.animateChanges {
+            sheet.sheetPresentationController?.selectedDetentIdentifier = .large
+        }
+        try await Task.sleep(for: .seconds(1))
+        let full = sheet.view.convert(sheet.view.bounds, to: nil).width
+        print("Score sheet width: half \(half), full \(full)")
+        XCTAssertEqual(SheetWidthKeeper.contentWidth(keeping: half, sheetWidth: full), half)
     }
 
     // MARK: - Fixtures

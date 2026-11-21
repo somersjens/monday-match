@@ -255,18 +255,20 @@ struct AccountCreationCard: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 6) {
                 Button(action: onToggle) {
+                    // The checkmark follows the text, so the label starts where
+                    // the other cards' labels do.
                     HStack(spacing: 8) {
-                        if phase.isSignedIn {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(OnboardingTheme.accentGradient)
-                                .transition(.scale(scale: 0.4).combined(with: .opacity))
-                        }
                         Text(phase.isSignedIn ? L10n("You’re signed in") : L10n("Create your account"))
                             .lineLimit(1)
                             .minimumScaleFactor(0.6)
                             .contentTransition(.opacity)
                             .id(phase.isSignedIn)
                             .transition(.onboardingReveal(reduceMotion: reduceMotion))
+                        if phase.isSignedIn {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(OnboardingTheme.accentGradient)
+                                .transition(.scale(scale: 0.4).combined(with: .opacity))
+                        }
                     }
                     .font(.system(.body, weight: .semibold))
                     .foregroundStyle(OnboardingTheme.primaryText)

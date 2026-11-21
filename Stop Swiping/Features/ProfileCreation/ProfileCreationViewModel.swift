@@ -47,6 +47,9 @@ final class ProfileCreationViewModel: ObservableObject {
     @Published private(set) var rejectionCount = 0
     /// Set while a single answer of a completed profile is being changed.
     @Published private(set) var editingStep: ProfileCreationStep?
+    /// Continue was used during that change: the questions walk on from the
+    /// one opened, and the quiet button steps back instead of cancelling.
+    @Published private(set) var hasMovedWhileEditing = false
     @Published private(set) var autoMatchingPhotoVerification: PhotoVerificationReceipt?
     @Published var substanceMode: PartnerPreferenceScale.Mode = .own
     /// The answers as they were before that change, restored on cancel.
@@ -183,6 +186,12 @@ final class ProfileCreationViewModel: ObservableObject {
 
     @discardableResult
     func submitCurrentStep() -> ProfileCreationSubmission {
+        let result = submitStep()
+        if result == .advanced, editingStep != nil { hasMovedWhileEditing = true }
+        return result
+    }
+
+    private func submitStep() -> ProfileCreationSubmission {
         if let missingSubstanceSide {
             substanceMode = missingSubstanceSide
             return .advanced
@@ -196,14 +205,20 @@ final class ProfileCreationViewModel: ObservableObject {
         }
         if state.currentStep == .dateOfBirth {
             let result = submitBirthDate()
-            guard result == .advanced, editingStep != nil else { return result }
-            return finishEditing()
+            if result == .advanced { move(to: .partnerAgeRange) }
+            return result
         }
         guard isComplete(state.currentStep) else {
             reject(nil)
             return .rejected
         }
         if editingStep != nil {
+            // A change walks on through the questions; only the checkmark,
+            // or Save on the last question, keeps it.
+            if let next = state.currentStep.next {
+                move(to: next)
+                return .advanced
+            }
             return finishEditing()
         }
         if state.isAnsweringNewQuestions == true {
@@ -330,7 +345,6 @@ final class ProfileCreationViewModel: ObservableObject {
             if state.partnerAgeRange?.isCustomized != true {
                 state.partnerAgeRange = PartnerAgeRules.suggestedRange(forAge: age)
             }
-            if editingStep == nil { move(to: .partnerAgeRange) }
             return .advanced
         }
     }
@@ -348,6 +362,7 @@ final class ProfileCreationViewModel: ObservableObject {
     /// Every answer is discarded; nothing a minor entered is kept.
     private func lockForUnderage() {
         editingStep = nil
+        hasMovedWhileEditing = false
         stateBeforeEditing = nil
         var locked = ProfileCreationState(today: today, applicationLanguage: AppLocale.languageCode)
         locked.birthDateSelection = state.birthDateSelection
@@ -635,6 +650,7 @@ final class ProfileCreationViewModel: ObservableObject {
         guard isCompleted else { return }
         stateBeforeEditing = state
         editingStep = step
+        hasMovedWhileEditing = false
         state.birthDateBaseline = today
         state.birthDateSelection = state.dateOfBirth ?? today
         feedback = nil
@@ -649,7 +665,26 @@ final class ProfileCreationViewModel: ObservableObject {
         state = saved
         stateBeforeEditing = nil
         editingStep = nil
+        hasMovedWhileEditing = false
         feedback = nil
+    }
+
+    /// The checkmark: keeps every change made so far, wherever the user is.
+    /// The question on screen is checked like Continue would check it first.
+    func saveEditing() -> ProfileCreationSubmission {
+        guard editingStep != nil else { return .rejected }
+        if currentStep == .religion {
+            state.religion.acceptedPartnerReligions = state.religion.effectivePartnerReligions
+        }
+        if currentStep == .dateOfBirth {
+            let result = submitBirthDate()
+            guard result == .advanced else { return result }
+        } else if !isComplete(currentStep) {
+            if let missingSubstanceSide { substanceMode = missingSubstanceSide }
+            reject(nil)
+            return .rejected
+        }
+        return finishEditing()
     }
 
     private func finishEditing() -> ProfileCreationSubmission {
@@ -661,6 +696,7 @@ final class ProfileCreationViewModel: ObservableObject {
             editingStep = state.currentStep
             return .rejected
         }
+        hasMovedWhileEditing = false
         return .completed
     }
 

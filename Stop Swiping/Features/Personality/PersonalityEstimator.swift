@@ -1,26 +1,83 @@
 import Foundation
 
-/// The user's own positions on the compatibility questions, centred so that
-/// −1 is the low end of a scale, 0 the middle and 1 the high end.
+/// What the compatibility answers say about the user themself, per question:
+/// a position centred so that −1 is the low end of a scale, 0 the middle and
+/// 1 the high end, and how much that answer can be trusted.
+///
+/// Personality tests measure how someone describes themself, so the own
+/// answer is the measurement. The other two parts of an answer only refine it:
+/// - Importance says how much a match on the question matters. Answers on
+///   topics someone cares about are more considered and more stable, so they
+///   count a little more within a dimension; importance never moves an answer
+///   toward either end, and a topic that matters little still counts.
+/// - The partner wish is mostly about the other person, and people often look
+///   for what they are not. Only for needs that are lived together (how often
+///   to be in touch, closeness, privacy) is the wish a second view of the
+///   user's own need, and only once it was set by hand: until then it copies
+///   the own answer and adds nothing.
 struct PersonalityAnswers {
-    private let values: [ProfileCreationStep: Double]
+    struct Evidence: Equatable {
+        /// −1…1.
+        var value: Double
+        /// How much the answer counts; 1 for a fairly important topic.
+        var reliability: Double = 1
+    }
+
+    private let evidence: [ProfileCreationStep: Evidence]
 
     init(state: ProfileCreationState) {
-        var values: [ProfileCreationStep: Double] = [:]
+        self.init(lifestyle: state.lifestyle)
+    }
+
+    init(lifestyle: LifestyleAnswers) {
+        var evidence: [ProfileCreationStep: Evidence] = [:]
         for question in CompatibilityScaleQuestion.all {
-            guard let own = state.lifestyle[question].own else { continue }
-            values[question.step] = Double(own - 3) / 2
+            let step = question.step
+            if let answer = Self.evidence(for: step, answer: lifestyle[question]) { evidence[step] = answer }
         }
-        self.values = values
+        self.evidence = evidence
     }
 
     init(values: [ProfileCreationStep: Double]) {
-        self.values = values
+        evidence = values.mapValues { Evidence(value: $0) }
     }
+
+    init(evidence: [ProfileCreationStep: Evidence]) {
+        self.evidence = evidence
+    }
+
+    static func evidence(for step: ProfileCreationStep, answer: CompatibilityScaleAnswer) -> Evidence? {
+        guard let own = answer.own else { return nil }
+        var value = centred(own)
+        if sharedNeeds.contains(step), answer.isPartnerCustomized, let partner = answer.partner, partner != own {
+            value = (value + partnerShare * centred(partner)) / (1 + partnerShare)
+        }
+        return Evidence(value: value, reliability: reliability(importance: answer.importance))
+    }
+
+    private static func centred(_ answer: Int) -> Double {
+        Double(min(max(answer, 1), 5) - 3) / 2
+    }
+
+    /// Not at all important 0.7 · fairly important (the default) 1 · very
+    /// important 1.3.
+    static func reliability(importance: Int?) -> Double {
+        guard let importance else { return 1 }
+        return 1 + 0.15 * Double(min(max(importance, 1), 5) - CompatibilityScaleAnswer.defaultImportance)
+    }
+
+    /// Questions about a need both partners live with, where wanting a partner
+    /// higher or lower on it shows the user's own need too.
+    static let sharedNeeds: Set<ProfileCreationStep> = [
+        .texting, .partnerSocializing, .physicalAffection, .publicAffection, .relationshipPrivacy,
+    ]
+
+    /// How much a hand-set partner wish counts next to the own answer.
+    static let partnerShare = 0.35
 
     /// Share of the questions that were answered.
     var coverage: Double {
-        Double(values.count) / Double(max(CompatibilityScaleQuestion.orderedSteps.count, 1))
+        Double(evidence.count) / Double(max(CompatibilityScaleQuestion.orderedSteps.count, 1))
     }
 
     /// The weighted mean of the answered questions, −1…1, pulled slightly
@@ -30,9 +87,9 @@ struct PersonalityAnswers {
     func score(_ weights: KeyValuePairs<ProfileCreationStep, Double>) -> Double {
         var total = 0.0, weight = 0.0
         for (step, w) in weights {
-            guard let value = values[step] else { continue }
-            total += value * w
-            weight += abs(w)
+            guard let answer = evidence[step] else { continue }
+            total += answer.value * w * answer.reliability
+            weight += abs(w) * answer.reliability
         }
         guard weight > 0 else { return 0 }
         return total / (weight + Self.evidencePrior)
@@ -132,10 +189,12 @@ enum PersonalityEstimator {
                  .physicalAffection: 0.2, .workAmbition: -0.2])
     }
 
-    /// Judging against perceiving: structure and plans over keeping options open.
+    /// Judging against perceiving: structure and plans over keeping options
+    /// open. Taking time over a decision keeps the options open, so it counts
+    /// toward perceiving.
     static func judging(_ a: PersonalityAnswers) -> Double {
         a.score([.weeklyPlanning: 1.0, .punctuality: 0.9, .perfectionism: 0.6, .homeTidiness: 0.6,
-                 .spendingMoney: 0.6, .rules: -0.5, .decisionMaking: 0.3])
+                 .spendingMoney: 0.6, .rules: -0.5, .decisionMaking: -0.3, .dailyRhythm: 0.2])
     }
 
     static func mbtiType(_ a: PersonalityAnswers) -> String {
@@ -322,10 +381,12 @@ enum PersonalityEstimator {
                  .travelStyle: -0.3])
     }
 
+    /// Morning people score somewhat higher on conscientiousness across
+    /// studies, so the daily rhythm adds a little.
     static func conscientiousness(_ a: PersonalityAnswers) -> Double {
         a.score([.punctuality: 1.0, .weeklyPlanning: 0.8, .perfectionism: 0.8, .homeTidiness: 0.7,
                  .spendingMoney: 0.6, .decisionMaking: 0.4, .workAmbition: 0.4, .rules: -0.4, .screenTime: -0.4,
-                 .foodChoices: 0.3, .exercise: 0.3])
+                 .foodChoices: 0.3, .exercise: 0.3, .dailyRhythm: 0.3])
     }
 
     static func agreeableness(_ a: PersonalityAnswers) -> Double {

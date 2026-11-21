@@ -1,39 +1,67 @@
 import PhotosUI
 import SwiftUI
 
-/// Objecting to the newest report against this account: what it said and
-/// what it does, then the person's own words. For "may be under 18" they
-/// also prove their age with a passport or ID card. The phone reads the
-/// document's machine-readable zone and compares the first initial and the
-/// birth date with the profile; only those facts are sent, never the photo.
-/// An administrator then approves (the report is withdrawn) or rejects it.
+/// Objecting to the newest report against this account: what it said, then
+/// the person's own words.
+///
+/// For "may be under 18" the same screen confirms the person's age instead:
+/// the account stays locked until then. A live scan reads the
+/// machine-readable zone of a passport or ID card and sends only the given
+/// names' initials, the birth date and the expiry date, never the photo. The
+/// screen only says whether the document could be read, never whether it
+/// matches the profile, so nobody can try documents until one passes; the
+/// server compares. When the document can't be read, the person requests a
+/// manual review with a photo of the document. The photo is shown here so
+/// the person sees what they added, but it stays on the phone: only that one
+/// was added is sent. The screen says neither that, nor who reviews.
 struct ReportObjectionSheet: View {
     let status: ModerationStatus
     let report: ModerationStatus.LatestReport
-    /// This phone's profile, to compare the document with.
+    /// This phone's profile. The server compares the document itself.
     let displayName: String
     let birthDate: CalendarDate?
-    let onSubmit: (_ message: String, _ idCheck: ReportIDCheck?) async throws -> Void
+    let onSubmit: (_ message: String, _ proof: AgeProof?) async throws -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var message = ""
     @State private var zone: MachineReadableZone?
-    @State private var isReading = false
-    @State private var readFailed = false
+    @State private var showsScanner = false
     @State private var pickedPhoto: PhotosPickerItem?
+    @State private var showsLibrary = false
     @State private var showsCamera = false
     @State private var isSending = false
     @State private var sendError: String?
+    /// "Request manual review" instead of a read document.
+    @State private var writesInstead = false
+    /// The photo of the document for the manual review: in memory while
+    /// this screen is open, never stored or sent.
+    @State private var documentPhoto: UIImage?
     @FocusState private var messageFocused: Bool
 
     static let messageLimit = 2000
 
-    private var needsProofOfAge: Bool { report.reportReason == .underage }
+    /// `writesInstead` and `documentPhoto` open the manual review with a
+    /// photo already added, for rendered UI checks.
+    init(status: ModerationStatus, report: ModerationStatus.LatestReport, displayName: String,
+         birthDate: CalendarDate?, writesInstead: Bool = false, documentPhoto: UIImage? = nil,
+         onSubmit: @escaping (_ message: String, _ proof: AgeProof?) async throws -> Void) {
+        self.status = status
+        self.report = report
+        self.displayName = displayName
+        self.birthDate = birthDate
+        self.onSubmit = onSubmit
+        _writesInstead = State(initialValue: writesInstead)
+        _documentPhoto = State(initialValue: documentPhoto)
+    }
+
+    private var isAgeCheck: Bool { report.reportReason == .underage }
 
     private var trimmedMessage: String { message.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     private var canSend: Bool {
-        !isSending && !trimmedMessage.isEmpty && (!needsProofOfAge || zone != nil)
+        guard !isSending else { return false }
+        if isAgeCheck { return writesInstead ? documentPhoto != nil : zone != nil }
+        return !trimmedMessage.isEmpty
     }
 
     var body: some View {
@@ -42,31 +70,27 @@ struct ReportObjectionSheet: View {
                 header
                 reportCard
 
-                VStack(alignment: .leading, spacing: 10) {
-                    sectionTitle(L10n("Your explanation"))
-                    TextField(L10n("Why is this report wrong?"), text: $message, axis: .vertical)
-                        .lineLimit(6...14)
-                        .focused($messageFocused)
-                        .foregroundStyle(OnboardingTheme.primaryText)
-                        .tint(OnboardingTheme.cyan)
-                        .padding(14)
-                        .onboardingSurface(cornerRadius: 16)
-                        .onChange(of: message) { _, text in
-                            if text.count > Self.messageLimit { message = String(text.prefix(Self.messageLimit)) }
-                        }
-                        .accessibilityIdentifier("objection.message")
+                if isAgeCheck {
+                    proofOfAge
+                    if writesInstead { explanation(placeholder: L10n("Anything you want to add (optional)")) }
+                } else {
+                    explanation(placeholder: L10n("Why is this report wrong?"))
                 }
 
-                if needsProofOfAge { proofOfAge }
+                VStack(spacing: 10) {
+                    Button {
+                        send()
+                    } label: {
+                        if isSending { ProgressView().tint(.white) } else { Text(sendTitle) }
+                    }
+                    .buttonStyle(GlowButtonStyle())
+                    .disabled(!canSend)
+                    .accessibilityIdentifier("objection.send")
 
-                Button {
-                    send()
-                } label: {
-                    if isSending { ProgressView().tint(.white) } else { Text(L10n("Send objection")) }
+                    if !isAgeCheck {
+                        ModerationWarning(text: L10n("An unjustified objection can lead to the immediate termination of your account."))
+                    }
                 }
-                .buttonStyle(GlowButtonStyle())
-                .disabled(!canSend)
-                .accessibilityIdentifier("objection.send")
             }
             .frame(maxWidth: OnboardingTheme.contentWidth)
             .padding(.horizontal, 20)
@@ -82,20 +106,24 @@ struct ReportObjectionSheet: View {
         .scrollIndicators(.hidden)
         .scrollDismissesKeyboard(.interactively)
         .background(OnboardingTheme.background.ignoresSafeArea())
+        .photosPicker(isPresented: $showsLibrary, selection: $pickedPhoto, matching: .images)
         .onChange(of: pickedPhoto) { _, item in
             guard let item else { return }
             Task {
                 let image = (try? await item.loadTransferable(type: Data.self)).flatMap(UIImage.init(data:))
                 pickedPhoto = nil
-                await read(image)
+                keep(image)
             }
         }
         .fullScreenCover(isPresented: $showsCamera) {
             CameraImagePicker { image in
                 showsCamera = false
-                Task { await read(image) }
+                keep(image)
             }
             .ignoresSafeArea()
+        }
+        .fullScreenCover(isPresented: $showsScanner) {
+            IDDocumentScanView { zone = $0 }
         }
         .alert(L10n("Could not send your objection"), isPresented: Binding(
             get: { sendError != nil }, set: { if !$0 { sendError = nil } })) {
@@ -108,15 +136,22 @@ struct ReportObjectionSheet: View {
         .preferredColorScheme(.dark)
     }
 
+    private var sendTitle: String {
+        if !isAgeCheck { return L10n("Send objection") }
+        return writesInstead ? L10n("Request manual review") : L10n("Confirm age")
+    }
+
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(L10n("Object"))
+                Text(isAgeCheck ? L10n("Confirm your age") : L10n("Object"))
                     .font(.system(size: 34, weight: .semibold, design: .rounded))
                     .foregroundStyle(OnboardingTheme.primaryText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                Text(L10n("Tell us in your own words why this report is not right."))
+                Text(isAgeCheck
+                     ? L10n("Your account stays locked until your age is confirmed.")
+                     : L10n("Tell us in your own words why this report is not right."))
                     .font(.subheadline)
                     .foregroundStyle(OnboardingTheme.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
@@ -131,7 +166,7 @@ struct ReportObjectionSheet: View {
         }
     }
 
-    /// The report this objection is about, and what it does.
+    /// The report this objection is about.
     private var reportCard: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(L10n("Reason"))
@@ -147,93 +182,115 @@ struct ReportObjectionSheet: View {
         .accessibilityElement(children: .combine)
     }
 
+    private func explanation(placeholder: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle(L10n("Your explanation"))
+            TextField(placeholder, text: $message, axis: .vertical)
+                .lineLimit(6...14)
+                .focused($messageFocused)
+                .foregroundStyle(OnboardingTheme.primaryText)
+                .tint(OnboardingTheme.cyan)
+                .padding(14)
+                .onboardingSurface(cornerRadius: 16)
+                .onChange(of: message) { _, text in
+                    if text.count > Self.messageLimit { message = String(text.prefix(Self.messageLimit)) }
+                }
+                .accessibilityIdentifier("objection.message")
+        }
+    }
+
     // MARK: Proof of age
 
+    /// One tile, like the photo square of automatic matching: the live scan,
+    /// or the photo for a manual review. A tap on it starts over.
     private var proofOfAge: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitle(L10n("Prove your age"))
-            VStack(alignment: .leading, spacing: 12) {
-                Text(L10n("Photograph the lines of <<< on your passport or ID card. Your phone checks your initial and date of birth; the photo is not sent."))
-                    .font(.footnote)
-                    .foregroundStyle(OnboardingTheme.secondaryText)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                if isReading {
-                    HStack(spacing: 10) {
-                        ProgressView().tint(OnboardingTheme.cyan)
-                        Text(L10n("Reading your document…"))
-                            .font(.footnote)
-                            .foregroundStyle(OnboardingTheme.secondaryText)
-                    }
-                } else if let zone {
-                    documentResult(zone)
-                } else if readFailed {
-                    Text(L10n("Could not read the document. Keep the lines of <<< sharp and fully in view."))
-                        .font(.footnote)
-                        .foregroundStyle(OnboardingTheme.pink)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                HStack(spacing: 10) {
-                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                        Button { showsCamera = true } label: {
-                            Label(zone == nil ? L10n("Take photo") : L10n("Retake"), systemImage: "camera")
-                        }
-                        .buttonStyle(DocumentButtonStyle())
-                        .accessibilityIdentifier("objection.camera")
-                    }
-                    PhotosPicker(selection: $pickedPhoto, matching: .images) {
-                        Label(L10n("Choose photo"), systemImage: "photo")
-                    }
-                    .buttonStyle(DocumentButtonStyle())
-                    .accessibilityIdentifier("objection.library")
-                }
-                .disabled(isReading || isSending)
+            sectionTitle(L10n("Passport or ID card"))
+            Group {
+                if writesInstead { photoTile } else { scanTile }
             }
-            .padding(14)
-            .onboardingSurface(cornerRadius: 16)
+            .transition(.opacity)
+
+            Button(writesInstead ? L10n("Scan my document instead") : L10n("Request manual review")) {
+                withAnimation(.easeInOut(duration: 0.25)) { writesInstead.toggle() }
+            }
+            .font(.system(.subheadline, weight: .semibold))
+            .foregroundStyle(OnboardingTheme.cyan)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+            .disabled(isSending)
+            .accessibilityIdentifier("objection.manualReview")
         }
     }
 
+    private var scanTile: some View {
+        Button { showsScanner = true } label: {
+            if zone != nil {
+                // Read, nothing more: whether it matches is for the server.
+                DocumentTile(symbol: "checkmark.seal.fill", title: L10n("Document read"), isDone: true, tips: [
+                    ("lock.fill", L10n("Only your initials and dates are sent, never the photo.")),
+                ])
+            } else {
+                DocumentTile(symbol: "text.viewfinder", title: L10n("Scan your passport or ID card"), tips: [
+                    ("rectangle.and.text.magnifyingglass", L10n("Use the side with the lines of <<<")),
+                    ("sun.max.fill", L10n("Good light, no glare")),
+                    ("lock.fill", L10n("Only your initials and dates are sent, never the photo.")),
+                ])
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(isSending)
+        .accessibilityHint(zone == nil ? L10n("Opens the camera to scan your document.") : L10n("Scans your document again."))
+        .accessibilityIdentifier(zone == nil ? "objection.scan" : "objection.documentRead")
+    }
+
+    /// The photo itself once added, so the person sees what they chose; a
+    /// tap picks another. It can't be removed: the review needs one.
     @ViewBuilder
-    private func documentResult(_ zone: MachineReadableZone) -> some View {
-        let comparison = birthDate.map { IDDocumentComparison(zone: zone, displayName: displayName, birthDate: $0) }
-        VStack(alignment: .leading, spacing: 6) {
-            checkRow(L10n("First initial \(zone.initial)"), matches: comparison?.initialMatches,
-                     detail: comparison?.initialMatches == false ? L10n("Does not match your name") : nil)
-            checkRow(L10n("Born \(Self.formatted(zone.birthDate))"), matches: comparison?.birthDateMatches,
-                     detail: comparison?.birthDateMatches == false ? L10n("Does not match your profile") : nil)
-            checkRow(L10n("18 or older"), matches: comparison?.isAdult ?? (IDDocumentComparison.age(of: zone.birthDate, on: .today()) >= 18),
-                     detail: nil)
-            if comparison?.isExpired == true {
-                checkRow(L10n("This document has expired"), matches: false, detail: nil)
+    private var photoTile: some View {
+        let label = Group {
+            if let documentPhoto {
+                Color.clear
+                    .aspectRatio(4 / 3, contentMode: .fit)
+                    .overlay {
+                        Image(uiImage: documentPhoto)
+                            .resizable()
+                            .scaledToFill()
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: DocumentTile.radius, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: DocumentTile.radius, style: .continuous)
+                            .strokeBorder(.white.opacity(0.18), lineWidth: 1)
+                    }
+                    .contentShape(RoundedRectangle(cornerRadius: DocumentTile.radius, style: .continuous))
+                    .accessibilityElement()
+                    .accessibilityLabel(L10n("Choose another photo"))
+                    .accessibilityIdentifier("objection.photo")
+            } else {
+                DocumentTile(symbol: "camera.fill", title: L10n("Add a photo of your passport or ID card"), tips: [
+                    ("viewfinder", L10n("The whole document in view")),
+                    ("text.magnifyingglass", L10n("Sharp and readable")),
+                    ("sun.max.fill", L10n("No glare or fingers in the way")),
+                ])
+                .accessibilityIdentifier("objection.addPhoto")
             }
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("objection.documentResult")
-    }
-
-    private func checkRow(_ text: String, matches: Bool?, detail: String?) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Image(systemName: matches == false ? "xmark.circle.fill" : "checkmark.circle.fill")
-                .foregroundStyle(matches == false ? OnboardingTheme.pink : OnboardingTheme.cyan)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(text)
-                    .font(.subheadline)
-                    .foregroundStyle(OnboardingTheme.primaryText)
-                if let detail {
-                    Text(detail)
-                        .font(.caption)
-                        .foregroundStyle(OnboardingTheme.secondaryText)
-                }
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            Menu {
+                Button(L10n("Take photo"), systemImage: "camera") { showsCamera = true }
+                Button(L10n("Choose photo"), systemImage: "photo") { showsLibrary = true }
+            } label: {
+                label
             }
+            .menuStyle(.button)
+            .buttonStyle(.plain)
+            .disabled(isSending)
+        } else {
+            Button { showsLibrary = true } label: { label }
+                .buttonStyle(.plain)
+                .disabled(isSending)
         }
-    }
-
-    static func formatted(_ date: CalendarDate) -> String {
-        guard let day = date.date() else { return MachineReadableZone.iso(date) }
-        return day.formatted(.dateTime.day().month(.wide).year().locale(AppLocale.current))
     }
 
     private func sectionTitle(_ text: String) -> some View {
@@ -246,24 +303,27 @@ struct ReportObjectionSheet: View {
 
     // MARK: Actions
 
-    private func read(_ image: UIImage?) async {
+    /// Kept small: only shown here, and dropped with this screen.
+    private func keep(_ image: UIImage?) {
         guard let image else { return }
-        isReading = true
-        readFailed = false
-        let result = await IDDocumentScanner.read(image)
-        isReading = false
-        zone = result
-        readFailed = result == nil
+        let longest = max(image.size.width, image.size.height)
+        let scale = min(1, 1600 / max(longest, 1))
+        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        withAnimation(.easeInOut(duration: 0.25)) {
+            documentPhoto = image.preparingThumbnail(of: size) ?? image
+        }
     }
 
     private func send() {
         messageFocused = false
         guard canSend else { return }
         isSending = true
+        let proof: AgeProof? = !isAgeCheck ? nil : writesInstead ? .manualReview : zone.map { .document($0.idCheck) }
+        let words = isAgeCheck && !writesInstead ? "" : trimmedMessage
         Task {
             defer { isSending = false }
             do {
-                try await onSubmit(trimmedMessage, needsProofOfAge ? zone?.idCheck : nil)
+                try await onSubmit(words, proof)
                 AccessibilityNotification.Announcement(L10n("Your objection was sent.")).post()
                 dismiss()
             } catch {
@@ -276,28 +336,87 @@ struct ReportObjectionSheet: View {
         let text = String(describing: error)
         if text.contains("Objection already made") { return L10n("You already objected to this report.") }
         if text.contains("Report unavailable") { return L10n("This report no longer counts against your account.") }
-        if text.contains("Proof of age") { return L10n("Your document could not be checked. Please take a new photo.") }
+        if text.contains("Proof of age") || text.contains("Photo required") {
+            return L10n("Your document could not be checked. Please take a new photo.")
+        }
         return L10n("Check your connection and try again.")
     }
 }
 
-private struct DocumentButtonStyle: ButtonStyle {
-    @Environment(\.isEnabled) private var isEnabled
+/// The empty square of automatic matching's photo, for a document: a badge
+/// top left, a title, and the tips under a hairline. Dashed until done.
+private struct DocumentTile: View {
+    static let radius: CGFloat = 28
 
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(OnboardingTheme.primaryText.opacity(isEnabled ? 1 : 0.5))
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .background {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(.white.opacity(configuration.isPressed ? 0.14 : 0.08))
+    let symbol: String
+    let title: String
+    var isDone = false
+    let tips: [(symbol: String, text: String)]
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: Self.radius, style: .continuous)
+        VStack(alignment: .leading, spacing: 0) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.white.opacity(0.08))
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+                if isDone {
+                    Image(systemName: symbol)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, OnboardingTheme.cyan)
+                        .font(.system(size: 26, weight: .semibold))
+                } else {
+                    Image(systemName: symbol)
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(OnboardingTheme.accentGradient)
+                }
             }
-            .overlay {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5)
+            .frame(width: 52, height: 52)
+            .accessibilityHidden(true)
+
+            Text(title)
+                .font(.system(.title3, design: .rounded, weight: .semibold))
+                .foregroundStyle(OnboardingTheme.primaryText)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 18)
+
+            Rectangle()
+                .fill(.white.opacity(0.12))
+                .frame(height: 1)
+                .padding(.vertical, 14)
+
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(tips, id: \.text) { tip in
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Image(systemName: tip.symbol)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(OnboardingTheme.cyan)
+                            .frame(width: 20)
+                            .accessibilityHidden(true)
+                        Text(tip.text)
+                            .font(.subheadline)
+                            .foregroundStyle(OnboardingTheme.primaryText.opacity(0.86))
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             }
-            .contentShape(Rectangle())
+        }
+        .padding(22)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .background { shape.fill(.white.opacity(0.05)) }
+        .overlay {
+            if isDone {
+                shape.strokeBorder(OnboardingTheme.cyan.opacity(0.55), lineWidth: 1)
+            } else {
+                shape.strokeBorder(.white.opacity(0.18), style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
+            }
+        }
+        .contentShape(shape)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
     }
 }
 

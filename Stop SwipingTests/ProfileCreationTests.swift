@@ -654,7 +654,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
             XCTAssertEqual(viewModel.state.lifestyle[question].own, 3)
             viewModel.beginEditing(question.step)
             viewModel.setCompatibilityPartner(1, for: question)
-            XCTAssertEqual(viewModel.submitCurrentStep(), .completed)
+            XCTAssertEqual(viewModel.saveEditing(), .completed)
             XCTAssertEqual(try XCTUnwrap(repository.loadProfile()).lifestyle[question].partner, 1)
         }
     }
@@ -672,7 +672,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         relaunched.setPartnerMaximumLevel(0, for: .drugs)
         XCTAssertEqual(store.load()?.lifestyle[.drugs].partnerMaximumLevel, 3, "Unsaved changes are not stored.")
 
-        XCTAssertEqual(relaunched.submitCurrentStep(), .completed)
+        XCTAssertEqual(relaunched.saveEditing(), .completed)
         XCTAssertNil(relaunched.editingStep)
         XCTAssertTrue(relaunched.isCompleted)
         XCTAssertEqual(store.load()?.lifestyle[.drugs].partnerMaximumLevel, 0)
@@ -692,17 +692,61 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.isCompleted)
     }
 
+    func testContinueWhileEditingWalksOnAndBackWithoutSavingUntilTheCheckmark() throws {
+        let store = InMemoryProfileCreationStore()
+        let repository = InMemoryProfileRepository()
+        let viewModel = makeViewModel(store: store, repository: repository)
+        completeProfile(viewModel)
+
+        viewModel.beginEditing(.height)
+        XCTAssertFalse(viewModel.hasMovedWhileEditing, "The opened question still cancels.")
+        viewModel.updateHeight(190)
+        XCTAssertEqual(viewModel.submitCurrentStep(), .advanced)
+        XCTAssertEqual(viewModel.currentStep, .partnerHeightRange)
+        XCTAssertEqual(viewModel.editingStep, .height, "Continue never finishes the change.")
+        XCTAssertTrue(viewModel.hasMovedWhileEditing)
+        XCTAssertEqual(store.load()?.heightCentimeters, 175, "Nothing is stored before the checkmark.")
+
+        XCTAssertTrue(viewModel.goBack())
+        XCTAssertEqual(viewModel.currentStep, .height)
+        XCTAssertTrue(viewModel.goBack(), "Back walks on past the opened question.")
+        XCTAssertEqual(viewModel.currentStep, .partnerAgeRange)
+        XCTAssertTrue(viewModel.hasMovedWhileEditing, "Once moved on, the button never cancels again.")
+
+        XCTAssertEqual(viewModel.saveEditing(), .completed)
+        XCTAssertNil(viewModel.editingStep)
+        XCTAssertFalse(viewModel.hasMovedWhileEditing)
+        XCTAssertEqual(store.load()?.heightCentimeters, 190)
+        XCTAssertEqual(try XCTUnwrap(repository.loadProfile()).heightCentimeters, 190)
+    }
+
+    func testContinueFromTheBirthdayWhileEditingMovesOnAndTheLastQuestionSaves() {
+        let viewModel = makeViewModel()
+        completeProfile(viewModel)
+
+        viewModel.beginEditing(.dateOfBirth)
+        XCTAssertEqual(viewModel.submitCurrentStep(), .advanced)
+        XCTAssertEqual(viewModel.currentStep, .partnerAgeRange)
+        XCTAssertEqual(viewModel.editingStep, .dateOfBirth)
+
+        let last = ProfileCreationStep.allCases.last!
+        viewModel.cancelEditing()
+        viewModel.beginEditing(last)
+        XCTAssertEqual(viewModel.submitCurrentStep(), .completed, "With no next question, Continue saves.")
+        XCTAssertNil(viewModel.editingStep)
+    }
+
     func testEditingTheBirthdayValidatesItAgain() {
         let viewModel = makeViewModel()
         completeProfile(viewModel)
 
         viewModel.beginEditing(.dateOfBirth)
         XCTAssertEqual(viewModel.birthDateSelection, .init(year: 1996, month: 4, day: 21))
-        XCTAssertEqual(viewModel.submitCurrentStep(), .completed, "An unchanged adult birthday saves.")
+        XCTAssertEqual(viewModel.saveEditing(), .completed, "An unchanged adult birthday saves.")
 
         viewModel.beginEditing(.dateOfBirth)
         viewModel.updateBirthDate(.init(year: 2012, month: 4, day: 21))
-        XCTAssertEqual(viewModel.submitCurrentStep(), .confirmAge(14))
+        XCTAssertEqual(viewModel.saveEditing(), .confirmAge(14))
         XCTAssertEqual(viewModel.editingStep, .dateOfBirth, "Still editing until the age is confirmed.")
         XCTAssertEqual(viewModel.confirmUnderage(), .underage)
         XCTAssertTrue(viewModel.isUnderageLocked)
@@ -745,7 +789,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         completeProfile(viewModel)
         viewModel.beginEditing(.futureChildren)
         viewModel.setFutureChildren(.yes)
-        XCTAssertEqual(viewModel.submitCurrentStep(), .completed)
+        XCTAssertEqual(viewModel.saveEditing(), .completed)
 
         let language = LanguageCatalog.option(for: viewModel.state.languages[0]).name
         let dealbreakers = viewModel.dealbreakers
@@ -774,7 +818,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
             case .partnerHasChildren: viewModel.setOpenToPartnerWithChildren(false)
             default: viewModel.setPartnerMaximumLevel(Substance.alcohol.levels.count - 1, for: .alcohol)
             }
-            XCTAssertEqual(viewModel.submitCurrentStep(), .completed)
+            XCTAssertEqual(viewModel.saveEditing(), .completed)
         }
         viewModel.togglePartnerGender(.man)
 
@@ -972,7 +1016,7 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.dealbreakers, original)
         viewModel.beginEditing(.partnerAgeRange)
         viewModel.updatePartnerAgeRange(minimum: 28, maximum: 35)
-        XCTAssertEqual(viewModel.submitCurrentStep(), .completed)
+        XCTAssertEqual(viewModel.saveEditing(), .completed)
         XCTAssertNotEqual(viewModel.dealbreakers, original)
         XCTAssertTrue(viewModel.dealbreakers.entries.contains { $0.step == .partnerAgeRange && $0.text.contains("35") })
     }
@@ -1159,8 +1203,8 @@ final class ProfileCreationViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.editingStep, .religion)
         viewModel.togglePartnerReligion(.jewish)
         viewModel.persist()
-        XCTAssertNil(store.load()?.religion.own, "An edit remains unsaved until Save on the second part.")
-        XCTAssertEqual(viewModel.submitCurrentStep(), .completed)
+        XCTAssertNil(store.load()?.religion.own, "An edit remains unsaved until it is saved.")
+        XCTAssertEqual(viewModel.saveEditing(), .completed)
         XCTAssertNil(viewModel.editingStep)
         XCTAssertEqual(store.load()?.religion.own, .buddhist)
         let draft = try XCTUnwrap(repository.loadProfile())

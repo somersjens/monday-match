@@ -4,6 +4,397 @@
     "" : {
 
     },
+    "Add a photo of your passport or ID card" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a photo of your passport or ID card"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg een foto van je paspoort of ID-kaart toe"
+          }
+        }
+      }
+    },
+        "Also ban the account" : {
+          "extractionState" : "manual",
+          "localizations" : {
+            "en" : {
+              "stringUnit" : {
+                "state" : "translated",
+                "value" : "Also ban the account"
+              }
+            },
+            "nl" : {
+              "stringUnit" : {
+                "state" : "translated",
+                "value" : "Account ook blokkeren"
+              }
+            }
+          }
+        },
+    "Camera access is required to scan your document. Allow camera access in Settings, then try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera access is required to scan your document. Allow camera access in Settings, then try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cameratoegang is nodig om je document te scannen. Sta cameratoegang toe in Instellingen en probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "Cancel scan" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel scan"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan annuleren"
+          }
+        }
+      }
+    },
+    "Couldn’t read your document" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t read your document"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je document kon niet worden gelezen"
+          }
+        }
+      }
+    },
+    "Good light, no glare" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good light, no glare"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Goed licht, geen schittering"
+          }
+        }
+      }
+    },
+    "Hold still…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold still…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Even stilhouden…"
+          }
+        }
+      }
+    },
+    "Hold the lines of <<< inside the frame" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold the lines of <<< inside the frame"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd de regels <<< binnen het kader"
+          }
+        }
+      }
+    },
+    "Live rear camera preview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live rear camera preview"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live beeld van de achtercamera"
+          }
+        }
+      }
+    },
+    "No glare or fingers in the way" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No glare or fingers in the way"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen schittering of vingers in beeld"
+          }
+        }
+      }
+    },
+    "Only your initials and dates are sent, never the photo." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only your initials and dates are sent, never the photo."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen je voorletters en datums worden verstuurd, nooit de foto."
+          }
+        }
+      }
+    },
+    "Opens the camera to scan your document." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the camera to scan your document."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opent de camera om je document te scannen."
+          }
+        }
+      }
+    },
+    "Scan your passport or ID card" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan your passport or ID card"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan je paspoort of ID-kaart"
+          }
+        }
+      }
+    },
+    "Scans your document again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scans your document again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scant je document opnieuw."
+          }
+        }
+      }
+    },
+    "Sharp and readable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sharp and readable"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scherp en leesbaar"
+          }
+        }
+      }
+    },
+    "The camera couldn’t be started. Please try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The camera couldn’t be started. Please try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De camera kon niet starten. Probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "The camera was interrupted. Please try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The camera was interrupted. Please try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De camera werd onderbroken. Probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "The lines of <<< couldn’t be read. Make sure they’re sharp, well lit and free of glare, then try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The lines of <<< couldn’t be read. Make sure they’re sharp, well lit and free of glare, then try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De regels <<< konden niet worden gelezen. Zorg dat ze scherp, goed verlicht en zonder schittering in beeld zijn, en probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "The whole document in view" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The whole document in view"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het hele document in beeld"
+          }
+        }
+      }
+    },
+    "This device has no camera to scan your document with." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device has no camera to scan your document with."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit apparaat heeft geen camera om je document mee te scannen."
+          }
+        }
+      }
+    },
+    "This match ended on {0}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This match ended on {0}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze match is op {0} beëindigd"
+          }
+        }
+      }
+    },
+        "Undo" : {
+          "extractionState" : "manual",
+          "localizations" : {
+            "en" : {
+              "stringUnit" : {
+                "state" : "translated",
+                "value" : "Undo"
+              }
+            },
+            "nl" : {
+              "stringUnit" : {
+                "state" : "translated",
+                "value" : "Ongedaan maken"
+              }
+            }
+          }
+        },
+    "Until {0} you can’t match or chat. A third report blocks your account permanently." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Until {0} you can’t match or chat. A third report blocks your account permanently."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tot {0} kun je niet matchen of chatten. Na een derde rapportage wordt je account permanent geblokkeerd."
+          }
+        }
+      }
+    },
     "–" : {
 
     },
@@ -1692,6 +2083,23 @@
         }
       }
     },
+    "Add a photo of your passport or ID card. The photo stays on your phone and is not sent." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a photo of your passport or ID card. The photo stays on your phone and is not sent."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg een foto van je paspoort of ID-kaart toe. De foto blijft op je telefoon en wordt niet verstuurd."
+          }
+        }
+      }
+    },
     "Add and verify a photo, or join without one." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1811,6 +2219,23 @@
         }
       }
     },
+    "After a report, your account was blocked permanently. You can no longer match or chat. You can still delete your account from your profile." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After a report, your account was blocked permanently. You can no longer match or chat. You can still delete your account from your profile."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na een rapportage is je account permanent geblokkeerd. Je kunt niet meer matchen of chatten. Je kunt je account nog wel verwijderen via je profiel."
+          }
+        }
+      }
+    },
     "After an argument, do you wait for the other person, or are you usually the first to make up?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1858,6 +2283,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Leeftijd eerder al automatisch goedgekeurd"
+          }
+        }
+      }
+    },
+    "Age check" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Age check"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leeftijdscontrole"
+          }
+        }
+      }
+    },
+    "Age check under review" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Age check under review"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leeftijdscontrole in behandeling"
           }
         }
       }
@@ -2848,6 +3307,23 @@
         }
       }
     },
+    "An unjustified objection can lead to the immediate termination of your account." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An unjustified objection can lead to the immediate termination of your account."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onterecht bezwaar kan leiden tot directe beëindiging van je account."
+          }
+        }
+      }
+    },
     "Analyst" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3018,6 +3494,23 @@
         }
       }
     },
+    "Anything you want to add (optional)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anything you want to add (optional)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wil je nog iets toevoegen? (optioneel)"
+          }
+        }
+      }
+    },
     "App language" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3086,19 +3579,19 @@
         }
       }
     },
-    "Approve this objection?" : {
+    "Approved automatically on {0} if you don’t decide." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Approve this objection?"
+            "value" : "Approved automatically on {0} if you don’t decide."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bezwaar goedkeuren?"
+            "value" : "Wordt op {0} automatisch goedgekeurd als je niet beslist."
           }
         }
       }
@@ -3643,6 +4136,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Permanente blokkade"
+          }
+        }
+      }
+    },
+    "Ban now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ban now"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu blokkeren"
           }
         }
       }
@@ -5265,6 +5775,23 @@
         }
       }
     },
+    "Concerning behavior" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concerning behavior"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorgwekkend gedrag"
+          }
+        }
+      }
+    },
     "Concerning offline behavior" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5278,6 +5805,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zorgwekkend gedrag buiten de app"
+          }
+        }
+      }
+    },
+    "Confirm age" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm age"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leeftijd bevestigen"
+          }
+        }
+      }
+    },
+    "Confirm your age" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm your age"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevestig je leeftijd"
           }
         }
       }
@@ -5516,6 +6077,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Coöperatief en diplomatiek. Je luistert, slaat bruggen en houdt de sfeer in het team goed."
+          }
+        }
+      }
+    },
+    "Could not confirm their age with a document." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not confirm their age with a document."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kon de leeftijd niet met een document bevestigen."
           }
         }
       }
@@ -6672,6 +7250,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wil je kinderen met een nieuwe partner?"
+          }
+        }
+      }
+    },
+    "Document read" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document read"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document gelezen"
           }
         }
       }
@@ -9651,6 +10246,23 @@
         }
       }
     },
+    "Initials {0} – profile {1}" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Initials {0} – profile {1}"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voorletters {0} – profiel {1}"
+          }
+        }
+      }
+    },
     "Innovative and daring. You look past the rules for new ways and bring others along." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10286,13 +10898,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keep your profile safe and let your matches reach you."
+            "value" : "Keep your profile, even if you lose your device."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Houd je profiel veilig en blijf bereikbaar voor je matches."
+            "value" : "Bewaar je profiel, ook bij verlies van je apparaat."
           }
         }
       }
@@ -10997,6 +11609,23 @@
         }
       }
     },
+    "Manual review requested. They added a photo of their document on their phone; it was not sent." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manual review requested. They added a photo of their document on their phone; it was not sent."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handmatige beoordeling aangevraagd. Er is een foto van het document toegevoegd op de telefoon; die is niet verstuurd."
+          }
+        }
+      }
+    },
     "Map" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11418,6 +12047,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Minderjarigen niet toegestaan"
+          }
+        }
+      }
+    },
+    "Moderation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moderation"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moderatie"
           }
         }
       }
@@ -13105,6 +13751,23 @@
         }
       }
     },
+    "Opens the app’s page in the store." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the app’s page in the store."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opent de pagina van de app in de store."
+          }
+        }
+      }
+    },
     "Opens the camera to scan someone else’s code." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13479,6 +14142,23 @@
         }
       }
     },
+    "Passport or ID card" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passport or ID card"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paspoort of ID-kaart"
+          }
+        }
+      }
+    },
     "Patience" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13700,6 +14380,23 @@
         }
       }
     },
+    "Photo added" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo added"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto toegevoegd"
+          }
+        }
+      }
+    },
     "Photo guidelines" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13747,6 +14444,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Foto geverifieerd"
+          }
+        }
+      }
+    },
+    "Photograph the lines of <<< on your passport or ID card. Only your initials and dates are sent, never the photo." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photograph the lines of <<< on your passport or ID card. Only your initials and dates are sent, never the photo."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotografeer de regels met <<< op je paspoort of ID-kaart. Alleen je voorletters en datums worden verstuurd, nooit de foto."
           }
         }
       }
@@ -14431,6 +15145,23 @@
         }
       }
     },
+    "Rate Stop Swiping" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rate Stop Swiping"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beoordeel Stop Swiping"
+          }
+        }
+      }
+    },
     "Rate your own appearance and set the minimum score you’re looking for in a partner." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14652,6 +15383,23 @@
         }
       }
     },
+    "Regular warning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regular warning"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gewone waarschuwing"
+          }
+        }
+      }
+    },
     "Reject" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14665,23 +15413,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Afkeuren"
-          }
-        }
-      }
-    },
-    "Reject this objection?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reject this objection?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bezwaar afkeuren?"
           }
         }
       }
@@ -15005,6 +15736,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Meldingen zijn vertrouwelijk. {0} krijgt niet te horen wie de melding heeft gedaan."
+          }
+        }
+      }
+    },
+    "Request manual review" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Request manual review"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handmatige beoordeling aanvragen"
           }
         }
       }
@@ -15379,6 +16127,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Scan een code"
+          }
+        }
+      }
+    },
+    "Scan my document instead" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan my document instead"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toch mijn document scannen"
           }
         }
       }
@@ -17117,6 +17882,23 @@
         }
       }
     },
+    "Stays a regular warning on {0} if you don’t decide." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stays a regular warning on {0} if you don’t decide."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blijft op {0} een gewone waarschuwing als je niet beslist."
+          }
+        }
+      }
+    },
     "Stays with me" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18001,6 +18783,23 @@
         }
       }
     },
+    "The account is blocked permanently, like after a third strike, and so is the phone it used. An approved objection lifts it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The account is blocked permanently, like after a third strike, and so is the phone it used. An approved objection lifts it."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het account wordt permanent geblokkeerd, net als na een derde strike, en de telefoon die het gebruikte ook. Een toegekend bezwaar heft dit op."
+          }
+        }
+      }
+    },
     "The app's local storage directory is unavailable." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18405,6 +19204,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "De rapportage blijft staan. De persoon ziet dat het bezwaar is afgewezen."
+          }
+        }
+      }
+    },
+    "The report stands. The person sees that their objection was rejected. For an unjustified objection you can also ban the account at once." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The report stands. The person sees that their objection was rejected. For an unjustified objection you can also ban the account at once."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De rapportage blijft staan. De persoon ziet dat het bezwaar is afgewezen. Bij een onterecht bezwaar kun je het account ook direct blokkeren."
+          }
+        }
+      }
+    },
+    "The report stays a regular strike, as the person already sees it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The report stays a regular strike, as the person already sees it."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De rapportage blijft een gewone strike, zoals de persoon die al ziet."
           }
         }
       }
@@ -18987,6 +19820,23 @@
         }
       }
     },
+    "This phone was used by an account that is permanently blocked. You can’t match or chat. You can still delete your account from your profile." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This phone was used by an account that is permanently blocked. You can’t match or chat. You can still delete your account from your profile."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze telefoon werd gebruikt door een account dat permanent is geblokkeerd. Je kunt niet matchen of chatten. Je kunt je account nog wel verwijderen via je profiel."
+          }
+        }
+      }
+    },
     "This photo changed on another device. Select it again to upload a new photo." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -19361,6 +20211,23 @@
         }
       }
     },
+    "Unjustified reporting can lead to the immediate termination of your account." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unjustified reporting can lead to the immediate termination of your account."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onterecht rapporteren kan leiden tot directe beëindiging van je account."
+          }
+        }
+      }
+    },
     "Unknown name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -19391,6 +20258,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Niet-verstuurde berichten voor het vorige apparaat worden verwijderd zodra je deze code bevestigt."
+          }
+        }
+      }
+    },
+    "Until you confirm your age, you can’t match or chat." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Until you confirm your age, you can’t match or chat."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tot je je leeftijd bevestigt, kun je niet matchen of chatten."
           }
         }
       }
@@ -19561,6 +20445,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nieuwe antwoorden gebruiken"
+          }
+        }
+      }
+    },
+    "Use the side with the lines of <<<" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the side with the lines of <<<"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik de kant met de regels <<<"
           }
         }
       }
@@ -21401,6 +22302,23 @@
         }
       }
     },
+    "You can’t match or chat. You can still delete your account from your profile." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can’t match or chat. You can still delete your account from your profile."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je kunt niet matchen of chatten. Je kunt je account nog wel verwijderen via je profiel."
+          }
+        }
+      }
+    },
     "You compared with this person in the last 24 hours, so you see the outcome from then, even if answers changed since." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -21979,6 +22897,23 @@
         }
       }
     },
+    "You’ll see the outcome here. Until then you can’t match or chat." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You’ll see the outcome here. Until then you can’t match or chat."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je ziet de uitkomst hier. Tot die tijd kun je niet matchen of chatten."
+          }
+        }
+      }
+    },
     "You’re sending messages very quickly. The rest will go out in a minute." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -22115,6 +23050,23 @@
         }
       }
     },
+    "Your account is now permanently blocked." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account is now permanently blocked."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je account is nu permanent geblokkeerd."
+          }
+        }
+      }
+    },
     "Your account is permanently blocked" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -22162,6 +23114,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je account is permanent geblokkeerd."
+          }
+        }
+      }
+    },
+    "Your account is unlocked again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account is unlocked again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je account is weer vrijgegeven."
+          }
+        }
+      }
+    },
+    "Your account stays locked until your age is confirmed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account stays locked until your age is confirmed."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je account blijft vergrendeld tot je leeftijd is bevestigd."
+          }
+        }
+      }
+    },
+    "Your account stays locked." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account stays locked."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je account blijft vergrendeld."
+          }
+        }
+      }
+    },
+    "Your age could not be confirmed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your age could not be confirmed"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je leeftijd kon niet worden bevestigd"
+          }
+        }
+      }
+    },
+    "Your age is confirmed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your age is confirmed"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je leeftijd is bevestigd"
           }
         }
       }
@@ -22842,6 +23879,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je herinnering kon niet worden ingepland. Probeer hem opnieuw aan te zetten."
+          }
+        }
+      }
+    },
+    "Your report about {0} was received." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your report about {0} was received."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je rapportage over {0} is ontvangen."
           }
         }
       }

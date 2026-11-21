@@ -20,6 +20,7 @@ what is left.
 | Exchange iPhone ↔ Android | Radio-independent channel: handshake, encryption and framing for Bluetooth LE. | `Features/Match/Exchange/ExchangeWire.swift`, [cross-platform exchange](cross-platform-exchange.md) |
 | Interop vectors | Bytes both apps must agree on: exchange channel, sealed profile codes, match scores per category, chat envelope and safety code. | `interop/vectors.json`, `Stop SwipingTests/InteropVectorsTests.swift` |
 | Sounds | The palette in Android resource form; the chime as WAV for a notification channel. | `tools/sounds/export_android.sh` → `platform-assets/android/res/raw/` |
+| Asking for a review | The rules and ledger are plain Swift behind `ReviewRequesting`; the Play In-App Review call and store link are described. Added 20 November 2026. | `Core/Reviews/`, [app reviews](app-reviews.md) |
 
 ## Deploying the server half
 
@@ -59,6 +60,7 @@ extension need a real iPhone.
 | Google sign-in on Android: an **Android** OAuth client in the `stop-swiping` Google Cloud project | Package name and signing SHA-1 |
 | Sign in with Apple on Android: a Services ID, return URL `https://yrnwzehdzlxwnhyabwja.supabase.co/auth/v1/callback`, and its client secret in Supabase's Apple provider (expires every 6 months) | Apple Developer portal |
 | `apple-revoke` for accounts that signed in with Apple on Android (the code then comes from the web flow, client ID = Services ID) | The Services ID |
+| In-app review on Android: `com.google.android.play:review` and an Android `ReviewRequesting`; `StoreListing.playPackageName` for the Rate row | Package name, Android app |
 | Play Billing products `lifetime_access` and an early-adopter offer. Google Play has no free in-app products: use a promo code or a server-side grant for early adopters | Play account |
 | `store-entitlement` for Play: verify the purchase token with the Google Play Developer API (service account) and record `store = 'play'` | Play account |
 | Play Integrity next to App Attest in `app-attest`; then enforce attested scans (see the migration's header) | Play account, Android app |

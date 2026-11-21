@@ -77,6 +77,8 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
     private let backup: ProfileICloudBackup?
     private let photoReporter: DevicePhotoReporting?
     private var worker: Task<Void, Error>?
+    /// The account this phone was last registered for with the server.
+    private var registeredDeviceFor: String?
     private var needsSync = false
     /// Set while a profile is being deleted, so no upload can bring it back.
     private var isDeleting = false
@@ -320,6 +322,7 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         let isConfirmed = previous?.confirmedAt.map { now().timeIntervalSince($0) < Self.confirmationLifetime } ?? false
         if isConfirmed, let previous, previous.photoHashes == photoHashes,
            previous.row.hasSameContent(as: Self.roundTripped(row)) {
+            await registerDevice(userID: userID)
             await reportPhotoScanIfNeeded(state: state, userID: userID)
             return
         }
@@ -341,6 +344,9 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
             try? await uploader.removePhotos(otherThan: currentIDs.union(previousIDs), userID: userID)
         }
         _ = try await uploader.uploadPhotos(changedPhotos, userID: userID)
+        // Before the profile can be matched: the server keeps a banned
+        // person's new account on the same phone out of matching.
+        await registerDevice(userID: userID)
         try await client.from("profiles").upsert(row, onConflict: "id").execute()
         // A newly stored matching photo is a new version: its scan is reported again.
         let reported = changedPhotos.contains { $0.id == state.autoMatching.photoID } ? nil : previous?.reportedPhotoID
@@ -349,6 +355,17 @@ final class SupabaseProfileSync: ProfileCloudSyncing {
         // A replaced photo is no longer named anywhere on the server.
         try? await uploader.removePhotos(previousIDs.subtracting(currentIDs), userID: userID)
         await reportPhotoScanIfNeeded(state: state, userID: userID)
+    }
+
+    /// Tells the server which phone this is, once per account per launch.
+    /// A failure never blocks the upload; it is tried on the next one.
+    private func registerDevice(userID: String) async {
+        guard registeredDeviceFor != userID, let installID = DeviceInstallID.current() else { return }
+        struct Params: Encodable { let p_install_id: UUID }
+        guard let banned: Bool = try? await client.rpc("register_device", params: Params(p_install_id: installID))
+            .execute().value else { return }
+        registeredDeviceFor = userID
+        if banned { NotificationCenter.default.post(name: .moderationChanged, object: nil) }
     }
 
     /// The matching photo was verified by a live scan on this phone (setup

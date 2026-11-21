@@ -6,7 +6,8 @@ import SwiftUI
 /// A notice that waits for an answer takes over the bottom controls: it
 /// stands where automatic matching would be, and its own buttons
 /// ("Understood", "Object") take the place of Adjust profile and My matches,
-/// so nothing else competes with it. Once read, what is still true (an
+/// so nothing else competes with it. "May be under 18" has no "Understood":
+/// the account stays locked until the person confirms their age. Once read, what is still true (an
 /// objection under review, a block, a ban) stays as a status card in the
 /// automatic matching card's place, with the profile buttons back below it.
 /// Neither uses symbols: the words carry it, like the rest of the home screen.
@@ -18,6 +19,8 @@ struct ModerationNotice: Hashable {
         case objectionResult
         /// The report this person just sent about their match.
         case reportSent
+        /// "May be under 18": locked until the person confirms their age.
+        case ageCheck
     }
 
     let kind: Kind
@@ -49,13 +52,16 @@ enum ModerationHome: Equatable {
     }
 
     /// An objection's outcome comes first: it is about an older report than
-    /// any new one. Then a report not read yet, then what still holds.
+    /// any new one. Then an age still to confirm, which nothing else can get
+    /// past, then a report not read yet, then what still holds.
     static func resolve(_ status: ModerationStatus?, isUnread: Bool,
                         result: ModerationStatus.ObjectionResult?, now: Date = Date()) -> ModerationHome? {
         guard let status else { return nil }
-        if let result { return .notice(ModerationCopy.result(result)) }
+        if let result { return .notice(ModerationCopy.result(result, status: status)) }
+        if status.needsAgeProof { return .notice(ModerationCopy.ageCheck()) }
         if isUnread { return .notice(ModerationCopy.strike(status, now: now)) }
-        if ModerationCopy.isLocked(status, now: now) || status.latestReport?.objection == .pending {
+        if ModerationCopy.isLocked(status, now: now) || status.latestReport?.objection == .pending
+            || status.ageCheck != nil {
             return .status(ModerationCopy.status(status, now: now))
         }
         return nil
@@ -146,14 +152,42 @@ struct ModerationStatusCard: View {
     }
 }
 
+/// The small print under a button whose misuse can end an account.
+struct ModerationWarning: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.footnote)
+            .foregroundStyle(OnboardingTheme.secondaryText)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity)
+            .accessibilityIdentifier("moderation.warning")
+    }
+}
+
 // MARK: - Copy
 
 /// Every sentence the home screen says about reports, in one place so the
 /// notice, the status and the tests read the same words.
 enum ModerationCopy {
-    /// Blocked or banned: no automatic matching, and the light is a lock.
+    /// Blocked, banned or waiting to confirm their age: no automatic
+    /// matching, and the light is a lock.
     static func isLocked(_ status: ModerationStatus, now: Date = Date()) -> Bool {
-        status.banned || status.isSuspended(now: now)
+        status.isLocked(now: now)
+    }
+
+    /// Why a ban holds, after its title.
+    static func banMessage(_ reason: ModerationStatus.BanReason?) -> String {
+        switch reason {
+        case .device:
+            L10n("This phone was used by an account that is permanently blocked. You can’t match or chat. You can still delete your account from your profile.")
+        case .direct:
+            L10n("After a report, your account was blocked permanently. You can no longer match or chat. You can still delete your account from your profile.")
+        case .strikes, nil:
+            L10n("You were reported too often. You can no longer match or chat. You can still delete your account from your profile.")
+        }
     }
 
     static func reasonTitle(_ code: String?) -> String {
@@ -172,24 +206,46 @@ enum ModerationCopy {
         let consequence: String
         if status.banned {
             title = L10n("Your account is permanently blocked")
-            consequence = L10n("You were reported too often. You can no longer match or chat. You can still delete your account from your profile.")
+            consequence = banMessage(status.banReason)
         } else if status.isSuspended(now: now), let until = status.suspendedUntil {
             title = L10n("Your account is blocked for 7 days")
-            consequence = L10n("You were reported again. Until \(Self.until(until)) you can’t match or chat. After a third report, your account is blocked permanently.")
+            consequence = L10n("Until \(Self.until(until)) you can’t match or chat. A third report blocks your account permanently.")
         } else {
             title = L10n("You were reported")
             consequence = L10n("This is a warning. After a second report, your account is blocked for 7 days.")
         }
+        // Objecting is the button below, with its warning; the text doesn't repeat it.
         return ModerationNotice(kind: .strike, title: title, reason: reasonTitle(status.latestReport?.reason),
-                                message: consequence,
-                                nextStep: status.canObject ? L10n("Not right? Object, and the report will be looked at again.") : nil,
-                                canObject: status.canObject)
+                                message: consequence, canObject: status.canObject)
+    }
+
+    // "May be under 18"
+
+    /// The button below already says "Confirm age"; the title says what happened.
+    static func ageCheck() -> ModerationNotice {
+        ModerationNotice(kind: .ageCheck, title: L10n("You were reported"), reason: ReportReason.underage.title,
+                         message: L10n("Until you confirm your age, you can’t match or chat."),
+                         canObject: false)
     }
 
     // The decision on an objection
 
-    static func result(_ result: ModerationStatus.ObjectionResult) -> ModerationNotice {
+    /// `status` tells whether a rejection also banned the account.
+    static func result(_ result: ModerationStatus.ObjectionResult, status: ModerationStatus? = nil) -> ModerationNotice {
         let approved = result.decision == .approved
+        if !approved, let status, status.banned, status.banReason == .direct {
+            return ModerationNotice(kind: .objectionResult, title: L10n("Your objection was rejected"),
+                                    reason: reasonTitle(result.reason),
+                                    message: L10n("Your account is now permanently blocked."), canObject: false)
+        }
+        if result.reason == ReportReason.underage.rawValue {
+            return ModerationNotice(
+                kind: .objectionResult,
+                title: approved ? L10n("Your age is confirmed") : L10n("Your age could not be confirmed"),
+                reason: reasonTitle(result.reason),
+                message: approved ? L10n("Your account is unlocked again.") : L10n("Your account stays locked."),
+                canObject: false)
+        }
         return ModerationNotice(
             kind: .objectionResult,
             title: approved ? L10n("Your objection was approved") : L10n("Your objection was rejected"),
@@ -211,16 +267,27 @@ enum ModerationCopy {
         } else {
             lock = nil
         }
+        let outcome = L10n("You’ll see the outcome here as soon as it has been looked at.")
 
+        if status.ageCheck?.objection == .pending {
+            return ModerationNotice(kind: .strike, title: L10n("Age check under review"), reason: nil,
+                                    message: status.banned ? (lock ?? outcome)
+                                        : L10n("You’ll see the outcome here. Until then you can’t match or chat."),
+                                    canObject: false)
+        }
         if status.latestReport?.objection == .pending {
-            let outcome = L10n("You’ll see the outcome here as soon as it has been looked at.")
             return ModerationNotice(kind: .strike, title: L10n("Objection under review"), reason: nil,
                                     message: lock.map { $0 + " " + outcome } ?? outcome, canObject: false)
         }
         if status.banned {
             return ModerationNotice(kind: .strike, title: L10n("Your account is permanently blocked"), reason: nil,
-                                    message: L10n("You can no longer match or chat. You can still delete your account from your profile."),
-                                    canObject: status.canObject)
+                                    message: banMessage(status.banReason),
+                                    canObject: status.canObject && status.banReason != .device)
+        }
+        if status.ageCheck?.objection == .rejected {
+            return ModerationNotice(kind: .strike, title: L10n("Your age could not be confirmed"), reason: nil,
+                                    message: L10n("You can’t match or chat. You can still delete your account from your profile."),
+                                    canObject: false)
         }
         let until = status.suspendedUntil.map(Self.until) ?? ""
         return ModerationNotice(kind: .strike, title: L10n("Blocked until \(until)"), reason: nil,
@@ -231,7 +298,7 @@ enum ModerationCopy {
     // A report this person sent
 
     static func reportSent(name: String, reason: ReportReason, endedMatch: Bool) -> ModerationNotice {
-        let received = L10n("Your report about \(name) was received. If \(name) objects, the report will be looked at again.")
+        let received = L10n("Your report about \(name) was received.")
         return ModerationNotice(kind: .reportSent, title: L10n("Thanks for your report"), reason: reason.title,
                                 message: endedMatch ? L10n("Your match has been broken.") + " " + received : received,
                                 canObject: false)

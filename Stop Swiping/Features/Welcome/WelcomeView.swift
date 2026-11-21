@@ -214,10 +214,16 @@ struct WelcomeView: View {
     private var isOnboarding: Bool { lightStage == .onboarding }
     private var canShowCode: Bool { WelcomeLightMetalView.isAvailable }
     /// The QR code is offered once the demo's explanation is understood;
-    /// before that the button would only lead back to the next step.
+    /// before that the button would only lead back to the next step. A
+    /// locked account (an age to confirm, a block, a ban) can't match, so it
+    /// gets no code at all.
     private var codeIsUnlocked: Bool {
         profileCreation.state.canShareProfile && profileCreation.state.hasUnderstoodExplanation == true
+            && !isSuspendedFromMatching
     }
+
+    /// The top-right code button, gone while the account is locked.
+    private var showsCodeButton: Bool { demoPhase == nil && (showsCode || !isSuspendedFromMatching) }
 
     /// Profiles are only offered while the code is on screen and nothing
     /// else is: the profile can't change underneath an exchange.
@@ -232,7 +238,7 @@ struct WelcomeView: View {
     /// A scanned profile is matched as soon as the home screen is at rest
     /// with a profile of its own to match against.
     private var canShowScannedMatch: Bool {
-        stage == .complete && lightStage == .complete && activeMatch == nil && demoPhase == nil && !isLightBusy
+        !isSuspendedFromMatching && stage == .complete && lightStage == .complete && activeMatch == nil && demoPhase == nil && !isLightBusy
             && scenePhase == .active && profileCreation.state.canShareProfile
             && !showsOverview && !showsAutoMatching && !showsSavedMatches && !showsAccess && !showsProfilePrivacy
             && accountCard == .closed
@@ -373,7 +379,9 @@ struct WelcomeView: View {
                             HelixCodeButton(showsCode: showsCode, size: corner.size, action: toggleCode)
                                 .position(corner.center(slot: 0))
                                 .disabled(isLightBusy)
-                                .opacity(demoPhase == nil ? 1 : 0)
+                                .opacity(showsCodeButton ? 1 : 0)
+                                .allowsHitTesting(showsCodeButton)
+                                .accessibilityHidden(!showsCodeButton)
                                 .transition(.opacity)
 
                             // Administrators: the open objections, in the
@@ -588,13 +596,17 @@ struct WelcomeView: View {
                 profileCreation.persist()
                 // The light stops while the app is away; the phones would not.
                 cancelDemo()
+                // A good moment isn't asked about later, out of context.
+                ReviewPromptCenter.shared.discardPendingMoment()
             } else {
+                ReviewPromptCenter.shared.recordOpen()
                 checkAccess()
                 Task { await notifications.refresh() }
                 Task { await syncProfile() }
             }
         }
         .task {
+            ReviewPromptCenter.shared.recordOpen()
             access.updateCompletion(profileCreation.state.completedAt)
             await access.start()
             if automaticallyShowsAccessOnAppear { checkAccess() }
@@ -625,9 +637,12 @@ struct WelcomeView: View {
         }
         .onChange(of: liveMatches.match?.id) { old, new in
             // The other person broke the match while it was on screen.
+            if let old, new != old { ReviewPromptCenter.shared.record(.matchEnded) }
             guard let old, new != old, activeMatch?.snapshot.id == old else { return }
             activeChat?.conversationEnded()
         }
+        .modifier(ReviewSetbackOnNotice(hasNotice: liveMatches.moderation?.hasUnseenNotice == true))
+        .modifier(ClosesCodeOnLock(isLocked: isSuspendedFromMatching, showsCode: $showsCode))
         .task(id: profileSyncRevision) {
             // Wait until a saved answer has settled, rather than uploading
             // each intermediate selection during editing.
@@ -680,8 +695,8 @@ struct WelcomeView: View {
             if let status = liveMatches.moderation {
                 ReportObjectionSheet(status: status, report: report,
                                      displayName: profileCreation.state.displayName,
-                                     birthDate: profileCreation.state.birthDateSelection) { message, idCheck in
-                    try await liveMatches.objectToReport(report.id, message: message, idCheck: idCheck)
+                                     birthDate: profileCreation.state.birthDateSelection) { message, proof in
+                    try await liveMatches.objectToReport(report.id, message: message, proof: proof)
                     // Objecting answers the notice: home moves on to
                     // "Objection under review".
                     acknowledgeModeration()
@@ -692,7 +707,9 @@ struct WelcomeView: View {
             Task { await liveMatches.refreshModeration() }
         }) {
             AdminObjectionsView(load: { try await liveMatches.adminObjections() },
-                                decide: { try await liveMatches.decideObjection($0, approve: $1) },
+                                decide: { try await liveMatches.decideObjection($0, approve: $1, ban: $2) },
+                                loadReviews: { try await liveMatches.adminReviews() },
+                                review: { try await liveMatches.reviewReport($0, ban: $1) },
                                 ownName: profileCreation.state.displayName)
         }
         .onChange(of: canShowScannedMatch && (scannedProfile != nil || codeInbox.pending != nil), initial: true) { _, ready in
@@ -954,17 +971,25 @@ struct WelcomeView: View {
         showsExchange ? nil : moderationHome?.notice
     }
 
-    /// "Understood" in the main button's place; "Object" in My matches'.
+    /// "Understood" in the main button's place; "Object" in My matches',
+    /// with its warning right below. An age to confirm has one way only.
     @ViewBuilder
     private func moderationButtons(for notice: ModerationNotice) -> some View {
-        Button(L10n("Understood")) { acknowledge(notice) }
-            .buttonStyle(GlowButtonStyle())
-            .accessibilityIdentifier("moderation.acknowledge")
-        if notice.canObject {
-            Button(L10n("Object"), action: objectToLatestReport)
-                .buttonStyle(QuietButtonStyle())
-                .accessibilityHint(L10n("Explain in a message why this report is wrong."))
-                .accessibilityIdentifier("moderation.object")
+        if notice.kind == .ageCheck {
+            Button(L10n("Confirm age"), action: confirmAge)
+                .buttonStyle(GlowButtonStyle())
+                .accessibilityIdentifier("moderation.confirmAge")
+        } else {
+            Button(L10n("Understood")) { acknowledge(notice) }
+                .buttonStyle(GlowButtonStyle())
+                .accessibilityIdentifier("moderation.acknowledge")
+            if notice.canObject {
+                Button(L10n("Object"), action: objectToLatestReport)
+                    .buttonStyle(QuietButtonStyle())
+                    .accessibilityHint(L10n("Explain in a message why this report is wrong."))
+                    .accessibilityIdentifier("moderation.object")
+                ModerationWarning(text: L10n("An unjustified objection can lead to the immediate termination of your account."))
+            }
         }
     }
 
@@ -978,6 +1003,9 @@ struct WelcomeView: View {
             acknowledgedResultID = unreadObjectionResult?.id
         case .objectionResult, .strike:
             acknowledgeModeration()
+        case .ageCheck:
+            // Never acknowledged: only confirming the age answers it.
+            break
         }
     }
 
@@ -991,6 +1019,12 @@ struct WelcomeView: View {
     private func objectToLatestReport() {
         guard let status = liveMatches.moderation, status.canObject, let report = status.latestReport else { return }
         presentScreen { objectingReport = report }
+    }
+
+    /// "May be under 18": the same screen, as an age check.
+    private func confirmAge() {
+        guard let status = liveMatches.moderation, status.needsAgeProof, let age = status.ageCheck else { return }
+        presentScreen { objectingReport = age.report }
     }
 
     /// Administrators only, opposite the QR code.
@@ -1152,7 +1186,7 @@ struct WelcomeView: View {
 
     private var isSuspendedFromMatching: Bool {
         guard let moderation = liveMatches.moderation else { return false }
-        return moderation.banned || moderation.isSuspended()
+        return moderation.isLocked()
     }
 
     fileprivate func reportLiveMatch() {
@@ -1610,7 +1644,8 @@ struct WelcomeView: View {
     }
 
     private func openScanner() {
-        guard !isLightBusy, activeMatch == nil, profileCreation.state.canShareProfile else { return }
+        guard !isLightBusy, activeMatch == nil, profileCreation.state.canShareProfile,
+              !isSuspendedFromMatching else { return }
         presentScreen { showsScanner = true }
     }
 
@@ -1647,6 +1682,15 @@ struct WelcomeView: View {
         let isRepeat = memory.snapshot(for: holder) != nil
         let shown = memory.resolve(snapshot, for: holder)
         if let photo { MatchPhotoStore.shared.save(photo, for: shown.id) }
+        if !isRepeat {
+            // Meeting someone and matching is the app at its best; a no match
+            // is the opposite, and keeps the review request away for a while.
+            if shown.report.isMatch {
+                ReviewPromptCenter.shared.record(.inPersonMatch, matchID: shown.id)
+            } else {
+                ReviewPromptCenter.shared.record(.noMatch)
+            }
+        }
         if !savedMatches.contains(shown.id) {
             savedMatches.save(shown)
             autoSavedMatchID = shown.id
@@ -1919,6 +1963,8 @@ struct WelcomeView: View {
     /// An ended automatic match leaves My matches, this phone and the
     /// account's list on the server; the other person keeps theirs.
     private func deleteMatch(_ snapshot: MatchSnapshot) {
+        // Deleting what just happened says it wasn't a good moment after all.
+        ReviewPromptCenter.shared.discardPendingMoment()
         if snapshot.isLive {
             guard snapshot.isBroken else { return }
             savedMatches.delete(snapshot.id)
@@ -1935,7 +1981,12 @@ struct WelcomeView: View {
 
     /// The heart fades where it is, and the helix ropes back in from the sides.
     private func closeMatch() {
-        guard activeMatch != nil else { return }
+        guard let closing = activeMatch else { return }
+        if let chat = activeChat, chat.isLive, !closing.snapshot.isBroken,
+           liveMatches.match?.id == closing.snapshot.id,
+           ReviewMoment.isRealConversation(chat.conversation.messages) {
+            ReviewPromptCenter.shared.record(.conversation, matchID: closing.snapshot.id)
+        }
         matchNote = nil
         autoSavedMatchID = nil
         OpenDemoChat.clear()
@@ -1955,6 +2006,8 @@ struct WelcomeView: View {
         // Photos of matches that weren't kept go with them. Automatic
         // matches keep theirs until they are deleted.
         MatchPhotoStore.shared.prune(keeping: Set(savedMatches.matches.map(\.id)).union(liveMatches.matchIDsWithPhotos))
+        // Reports never show in the chat: back home is where they appear.
+        Task { await liveMatches.refreshModerationOnReturn() }
         Task {
             withAnimation(.easeOut(duration: 0.3)) {
                 pinsDemoControls = false
@@ -1981,6 +2034,25 @@ struct WelcomeView: View {
                 isLightHidden = false
             }
             waitForHelixEntrance()
+            askForReviewWhenCalm(afterClosing: closing.snapshot.id)
+        }
+    }
+
+    /// After a good moment, once the helix is home and nothing else is on
+    /// the screen, the store may show its review sheet. Anything else going
+    /// on by then lets the moment pass.
+    private func askForReviewWhenCalm(afterClosing matchID: UUID) {
+        guard ReviewPromptCenter.shared.pendingMoment != nil else { return }
+        Task {
+            let settle = reduceMotion ? 1.0 : WelcomeLightHelix.Arrival.delay + WelcomeLightHelix.Arrival.duration + 1.0
+            try? await Task.sleep(for: .seconds(settle))
+            guard scenePhase == .active, stage == .complete, activeMatch == nil, demoPhase == nil,
+                  !presentsScreen, !showsAccess, !isLightBusy, sentReport == nil,
+                  !(hasAccount && isSuspendedFromMatching), liveMatches.moderation?.hasUnseenNotice != true else {
+                ReviewPromptCenter.shared.discardPendingMoment()
+                return
+            }
+            ReviewPromptCenter.shared.askIfCalm(afterClosing: matchID)
         }
     }
 
@@ -2078,6 +2150,7 @@ struct WelcomeView: View {
         }
         // It stays in My matches as broken.
         savedMatches.markBroken(activeMatch.snapshot.id)
+        if !activeMatch.snapshot.isDemo { ReviewPromptCenter.shared.record(.matchEnded) }
         AccessibilityNotification.Announcement(L10n("Match broken.")).post()
         closeMatch()
     }
@@ -2100,6 +2173,7 @@ struct WelcomeView: View {
         }
         activeChat?.submitReport(reason: report.reason, details: report.details, endMatch: report.alsoBreak,
                                  includesChat: report.includesChat)
+        ReviewPromptCenter.shared.record(.reportSent)
         AccessibilityNotification.Announcement(L10n("Thanks. Your report was sent.")).post()
         if let name = activeMatch?.snapshot.name {
             sentReport = SentReport(name: name, reason: report.reason, endedMatch: report.alsoBreak)
@@ -2493,5 +2567,30 @@ private enum MatchPersonalityMotion {
         // Out before the rings have moved far; back once the chart has mostly
         // rewound, so its strands never run through the messages.
         return returning ? .easeInOut(duration: 0.5).delay(0.65) : .easeOut(duration: 0.3)
+    }
+}
+
+/// A lock that arrives while the QR code is open closes it: a locked
+/// account can't match, so it shows no code.
+private struct ClosesCodeOnLock: ViewModifier {
+    let isLocked: Bool
+    @Binding var showsCode: Bool
+
+    func body(content: Content) -> some View {
+        content.onChange(of: isLocked, initial: true) { _, isLocked in
+            guard isLocked, showsCode else { return }
+            withAnimation(.easeInOut(duration: 0.25)) { showsCode = false }
+        }
+    }
+}
+
+/// A new strike or moderation notice keeps the review request away.
+private struct ReviewSetbackOnNotice: ViewModifier {
+    let hasNotice: Bool
+
+    func body(content: Content) -> some View {
+        content.onChange(of: hasNotice) { _, hasNotice in
+            if hasNotice { ReviewPromptCenter.shared.record(.moderationNotice) }
+        }
     }
 }

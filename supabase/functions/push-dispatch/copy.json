@@ -175,6 +175,13 @@
         "title": "New objection",
         "body": "Someone objected to a report ({reason}). Decide in the app's admin overview."
       }
+    ],
+    "admin.moderation_review": [
+      {
+        "id": "admin.review.1",
+        "title": "Concerning behavior reported",
+        "body": "Someone reported concerning behavior outside the app. Decide in the app's admin overview."
+      }
     ]
   },
   "nl": {
@@ -352,6 +359,13 @@
         "id": "admin.report.1",
         "title": "Nieuw bezwaar",
         "body": "Iemand maakt bezwaar tegen een rapportage ({reason}). Beslis in het beheeroverzicht van de app."
+      }
+    ],
+    "admin.moderation_review": [
+      {
+        "id": "admin.review.1",
+        "title": "Zorgwekkend gedrag gemeld",
+        "body": "Iemand meldt zorgwekkend gedrag buiten de app. Beslis in het beheeroverzicht van de app."
       }
     ]
   }

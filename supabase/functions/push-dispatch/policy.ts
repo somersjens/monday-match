@@ -44,7 +44,8 @@ export const platformOf = (entry: Entry): Platform => entry.platform ?? "ios";
 // The server only ever sends copy without a name. The preview slots in
 // copy.json are used on the phone, which knows the name.
 export function slot(entry: Entry): string {
-  if (entry.kind === "moderation_report") return "admin.moderation_report";
+  // detail "review": concerning offline behavior, for an administrator to review.
+  if (entry.kind === "moderation_report") return entry.detail === "review" ? "admin.moderation_review" : "admin.moderation_report";
   if (entry.kind !== "message_new") return entry.kind;
   return entry.count > 1 ? "message_new.private_batch" : "message_new.private";
 }

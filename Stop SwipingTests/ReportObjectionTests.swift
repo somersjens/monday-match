@@ -73,6 +73,105 @@ final class ReportObjectionTests: XCTestCase {
         XCTAssertFalse(IDDocumentComparison(zone: zone, displayName: "Emma", birthDate: zone.birthDate, today: today).isAdult)
     }
 
+    func testEveryGivenNameCountsForTheInitial() throws {
+        // ANNA MARIA may go by Maria.
+        let zone = try XCTUnwrap(MachineReadableZone.parse(lines: [
+            "P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<",
+            "L898902C36UTO7408122F1204159ZE184226B<<<<<10",
+        ], today: today))
+        XCTAssertEqual(zone.initials, ["A", "M"])
+        XCTAssertTrue(IDDocumentComparison(zone: zone, displayName: "Maria", birthDate: zone.birthDate, today: today).initialMatches)
+        XCTAssertFalse(IDDocumentComparison(zone: zone, displayName: "Eriksson", birthDate: zone.birthDate, today: today).initialMatches)
+        let json = String(decoding: try JSONEncoder().encode(zone.idCheck), as: UTF8.self)
+        XCTAssertTrue(json.contains("\"initials\":[\"A\",\"M\"]"))
+    }
+
+    // MARK: Live scan
+
+    func testFillersReadAsKAreRepaired() throws {
+        XCTAssertEqual(MachineReadableZone.repairedFillers("ERIKSSON<<ANNA<MARIA<<<K<<KK<<<"),
+                       "ERIKSSON<<ANNA<MARIA<<<<<<<<<<<")
+        // A name ending in K keeps it; fillers start at a <.
+        XCTAssertEqual(MachineReadableZone.repairedFillers("DE<VRIES<<DIRK<<<<<<"), "DE<VRIES<<DIRK<<<<<<")
+        let zone = try XCTUnwrap(MachineReadableZone.parse(lines: [
+            "I<UTOD231458907<<<<<<<<<<<<<<<",
+            "7408122F1204159UTO<<<<<<<<<<<6",
+            "ERIKSSON<<ANNA<MARIA<<<K<<KK<<",
+        ], today: today))
+        XCTAssertEqual(zone.initials, ["A", "M"])
+    }
+
+    func testPiecesOfOneLineAreJoinedLeftToRight() throws {
+        // Vision splits the names line at its fillers and lists the pieces
+        // out of order; the numbers line sits lower (smaller y).
+        let pieces = [
+            RecognisedTextRows.Piece(text: "<<<<<<<<<<<<<<<<<<<", box: CGRect(x: 0.6, y: 0.402, width: 0.35, height: 0.05)),
+            RecognisedTextRows.Piece(text: "L898902C36UTO7408122F1204159ZE184226B<<<<<10",
+                                     box: CGRect(x: 0.05, y: 0.3, width: 0.9, height: 0.05)),
+            RecognisedTextRows.Piece(text: "P<UTOERIKSSON<<ANNA<MARIA", box: CGRect(x: 0.05, y: 0.4, width: 0.5, height: 0.05)),
+        ]
+        let lines = RecognisedTextRows.join(pieces)
+        XCTAssertEqual(lines, ["P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<",
+                               "L898902C36UTO7408122F1204159ZE184226B<<<<<10"])
+        XCTAssertNotNil(MachineReadableZone.parse(lines: lines, today: today))
+    }
+
+    func testLiveScanNeedsTwoMatchingReads() {
+        let lines = ["P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<", "L898902C36UTO7408122F1204159ZE184226B<<<<<10"]
+        let misread = ["P<UTOERIKSSON<<HANNA<MARIA<<<<<<<<<<<<<<<<<<", lines[1]]
+        var reader = MachineReadableZoneReader()
+        XCTAssertNil(reader.observe(lines: lines, today: today))
+        XCTAssertNil(reader.observe(lines: misread, today: today), "A different initial starts over")
+        XCTAssertNil(reader.observe(lines: ["blurry"], today: today))
+        XCTAssertNil(reader.observe(lines: lines, today: today))
+        XCTAssertEqual(reader.observe(lines: lines, today: today)?.initials, ["A", "M"])
+
+        // A wrong document-number check digit never counts, however often.
+        var strict = MachineReadableZoneReader()
+        let badNumber = [lines[0], "L898902C37UTO7408122F1204159ZE184226B<<<<<10"]
+        XCTAssertNil(strict.observe(lines: badNumber, today: today))
+        XCTAssertNil(strict.observe(lines: badNumber, today: today))
+    }
+
+    func testZoneLinesAreRecognisedBeforeTheyRead() {
+        XCTAssertTrue(MachineReadableZone.looksLikeZoneLine("L898902C36UTO74O8I22F12O4159ZE184226B<<<<<10"))
+        XCTAssertFalse(MachineReadableZone.looksLikeZoneLine("KONINKRIJK DER NEDERLANDEN"))
+    }
+
+    func testCameraZoomsInOnlyWhenTooCloseToFocus() {
+        // About 70° across; 200 mm closest focus, like recent Pro iPhones.
+        let zoom = IDDocumentCamera.zoomFactor(minimumFocusDistance: 200, fieldOfView: 70, maximum: 10)
+        XCTAssertGreaterThan(zoom, 1.3)
+        XCTAssertLessThan(zoom, 2.2)
+        XCTAssertEqual(IDDocumentCamera.zoomFactor(minimumFocusDistance: 80, fieldOfView: 70, maximum: 10), 1)
+        XCTAssertEqual(IDDocumentCamera.zoomFactor(minimumFocusDistance: -1, fieldOfView: 70, maximum: 10), 1)
+        XCTAssertEqual(IDDocumentCamera.zoomFactor(minimumFocusDistance: 2000, fieldOfView: 70, maximum: 10), 3)
+    }
+
+    func testOnlyWhatTheFrameShowsIsRead() {
+        // Upright 1080 × 1920 video in a 1.5 : 1 frame: full width, a band of the height.
+        let region = IDDocumentCamera.visibleRegion(bufferAspect: 1080 / 1920, frameAspect: 1.5)
+        XCTAssertEqual(region.width, 1)
+        XCTAssertEqual(region.height, 0.375, accuracy: 0.001)
+        XCTAssertEqual(region.midY, 0.5, accuracy: 0.001)
+        let landscape = IDDocumentCamera.visibleRegion(bufferAspect: 1920 / 1080, frameAspect: 1.5)
+        XCTAssertEqual(landscape.height, 1)
+        XCTAssertEqual(landscape.midX, 0.5, accuracy: 0.001)
+    }
+
+    func testScanScreenMovesFromSearchingToRead() {
+        let model = IDDocumentScanViewModel()
+        let lines = ["P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<", "L898902C36UTO7408122F1204159ZE184226B<<<<<10"]
+        model.observe(["Some unrelated text"])
+        XCTAssertEqual(model.phase, .searching)
+        model.observe([lines[0], "L898902C36UTO7408132F1204159ZE184226B<<<<<10"])
+        XCTAssertEqual(model.phase, .holdStill, "Lines of <<< in view but not read yet")
+        model.observe(lines)
+        XCTAssertNil(model.outcome)
+        model.observe(lines)
+        XCTAssertEqual(model.outcome?.isRead, true)
+    }
+
     func testOnlyInitialAndDatesLeaveThePhone() throws {
         let zone = try XCTUnwrap(MachineReadableZone.parse(lines: [
             "P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<",
@@ -175,6 +274,85 @@ final class ReportObjectionTests: XCTestCase {
                                        banned: false, latestReport: report)
         XCTAssertEqual(ModerationCopy.strike(blocked).reason, ReportReason.harassment.title)
         XCTAssertTrue(ModerationCopy.isLocked(blocked))
+    }
+
+    func testManualReviewSendsNoIDDetails() throws {
+        let json = String(decoding: try JSONEncoder().encode(AgeProof.manualReview), as: UTF8.self)
+        XCTAssertTrue(json.contains("\"manual_review\":true") && json.contains("\"photo_attached\":true"))
+        XCTAssertFalse(json.contains("birth") || json.contains("initial"))
+        let check = ReportIDCheck(initial: "A", birthDate: "1974-08-12", expires: nil, document: "P", checkDigits: true)
+        let sorted = JSONEncoder()
+        sorted.outputFormatting = .sortedKeys
+        XCTAssertEqual(try sorted.encode(AgeProof.document(check)), try sorted.encode(check),
+                       "A document is sent exactly as before")
+    }
+
+    func testUnderEighteenLocksWithoutUnderstood() throws {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let report = UUID()
+        let locked = try decoder.decode(ModerationStatus.self, from: Data("""
+        {"strikes":0,"strikes_seen":0,"banned":false,"latest_report":null,"age_locked":true,
+         "age_check":{"id":"\(report)","is_demo":false,"objection":null}}
+        """.utf8))
+        XCTAssertTrue(locked.needsAgeProof)
+        XCTAssertTrue(locked.isLocked())
+        XCTAssertFalse(locked.canObject, "It is not a strike to object to")
+        let notice = try XCTUnwrap(ModerationHome.resolve(locked, isUnread: false, result: nil)?.notice)
+        XCTAssertEqual(notice.kind, .ageCheck, "Even when read, the age check stays in front")
+        XCTAssertEqual(notice.title, L10n("You were reported"), "The button already says to confirm the age")
+        XCTAssertEqual(locked.ageCheck?.report.reportReason, .underage)
+
+        let pending = ModerationStatus(strikes: 0, strikesSeen: 0, suspendedUntil: nil, banned: false,
+                                       ageCheck: .init(id: report, objection: .pending), ageLocked: true)
+        XCTAssertFalse(pending.needsAgeProof)
+        XCTAssertTrue(pending.awaitsDecision)
+        XCTAssertEqual(ModerationHome.resolve(pending, isUnread: false, result: nil)?.status?.title,
+                       L10n("Age check under review"))
+
+        let confirmed = ModerationStatus.ObjectionResult(id: UUID(), decision: .approved, reason: "underage")
+        XCTAssertEqual(ModerationCopy.result(confirmed).title, L10n("Your age is confirmed"))
+    }
+
+    func testARejectionThatBansSaysSo() {
+        let rejected = ModerationStatus.ObjectionResult(id: UUID(), decision: .rejected, reason: "harassment")
+        let banned = ModerationStatus(strikes: 1, strikesSeen: 1, suspendedUntil: nil, banned: true, banReason: .direct)
+        XCTAssertEqual(ModerationCopy.result(rejected, status: banned).message, L10n("Your account is now permanently blocked."))
+        XCTAssertNotEqual(ModerationCopy.result(rejected).message, L10n("Your account is now permanently blocked."))
+    }
+
+    func testBansSayWhy() throws {
+        let device = try JSONDecoder().decode(ModerationStatus.self, from: Data("""
+        {"strikes":0,"strikes_seen":0,"banned":true,"ban_reason":"device"}
+        """.utf8))
+        XCTAssertEqual(device.banReason, .device)
+        XCTAssertTrue(ModerationCopy.isLocked(device))
+        let status = try XCTUnwrap(ModerationHome.resolve(device, isUnread: false, result: nil)?.status)
+        XCTAssertEqual(status.message, ModerationCopy.banMessage(.device))
+        XCTAssertFalse(status.canObject)
+        XCTAssertNotEqual(ModerationCopy.banMessage(.direct), ModerationCopy.banMessage(.strikes))
+    }
+
+    func testTheStrikeNoticeLeavesObjectingToTheButton() {
+        let report = ModerationStatus.LatestReport(id: UUID(), reason: "spam", objection: nil)
+        let warning = ModerationStatus(strikes: 1, strikesSeen: 0, suspendedUntil: nil, banned: false, latestReport: report)
+        let notice = ModerationCopy.strike(warning)
+        XCTAssertNil(notice.nextStep)
+        XCTAssertFalse(notice.message.localizedCaseInsensitiveContains(L10n("Object")))
+        XCTAssertTrue(notice.canObject)
+    }
+
+    func testAdminReviewDecodesTheReportAtTheTopLevel() throws {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let id = UUID()
+        let review = try decoder.decode(AdminReview.self, from: Data("""
+        {"id":"\(id)","reason":"offlineBehavior","details":"","created_at":"2026-11-20T09:00:00Z",
+         "ended_match":false,"is_demo":false,"display_name":"Bram","strike":2,"chat_copy":null}
+        """.utf8))
+        XCTAssertEqual(review.id, id)
+        XCTAssertEqual(review.report.strike, 2)
+        XCTAssertEqual(review.displayName, "Bram")
     }
 
     func testANoticeOverrulesTheHomeScreenUntilItIsRead() {

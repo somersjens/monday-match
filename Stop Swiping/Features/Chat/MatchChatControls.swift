@@ -355,6 +355,7 @@ struct MatchReportSheet: View {
                 Button(L10n("Send report"), action: submit)
                     .buttonStyle(GlowButtonStyle())
                     .padding(.top, 4)
+                ModerationWarning(text: L10n("Unjustified reporting can lead to the immediate termination of your account."))
             }
             .frame(maxWidth: OnboardingTheme.contentWidth)
             .padding(.horizontal, 20)

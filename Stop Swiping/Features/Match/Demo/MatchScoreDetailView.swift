@@ -85,9 +85,9 @@ struct MatchScoreDetailView: View {
             }
             .frame(maxWidth: OnboardingTheme.contentWidth)
             .padding(.horizontal, 20)
+            .keepsSheetWidth()
             .padding(.top, 28)
             .padding(.bottom, 32)
-            .frame(maxWidth: .infinity)
         }
         .scrollIndicators(.hidden)
         .background { OnboardingTheme.background.ignoresSafeArea() }

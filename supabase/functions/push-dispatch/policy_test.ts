@@ -104,3 +104,10 @@ Deno.test("a new objection reaches administrators with the report's reason only"
   assert(payload.aps["thread-id"] === "moderation" && payload.destination === "stopswiping://open/profile");
   assert(dedupeKey(entry) === `moderation_report.${base.outbox_id}`);
 });
+
+Deno.test("concerning offline behavior reaches administrators as a review, without words", () => {
+  const entry = { ...base, kind: "moderation_report" as const, detail: "review", language: "nl" as const };
+  const payload = JSON.parse(compose(entry).body);
+  assert(payload.aps.alert.title === "Zorgwekkend gedrag gemeld" && !payload.aps.alert.body.includes("review"));
+  assert(payload.aps["thread-id"] === "moderation");
+});

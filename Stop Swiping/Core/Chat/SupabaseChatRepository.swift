@@ -179,8 +179,10 @@ protocol MatchFollowing: AnyObject {
 }
 
 /// Reports against this account: 1 is a warning, 2 blocks matching and chat
-/// for 7 days, 3 bans the account. The newest report can always be objected
-/// to (202611200007_report_objections.sql).
+/// for 7 days, 3 bans the account (and the phones it used). An administrator
+/// can also ban directly. "May be under 18" is no strike: it locks the account
+/// until the person proves their age. The newest report can always be
+/// objected to (202611200007_report_objections.sql, 202611200009).
 nonisolated struct ModerationStatus: Codable, Equatable {
     /// Where an objection to a report stands.
     enum Objection: String, Codable, Equatable {
@@ -196,6 +198,38 @@ nonisolated struct ModerationStatus: Codable, Equatable {
         var reportReason: ReportReason? { ReportReason(rawValue: reason) }
     }
 
+    /// Why the account is banned.
+    enum BanReason: String, Codable, Equatable {
+        /// Three strikes.
+        case strikes
+        /// An administrator banned the account directly.
+        case direct
+        /// This phone was used by a banned account.
+        case device
+    }
+
+    /// The newest "may be under 18" report that still stands: the account is
+    /// locked until the person proves their age.
+    struct AgeCheck: Codable, Equatable, Identifiable {
+        let id: UUID
+        /// An administrator's demo report: shows the same, never locks.
+        var isDemo = false
+        /// Nil until the person sent their proof or message.
+        let objection: Objection?
+        enum CodingKeys: String, CodingKey { case id, isDemo = "is_demo", objection }
+        init(id: UUID, isDemo: Bool = false, objection: Objection?) {
+            self.id = id; self.isDemo = isDemo; self.objection = objection
+        }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(UUID.self, forKey: .id)
+            isDemo = (try? c.decodeIfPresent(Bool.self, forKey: .isDemo)) ?? false
+            objection = try? c.decodeIfPresent(Objection.self, forKey: .objection)
+        }
+        /// The report, as the verification screen takes it.
+        var report: LatestReport { LatestReport(id: id, reason: ReportReason.underage.rawValue, objection: objection) }
+    }
+
     /// A decided objection whose outcome this person has not read yet.
     struct ObjectionResult: Codable, Equatable {
         let id: UUID
@@ -207,23 +241,31 @@ nonisolated struct ModerationStatus: Codable, Equatable {
     let strikesSeen: Int
     let suspendedUntil: Date?
     let banned: Bool
+    var banReason: BanReason?
     var latestReport: LatestReport?
     var objectionResult: ObjectionResult?
+    var ageCheck: AgeCheck?
+    /// Waiting to prove their age: no matching, no chat.
+    var ageLocked = false
     /// This account decides objections (matching_private.admins).
     var isAdmin = false
-    /// Objections waiting for an administrator; 0 for everyone else.
+    /// Objections and reviews waiting for an administrator; 0 for everyone else.
     var adminPending = 0
 
     enum CodingKeys: String, CodingKey {
         case strikes, strikesSeen = "strikes_seen", suspendedUntil = "suspended_until", banned
-        case latestReport = "latest_report", objectionResult = "objection_result"
+        case banReason = "ban_reason", latestReport = "latest_report", objectionResult = "objection_result"
+        case ageCheck = "age_check", ageLocked = "age_locked"
         case isAdmin = "is_admin", adminPending = "admin_pending"
     }
-    init(strikes: Int, strikesSeen: Int, suspendedUntil: Date?, banned: Bool,
+    init(strikes: Int, strikesSeen: Int, suspendedUntil: Date?, banned: Bool, banReason: BanReason? = nil,
          latestReport: LatestReport? = nil, objectionResult: ObjectionResult? = nil,
+         ageCheck: AgeCheck? = nil, ageLocked: Bool = false,
          isAdmin: Bool = false, adminPending: Int = 0) {
         self.strikes = strikes; self.strikesSeen = strikesSeen; self.suspendedUntil = suspendedUntil; self.banned = banned
+        self.banReason = banReason
         self.latestReport = latestReport; self.objectionResult = objectionResult
+        self.ageCheck = ageCheck; self.ageLocked = ageLocked
         self.isAdmin = isAdmin; self.adminPending = adminPending
     }
     init(from decoder: Decoder) throws {
@@ -232,8 +274,11 @@ nonisolated struct ModerationStatus: Codable, Equatable {
         strikesSeen = try c.decodeIfPresent(Int.self, forKey: .strikesSeen) ?? 0
         suspendedUntil = try? c.decodeIfPresent(Date.self, forKey: .suspendedUntil)
         banned = try c.decodeIfPresent(Bool.self, forKey: .banned) ?? false
+        banReason = try? c.decodeIfPresent(BanReason.self, forKey: .banReason)
         latestReport = try? c.decodeIfPresent(LatestReport.self, forKey: .latestReport)
         objectionResult = try? c.decodeIfPresent(ObjectionResult.self, forKey: .objectionResult)
+        ageCheck = try? c.decodeIfPresent(AgeCheck.self, forKey: .ageCheck)
+        ageLocked = (try? c.decodeIfPresent(Bool.self, forKey: .ageLocked)) ?? false
         isAdmin = (try? c.decodeIfPresent(Bool.self, forKey: .isAdmin)) ?? false
         adminPending = (try? c.decodeIfPresent(Int.self, forKey: .adminPending)) ?? 0
     }
@@ -245,7 +290,11 @@ nonisolated struct ModerationStatus: Codable, Equatable {
     var canObject: Bool { latestReport != nil && latestReport?.objection == nil }
     /// Something is waiting on an administrator, for this person or for them
     /// as an administrator: worth asking the server more often.
-    var awaitsDecision: Bool { latestReport?.objection == .pending || isAdmin }
+    var awaitsDecision: Bool { latestReport?.objection == .pending || ageCheck?.objection == .pending || isAdmin }
+    /// The person must still prove their age; until then nothing else can be done.
+    var needsAgeProof: Bool { ageCheck != nil && ageCheck?.objection == nil }
+    /// No matching and no chat: banned, blocked for 7 days, or waiting to prove their age.
+    func isLocked(now: Date = Date()) -> Bool { banned || isSuspended(now: now) || ageLocked }
 }
 
 /// One line of a conversation copy sent with a report, oldest first.
@@ -283,6 +332,8 @@ nonisolated struct ReportChatLine: Codable, Equatable {
 nonisolated struct ReportIDCheck: Codable, Equatable {
     /// First letter of the first given name.
     let initial: String
+    /// First letter of every given name: "Jan Pieter" may go by Pieter.
+    var initials: [String]? = nil
     /// yyyy-MM-dd.
     let birthDate: String
     let expires: String?
@@ -290,7 +341,26 @@ nonisolated struct ReportIDCheck: Codable, Equatable {
     let document: String
     let checkDigits: Bool
     enum CodingKeys: String, CodingKey {
-        case initial, birthDate = "birth_date", expires, document, checkDigits = "check_digits"
+        case initial, initials, birthDate = "birth_date", expires, document, checkDigits = "check_digits"
+    }
+}
+
+/// How someone reported as "may be under 18" confirms their age.
+nonisolated enum AgeProof: Encodable, Equatable {
+    /// What the phone read from their passport or ID card.
+    case document(ReportIDCheck)
+    /// The document could not be read: they added a photo of it, which stays
+    /// on the phone. Only that a photo was added is sent, never ID details.
+    case manualReview
+
+    func encode(to encoder: Encoder) throws {
+        switch self {
+        case .document(let check):
+            try check.encode(to: encoder)
+        case .manualReview:
+            var container = encoder.singleValueContainer()
+            try container.encode(["manual_review": true, "photo_attached": true])
+        }
     }
 }
 
@@ -304,7 +374,7 @@ nonisolated struct AdminObjection: Decodable, Identifiable, Equatable {
         let createdAt: Date
         let chatCopy: [ReportChatLine]?
         let endedMatch: Bool
-        /// 1 warning, 2 a 7-day block, 3 or more a ban.
+        /// 0 "under 18" (a lock, not a strike), 1 warning, 2 a 7-day block, 3 or more a ban.
         let strike: Int
         /// An administrator reported the demo match: about themself, never a lock.
         let isDemo: Bool
@@ -328,6 +398,8 @@ nonisolated struct AdminObjection: Decodable, Identifiable, Equatable {
     /// The server's reading of the document against the profile.
     struct IDCheck: Decodable, Equatable {
         let initial: String?
+        /// Every given name's first letter (202611200009); older checks have only `initial`.
+        let initials: [String]?
         let birthDate: String?
         let expires: String?
         let document: String?
@@ -338,8 +410,11 @@ nonisolated struct AdminObjection: Decodable, Identifiable, Equatable {
         let profileBirthDate: String?
         let initialMatches: Bool?
         let birthDateMatches: Bool?
+        /// "Request manual review": a photo was added on their phone, no ID details sent.
+        let manualReview: Bool?
         enum CodingKeys: String, CodingKey {
-            case initial, birthDate = "birth_date", expires, document, checkDigits = "check_digits", adult, expired
+            case manualReview = "manual_review"
+            case initial, initials, birthDate = "birth_date", expires, document, checkDigits = "check_digits", adult, expired
             case profileInitial = "profile_initial", profileBirthDate = "profile_birth_date"
             case initialMatches = "initial_matches", birthDateMatches = "birth_date_matches"
         }
@@ -353,11 +428,13 @@ nonisolated struct AdminObjection: Decodable, Identifiable, Equatable {
     /// "Under 18" was disputed with a matching document before and approved
     /// automatically; this second time an administrator decides.
     let ageProvenBefore: Bool
+    /// Approved by itself then, unless an administrator decides first.
+    let autoDecidesAt: Date?
     let report: Report
 
     enum CodingKeys: String, CodingKey {
         case id, createdAt = "created_at", message, idCheck = "id_check", displayName = "display_name", report
-        case ageProvenBefore = "age_proven_before"
+        case ageProvenBefore = "age_proven_before", autoDecidesAt = "auto_decides_at"
     }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -367,7 +444,27 @@ nonisolated struct AdminObjection: Decodable, Identifiable, Equatable {
         idCheck = try? c.decodeIfPresent(IDCheck.self, forKey: .idCheck)
         displayName = try c.decodeIfPresent(String.self, forKey: .displayName)
         ageProvenBefore = (try? c.decodeIfPresent(Bool.self, forKey: .ageProvenBefore)) ?? false
+        autoDecidesAt = try? c.decodeIfPresent(Date.self, forKey: .autoDecidesAt)
         report = try c.decode(Report.self, forKey: .report)
+    }
+}
+
+/// "Concerning offline behavior", waiting for an administrator to keep it
+/// as a regular warning or ban the account directly (202611200009 admin_reviews).
+nonisolated struct AdminReview: Decodable, Identifiable, Equatable {
+    /// The same fields as an objection's report, at the top level.
+    let report: AdminObjection.Report
+    let displayName: String?
+    /// Kept as a regular warning by itself then, unless decided first.
+    let autoDecidesAt: Date?
+    var id: UUID { report.id }
+
+    enum CodingKeys: String, CodingKey { case displayName = "display_name", autoDecidesAt = "auto_decides_at" }
+    init(from decoder: Decoder) throws {
+        report = try AdminObjection.Report(from: decoder)
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        displayName = try c.decodeIfPresent(String.self, forKey: .displayName)
+        autoDecidesAt = try? c.decodeIfPresent(Date.self, forKey: .autoDecidesAt)
     }
 }
 
@@ -404,14 +501,19 @@ protocol SecureChatRepository {
     func moderation() async throws -> ModerationStatus
     func acknowledgeModeration() async throws
     /// Objects to the newest report against this account.
-    func objectToReport(_ reportID: UUID, message: String, idCheck: ReportIDCheck?) async throws
+    func objectToReport(_ reportID: UUID, message: String, proof: AgeProof?) async throws
     /// Administrators only: reports the demo match as a report against this
     /// account itself, to try the warning, the objection and the decision.
     func reportDemo(reason: String, details: String, chatCopy: [ReportChatLine]?) async throws
     /// Administrators only: every open objection, oldest first.
     func adminObjections() async throws -> [AdminObjection]
-    /// Administrators only: approve withdraws the report, reject keeps it.
-    func decideObjection(_ objectionID: UUID, approve: Bool) async throws
+    /// Administrators only: approve withdraws the report, reject keeps it;
+    /// reject with `ban` also bans the account directly.
+    func decideObjection(_ objectionID: UUID, approve: Bool, ban: Bool) async throws
+    /// Administrators only: "concerning offline behavior" waiting for a decision.
+    func adminReviews() async throws -> [AdminReview]
+    /// Administrators only: keep as a regular warning, or ban directly.
+    func reviewReport(_ reportID: UUID, ban: Bool) async throws
     /// The partner's matching photo; Storage only allows it during an active match.
     func partnerPhoto(path: String) async throws -> Data
     /// Removes an ended match from this account's My matches. The other
@@ -434,10 +536,12 @@ extension SecureChatRepository {
                 chatCopy: [ReportChatLine]?) async throws {
         try await report(matchID, reason: reason, details: details, breakMatch: breakMatch)
     }
-    func objectToReport(_ reportID: UUID, message: String, idCheck: ReportIDCheck?) async throws {}
+    func objectToReport(_ reportID: UUID, message: String, proof: AgeProof?) async throws {}
     func reportDemo(reason: String, details: String, chatCopy: [ReportChatLine]?) async throws {}
     func adminObjections() async throws -> [AdminObjection] { [] }
-    func decideObjection(_ objectionID: UUID, approve: Bool) async throws {}
+    func decideObjection(_ objectionID: UUID, approve: Bool, ban: Bool) async throws {}
+    func adminReviews() async throws -> [AdminReview] { [] }
+    func reviewReport(_ reportID: UUID, ban: Bool) async throws {}
     func shareCard(_ matchID: UUID, card: String) async throws {}
     func markRead(_ matchID: UUID, upTo messageID: Int64) async throws {}
     func matchHistory() async throws -> [CloudChatMatch] { [] }
@@ -560,10 +664,10 @@ final class SupabaseChatRepository: SecureChatRepository {
     func acknowledgeModeration() async throws {
         try await client.rpc("acknowledge_moderation").execute()
     }
-    func objectToReport(_ reportID: UUID, message: String, idCheck: ReportIDCheck?) async throws {
-        struct Params: Encodable { let p_report_id: UUID; let p_message: String; let p_id_check: ReportIDCheck? }
+    func objectToReport(_ reportID: UUID, message: String, proof: AgeProof?) async throws {
+        struct Params: Encodable { let p_report_id: UUID; let p_message: String; let p_id_check: AgeProof? }
         try await client.rpc("object_to_report", params: Params(p_report_id: reportID, p_message: message,
-                                                                 p_id_check: idCheck)).execute()
+                                                                 p_id_check: proof)).execute()
     }
     func reportDemo(reason: String, details: String, chatCopy: [ReportChatLine]?) async throws {
         struct Params: Encodable { let p_reason: String; let p_details: String; let p_chat_copy: [ReportChatLine]? }
@@ -573,9 +677,17 @@ final class SupabaseChatRepository: SecureChatRepository {
     func adminObjections() async throws -> [AdminObjection] {
         try await client.rpc("admin_objections").execute().value
     }
-    func decideObjection(_ objectionID: UUID, approve: Bool) async throws {
-        struct Params: Encodable { let p_objection_id: UUID; let p_approve: Bool }
-        try await client.rpc("admin_decide_objection", params: Params(p_objection_id: objectionID, p_approve: approve)).execute()
+    func decideObjection(_ objectionID: UUID, approve: Bool, ban: Bool) async throws {
+        struct Params: Encodable { let p_objection_id: UUID; let p_approve: Bool; let p_ban: Bool }
+        try await client.rpc("admin_decide_objection", params: Params(p_objection_id: objectionID, p_approve: approve,
+                                                                       p_ban: ban)).execute()
+    }
+    func adminReviews() async throws -> [AdminReview] {
+        try await client.rpc("admin_reviews").execute().value
+    }
+    func reviewReport(_ reportID: UUID, ban: Bool) async throws {
+        struct Params: Encodable { let p_report_id: UUID; let p_ban: Bool }
+        try await client.rpc("admin_review_report", params: Params(p_report_id: reportID, p_ban: ban)).execute()
     }
     func shareCard(_ matchID: UUID, card: String) async throws {
         try await client.rpc("share_match_card",params:["p_match_id":matchID.uuidString,"p_card":card]).execute()

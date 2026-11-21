@@ -67,6 +67,23 @@ final class AdaptiveLayoutRenderTests: XCTestCase {
         }
     }
 
+    /// A question opened from the profile overview: no step dots, and the
+    /// checkmark where the overview has its own.
+    func testRenderProfileEditor() async throws {
+        for device in Self.devices {
+            for step in [ProfileCreationStep.height, .languages, .texting] {
+                let model = ProfileCreationViewModel(store: InMemoryProfileCreationStore(state: Self.completedState()),
+                                                     repository: nil)
+                model.beginEditing(step)
+                try await render(
+                    ProfileCreationFlowView(viewModel: model, locationService: LocationService(),
+                                            canExitFromFirstStep: true, onExit: {}, onUnderage: {}, onComplete: {})
+                        .background(OnboardingTheme.background),
+                    screen: "editor-\(step)", device: device)
+            }
+        }
+    }
+
     /// The report notices on the home screen, the objection screen and the
     /// administrator's list, in Dutch (the copy the person sees first).
     func testRenderObjectionScreens() async throws {
@@ -100,15 +117,154 @@ final class AdaptiveLayoutRenderTests: XCTestCase {
         .padding(.horizontal, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(OnboardingTheme.background)
-        let admin = AdminObjectionsView(load: { [try Self.sampleObjection()] }, decide: { _, _ in })
+        let admin = AdminObjectionsView(load: { [try Self.sampleObjection()] }, decide: { _, _, _ in },
+                                        loadReviews: { [try Self.sampleReview()] })
         let objection = ReportObjectionSheet(status: warning, report: report, displayName: "Anna",
                                              birthDate: .init(year: 1974, month: 8, day: 12)) { _, _ in }
+        let ageCheck = ReportObjectionSheet(status: warning,
+                                            report: .init(id: UUID(), reason: "underage", objection: nil),
+                                            displayName: "Anna", birthDate: .init(year: 1974, month: 8, day: 12)) { _, _ in }
+        let manualReview = ReportObjectionSheet(status: warning,
+                                                report: .init(id: UUID(), reason: "underage", objection: nil),
+                                                displayName: "Anna", birthDate: .init(year: 1974, month: 8, day: 12),
+                                                writesInstead: true, documentPhoto: Self.sampleDocument()) { _, _ in }
+        let manualReviewEmpty = ReportObjectionSheet(status: warning,
+                                                     report: .init(id: UUID(), reason: "underage", objection: nil),
+                                                     displayName: "Anna", birthDate: .init(year: 1974, month: 8, day: 12),
+                                                     writesInstead: true) { _, _ in }
         for device in Self.devices.prefix(4) {
             try await render(cards, screen: "objection-cards", device: device)
             try await render(statuses, screen: "objection-status", device: device)
             try await render(objection, screen: "objection-sheet", device: device)
+            try await render(ageCheck, screen: "objection-age-check", device: device)
+            try await render(manualReview, screen: "objection-age-manual", device: device)
+            try await render(manualReviewEmpty, screen: "objection-age-manual-empty", device: device)
+            for (name, phase, outcome) in Self.idScanStates {
+                let scan = IDDocumentScanScreen(phase: phase, outcome: outcome, needsCameraPermission: false,
+                                                onCancel: {}, onRetry: {}, onSettings: {}) {
+                    LinearGradient(colors: [.gray, .black], startPoint: .top, endPoint: .bottom)
+                }
+                try await render(scan, screen: "id-scan-\(name)", device: device)
+            }
             try await render(admin, screen: "objection-admin", device: device)
         }
+    }
+
+    /// Every report state as the home screen's bottom shows it, three phones
+    /// side by side: a notice with its own buttons, or a status card above
+    /// the usual profile buttons.
+    func testRenderModerationHomeStates() async throws {
+        let report = ModerationStatus.LatestReport(id: UUID(), reason: "harassment", objection: nil)
+        let soon = Date().addingTimeInterval(5 * 86_400)
+        func status(_ s: ModerationStatus) -> ModerationNotice { ModerationCopy.status(s) }
+        let warning = ModerationStatus(strikes: 1, strikesSeen: 0, suspendedUntil: nil, banned: false, latestReport: report)
+        let blocked = ModerationStatus(strikes: 2, strikesSeen: 1, suspendedUntil: soon, banned: false, latestReport: report)
+        let banned = ModerationStatus(strikes: 3, strikesSeen: 2, suspendedUntil: nil, banned: true, banReason: .strikes,
+                                      latestReport: report)
+        let age = ModerationStatus.AgeCheck(id: UUID(), objection: nil)
+        let screens: [(String, [AnyView])] = [
+            ("home-moderation-1", [
+                Self.notice(ModerationCopy.strike(warning)),
+                Self.notice(ModerationCopy.strike(blocked)),
+                Self.notice(ModerationCopy.strike(banned)),
+            ]),
+            ("home-moderation-2", [
+                Self.notice(ModerationCopy.ageCheck()),
+                Self.statusCard(status(ModerationStatus(strikes: 0, strikesSeen: 0, suspendedUntil: nil, banned: false,
+                                                        ageCheck: .init(id: age.id, objection: .pending), ageLocked: true))),
+                Self.statusCard(status(ModerationStatus(strikes: 0, strikesSeen: 0, suspendedUntil: nil, banned: false,
+                                                        ageCheck: .init(id: age.id, objection: .rejected), ageLocked: true))),
+            ]),
+            ("home-moderation-3", [
+                Self.statusCard(status(ModerationStatus(strikes: 1, strikesSeen: 1, suspendedUntil: nil, banned: false,
+                                                        latestReport: .init(id: UUID(), reason: "spam", objection: .pending)))),
+                Self.statusCard(status(ModerationStatus(strikes: 2, strikesSeen: 2, suspendedUntil: soon, banned: false,
+                                                        latestReport: report))),
+                Self.statusCard(status(ModerationStatus(strikes: 0, strikesSeen: 0, suspendedUntil: nil, banned: true,
+                                                        banReason: .device))),
+            ]),
+            ("home-moderation-4", [
+                Self.notice(ModerationCopy.result(.init(id: UUID(), decision: .approved, reason: "spam"))),
+                Self.notice(ModerationCopy.result(.init(id: UUID(), decision: .approved, reason: "underage"))),
+                Self.notice(ModerationCopy.reportSent(name: "Anna", reason: .harassment, endedMatch: true)),
+            ]),
+        ]
+        let phone = Self.devices[2]
+        let canvas = Device("three", phone.size.width * 3, phone.size.height, top: phone.insets.top, bottom: phone.insets.bottom)
+        for (name, states) in screens {
+            let view = HStack(spacing: 0) {
+                ForEach(states.indices, id: \.self) { index in
+                    VStack(spacing: 12) {
+                        Spacer(minLength: 0)
+                        states[index]
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 16)
+                    .frame(width: phone.size.width)
+                    .overlay(alignment: .trailing) { Rectangle().fill(.white.opacity(0.15)).frame(width: 1) }
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(OnboardingTheme.background)
+            try await render(view, screen: name, device: canvas)
+        }
+    }
+
+    /// A notice and the buttons that take the profile buttons' place.
+    /// The live document scan in each of its states.
+    static let idScanStates: [(String, IDDocumentScanPhase, IDDocumentScanOutcome?)] = [
+        ("searching", .searching, nil),
+        ("hold-still", .holdStill, nil),
+        ("read", .searching, .read(MachineReadableZone(documentCode: "P", initials: ["A"],
+                                                        birthDate: .init(year: 1974, month: 8, day: 12),
+                                                        expiryDate: nil, checkDigitsValid: true))),
+        ("failed", .searching, .failed(L10n("The lines of <<< couldn’t be read. Make sure they’re sharp, well lit and free of glare, then try again."))),
+    ]
+
+    /// A stand-in photo of a document: a pale card with lines on it.
+    static func sampleDocument() -> UIImage {
+        UIGraphicsImageRenderer(size: CGSize(width: 856, height: 540)).image { context in
+            UIColor(red: 0.78, green: 0.82, blue: 0.88, alpha: 1).setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 856, height: 540))
+            UIColor(white: 0.55, alpha: 1).setFill()
+            context.fill(CGRect(x: 40, y: 60, width: 220, height: 280))
+            for row in 0..<6 { context.fill(CGRect(x: 300, y: 70 + row * 42, width: 460 - row * 30, height: 16)) }
+            for row in 0..<3 { context.fill(CGRect(x: 40, y: 400 + row * 40, width: 776, height: 18)) }
+        }
+    }
+
+    private static func notice(_ notice: ModerationNotice) -> AnyView {
+        AnyView(VStack(spacing: 12) {
+            ModerationNoticeCard(notice: notice)
+            if notice.kind == .ageCheck {
+                Button(L10n("Confirm age")) {}.buttonStyle(GlowButtonStyle())
+            } else {
+                Button(L10n("Understood")) {}.buttonStyle(GlowButtonStyle())
+                if notice.canObject {
+                    Button(L10n("Object")) {}.buttonStyle(QuietButtonStyle())
+                    ModerationWarning(text: L10n("An unjustified objection can lead to the immediate termination of your account."))
+                }
+            }
+        })
+    }
+
+    /// A status in the automatic matching card's place, above the profile buttons.
+    private static func statusCard(_ status: ModerationNotice) -> AnyView {
+        AnyView(VStack(spacing: 12) {
+            ModerationStatusCard(status: status, onObject: {})
+            Button(L10n("Adjust profile")) {}.buttonStyle(GlowButtonStyle())
+            Button(L10n("My matches")) {}.buttonStyle(QuietButtonStyle())
+        })
+    }
+
+    static func sampleReview() throws -> AdminReview {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(AdminReview.self, from: Data("""
+        {"id":"\(UUID())","reason":"offlineBehavior","details":"Stond onaangekondigd voor mijn deur.",
+         "created_at":"2026-11-20T09:00:00Z","ended_match":true,"is_demo":false,"display_name":"Bram","strike":1,
+         "auto_decides_at":"2026-11-27T09:00:00Z"}
+        """.utf8))
     }
 
     static func sampleObjection() throws -> AdminObjection {

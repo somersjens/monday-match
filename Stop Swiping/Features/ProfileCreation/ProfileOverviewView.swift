@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Every answer of a completed profile, full screen. Choosing an answer opens
-/// that question here; saving or cancelling returns to the overview.
+/// that question here; Continue walks on through the next questions, and the
+/// checkmark or Cancel returns to the overview.
 struct ProfileOverviewView: View {
     @ObservedObject var viewModel: ProfileCreationViewModel
     @ObservedObject var locationService: LocationService
@@ -11,6 +12,7 @@ struct ProfileOverviewView: View {
     var onDeleteProfile: (() async throws -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @State private var path: [Route] = []
     @State private var showsLanguagePicker = false
     @State private var confirmsDeletion = false
@@ -121,6 +123,10 @@ struct ProfileOverviewView: View {
                     }
                 }
 
+                if let reviewURL = StoreListing.reviewURL() {
+                    reviewRow(reviewURL)
+                }
+
                 if onDeleteProfile != nil {
                     deleteRow
                 }
@@ -166,17 +172,7 @@ struct ProfileOverviewView: View {
             .accessibilityLabel(L10n("App language"))
             .accessibilityValue(AppLanguageSettings.shared.language.name)
 
-            Button { dismiss() } label: {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(OnboardingTheme.accentGradient)
-                    .frame(width: 44, height: 44)
-                    .background { Circle().fill(.white.opacity(0.08)) }
-                    .overlay { Circle().strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5) }
-                    .contentShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(L10n("Close"))
+            RoundCheckmarkButton(accessibilityLabel: L10n("Close")) { dismiss() }
         }
         .padding(.top, 12)
     }
@@ -225,6 +221,33 @@ struct ProfileOverviewView: View {
         .accessibilityValue(answer.compact)
         .accessibilityHint(L10n("Opens this question."))
         .accessibilityAddTraits(.isButton)
+    }
+
+    /// Always there for whoever wants to leave a review; the store's own
+    /// sheet only ever appears by itself, after a good moment.
+    private func reviewRow(_ url: URL) -> some View {
+        Button { openURL(url) } label: {
+            HStack(spacing: 14) {
+                IconTile(systemImage: "star")
+                Text(L10n("Rate Stop Swiping"))
+                    .font(.system(.body, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.primaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.tertiaryText)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(AnswerRowStyle())
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .onboardingSurface(cornerRadius: 24)
+        .padding(.top, 12)
+        .accessibilityHint(L10n("Opens the app’s page in the store."))
+        .accessibilityIdentifier("overview.rateApp")
     }
 
     private var deleteRow: some View {

@@ -190,6 +190,7 @@ private struct LanguagePickerSheet: View {
                 }
             }
         }
+        .keepsSheetWidth()
         .tint(OnboardingTheme.cyan)
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)

@@ -182,6 +182,63 @@ final class PersonalityEstimatorTests: XCTestCase {
         XCTAssertEqual(PersonalityEstimator.mbti(partial).headline.first, "E")
     }
 
+    private func lifestyle(_ answers: [ProfileCreationStep: CompatibilityScaleAnswer]) throws -> PersonalityAnswers {
+        var lifestyle = LifestyleAnswers()
+        for (step, answer) in answers {
+            lifestyle[try XCTUnwrap(CompatibilityScaleQuestion.question(for: step))] = answer
+        }
+        return PersonalityAnswers(lifestyle: lifestyle)
+    }
+
+    private func answer(_ own: Int, importance: Int = 3, partner: Int? = nil) -> CompatibilityScaleAnswer {
+        CompatibilityScaleAnswer(own: own, partner: partner ?? own, isPartnerCustomized: partner != nil,
+                                 importance: importance)
+    }
+
+    /// With untouched importance and partner values, only the own answers count.
+    func testOwnAnswersAreTheMeasurement() throws {
+        let stored = try lifestyle([.talkativeness: answer(5), .aloneTime: answer(2), .punctuality: answer(1)])
+        let plain = PersonalityAnswers(values: [.talkativeness: 1, .aloneTime: -0.5, .punctuality: -1])
+        XCTAssertEqual(PersonalityEstimator.extraversion(stored), PersonalityEstimator.extraversion(plain), accuracy: 1e-12)
+        XCTAssertEqual(PersonalityEstimator.conscientiousness(stored), PersonalityEstimator.conscientiousness(plain),
+                       accuracy: 1e-12)
+    }
+
+    /// Importance makes an answer count more within its dimension, but a
+    /// middle answer stays in the middle however important it is.
+    func testImportanceWeighsAnswersWithoutMovingThem() throws {
+        let talkerCares = try lifestyle([.talkativeness: answer(5, importance: 5), .nightlife: answer(1, importance: 1)])
+        let homebodyCares = try lifestyle([.talkativeness: answer(5, importance: 1), .nightlife: answer(1, importance: 5)])
+        XCTAssertGreaterThan(PersonalityEstimator.extraversion(talkerCares), 0)
+        XCTAssertLessThan(PersonalityEstimator.extraversion(homebodyCares), 0)
+
+        let neutral = try lifestyle([.talkativeness: answer(3, importance: 5)])
+        XCTAssertEqual(PersonalityEstimator.extraversion(neutral), 0)
+        let important = try lifestyle([.talkativeness: answer(5, importance: 5)])
+        XCTAssertEqual(PersonalityEstimator.extraversion(important), 1.3 / 1.9, accuracy: 1e-9)
+        let unimportant = try lifestyle([.talkativeness: answer(5, importance: 1)])
+        XCTAssertGreaterThan(PersonalityEstimator.extraversion(unimportant), 0.5)
+    }
+
+    /// A hand-set partner wish adds to the user's own need only where the need
+    /// is lived together; elsewhere it describes the partner, not the user.
+    func testPartnerWishRefinesOnlySharedNeeds() throws {
+        let wantsContact = try lifestyle([.texting: answer(3, partner: 5)])
+        XCTAssertGreaterThan(PersonalityEstimator.neuroticism(wantsContact), 0)
+
+        let prefilled = try lifestyle([.texting: CompatibilityScaleAnswer(own: 3, partner: 5)])
+        XCTAssertEqual(PersonalityEstimator.neuroticism(prefilled), 0)
+
+        let wantsTalker = try lifestyle([.talkativeness: answer(3, partner: 5), .socialPlans: answer(1, partner: 5)])
+        XCTAssertEqual(PersonalityEstimator.extraversion(wantsTalker),
+                       PersonalityEstimator.extraversion(PersonalityAnswers(values: [.talkativeness: 0, .socialPlans: -1])),
+                       accuracy: 1e-12)
+
+        // The own answer stays the larger part.
+        let evidence = try XCTUnwrap(PersonalityAnswers.evidence(for: .texting, answer: answer(1, partner: 5)))
+        XCTAssertLessThan(evidence.value, 0)
+    }
+
     func testMotionWeavesInCrossesAndUnweaves() throws {
         let first = WelcomeLightPersonality.Visual(kind: .spectrum, values: [0.5, -0.5, 0.2, 0.1])
         let second = WelcomeLightPersonality.Visual(kind: .radar, values: [0.2, 0.9, 0.5, 0.4, 0.7])

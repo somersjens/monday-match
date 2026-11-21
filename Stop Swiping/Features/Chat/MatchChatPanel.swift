@@ -334,6 +334,7 @@ struct MatchChatPanel: View {
                 Spacer()
             }
             .padding(24)
+            .keepsSheetWidth()
             .navigationTitle(L10n("Security code"))
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

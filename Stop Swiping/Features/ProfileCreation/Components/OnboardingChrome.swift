@@ -1,36 +1,23 @@
 import SwiftUI
 
-/// Progress as a row of points of light; the current step stretches into a
-/// short gradient bar rather than filling a conventional progress bar.
-struct OnboardingProgressDots: View {
-    let current: Int
-    let total: Int
-
-    /// Keep long questionnaires within a phone's width while following the
-    /// current question. VoiceOver still announces the full step count.
-    private var visibleSteps: ClosedRange<Int> {
-        let count = total <= 17 ? total : 9
-        let start = max(1, min(current - count / 2, total - count + 1))
-        return start...(start + count - 1)
-    }
+/// The round gradient checkmark at the top right of the profile overview and
+/// of a question being changed from it.
+struct RoundCheckmarkButton: View {
+    let accessibilityLabel: String
+    let action: () -> Void
 
     var body: some View {
-        HStack(spacing: 6) {
-            ForEach(visibleSteps, id: \.self) { index in
-                Capsule()
-                    .fill(fill(for: index))
-                    .frame(width: index == current ? 22 : 6, height: 6)
-            }
+        Button(action: action) {
+            Image(systemName: "checkmark")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(OnboardingTheme.accentGradient)
+                .frame(width: 44, height: 44)
+                .background { Circle().fill(.white.opacity(0.08)) }
+                .overlay { Circle().strokeBorder(OnboardingTheme.hairline, lineWidth: 0.5) }
+                .contentShape(Circle())
         }
-        .animation(OnboardingMotion.step, value: current)
-        .frame(height: 44)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(L10n("Step \(current) of \(total)"))
-    }
-
-    private func fill(for index: Int) -> AnyShapeStyle {
-        if index == current { return AnyShapeStyle(OnboardingTheme.accentGradient) }
-        return AnyShapeStyle(Color.white.opacity(index < current ? 0.55 : 0.16))
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
     }
 }
 
@@ -38,6 +25,8 @@ struct OnboardingStepHeader: View {
     let title: String
     let subtitle: String?
     var titleFocus: AccessibilityFocusState<Bool>.Binding
+    /// Keeps the title clear of a button floating at its top right.
+    var titleTrailingInset: CGFloat = 0
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -55,6 +44,7 @@ struct OnboardingStepHeader: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityFocused(titleFocus)
+                .padding(.trailing, titleTrailingInset)
 
             if let subtitle {
                 Text(subtitle)

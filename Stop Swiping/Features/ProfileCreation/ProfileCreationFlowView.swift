@@ -20,8 +20,8 @@ struct ProfileCreationFlowView: View {
     @State private var navigationToken = 0
     @State private var pendingAutoAdvance: Task<Void, Never>?
     @State private var hasEntered = false
-    /// Changing one answer of a finished profile shows the step dots; filling
-    /// in the questionnaire shows the progress card.
+    /// Changing answers of a finished profile shows only the save checkmark;
+    /// filling in the questionnaire shows the progress card.
     @State private var isEditingSession: Bool
     /// The last question was answered and the closing moment is playing.
     @State private var finish = FinishPhase.none
@@ -70,18 +70,41 @@ struct ProfileCreationFlowView: View {
 
     private var isEditing: Bool { viewModel.editingStep != nil }
 
+    /// Until Continue is used, the quiet button drops the change; after it,
+    /// it walks back through the questions and never cancels again.
+    private var cancelsEditing: Bool { isEditing && !viewModel.hasMovedWhileEditing }
+
+    private var isReligionPartnerPhase: Bool {
+        displayedStep == .religion && viewModel.state.religionPhase == .partner
+    }
+
     private var showsBack: Bool {
-        isEditing || displayedStep.previous != nil || canExitFromFirstStep
+        if isEditing { return cancelsEditing || displayedStep.previous != nil || isReligionPartnerPhase }
+        return displayedStep.previous != nil || canExitFromFirstStep
+    }
+
+    private var backTitle: String {
+        if cancelsEditing { return L10n("Cancel") }
+        if isEditing { return L10n("Back") }
+        return isReligionPartnerPhase ? L10n("Cancel") : L10n("Back")
     }
 
     private var primaryTitle: String {
+        if isEditing {
+            if displayedStep == .religion, !isReligionPartnerPhase, viewModel.state.religion.own == nil { return L10n("Skip") }
+            return displayedStep.next == nil ? L10n("Save") : L10n("Continue")
+        }
         if displayedStep == .religion {
             if viewModel.state.religionPhase == .partner { return L10n("Save") }
             return viewModel.state.religion.own == nil ? L10n("Skip") : L10n("Continue")
         }
-        if isEditing { return L10n("Save") }
         return displayedStep.next == nil ? L10n("Complete") : L10n("Continue")
     }
+
+    /// The step page's top inset. While editing, the question's first line
+    /// sits level with the checkmark, where the overview has its own.
+    private var pageTopPadding: CGFloat { isEditingSession ? 25 : 10 }
+    private var titleTrailingInset: CGFloat { isEditingSession ? 48 : 0 }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -105,6 +128,9 @@ struct ProfileCreationFlowView: View {
                 .opacity(finish == .none ? 1 : 0)
                 .blur(radius: finish == .none || reduceMotion ? 0 : 8)
                 .allowsHitTesting(finish == .none)
+        }
+        .overlay(alignment: .top) {
+            if isEditingSession { saveCheckmark }
         }
         // The question steps back while the age is being confirmed.
         .blur(radius: ageToConfirm == nil || reduceMotion ? 0 : 12)
@@ -160,11 +186,7 @@ struct ProfileCreationFlowView: View {
 
     @ViewBuilder
     private var progressHeader: some View {
-        if isEditingSession {
-            OnboardingProgressDots(current: displayedStep.number, total: ProfileCreationStep.allCases.count)
-                .padding(.top, 2)
-                .opacity(hasEntered ? 1 : 0)
-        } else {
+        if !isEditingSession {
             OnboardingProgressCard(progress: finish == .none ? viewModel.state.progress : 1,
                                    deadline: countdownDeadline,
                                    isFinished: finish >= .sealed)
@@ -177,6 +199,20 @@ struct ProfileCreationFlowView: View {
                 .opacity(hasEntered ? 1 : 0)
                 .offset(y: hasEntered || reduceMotion ? 0 : -12)
         }
+    }
+
+    /// In the same place as the overview's checkmark: keeps every change.
+    private var saveCheckmark: some View {
+        HStack {
+            Spacer(minLength: 0)
+            RoundCheckmarkButton(accessibilityLabel: L10n("Save"), action: handleSave)
+                .disabled(isNavigating)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+        .frame(maxWidth: OnboardingTheme.contentWidth)
+        .frame(maxWidth: .infinity)
+        .opacity(hasEntered ? 1 : 0)
     }
 
     /// The bar fills, the card seals with a checkmark, and the screen softens
@@ -210,11 +246,12 @@ struct ProfileCreationFlowView: View {
         if step == .location {
             // The map handles its own gestures, so this page never scrolls.
             VStack(alignment: .leading, spacing: 20) {
-                OnboardingStepHeader(title: step.title, subtitle: step.subtitle, titleFocus: $isTitleFocused)
+                OnboardingStepHeader(title: step.title, subtitle: step.subtitle, titleFocus: $isTitleFocused,
+                                     titleTrailingInset: titleTrailingInset)
                 LocationStep(viewModel: viewModel, locationService: locationService)
             }
             .padding(.horizontal, 24)
-            .padding(.top, 10)
+            .padding(.top, pageTopPadding)
             .padding(.bottom, 12)
             .frame(maxWidth: OnboardingTheme.contentWidth)
             .frame(maxWidth: .infinity)
@@ -225,14 +262,15 @@ struct ProfileCreationFlowView: View {
                         OnboardingStepHeader(
                             title: step == .religion ? viewModel.state.religionPhase.title : step.title,
                             subtitle: step == .religion ? nil : step.subtitle,
-                            titleFocus: $isTitleFocused
+                            titleFocus: $isTitleFocused,
+                            titleTrailingInset: titleTrailingInset
                         )
                         .id(Self.pageTopID)
                         stepContent(step)
                             .frame(maxWidth: .infinity)
                     }
                     .padding(.horizontal, 24)
-                    .padding(.top, 10)
+                    .padding(.top, pageTopPadding)
                     .padding(.bottom, 24)
                     .frame(maxWidth: OnboardingTheme.contentWidth)
                     .frame(maxWidth: .infinity)
@@ -331,7 +369,7 @@ struct ProfileCreationFlowView: View {
             .simultaneousGesture(randomFillHold)
 
             HStack(spacing: 12) {
-                Button(isEditing || (displayedStep == .religion && viewModel.state.religionPhase == .partner) ? L10n("Cancel") : L10n("Back"), action: handleBack)
+                Button(backTitle, action: handleBack)
                     .buttonStyle(QuietButtonStyle())
                     .opacity(showsBack ? 1 : 0)
                     .disabled(!showsBack)
@@ -431,16 +469,23 @@ struct ProfileCreationFlowView: View {
             ignoresNextContinue = false
             return
         }
-        guard !isNavigating, ageToConfirm == nil else { return }
-        // The first Continue on an untouched height only reveals the notice;
-        // the next one moves on.
-        if displayedStep == .height, !showsHeightHonestyNotice {
-            hasRevealedHeightNotice = true
-            isHeightNoticeShown = true
-            AccessibilityNotification.Announcement(L10n("False information can lead to account termination.")).post()
-            return
-        }
+        guard !isNavigating, ageToConfirm == nil, !revealsHeightNoticeFirst() else { return }
         handleSubmission(viewModel.submitCurrentStep())
+    }
+
+    private func handleSave() {
+        guard !isNavigating, ageToConfirm == nil, finish == .none, !revealsHeightNoticeFirst() else { return }
+        handleSubmission(viewModel.saveEditing())
+    }
+
+    /// The first Continue or Save on an untouched height only reveals the
+    /// notice; the next one goes ahead.
+    private func revealsHeightNoticeFirst() -> Bool {
+        guard displayedStep == .height, !showsHeightHonestyNotice else { return false }
+        hasRevealedHeightNotice = true
+        isHeightNoticeShown = true
+        AccessibilityNotification.Announcement(L10n("False information can lead to account termination.")).post()
+        return true
     }
 
     private func handleSubmission(_ submission: ProfileCreationSubmission) {
@@ -481,13 +526,13 @@ struct ProfileCreationFlowView: View {
 
     private func handleBack() {
         guard !isNavigating, ageToConfirm == nil else { return }
-        if isEditing {
+        if cancelsEditing {
             isNavigating = true
             viewModel.cancelEditing()
             onExit()
         } else if viewModel.goBack() {
             isNavigating = viewModel.currentStep != displayedStep
-        } else if canExitFromFirstStep {
+        } else if !isEditing, canExitFromFirstStep {
             isNavigating = true
             onExit()
         }

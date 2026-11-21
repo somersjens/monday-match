@@ -808,7 +808,9 @@ private struct BrokenMatchHistory: View {
         case .profileDeleted where !ended.byMe:
             return L10n("\(name) deleted their profile on \(date)")
         case .moderation:
-            return L10n("Ended by moderation on \(date)")
+            // Neutral for both: a report against someone shows only on their
+            // own home screen, never next to the match.
+            return L10n("This match ended on \(date)")
         default:
             return ended.byMe ? L10n("You broke this match on \(date)") : L10n("\(name) broke this match on \(date)")
         }

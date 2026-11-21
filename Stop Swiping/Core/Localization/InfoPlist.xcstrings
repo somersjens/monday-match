@@ -31,13 +31,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The camera scans profile codes and checks that your chosen photo is you. The face scan happens on this iPhone; the camera image is never uploaded."
+            "value" : "The camera scans profile codes and identity documents, and checks that your chosen photo is you. Scans happen on this iPhone; the camera image is never uploaded."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "De camera scant profielcodes en controleert of je gekozen foto echt jij bent. De gezichtsscan gebeurt op deze iPhone; het camerabeeld wordt nooit geüpload."
+            "value" : "De camera scant profielcodes en identiteitsdocumenten, en controleert of je gekozen foto echt jij bent. Scans gebeuren op deze iPhone; het camerabeeld wordt nooit geüpload."
           }
         }
       }
